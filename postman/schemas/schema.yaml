@@ -1,0 +1,1354 @@
+openapi: 3.0.0
+info:
+  title: TOP API
+  version: 0.1.0
+  description: API to manage phenotypes, repositories, ontologies and organisations
+
+servers:
+  - url: http://localhost:8080
+
+paths:
+  /metadata:
+    get:
+      summary: OpenAPI description of this API
+      operationId: getMetadata
+      security:
+        - BearerAuth: []
+        - BasicAuth: []
+      responses:
+        200:
+          description: API metadata
+          content:
+            text/plain:
+              schema:
+                type: string
+
+  /ping:
+    get:
+      summary: Checks if the server is running
+      operationId: ping
+      security:
+        - BearerAuth: []
+        - BasicAuth: []
+      responses:
+        200:
+          description: Server is up and running
+        default:
+          $ref: '#/components/schemas/UnexpectedError'
+  
+  /authentication_token:
+    post:
+      summary: Get JWT token
+      operationId: getAuthenticationToken
+      security:
+        - BearerAuth: []
+        - BasicAuth: []
+      requestBody:
+        description: Login data
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+                  format: password
+      responses:
+        200:
+          description: Generated JWT token
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - token
+                properties:
+                  token:
+                    description: The JWT token
+                    type: string
+                    readOnly: true
+        401:
+          $ref: '#/components/schemas/Unauthorized'
+        default:
+          $ref: '#/components/schemas/UnexpectedError'
+
+  /user_account:
+    parameters:
+      - $ref: '#/components/parameters/include'
+    get:
+      summary: Searches for user accounts. Use the query parameters to filter the result.
+      operationId: getUserAccounts
+      tags:
+        - userAccount
+      parameters:
+        - name: username
+          description: Filter user accounts by name.
+          in: query
+          schema:
+            type: string
+        - $ref: '#/components/parameters/page'
+      responses:
+        200:
+          description: List of user accounts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserAccount'
+        401:
+          $ref: '#/components/schemas/Unauthorized'
+        default:
+          $ref: '#/components/schemas/UnexpectedError'
+    post:
+      summary: Creates new user account and returns the result
+      operationId: createUserAccount
+      tags:
+        - userAccount
+      requestBody:
+        description: User account details
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserAccount'
+      responses:
+        201:
+          description: Created user account
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserAccount'
+        401:
+          $ref: '#/components/schemas/Unauthorized'
+        default:
+          $ref: '#/components/schemas/UnexpectedError'
+
+  /user_account/{userAccountId}:
+    summary: Represents a user account
+    parameters:
+      - name: userAccountId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - $ref: '#/components/parameters/include'
+    get:
+      summary: Returns a particular user account
+      operationId: getUserAccountByUserAccountId
+      tags:
+        - userAccount
+      responses:
+        200:
+          description: Details about a user account by ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserAccount'
+        401:
+          $ref: '#/components/schemas/Unauthorized'
+        404:
+          $ref: '#/components/schemas/NotFound'
+        default:
+          $ref: '#/components/schemas/UnexpectedError'
+    patch:
+      summary: Updates a particular user account by ID and returns the resulting user account
+      operationId: updateUserAccountByUserAccountId
+      tags:
+        - userAccount
+      requestBody:
+        description: User account details to be applied
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserAccount'
+      responses:
+        200:
+          description: Details about the updated user account
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserAccount'
+        401:
+          $ref: '#/components/schemas/Unauthorized'
+        404:
+          $ref: '#/components/schemas/NotFound'
+        default:
+          $ref: '#/components/schemas/UnexpectedError'
+    delete:
+      summary: Deletes a particular user account by ID and returns the deleted user account
+      operationId: deleteUserAccountByUserAccountId
+      tags:
+        - userAccount
+      responses:
+        200:
+          description: Details about the deleted user account
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserAccount'
+        401:
+          $ref: '#/components/schemas/Unauthorized'
+        404:
+          $ref: '#/components/schemas/NotFound'
+        default:
+          $ref: '#/components/schemas/UnexpectedError'
+
+  /organisation:
+    parameters:
+      - $ref: '#/components/parameters/include'
+    get:
+      summary: Searches for organisations. Use the query parameters to filter the result.
+      operationId: getOrganisations
+      tags:
+        - organisation
+      parameters:
+        - name: name
+          description: Filter organisations by name.
+          in: query
+          schema:
+            type: string
+        - $ref: '#/components/parameters/page'
+      responses:
+        200:
+          description: List of organisations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Organisation'
+        401:
+          $ref: '#/components/schemas/Unauthorized'
+        default:
+          $ref: '#/components/schemas/UnexpectedError'
+    post:
+      summary: Creates new organisation
+      operationId: createOrganisation
+      tags:
+        - organisation
+      requestBody:
+        description: Organisation details
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Organisation'
+      responses:
+        201:
+          description: Created organisation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organisation'
+        401:
+          $ref: '#/components/schemas/Unauthorized'
+        default:
+          $ref: '#/components/schemas/UnexpectedError'
+
+  /{organisationName}:
+    summary: Represents an organisation
+    parameters:
+      - name: organisationName
+        in: path
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/include'
+    get:
+      summary: Returns a particular organisation
+      operationId: getOrganisationByName
+      tags:
+        - organisation
+      responses:
+        200:
+          description: Details of the organisation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organisation'
+        401:
+          $ref: '#/components/schemas/Unauthorized'
+        404:
+          $ref: '#/components/schemas/NotFound'
+        default:
+          $ref: '#/components/schemas/UnexpectedError'
+    patch:
+      summary: Updates a particular organisation by name and returns the result
+      operationId: updateOrganisationByName
+      tags:
+        - organisation
+      requestBody:
+        description: Organisation details to be applied
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Organisation'
+      responses:
+        200:
+          description: Details about the updated organisation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organisation'
+        401:
+          $ref: '#/components/schemas/Unauthorized'
+        404:
+          $ref: '#/components/schemas/NotFound'
+        default:
+          $ref: '#/components/schemas/UnexpectedError'
+    delete:
+      summary: Deletes a particular organisation by name and returns the deleted organisation
+      operationId: deleteOrganisationByName
+      tags:
+        - organisation
+      responses:
+        200:
+          description: Details about the deleted organisation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organisation'
+        401:
+          $ref: '#/components/schemas/Unauthorized'
+        404:
+          $ref: '#/components/schemas/NotFound'
+        default:
+          $ref: '#/components/schemas/UnexpectedError'
+
+  /repository:
+    parameters:
+      - $ref: '#/components/parameters/include'
+    get:
+      summary: Searches for repositories. Use the query parameters to filter the result.
+      operationId: getRepositories
+      tags:
+        - repository
+      parameters:
+        - name: name
+          description: Filter repositories by name.
+          in: query
+          schema:
+            type: string
+        - $ref: '#/components/parameters/page'
+      responses:
+        200:
+          description: List of repositories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Repository'
+        401:
+          $ref: '#/components/schemas/Unauthorized'
+        default:
+          $ref: '#/components/schemas/UnexpectedError'
+
+  /ontology:
+    parameters:
+      - $ref: '#/components/parameters/include'
+    get:
+      summary: Searches for ontologies. Use the query parameters to filter the result.
+      operationId: getOntologies
+      tags:
+        - ontology
+      parameters:
+        - name: name
+          description: Filter ontologies by name.
+          in: query
+          schema:
+            type: string
+        - $ref: '#/components/parameters/page'
+      responses:
+        200:
+          description: List of ontologies
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Ontology'
+        401:
+          $ref: '#/components/schemas/Unauthorized'
+        default:
+          $ref: '#/components/schemas/UnexpectedError'
+
+  /{organisationName}/repository:
+    parameters:
+      - name: organisationName
+        in: path
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/include'
+    get:
+      summary: Searches for repositories in organisation. Use the query parameters to filter the result.
+      operationId: getRepositoriesByOrganisationName
+      tags:
+        - repository
+      parameters:
+        - name: name
+          description: Filter repositories by name.
+          in: query
+          schema:
+            type: string
+        - $ref: '#/components/parameters/page'
+      responses:
+        200:
+          description: List of repositories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Repository'
+        401:
+          $ref: '#/components/schemas/Unauthorized'
+        404:
+          $ref: '#/components/schemas/NotFound'
+        default:
+          $ref: '#/components/schemas/UnexpectedError'
+    post:
+      summary: Creates new repository in organisation
+      operationId: createRepository
+      tags:
+        - repository
+      requestBody:
+        description: Repository details
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Repository'
+      responses:
+        201:
+          description: Created repository
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Repository'
+        401:
+          $ref: '#/components/schemas/Unauthorized'
+        404:
+          $ref: '#/components/schemas/NotFound'
+        default:
+          $ref: '#/components/schemas/UnexpectedError'
+
+  /{organisationName}/{repositoryName}:
+    summary: Represents a repository in an organisation
+    parameters:
+      - name: organisationName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: repositoryName
+        in: path
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/include'
+    get:
+      summary: Returns a particular repository in organisation
+      operationId: getRepositoryByName
+      tags:
+        - repository
+      responses:
+        200:
+          description: Details of the repository
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Repository'
+        401:
+          $ref: '#/components/schemas/Unauthorized'
+        404:
+          $ref: '#/components/schemas/NotFound'
+        default:
+          $ref: '#/components/schemas/UnexpectedError'
+    patch:
+      summary: Updates a particular repository by name in the organisation and returns the resulting repository
+      operationId: updateRepositoryByName
+      tags:
+        - repository
+      requestBody:
+        description: Repository details to be applied
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Repository'
+      responses:
+        200:
+          description: Details about the updated repository
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Repository'
+        401:
+          $ref: '#/components/schemas/Unauthorized'
+        404:
+          $ref: '#/components/schemas/NotFound'
+        default:
+          $ref: '#/components/schemas/UnexpectedError'
+    delete:
+      summary: Deletes a particular repository by name in the organisation and returns the deleted repository
+      operationId: deleteRepositoryByName
+      tags:
+        - repository
+      parameters:
+        - name: repositoryName
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: organisationName
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Details about the deleted repository
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Repository'
+        401:
+          $ref: '#/components/schemas/Unauthorized'
+        404:
+          $ref: '#/components/schemas/NotFound'
+        default:
+          $ref: '#/components/schemas/UnexpectedError'
+
+  /{organisationName}/{repositoryName}/ontology:
+    parameters:
+      - name: organisationName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: repositoryName
+        in: path
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/include'
+    get:
+      summary: Searches for ontologies in repository. Use the query parameters to filter the result.
+      operationId: getOntologiesByRepositoryName
+      tags:
+        - ontology
+      parameters:
+        - name: name
+          description: Filter ontologies by name.
+          in: query
+          schema:
+            type: string
+        - $ref: '#/components/parameters/page'
+      responses:
+        200:
+          description: List of ontologies
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Ontology'
+        401:
+          $ref: '#/components/schemas/Unauthorized'
+        404:
+          $ref: '#/components/schemas/NotFound'
+        default:
+          $ref: '#/components/schemas/UnexpectedError'
+    post:
+      summary: Creates new ontology in repository
+      operationId: createOntology
+      tags:
+        - ontology
+      requestBody:
+        description: Ontology details
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Ontology'
+      responses:
+        201:
+          description: Created ontology
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ontology'
+        401:
+          $ref: '#/components/schemas/Unauthorized'
+        404:
+          $ref: '#/components/schemas/NotFound'
+        default:
+          $ref: '#/components/schemas/UnexpectedError'
+
+  /{organisationName}/{repositoryName}/ontology/{ontologyName}/{version}:
+    summary: Represents an entity (i.e. phenotype or category) in a repository
+    parameters:
+      - name: organisationName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: repositoryName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: ontologyName
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: version
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/VersionNumber'
+      - $ref: '#/components/parameters/include'
+    get:
+      summary: Returns a particular ontology in the repository
+      operationId: getOntologyByName
+      tags:
+        - ontology
+      responses:
+        200:
+          description: Details of the ontology
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ontology'
+        401:
+          $ref: '#/components/schemas/Unauthorized'
+        404:
+          $ref: '#/components/schemas/NotFound'
+        default:
+          $ref: '#/components/schemas/UnexpectedError'
+    put:
+      summary: Updates a particular ontology by name in the repository and returns the result
+      operationId: updateOntologyByName
+      tags:
+        - ontology
+      requestBody:
+        description: Ontology details to be applied
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Ontology'
+      responses:
+        200:
+          description: Details about the updated ontology
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ontology'
+        401:
+          $ref: '#/components/schemas/Unauthorized'
+        404:
+          $ref: '#/components/schemas/NotFound'
+        default:
+          $ref: '#/components/schemas/UnexpectedError'
+    patch:
+      summary: Build a new release for the ontology
+      operationId: releaseOntology
+      tags:
+        - ontology
+      responses:
+        200:
+          description: Details about the released ontology
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ontology'
+        401:
+          $ref: '#/components/schemas/Unauthorized'
+        404:
+          $ref: '#/components/schemas/NotFound'
+        default:
+          $ref: '#/components/schemas/Error'
+    delete:
+      summary: Deletes a particular ontology by name in the repository and returns the deleted ontology
+      operationId: deleteOntologyByName
+      tags:
+        - ontology
+      responses:
+        200:
+          description: Details about the deleted ontology
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ontology'
+        401:
+          $ref: '#/components/schemas/Unauthorized'
+        404:
+          $ref: '#/components/schemas/NotFound'
+        default:
+          $ref: '#/components/schemas/UnexpectedError'
+
+  /{organisationName}/{repositoryName}/entity:
+    parameters:
+      - name: organisationName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: repositoryName
+        in: path
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/include'
+    get:
+      summary: Searches for phenotypes or categories. Use the query parameters to filter the result.
+      operationId: getEntities
+      tags:
+        - phenotype
+        - category
+      parameters:
+        - name: name
+          description: Filter phenotypes or categories by name.
+          in: query
+          schema:
+            type: string
+        - name: type
+          description: Filter phenotypes or categories by type.
+          in: query
+          schema:
+            $ref: '#/components/schemas/EntityType'
+        - name: dataType
+          description: Filter phenotypes or categories by data type
+          in: query
+          schema:
+            $ref: '#/components/schemas/EntityDataType'
+        - $ref: '#/components/parameters/page'
+      responses:
+        200:
+          description: List of phenotypes or categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Entity'
+        401:
+          $ref: '#/components/schemas/Unauthorized'
+        404:
+          $ref: '#/components/schemas/NotFound'
+        default:
+          $ref: '#/components/schemas/UnexpectedError'
+    post:
+      summary: Creates a new phenotype or category in the repository and returns the result
+      operationId: createEntity
+      tags:
+        - phenotype
+        - category
+      requestBody:
+        description: Phenotype or category details to be applied
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Entity'
+      responses:
+        200:
+          description: Details about the created phenotype or category
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Entity'
+        401:
+          $ref: '#/components/schemas/Unauthorized'
+        404:
+          $ref: '#/components/schemas/NotFound'
+        default:
+          $ref: '#/components/schemas/UnexpectedError'
+
+  /{organisationName}/{repositoryName}/{uuid}:
+    summary: Represents an entity (i.e. phenotype or category) in a repository
+    parameters:
+      - name: organisationName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: repositoryName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: uuid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: version
+        description: Defaults to the latest version number.
+        in: query
+        schema:
+          $ref: '#/components/schemas/VersionNumber'
+      - $ref: '#/components/parameters/include'
+    get:
+      summary: Returns a particular phenotype or category in the repository
+      operationId: getEntityByUuid
+      tags:
+        - phenotype
+        - category
+      responses:
+        200:
+          description: Details of the phenotype or category
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Entity'
+        401:
+          $ref: '#/components/schemas/Unauthorized'
+        404:
+          $ref: '#/components/schemas/NotFound'
+        default:
+          $ref: '#/components/schemas/UnexpectedError'
+    put:
+      summary: Updates a particular phenotype or category by uuid in the repository and returns the result
+      operationId: updateEntityByUuid
+      tags:
+        - phenotype
+        - category
+      requestBody:
+        description: Phenotype or category details to be applied
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Entity'
+      responses:
+        200:
+          description: Details about the updated phenotype or category
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Entity'
+        401:
+          $ref: '#/components/schemas/Unauthorized'
+        404:
+          $ref: '#/components/schemas/NotFound'
+        default:
+          $ref: '#/components/schemas/UnexpectedError'
+    patch:
+      summary: Build a new release for the phenotype or category
+      operationId: releaseEntity
+      tags:
+        - phenotype
+        - category
+      responses:
+        200:
+          description: Details about the released phenotype or category
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Entity'
+        401:
+          $ref: '#/components/schemas/Unauthorized'
+        404:
+          $ref: '#/components/schemas/NotFound'
+        default:
+          $ref: '#/components/schemas/Error'
+    delete:
+      summary: Deletes a particular phenotype or category by uuid in the repository and returns the deleted phenotype or category
+      operationId: deleteEntityByUuid
+      tags:
+        - phenotype
+        - category
+      responses:
+        200:
+          description: Details about the deleted phenotype or category
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Entity'
+        401:
+          $ref: '#/components/schemas/Unauthorized'
+        404:
+          $ref: '#/components/schemas/NotFound'
+        default:
+          $ref: '#/components/schemas/UnexpectedError'
+
+  /code_system:
+    get:
+      summary: Searches for code systems
+      operationId: getCodeSystems
+      tags:
+        - code_system
+      parameters:
+        - name: name
+          in: query
+          schema:
+            type: string
+        - name: uri
+          in: query
+          schema:
+            type: string
+            format: uri
+      responses:
+        200:
+          description: List of matching code systems
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CodeSystem'
+        401:
+          $ref: '#/components/schemas/Unauthorized'
+        default:
+          $ref: '#/components/schemas/UnexpectedError'
+  
+  /code:
+    get:
+      summary: Searches for codes
+      operationId: getCodes
+      tags:
+        - code
+      parameters:
+        - name: name
+          in: query
+          schema:
+            type: string
+        - name: code
+          in: query
+          schema:
+            type: string
+        - name: codeSystemName
+          in: query
+          schema:
+            type: string
+        - name: codeSystemUri
+          in: query
+          schema:
+            type: string
+            format: uri
+      responses:
+        200:
+          description: List of matching codes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Code'
+        401:
+          $ref: '#/components/schemas/Unauthorized'
+        default:
+          $ref: '#/components/schemas/UnexpectedError'
+
+components:
+  responses:
+    NotFound:
+      description: The specified resource was not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Unauthorized:
+      description: Unauthorized, Access token is missing or invalid
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    UnexpectedError:
+      description: Unexpected error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  parameters:
+    page:
+      name: page
+      in: query
+      description: The desired page, if the resultset is paged.
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+        default: 1
+
+    include:
+      name: include
+      in: header
+      schema:
+        type: array
+        items:
+          type: string
+          pattern: '^\w*$'
+
+  schemas:
+    UserAccount:
+      type: object
+      required:
+        - username
+        - email
+      properties:
+        userAccountId:
+          type: integer
+          format: int32
+        username:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+          format: password
+        isAdmin:
+          description: Whether the user account is an administrator
+          type: boolean
+          default: false
+        createdAt:
+          type: string
+          format: date-time
+
+    Repository:
+      type: object
+      required:
+        - name
+      properties:
+        repositoryId:
+          type: integer
+          format: int32
+        name:
+          type: string
+        description:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        organisation:
+          $ref: '#/components/schemas/Organisation'
+
+    Ontology:
+      allOf:
+        - $ref: '#/components/schemas/VersionedContent'
+        - type: object
+          required:
+            - name
+          properties:
+            ontologyId:
+              type: integer
+              format: int32
+            name:
+              type: string
+            description:
+              type: string
+            repository:
+              $ref: '#/components/schemas/Repository'
+            organisation:
+              $ref: '#/components/schemas/Organisation'
+
+    Organisation:
+      type: object
+      required:
+        - name
+      properties:
+        organisationId:
+          type: integer
+          format: int32
+        name:
+          type: string
+        description:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        superOrganisation:
+          $ref: '#/components/schemas/Organisation'
+
+    Category:
+      allOf:
+        - $ref: '#/components/schemas/VersionedContent'
+        - type: object
+          required:
+            - type
+          properties:
+            uuid:
+              type: string
+              format: uuid
+            type:
+              $ref: '#/components/schemas/EntityType'
+            titles:
+              type: array
+              description: There should only be one title per language
+              items:
+                $ref: '#/components/schemas/LocalisableText'
+            synonyms:
+              type: array
+              items:
+                $ref: '#/components/schemas/LocalisableText'
+            descriptions:
+              type: array
+              items:
+                $ref: '#/components/schemas/LocalisableText'
+            index:
+              type: integer
+              format: int32
+              minimum: 1
+            codes:
+              type: array
+              items:
+                $ref: '#/components/schemas/Code'
+            superCategories:
+              type: array
+              items:
+                $ref: '#/components/schemas/Category'
+            repository:
+              $ref: '#/components/schemas/Repository'
+            equivalentEntities:
+              type: array
+              items:
+                $ref: '#/components/schemas/Entity'
+
+    Phenotype:
+      allOf:
+        - $ref: '#/components/schemas/Category'
+        - oneOf:
+          - $ref: '#/components/schemas/HasDataType'
+          - allOf:
+            - $ref: '#/components/schemas/HasDataType'
+            - $ref: '#/components/schemas/HasFormula'
+          - $ref: '#/components/schemas/HasRestriction'
+          - $ref: '#/components/schemas/HasExpression'
+        - type: object
+          properties:
+            units:
+              type: array
+              items:
+                type: object
+                properties:
+                  preferred:
+                    type: boolean
+                    default: false
+                    description: If there are multiple preferred units, the first one will be used
+                  unit:
+                    type: string
+                    minLength: 1
+            score:
+              type: number
+            superPhenotype:
+              $ref: '#/components/schemas/Phenotype'
+
+    Entity:
+      description: Either category or phenotype
+      oneOf:
+        - $ref: '#/components/schemas/Category'
+        - $ref: '#/components/schemas/Phenotype'
+
+    HasDataType:
+      type: object
+      required:
+        - dataType
+      properties:
+        dataType:
+          $ref: '#/components/schemas/EntityDataType'
+
+    HasFormula:
+      type: object
+      required:
+        - formula
+      properties:
+        formula:
+          type: string
+
+    HasRestriction:
+      type: object
+      required:
+        - restriction
+      properties:
+        restriction:
+          $ref: '#/components/schemas/Restriction'
+
+    HasExpression:
+      type: object
+      required:
+        - expression
+      properties:
+        expression:
+          $ref: '#/components/schemas/Expression'
+
+    Expression:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          enum: [union, intersection, complement, restriction]
+        id:
+          type: string
+          format: uuid
+          description: If type equals class or restriction, this property contains the id of that class or restriction
+        operands:
+          type: array
+          items:
+            $ref: '#/components/schemas/Expression'
+
+    VersionNumber:
+      description: Reflects the version of the content. The value is generated server-side.
+      type: integer
+      format: int32
+      minimum: 0
+
+    EntityType:
+      type: string
+      enum:
+        - category
+        - missing_value
+        - phenotype_group
+        - single_phenotype
+        - combined_phenotype
+        - derived_phenotype
+        - single_restriction
+        - combined_restriction
+        - derived_restriction
+    
+    EntityDataType:
+      type: string
+      enum: [string, number, boolean, date_time]
+
+    VersionedContent:
+      type: object
+      properties:
+        version:
+          $ref: '#/components/schemas/VersionNumber'
+        createdAt:
+          type: string
+          format: date-time
+        hiddenAt:
+          type: string
+          format: date-time
+        refer:
+          type: string
+          format: uri
+
+    LocalisableText:
+      description: A text in a specific language
+      type: object
+      required:
+        - lang
+        - text
+      properties:
+        lang:
+          description: ICU Locale code
+          type: string
+          pattern: '^[a-z]{2}(-[A-Z\-]+)?$'
+        text:
+          description: The actual localised text
+          type: string
+
+    CodeSystem:
+      type: object
+      required:
+        - uri
+        - name
+      properties:
+        uri:
+          type: string
+          format: uri
+        name:
+          type: string
+
+    Code:
+      description: Code of a code system
+      type: object
+      required:
+        - codeSystem
+        - code
+      properties:
+        codeSystem:
+          $ref: '#/components/schemas/CodeSystem'
+        code:
+          type: string
+        name:
+          type: string
+
+    Restriction:
+      description: Represents restriction of an abstract phenotype
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          enum: [string, number, date_time, boolean]
+        negated:
+          type: boolean
+          default: false
+        quantor:
+          $ref: '#/components/schemas/Quantor'
+        minOperator:
+          $ref: '#/components/schemas/RestrictionOperator'
+        maxOperator:
+          $ref: '#/components/schemas/RestrictionOperator'
+        values:
+          type: array
+          description: In case there are operators, the first two values are used as values for those operators
+          items:
+            $ref: '#/components/schemas/RestrictionValue'
+    
+    RestrictionValue:
+      description: Single value of a restriction
+      oneOf:
+        - type: string
+        - type: number
+        - type: boolean
+        - type: string
+          format: date-time
+
+    RestrictionOperator:
+      type: string
+      enum: ['<', '<=', '>', '>=']
+    
+    Quantor:
+      type: string
+      enum: ['none', 'exists', 'some', 'all']
+
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    BasicAuth:
+      type: http
+      scheme: basic
+
+security:
+  - BearerAuth: []
+  - BasicAuth: []
