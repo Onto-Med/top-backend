@@ -75,6 +75,12 @@
 			<artifactId>validation-api</artifactId>
 			<version>2.0.1.Final</version>
 		</dependency>
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<version>42.2.24</version>
+			<scope>runtime</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -106,6 +112,71 @@
 						</configuration>
 					</execution>
 				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.jooq</groupId>
+				<artifactId>jooq-codegen-maven</artifactId>
+
+				<executions>
+					<execution>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+					</execution>
+				</executions>
+
+				<configuration>
+					<jdbc>
+						<driver>org.postgresql.Driver</driver>
+						<!--suppress UnresolvedMavenProperty -->
+						<url>jdbc:postgresql://${env.DB_HOST}:${env.DB_PORT}/${env.DB_DATABASE}</url>
+						<!--suppress UnresolvedMavenProperty -->
+						<user>${env.DB_USER}</user>
+						<!--suppress UnresolvedMavenProperty -->
+						<password>${env.DB_PASS}</password>
+					</jdbc>
+
+					<generator>
+						<name>org.jooq.codegen.JavaGenerator</name>
+						<database>
+							<name>org.jooq.meta.postgres.PostgresDatabase</name>
+							<includes>.*</includes>
+							<inputSchema>public</inputSchema>
+							<includeRoutines>false</includeRoutines>
+							<forcedTypes>
+								<forcedType>
+									<name>text</name>
+									<includeTypes>citext</includeTypes>
+								</forcedType>
+							</forcedTypes>
+						</database>
+						<strategy>
+							<matchers>
+								<tables>
+									<table>
+										<expression>^(.*)class(.*)$</expression>
+										<tableClass>
+											<transform>PASCAL</transform>
+											<expression>$1clazz$2</expression>
+										</tableClass>
+									</table>
+								</tables>
+							</matchers>
+						</strategy>
+						<generate>
+							<pojos>true</pojos>
+							<pojosEqualsAndHashCode>true</pojosEqualsAndHashCode>
+							<javaTimeTypes>true</javaTimeTypes>
+							<fluentSetters>true</fluentSetters>
+						</generate>
+						<target>
+							<packageName>de.uni_leipzig.imise.top.data</packageName>
+							<directory>target/generated-sources/jooq</directory>
+						</target>
+					</generator>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>
