@@ -2,26 +2,29 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
+	<packaging>pom</packaging>
 
 	<groupId>de.uni_leipzig.imise.top</groupId>
 	<artifactId>top-backend</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>${revision}</version>
 
-	<name>top-backend</name>
-	<description>Demo project for Spring Boot</description>
+	<name>TOP Backend</name>
+	<description>Backend of the TOP Framework</description>
 
 	<properties>
+		<revision>0.0.1-SNAPSHOT</revision>
 		<java.version>11</java.version>
 		<maven.compiler.source>11</maven.compiler.source>
 		<maven.compiler.target>11</maven.compiler.target>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 
+	<modules>
+		<module>authorization-server</module>
+		<module>resource-server</module>
+	</modules>
+
 	<repositories>
-		<repository>
-			<id>top-api</id>
-			<url>https://maven.pkg.github.com/onto-med/top-api</url>
-		</repository>
 		<repository>
 			<id>generic-ontology-db</id>
 			<url>https://maven.pkg.github.com/onto-med/generic-ontology-db</url>
@@ -29,11 +32,6 @@
 	</repositories>
 
 	<dependencies>
-		<dependency>
-			<groupId>de.uni_leipzig.imise.top</groupId>
-			<artifactId>top-api</artifactId>
-			<version>0.1.2</version>
-		</dependency>
 		<dependency>
 			<groupId>de.uni_leipzig.imise.top</groupId>
 			<artifactId>generic-ontology-db</artifactId>
@@ -76,11 +74,29 @@
 	<build>
 		<plugins>
 			<plugin>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-maven-plugin</artifactId>
-				<version>2.5.6</version>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>flatten-maven-plugin</artifactId>
+				<version>1.0.0</version>
+				<configuration>
+					<updatePomFile>true</updatePomFile>
+				</configuration>
+				<executions>
+					<execution>
+						<id>flatten</id>
+						<phase>process-resources</phase>
+						<goals>
+							<goal>flatten</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>flatten.clean</id>
+						<phase>clean</phase>
+						<goals>
+							<goal>clean</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>
-
 </project>
