@@ -1,4 +1,4 @@
-package de.uni_leipzig.imise.top.backend.configuration;
+package de.uni_leipzig.imise.top.backend.resource.configuration;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;

@@ -1,4 +1,4 @@
-package de.uni_leipzig.imise.top.backend;
+package de.uni_leipzig.imise.top.backend.resource;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -8,8 +8,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EnableTransactionManagement
 public class TopBackendApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(TopBackendApplication.class, args);
-	}
-
+  public static void main(String[] args) {
+    SpringApplication.run(TopBackendApplication.class, args);
+  }
 }
