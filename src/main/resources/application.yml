@@ -15,4 +15,5 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:8081
+          issuer-url: http://localhost:8080/auth/realms/dev
+          jwk-set-uri: http://localhost:8080/auth/realms/{realm}/protocol/openid-connect/certs
