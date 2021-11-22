@@ -11,19 +11,26 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-import static de.uni_leipzig.imise.top.data.Tables.*;
+import static de.uni_leipzig.imise.top.data.Tables.DIRECTORY;
 
 @Service
 public class OrganisationApiDelegateImpl implements OrganisationApiDelegate {
   @Autowired DSLContext context;
 
   @Override
-  public ResponseEntity<Organisation> createOrganisation(Organisation organisation, List<String> include) {
+  public ResponseEntity<Organisation> createOrganisation(
+      Organisation organisation, List<String> include) {
+//    UserDetails userDetails =
+//        (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+//
+//    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, userDetails.getUsername());
+
     DirectoryRecord newRecord =
-      context.newRecord(DIRECTORY)
-        .setName(organisation.getName())
-        .setDescription(organisation.getDescription())
-        .setType("organisation");
+        context
+            .newRecord(DIRECTORY)
+            .setName(organisation.getName())
+            .setDescription(organisation.getDescription())
+            .setType("organisation");
     newRecord.store();
     newRecord.refresh();
 
