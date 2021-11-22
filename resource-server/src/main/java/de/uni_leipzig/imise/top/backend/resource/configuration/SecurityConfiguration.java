@@ -17,7 +17,6 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         .cors()
         .and()
         .authorizeRequests()
-      .antMatchers(HttpMethod.GET, "/ping").permitAll()
         .anyRequest()
         .permitAll()
         .and()
