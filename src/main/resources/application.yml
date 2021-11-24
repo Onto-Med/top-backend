@@ -1,3 +1,8 @@
+server:
+  port: ${APP_PORT}
+  servlet:
+    context-path: ${APP_PATH}
+
 spring:
   jooq:
     sql-dialect: Postgres
