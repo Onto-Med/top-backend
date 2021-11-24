@@ -1,5 +1,6 @@
-package de.uni_leipzig.imise.top.backend.api;
+package de.uni_leipzig.imise.top.backend.resource.api;
 
+import de.uni_leipzig.imise.top.backend.api.OrganisationNameApiDelegate;
 import de.uni_leipzig.imise.top.backend.model.Entity;
 import de.uni_leipzig.imise.top.backend.model.Organisation;
 import de.uni_leipzig.imise.top.data.tables.records.DirectoryRecord;

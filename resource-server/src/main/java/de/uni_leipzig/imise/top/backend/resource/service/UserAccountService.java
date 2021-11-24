@@ -1,4 +1,4 @@
-package de.uni_leipzig.imise.top.backend.service;
+package de.uni_leipzig.imise.top.backend.resource.service;
 
 import de.uni_leipzig.imise.top.data.tables.pojos.UserAccount;
 import de.uni_leipzig.imise.top.data.tables.records.UserAccountRecord;

@@ -11,3 +11,9 @@ spring:
     username: ${DB_USER}
     password: ${DB_PASS}
     driver-class-name: org.postgresql.Driver
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-url: http://localhost:8080/auth/realms/dev
+          jwk-set-uri: http://localhost:8080/auth/realms/dev/protocol/openid-connect/certs
