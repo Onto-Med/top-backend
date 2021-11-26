@@ -26,7 +26,7 @@
         <dependency>
             <groupId>de.uni_leipzig.imise.top</groupId>
             <artifactId>top-api</artifactId>
-            <version>0.1.5</version>
+            <version>0.1.6</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
