@@ -12,6 +12,8 @@ spring:
     password: ${DB_PASS}
     driver-class-name: org.postgresql.Driver
   security:
+    cors:
+      allowed-origins: "*"
     oauth2:
       resourceserver:
         jwt:
