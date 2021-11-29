@@ -1,8 +1,8 @@
-package de.uni_leipzig.imise.top.backend.resource.api;
+package care.smith.top.backend.resource.api;
 
-import de.uni_leipzig.imise.top.backend.api.OrganisationApiDelegate;
-import de.uni_leipzig.imise.top.backend.model.Organisation;
-import de.uni_leipzig.imise.top.data.tables.records.DirectoryRecord;
+import care.smith.top.backend.api.OrganisationApiDelegate;
+import care.smith.top.backend.model.Organisation;
+import care.smith.top.data.tables.records.DirectoryRecord;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-import static de.uni_leipzig.imise.top.data.Tables.DIRECTORY;
+import static care.smith.top.data.Tables.DIRECTORY;
 
 @Service
 public class OrganisationApiDelegateImpl implements OrganisationApiDelegate {

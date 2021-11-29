@@ -1,7 +1,7 @@
-package de.uni_leipzig.imise.top.backend.resource.service;
+package care.smith.top.backend.resource.service;
 
-import de.uni_leipzig.imise.top.backend.model.Phenotype;
-import de.uni_leipzig.imise.top.data.tables.records.ClassRecord;
+import care.smith.top.backend.model.Phenotype;
+import care.smith.top.data.tables.records.ClassRecord;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -10,7 +10,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.UUID;
 
-import static de.uni_leipzig.imise.top.data.Tables.CLASS;
+import static care.smith.top.data.Tables.CLASS;
 
 @Service
 public class PhenotypeService {

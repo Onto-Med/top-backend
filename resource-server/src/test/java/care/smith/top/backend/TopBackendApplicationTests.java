@@ -1,4 +1,4 @@
-package de.uni_leipzig.imise.top.backend;
+package care.smith.top.backend;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

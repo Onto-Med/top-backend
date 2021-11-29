@@ -1,13 +1,13 @@
-package de.uni_leipzig.imise.top.backend.resource.service;
+package care.smith.top.backend.resource.service;
 
-import de.uni_leipzig.imise.top.data.tables.pojos.UserAccount;
-import de.uni_leipzig.imise.top.data.tables.records.UserAccountRecord;
+import care.smith.top.data.tables.pojos.UserAccount;
+import care.smith.top.data.tables.records.UserAccountRecord;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import static de.uni_leipzig.imise.top.data.Tables.USER_ACCOUNT;
+import static care.smith.top.data.Tables.USER_ACCOUNT;
 
 @Service
 public class UserAccountService {
