@@ -20,10 +20,11 @@ public class OrganisationApiDelegateImpl implements OrganisationApiDelegate {
   @Override
   public ResponseEntity<Organisation> createOrganisation(
       Organisation organisation, List<String> include) {
-//    UserDetails userDetails =
-//        (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-//
-//    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, userDetails.getUsername());
+    // TODO: use below code to get current user
+    // UserDetails userDetails =
+    //   (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    //
+    // throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, userDetails.getUsername());
 
     DirectoryRecord newRecord =
         context
