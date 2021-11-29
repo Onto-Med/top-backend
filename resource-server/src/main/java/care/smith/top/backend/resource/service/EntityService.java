@@ -1,5 +1,6 @@
 package care.smith.top.backend.resource.service;
 
+import care.smith.top.backend.model.Entity;
 import care.smith.top.backend.model.Phenotype;
 import care.smith.top.data.tables.records.ClassRecord;
 import org.jooq.DSLContext;
@@ -16,15 +17,15 @@ import static care.smith.top.data.Tables.CLASS;
 public class EntityService {
   @Autowired DSLContext context;
 
-  public Phenotype loadPhenotypeById(String id) {
+  public Entity loadEntityById(String id) {
     ClassRecord record = context.fetchOne(CLASS, CLASS.UUID.eq(UUID.fromString(id)));
     if (record == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
 
-    return mapToPhenotype(record);
+    return mapToEntity(record);
   }
 
-  private Phenotype mapToPhenotype(ClassRecord record) {
+  private Entity mapToEntity(ClassRecord record) {
     // TODO: mapping from DB
-    return new Phenotype();
+    return new Entity();
   }
 }
