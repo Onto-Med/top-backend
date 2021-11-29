@@ -1,7 +1,6 @@
 package care.smith.top.backend.resource.service;
 
 import care.smith.top.backend.model.Entity;
-import care.smith.top.backend.model.Phenotype;
 import care.smith.top.data.tables.records.ClassRecord;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,15 +16,19 @@ import static care.smith.top.data.Tables.CLASS;
 public class EntityService {
   @Autowired DSLContext context;
 
-  public Entity loadEntityById(String id) {
-    ClassRecord record = context.fetchOne(CLASS, CLASS.UUID.eq(UUID.fromString(id)));
+  public Entity loadEntity(
+      String organisationName, String repositoryName, UUID id, Integer version) {
+    ClassRecord record = context.fetchOne(CLASS, CLASS.UUID.eq(id));
     if (record == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
 
     return mapToEntity(record);
   }
 
   private Entity mapToEntity(ClassRecord record) {
-    // TODO: mapping from DB
-    return new Entity();
+    Entity entity = new Entity();
+    entity.setId(record.getUuid());
+    // TODO: implement mapping from DB...
+
+    return entity;
   }
 }

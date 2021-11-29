@@ -3,6 +3,7 @@ package care.smith.top.backend.resource.api;
 import care.smith.top.backend.api.OrganisationNameApiDelegate;
 import care.smith.top.backend.model.Entity;
 import care.smith.top.backend.model.Organisation;
+import care.smith.top.backend.resource.service.EntityService;
 import care.smith.top.backend.resource.service.OrganisationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -15,6 +16,7 @@ import java.util.UUID;
 @Service
 public class OrganisationNameApiDelegateImpl implements OrganisationNameApiDelegate {
   @Autowired OrganisationService organisationService;
+  @Autowired EntityService entityService;
 
   @Override
   public ResponseEntity<Entity> createEntity(
@@ -29,8 +31,8 @@ public class OrganisationNameApiDelegateImpl implements OrganisationNameApiDeleg
       UUID id,
       Integer version,
       List<String> include) {
-    return OrganisationNameApiDelegate.super.getEntityById(
-        organisationName, repositoryName, id, version, include);
+    return new ResponseEntity<>(
+        entityService.loadEntity(organisationName, repositoryName, id, version), HttpStatus.OK);
   }
 
   @Override
