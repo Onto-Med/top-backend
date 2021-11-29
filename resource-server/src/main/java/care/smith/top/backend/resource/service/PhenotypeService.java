@@ -18,15 +18,13 @@ public class PhenotypeService {
 
   public Phenotype loadPhenotypeById(String id) {
     ClassRecord record = context.fetchOne(CLASS, CLASS.UUID.eq(UUID.fromString(id)));
-
     if (record == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
 
-    Phenotype phenotype = new Phenotype();
-    // TODO: mapping from DB
-    return phenotype;
+    return mapToPhenotype(record);
   }
 
-  private Phenotype maptoPhenotype(ClassRecord record) {
-    return null;
+  private Phenotype mapToPhenotype(ClassRecord record) {
+    // TODO: mapping from DB
+    return new Phenotype();
   }
 }
