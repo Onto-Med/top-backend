@@ -20,6 +20,10 @@
             <id>top-api</id>
             <url>https://maven.pkg.github.com/onto-med/top-api</url>
         </repository>
+        <repository>
+            <id>simple-onto-api</id>
+            <url>https://maven.pkg.github.com/onto-med/simple-onto-api</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -27,6 +31,11 @@
             <groupId>de.uni_leipzig.imise.top</groupId>
             <artifactId>top-api</artifactId>
             <version>0.1.6</version>
+        </dependency>
+        <dependency>
+            <groupId>care.smith.top.simple_onto_api</groupId>
+            <artifactId>simple-onto-api</artifactId>
+            <version>0.0.2</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
