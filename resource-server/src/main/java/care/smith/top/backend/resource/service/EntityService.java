@@ -13,7 +13,7 @@ import java.util.UUID;
 import static care.smith.top.data.Tables.CLASS;
 
 @Service
-public class PhenotypeService {
+public class EntityService {
   @Autowired DSLContext context;
 
   public Phenotype loadPhenotypeById(String id) {
