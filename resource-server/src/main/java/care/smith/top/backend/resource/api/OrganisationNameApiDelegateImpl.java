@@ -36,6 +36,17 @@ public class OrganisationNameApiDelegateImpl implements OrganisationNameApiDeleg
   }
 
   @Override
+  public ResponseEntity<Entity> deleteEntityById(
+      String organisationName,
+      String repositoryName,
+      UUID id,
+      Integer version,
+      List<String> include) {
+    entityService.deleteEntity(organisationName, repositoryName, id, version);
+    return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+  }
+
+  @Override
   public ResponseEntity<Organisation> deleteOrganisationByName(
       String organisationName, List<String> include) {
     organisationService.deleteOrganisationByName(organisationName);
