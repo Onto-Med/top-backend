@@ -32,11 +32,11 @@
             <artifactId>top-api</artifactId>
             <version>0.1.6</version>
         </dependency>
-        <!-- <dependency>
-            <groupId>care.smith.top.simple_onto_api</groupId>
-            <artifactId>simple-onto-api</artifactId>
-            <version>0.0.2</version>
-        </dependency> -->
+        <dependency>
+           <groupId>care.smith.top.simple_onto_api</groupId>
+           <artifactId>simple-onto-api</artifactId>
+           <version>0.0.4</version>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
