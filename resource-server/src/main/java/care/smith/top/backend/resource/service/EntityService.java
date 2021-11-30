@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 import static care.smith.top.data.Tables.CLASS_VERSION;
@@ -28,7 +29,8 @@ public class EntityService {
       String organisationName, String repositoryName, UUID id, Integer version) {
     ClassVersionRecord record = loadEntityRecord(organisationName, repositoryName, id, version);
     if (record == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-    record.delete();
+    record.setHiddenAt(OffsetDateTime.now());
+    record.update();
   }
 
   private Entity mapToEntity(ClassVersionRecord record) {
