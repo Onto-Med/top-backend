@@ -1,10 +1,8 @@
 package care.smith.top.backend.resource.api;
 
-import care.smith.top.backend.api.OrganisationNameApiDelegate;
+import care.smith.top.backend.api.EntityApiDelegate;
 import care.smith.top.backend.model.Entity;
-import care.smith.top.backend.model.Organisation;
 import care.smith.top.backend.resource.service.EntityService;
-import care.smith.top.backend.resource.service.OrganisationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,8 +12,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
-public class OrganisationNameApiDelegateImpl implements OrganisationNameApiDelegate {
-  @Autowired OrganisationService organisationService;
+public class EntityApiDelegateImpl implements EntityApiDelegate {
   @Autowired EntityService entityService;
 
   @Override
@@ -36,20 +33,14 @@ public class OrganisationNameApiDelegateImpl implements OrganisationNameApiDeleg
   }
 
   @Override
-  public ResponseEntity<Entity> deleteEntityById(
+  public ResponseEntity<Void> deleteEntityById(
       String organisationName,
       String repositoryName,
       UUID id,
       Integer version,
-      List<String> include) {
-    entityService.deleteEntity(organisationName, repositoryName, id, version);
-    return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-  }
-
-  @Override
-  public ResponseEntity<Organisation> deleteOrganisationByName(
-      String organisationName, List<String> include) {
-    organisationService.deleteOrganisationByName(organisationName);
+      List<String> include,
+      Boolean permanent) {
+    entityService.deleteEntity(organisationName, repositoryName, id, version, permanent);
     return new ResponseEntity<>(HttpStatus.NO_CONTENT);
   }
 }

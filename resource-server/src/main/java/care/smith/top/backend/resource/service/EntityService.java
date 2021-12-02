@@ -33,11 +33,16 @@ public class EntityService {
   }
 
   public void deleteEntity(
-      String organisationName, String repositoryName, UUID id, Integer version) {
+      String organisationName, String repositoryName, UUID id, Integer version, boolean permanent) {
     ClassVersionRecord record = loadEntityRecord(organisationName, repositoryName, id, version);
     if (record == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-    record.setHiddenAt(OffsetDateTime.now());
-    record.update();
+
+    if (permanent) {
+      record.delete();
+    } else {
+      record.setHiddenAt(OffsetDateTime.now());
+      record.update();
+    }
   }
 
   private Entity mapToEntity(ClassVersionRecord record) {

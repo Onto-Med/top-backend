@@ -20,4 +20,11 @@ public class OrganisationApiDelegateImpl implements OrganisationApiDelegate {
     return new ResponseEntity<>(
         organisationService.createOrganisation(organisation), HttpStatus.CREATED);
   }
+
+  @Override
+  public ResponseEntity<Void> deleteOrganisationByName(
+      String organisationName, List<String> include) {
+    organisationService.deleteOrganisationByName(organisationName);
+    return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+  }
 }
