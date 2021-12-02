@@ -12,22 +12,22 @@ import static care.smith.top.data.Tables.DIRECTORY;
 
 @Service
 public class OrganisationService {
-  @Autowired
-  DSLContext context;
+  @Autowired DSLContext context;
 
   public Organisation createOrganisation(Organisation organisation) {
     // TODO: use below code to get current user
     // UserDetails userDetails =
     //   (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     //
-    // throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, userDetails.getUsername());
+    // throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+    // userDetails.getUsername());
 
     DirectoryRecord newRecord =
-      context
-        .newRecord(DIRECTORY)
-        .setName(organisation.getName())
-        .setDescription(organisation.getDescription())
-        .setType("organisation");
+        context
+            .newRecord(DIRECTORY)
+            .setName(organisation.getName())
+            .setDescription(organisation.getDescription())
+            .setType("organisation");
     newRecord.store();
     newRecord.refresh();
 
@@ -40,7 +40,7 @@ public class OrganisationService {
     return created;
   }
 
-  public Organisation deleteOrganisationByName(String organisationName) {
+  public void deleteOrganisationByName(String organisationName) {
     DirectoryRecord record = context.fetchOne(DIRECTORY, DIRECTORY.NAME.eq(organisationName));
     if (record == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
 
@@ -51,6 +51,5 @@ public class OrganisationService {
     organisation.setCreatedAt(record.getCreatedAt());
 
     record.delete();
-    return organisation;
   }
 }
