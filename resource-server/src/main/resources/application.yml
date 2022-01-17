@@ -3,14 +3,17 @@ server:
   servlet:
     context-path: ${APP_PATH}
 
+logging:
+  level:
+    root: DEBUG
+
 spring:
-  jooq:
-    sql-dialect: Postgres
-  datasource:
-    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_DATABASE}
-    username: ${DB_USER}
-    password: ${DB_PASS}
-    driver-class-name: org.postgresql.Driver
+  neo4j:
+    uri: bolt://${DB_HOST}:${DB_PORT}
+  data:
+    neo4j:
+      username: ${DB_USER}
+      password: ${DB_PASS}
   security:
     cors:
       allowed-origins: "*"
