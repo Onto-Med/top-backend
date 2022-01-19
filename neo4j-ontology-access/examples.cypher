@@ -56,3 +56,8 @@ CREATE
     (class_rel1) -[:BELONGS_TO]-> (public_repo),
     (class_rel2) -[:BELONGS_TO]-> (help_repo),
     (class_rel3) -[:BELONGS_TO]-> (help_repo)
+
+// example vor versioned annotation
+WITH public_weight
+CALL graph.versioner.init('Annotation', { value: 'Weight',  language: 'en', index: 1, property: 'title', datatype: 'string' }) YIELD node AS title_en
+CALL graph.versioner.relationship.create(public_weight, title_en, 'HAS_ANNOTATION') YIELD relationship RETURN relationship
