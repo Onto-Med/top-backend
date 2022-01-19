@@ -15,18 +15,37 @@ CREATE
     (help_repo:Repository   { name: 'HELP',              created_at: datetime(), description: 'Guideline-based Use of Antibiotics in Infectious Medicine' }),
 
     (public_repo) -[:BELONGS_TO]-> (imise),
-    (help_repo)   -[:BELONGS_TO]-> (nwg),
+    (help_repo)   -[:BELONGS_TO]-> (nwg)
 
+WITH public_repo, help_repo
 
-    // Classes:
-    (public_weight:Class     { uuid: apoc.create.uuid(), name: 'weight',          created_at: datetime() }),
-    (private_weight:Class    { uuid: apoc.create.uuid(), name: 'weight',          created_at: datetime() }),
-    (restricted_weight:Class { uuid: apoc.create.uuid(), name: 'weight_gt_100kg', created_at: datetime() }),
+// Classes:
+CALL graph.versioner.init('Class', { uuid: apoc.create.uuid() }, { name: 'weight', version: 1 }) YIELD node AS public_weight
+CALL graph.versioner.update(public_weight, { name: 'body_weight', version: 2 }) YIELD node
+CALL graph.versioner.init('Class', { uuid: apoc.create.uuid() }, { name: 'weight', version: 1 }) YIELD node AS private_weight
+CALL graph.versioner.init('Class', { uuid: apoc.create.uuid() }, { name: 'weight_gt_100kg', version: 1 }) YIELD node AS restricted_weight
 
-    (public_weight)     -[:HAS_ORIGIN]-> (public_repo),
-    (private_weight)    -[:HAS_ORIGIN]-> (help_repo),
-    (restricted_weight) -[:HAS_ORIGIN]-> (help_repo),
-    (private_weight)    -[:IS_FORK_OF]-> (public_weight),
+CALL graph.versioner.get.nth.state(public_weight, 1) YIELD node AS public_version
+CALL graph.versioner.get.current.state(private_weight) YIELD node AS private_version
+CALL graph.versioner.get.current.state(restricted_weight) YIELD node AS restricted_version
+
+// Annotations:
+CREATE
+    (private_version) -[:IS_EQUIVALENT_TO]-> (public_version),
+
+    (public_version) -[:HAS_ANNOTATION]-> (:Annotation:String:Title    { value: 'Weight',  language: 'en', index: 1 }),
+    (public_version) -[:HAS_ANNOTATION]-> (:Annotation:String:Title    { value: 'Gewicht', language: 'de', index: 2 }),
+    (public_version) -[:HAS_ANNOTATION]-> (:Annotation:String:Unit     { value: 'kg' }),
+    (public_version) -[:HAS_ANNOTATION]-> (:Annotation:String:Datatype { value: 'decimal' }),
+
+    (restricted_version) -[:HAS_ANNOTATION]-> (:Annotation:String:Title { value: 'Weight > 100 kg', language: 'en', index: 1 }),
+    (restricted_version) -[:HAS_ANNOTATION]-> (:Annotation:String:Title { value: 'Gewicht > 100 kg', language: 'de', index: 2 })
+
+CREATE
+    // (public_weight)     -[:HAS_ORIGIN]-> (public_repo),
+    // (private_weight)    -[:HAS_ORIGIN]-> (help_repo),
+    // (restricted_weight) -[:HAS_ORIGIN]-> (help_repo),
+    (private_weight) -[:IS_FORK_OF]-> (public_weight),
 
 
     // Relations
@@ -36,20 +55,4 @@ CREATE
 
     (class_rel1) -[:BELONGS_TO]-> (public_repo),
     (class_rel2) -[:BELONGS_TO]-> (help_repo),
-    (class_rel3) -[:BELONGS_TO]-> (help_repo),
-
-
-    // Annotations:
-    (public_weight) <-[:ANNOTATES]- (:Annotation { property: 'title',    value: 'Weight',  type: 'string', language: 'en', index: 1 }),
-    (public_weight) <-[:ANNOTATES]- (:Annotation { property: 'title',    value: 'Gewicht', type: 'string', language: 'de', index: 2 }),
-    (public_weight) <-[:ANNOTATES]- (:Annotation { property: 'unit',     value: 'kg',      type: 'string' }),
-    (public_weight) <-[:ANNOTATES]- (:Annotation { property: 'datatype', value: 'decimal', type: 'string' }),
-
-    (restricted_weight) <-[:ANNOTATES]- (:Annotation { property: 'title', value: 'Weight > 100 kg',  type: 'string', language: 'en', index: 1 }),
-    (restricted_weight) <-[:ANNOTATES]- (:Annotation { property: 'title', value: 'Gewicht > 100 kg', type: 'string', language: 'de', index: 2 });
-
-
-// Equivalent class versions (https://github.com/h-omer/neo4j-versioner-core):
-CALL graph.versioner.get.current.state(private_weight) YIELD private_version
-CALL graph.versioner.get.current.state(public_weight)  YIELD public_version
-CREATE (private_version) -[:IS_EQUIVALENT_TO]-> (public_version);
+    (class_rel3) -[:BELONGS_TO]-> (help_repo)
