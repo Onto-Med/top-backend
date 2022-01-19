@@ -11,7 +11,7 @@ CREATE
 
 
     // Repositories:
-    (public_repo:Repository { name: 'Public Repository', created_at: datetime(), is_primary: true },
+    (public_repo:Repository { name: 'Public Repository', created_at: datetime(), is_primary: true }),
     (help_repo:Repository   { name: 'HELP',              created_at: datetime(), description: 'Guideline-based Use of Antibiotics in Infectious Medicine' }),
 
     (public_repo) -[:BELONGS_TO]-> (imise),
