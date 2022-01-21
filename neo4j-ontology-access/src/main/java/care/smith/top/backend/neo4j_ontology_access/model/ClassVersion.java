@@ -1,6 +1,7 @@
 package care.smith.top.backend.neo4j_ontology_access.model;
 
 import org.springframework.data.annotation.Version;
+import org.springframework.data.neo4j.core.schema.GeneratedValue;
 import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Relationship;
@@ -18,7 +19,7 @@ import java.util.UUID;
  */
 @Node
 public class ClassVersion extends Annotatable {
-  @Id private UUID id;
+  @Id @GeneratedValue private long id;
   @Version private long version;
 
   @Relationship(type = "HAS_EXPRESSION")
@@ -27,13 +28,7 @@ public class ClassVersion extends Annotatable {
   @Relationship(type = "IS_EQUIVALENT_TO")
   private Set<ClassVersion> equivalentClasses;
 
-  public ClassVersion() {
-    this.id = UUID.randomUUID();
-  }
-
-  public ClassVersion(UUID id) {
-    this.id = id;
-  }
+  public ClassVersion() {}
 
   public ClassVersion addExpression(Expression expression) {
     return addExpressions(Collections.singleton(expression));
@@ -64,7 +59,7 @@ public class ClassVersion extends Annotatable {
     return this;
   }
 
-  public UUID getId() {
+  public long getId() {
     return id;
   }
 

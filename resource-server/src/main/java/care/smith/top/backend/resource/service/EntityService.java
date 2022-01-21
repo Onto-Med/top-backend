@@ -1,9 +1,10 @@
 package care.smith.top.backend.resource.service;
 
 import care.smith.top.backend.model.Entity;
+import care.smith.top.backend.resource.repository.ClassRepository;
 import care.smith.top.backend.neo4j_ontology_access.model.Annotation;
+import care.smith.top.backend.neo4j_ontology_access.model.Class;
 import care.smith.top.backend.neo4j_ontology_access.model.ClassVersion;
-import care.smith.top.backend.neo4j_ontology_access.OntologyRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -14,13 +15,14 @@ import java.util.stream.Collectors;
 
 @Service
 public class EntityService {
-  @Autowired
-  OntologyRepository ontologyRepository;
+  @Autowired ClassRepository classRepository;
 
   public Entity createEntity(String organisationName, String repositoryName, Entity entity) {
-    ClassVersion cls = new ClassVersion(entity.getId());
+    Class cls = new Class(entity.getId());
+    ClassVersion version = new ClassVersion();
 
-    cls.addAnnotations(
+    version
+        .addAnnotations(
             entity.getTitles().stream()
                 .map(t -> new Annotation("title", t.getText(), t.getLang(), null))
                 .collect(Collectors.toSet()))
@@ -33,23 +35,26 @@ public class EntityService {
                 .map(d -> new Annotation("description", d.getText(), d.getLang(), null))
                 .collect(Collectors.toSet()));
 
-    ontologyRepository.save(cls);
+    cls.createVersion(version).setCurrentVersion(version);
+
+    classRepository.save(cls);
     return entity;
   }
 
   public Entity loadEntity(
       String organisationName, String repositoryName, UUID id, Integer version) {
-    ClassVersion cls = ontologyRepository.findClassById(id);
+    Class cls = classRepository.findClassByUuid(id);
     if (cls == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
     Entity entity = new Entity();
-    entity.setId(cls.getId());
+    entity.setId(cls.getUuid());
+    // ...
     return entity;
   }
 
   public void deleteEntity(
       String organisationName, String repositoryName, UUID id, Integer version, boolean permanent) {
-    ClassVersion cls = ontologyRepository.findClassById(id);
+    Class cls = classRepository.findClassByUuid(id);
     // TODO: delete annotations
-    ontologyRepository.delete(cls);
+    classRepository.delete(cls);
   }
 }
