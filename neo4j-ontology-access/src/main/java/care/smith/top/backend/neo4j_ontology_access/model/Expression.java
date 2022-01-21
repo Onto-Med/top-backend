@@ -42,23 +42,26 @@ public class Expression {
     return type;
   }
 
-  public void setType(String type) {
+  public Expression setType(String type) {
     this.type = type;
+    return this;
   }
 
   public Integer getIndex() {
     return index;
   }
 
-  public void setIndex(Integer index) {
+  public Expression setIndex(Integer index) {
     this.index = index;
+    return this;
   }
 
   public Set<ClassVersion> getComponents() {
     return components;
   }
 
-  public void setComponents(Set<ClassVersion> components) {
+  public Expression setComponents(Set<ClassVersion> components) {
     this.components = components;
+    return this;
   }
 }
