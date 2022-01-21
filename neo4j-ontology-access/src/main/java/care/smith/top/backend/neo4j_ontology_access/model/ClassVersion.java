@@ -4,15 +4,16 @@ import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Relationship;
 
+import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
 /**
  * Example:
  *
- * <p>(:Class { id: '3fa85f64-5717-4562-b3fc-2c963f66afa6' }) -[:HAS_ANNOTATION]-> (:Annotation)
+ * <p>(:ClassVersion { id: '3fa85f64-5717-4562-b3fc-2c963f66afa6' }) -[:HAS_ANNOTATION]->
+ * (:Annotation)
  */
 @Node
 public class ClassVersion extends Annotatable {
@@ -30,6 +31,20 @@ public class ClassVersion extends Annotatable {
     this.id = id;
   }
 
+  public ClassVersion addExpression(Expression expression) {
+    return addExpressions(Collections.singleton(expression));
+  }
+
+  public ClassVersion addExpressions(Set<Expression> expressions) {
+    if (this.expressions == null) this.expressions = new HashSet<>();
+    this.expressions.addAll(expressions);
+    return this;
+  }
+
+  public void setExpressions(Set<Expression> expressions) {
+    this.expressions = expressions;
+  }
+
   public UUID getId() {
     return id;
   }
@@ -37,15 +52,4 @@ public class ClassVersion extends Annotatable {
   public int getVersion() {
     return version;
   }
-
-  public void setVersion(int version) {
-    this.version = version;
-  }
-
-  public ClassVersion addExpression(Expression... expressions) {
-    if (this.expressions == null) this.expressions = new HashSet<>();
-    this.expressions.addAll(List.of(expressions));
-    return this;
-  }
-
 }
