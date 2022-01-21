@@ -5,7 +5,7 @@ server:
 
 logging:
   level:
-    root: DEBUG
+    root: INFO
 
 spring:
   neo4j:
