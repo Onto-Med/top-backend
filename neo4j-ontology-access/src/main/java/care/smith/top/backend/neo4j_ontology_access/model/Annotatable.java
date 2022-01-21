@@ -2,6 +2,7 @@ package care.smith.top.backend.neo4j_ontology_access.model;
 
 import org.springframework.data.neo4j.core.schema.Relationship;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -10,9 +11,7 @@ public abstract class Annotatable {
   protected Set<Annotation> annotations;
 
   public Annotatable addAnnotation(Annotation annotation) {
-    if (this.annotations == null) this.annotations = new HashSet<>();
-    this.annotations.add(annotation);
-    return this;
+    return addAnnotations(Collections.singleton(annotation));
   }
 
   public Annotatable addAnnotations(Set<Annotation> annotations) {
