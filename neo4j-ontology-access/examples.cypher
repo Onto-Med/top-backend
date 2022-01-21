@@ -20,10 +20,10 @@ CREATE
 WITH public_repo, help_repo
 
 // Classes:
-CALL graph.versioner.init('Class', { uuid: apoc.create.uuid() }, { name: 'weight', version: 1 }) YIELD node AS public_weight
+CALL graph.versioner.init('Class', { uuid: randomUUID() }, { name: 'weight', version: 1 }) YIELD node AS public_weight
 CALL graph.versioner.update(public_weight, { name: 'body_weight', version: 2 }) YIELD node
-CALL graph.versioner.init('Class', { uuid: apoc.create.uuid() }, { name: 'weight', version: 1 }) YIELD node AS private_weight
-CALL graph.versioner.init('Class', { uuid: apoc.create.uuid() }, { name: 'weight_gt_100kg', version: 1 }) YIELD node AS restricted_weight
+CALL graph.versioner.init('Class', { uuid: randomUUID() }, { name: 'weight', version: 1 }) YIELD node AS private_weight
+CALL graph.versioner.init('Class', { uuid: randomUUID() }, { name: 'weight_gt_100kg', version: 1 }) YIELD node AS restricted_weight
 
 CALL graph.versioner.get.nth.state(public_weight, 1) YIELD node AS public_version
 CALL graph.versioner.get.current.state(private_weight) YIELD node AS private_version
