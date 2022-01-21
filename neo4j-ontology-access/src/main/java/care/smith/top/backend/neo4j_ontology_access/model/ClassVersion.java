@@ -24,6 +24,9 @@ public class ClassVersion extends Annotatable {
   @Relationship(type = "HAS_EXPRESSION")
   private Set<Expression> expressions;
 
+  @Relationship(type = "IS_EQUIVALENT_TO")
+  private Set<ClassVersion> equivalentClasses;
+
   public ClassVersion() {
     this.id = UUID.randomUUID();
   }
@@ -44,6 +47,21 @@ public class ClassVersion extends Annotatable {
 
   public void setExpressions(Set<Expression> expressions) {
     this.expressions = expressions;
+  }
+
+  public ClassVersion addEquivalentClass(ClassVersion equivalentClass) {
+    return addEquivalentClasses(Collections.singleton(equivalentClass));
+  }
+
+  public ClassVersion addEquivalentClasses(Set<ClassVersion> equivalentClasses) {
+    if (this.equivalentClasses == null) this.equivalentClasses = new HashSet<>();
+    this.equivalentClasses.addAll(equivalentClasses);
+    return this;
+  }
+
+  public ClassVersion setEquivalentClasses(Set<ClassVersion> equivalentClasses) {
+    this.equivalentClasses = equivalentClasses;
+    return this;
   }
 
   public UUID getId() {
