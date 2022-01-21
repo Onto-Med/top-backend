@@ -1,5 +1,6 @@
 package care.smith.top.backend.neo4j_ontology_access.model;
 
+import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;
@@ -10,7 +11,7 @@ import java.util.Set;
 import java.util.UUID;
 
 @Node
-public class Class {
+public class Class extends Annotatable {
   @Id private final UUID uuid;
 
   @Relationship(type = "IS_FORK_OF")
@@ -22,10 +23,7 @@ public class Class {
   @Relationship(type = "CURRENT_VERSION")
   private ClassVersion currentVersion;
 
-  public Class() {
-    this.uuid = UUID.randomUUID();
-  }
-
+  @PersistenceConstructor
   public Class(UUID uuid) {
     this.uuid = uuid;
   }
