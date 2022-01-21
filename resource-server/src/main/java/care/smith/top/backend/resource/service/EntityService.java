@@ -1,8 +1,9 @@
 package care.smith.top.backend.resource.service;
 
 import care.smith.top.backend.model.Entity;
-import care.smith.top.backend.neo4j_ontology_access.Annotation;
-import care.smith.top.backend.neo4j_ontology_access.ClassVersion;
+import care.smith.top.backend.neo4j_ontology_access.model.Annotation;
+import care.smith.top.backend.neo4j_ontology_access.model.ClassVersion;
+import care.smith.top.backend.neo4j_ontology_access.OntologyRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -13,7 +14,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class EntityService {
-  @Autowired OntologyRepository ontologyRepository;
+  @Autowired
+  OntologyRepository ontologyRepository;
 
   public Entity createEntity(String organisationName, String repositoryName, Entity entity) {
     ClassVersion cls = new ClassVersion(entity.getId());
