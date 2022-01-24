@@ -12,7 +12,7 @@ import org.springframework.security.core.userdetails.User;
 import java.time.Instant;
 
 @Node
-public class OntologyVersion {
+public class OntologyVersion implements ClassRelationOwner {
   @Id @GeneratedValue private Long nodeId;
   @Version private Long nodeVersion;
   @CreatedBy private User createdBy;

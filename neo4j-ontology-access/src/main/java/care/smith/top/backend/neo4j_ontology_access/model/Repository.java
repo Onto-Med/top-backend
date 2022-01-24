@@ -4,7 +4,7 @@ import org.springframework.data.neo4j.core.schema.Node;
 
 /** Repositories are included in {@link Directory}s and can contain ontologies and classes. */
 @Node
-public class Repository extends Directory {
+public class Repository extends Directory implements ClassRelationOwner {
   /** Determins whether this repository is a primary (aka. public) repository. */
   private boolean primary;
 

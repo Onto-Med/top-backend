@@ -18,7 +18,7 @@ public class ClassRelation {
   private Class superclass;
 
   @Relationship(type = "BELONGS_TO")
-  private Repository repository;
+  private ClassRelationOwner owner;
 
   @PersistenceConstructor
   public ClassRelation(Long id) {
@@ -38,12 +38,12 @@ public class ClassRelation {
     return this;
   }
 
-  public Directory getRepository() {
-    return repository;
+  public ClassRelationOwner getRepository() {
+    return owner;
   }
 
-  public ClassRelation setRepository(Repository repository) {
-    this.repository = repository;
+  public ClassRelation setRepository(ClassRelationOwner owner) {
+    this.owner = owner;
     return this;
   }
 }
