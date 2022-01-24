@@ -35,7 +35,7 @@ public class OrganisationService {
     directory = directoryRepository.save(directory);
 
     Organisation result = new Organisation();
-    result.setOrganisationId(Integer.parseInt(directory.getIdentifier()));
+    result.setOrganisationId(Integer.parseInt(directory.getId()));
     result.setName(directory.getName());
     result.setDescription(directory.getDescription());
     result.setCreatedAt(directory.getCreatedAt().atOffset(ZoneOffset.UTC));

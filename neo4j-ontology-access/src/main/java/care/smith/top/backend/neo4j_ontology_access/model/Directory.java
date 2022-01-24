@@ -62,7 +62,7 @@ public class Directory {
     return this;
   }
 
-  public String getIdentifier() {
+  public String getId() {
     return id;
   }
 
