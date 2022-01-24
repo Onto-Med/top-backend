@@ -34,10 +34,5 @@
             <artifactId>spring-boot-starter-data-neo4j</artifactId>
             <version>${spring.boot.version}</version>
         </dependency>
-        <dependency>
-            <groupId>care.smith.top.simple_onto_api</groupId>
-            <artifactId>simple-onto-api</artifactId>
-            <version>0.0.4</version>
-        </dependency>
     </dependencies>
 </project>

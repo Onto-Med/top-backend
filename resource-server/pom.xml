@@ -31,7 +31,7 @@
         <dependency>
             <groupId>care.smith.top</groupId>
             <artifactId>top-api</artifactId>
-            <version>0.1.7</version>
+            <version>0.1.8</version>
         </dependency>
         <dependency>
            <groupId>care.smith.top.simple_onto_api</groupId>
@@ -55,7 +55,7 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-                <version>2.5.6</version>
+                <version>${spring.boot.version}</version>
             </plugin>
         </plugins>
     </build>
