@@ -27,6 +27,7 @@ public class EntityService {
   @Autowired AnnotationRepository annotationRepository;
   @Autowired ExpressionRepository expressionRepository;
 
+  @Transactional
   public Entity createEntity(String organisationName, String repositoryName, Entity entity) {
     if (classRepository.existsById(entity.getId()))
       throw new ResponseStatusException(HttpStatus.CONFLICT);
