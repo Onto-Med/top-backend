@@ -1,12 +1,16 @@
 package care.smith.top.backend.neo4j_ontology_access.model;
 
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.neo4j.core.schema.GeneratedValue;
 import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Relationship;
+import org.springframework.security.core.userdetails.User;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -14,13 +18,21 @@ import java.util.Set;
 /**
  * Example:
  *
- * <p>(:ClassVersion { id: '3fa85f64-5717-4562-b3fc-2c963f66afa6' }) -[:HAS_ANNOTATION]->
- * (:Annotation)
+ * <p>(:ClassVersion { id: '3fa85f64-5717-4562-b3fc-2c963f66afa6', name: 'weight', createdAt:
+ * datetime(), hiddenAt: null }) -[:HAS_ANNOTATION]-> (:Annotation)
  */
 @Node
 public class ClassVersion extends Annotatable {
   @Id @GeneratedValue private Long id;
   @Version private long version;
+
+  private String name;
+
+  @CreatedBy private User user;
+
+  @CreatedDate private LocalDateTime createdAt;
+
+  private LocalDateTime hiddenAt;
 
   @Relationship(type = "HAS_EXPRESSION")
   private Set<Expression> expressions;

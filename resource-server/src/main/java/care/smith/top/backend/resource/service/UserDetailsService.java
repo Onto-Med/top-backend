@@ -6,7 +6,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 @Service
-public class UserAccountService {
+public class UserDetailsService {
 //  @Autowired DSLContext context;
 
   public UserAccount loadUserAccountByUsername(String username) throws UsernameNotFoundException {
