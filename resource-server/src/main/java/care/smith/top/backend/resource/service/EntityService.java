@@ -1,6 +1,7 @@
 package care.smith.top.backend.resource.service;
 
 import care.smith.top.backend.model.Entity;
+import care.smith.top.backend.model.LocalisableText;
 import care.smith.top.backend.neo4j_ontology_access.model.Annotatable;
 import care.smith.top.backend.neo4j_ontology_access.model.Annotation;
 import care.smith.top.backend.neo4j_ontology_access.model.Class;
@@ -15,7 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -56,44 +57,59 @@ public class EntityService {
 
   public Entity loadEntity(
       String organisationName, String repositoryName, UUID id, Integer version) {
-    Optional<Class> cls = classRepository.findById(id);
-    if (cls.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+    Class cls =
+        classRepository
+            .findById(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+    ClassVersion classVersion =
+        cls.getVersion(version)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
     Entity entity = new Entity();
-    entity.setId(cls.get().getUuid());
-    // ...
+    entity.setId(cls.getUuid());
+    entity.setVersion(classVersion.getVersion());
+    entity.setCreatedAt(classVersion.getCreatedAt().atOffset(ZoneOffset.UTC));
+    if (classVersion.getHiddenAt() != null)
+      entity.setHiddenAt(classVersion.getHiddenAt().atOffset(ZoneOffset.UTC));
+    entity.setTitles(
+        classVersion.getAnnotations().stream()
+            .filter(a -> a.getProperty().equals("title"))
+            .map(a -> new LocalisableText().lang(a.getLanguage()).text(a.getStringValue()))
+            .collect(Collectors.toList()));
+
     return entity;
   }
 
   @Transactional
   public void deleteEntity(
       String organisationName, String repositoryName, UUID id, Integer version, boolean permanent) {
-    Optional<Class> cls = classRepository.findById(id);
-    if (cls.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+    Class cls =
+        classRepository
+            .findById(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-    ClassVersion classVersion;
+    Optional<ClassVersion> optional;
     if (version == null) {
-      classVersion = cls.get().getCurrentVersion();
+      optional = cls.getCurrentVersion();
     } else {
-      Optional<ClassVersion> optional =
-          cls.get().getVersions().stream().filter(v -> v.getVersion() == version).findFirst();
-      if (optional.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-      classVersion = optional.get();
+      optional = cls.getVersions().stream().filter(v -> v.getVersion() == version).findFirst();
     }
+    ClassVersion classVersion =
+        optional.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
     if (permanent) {
       deleteAnnotations(classVersion);
       expressionRepository.deleteAll(classVersion.getExpressions());
       classVersionRepository.delete(classVersion);
     } else {
-      if (!classVersion.isHidden()) {
-        classVersion.setHiddenAt(LocalDateTime.now());
-        classVersionRepository.save(classVersion);
-      }
+      if (!classVersion.isHidden()) classVersionRepository.save(classVersion.hide());
     }
   }
 
   /**
    * Recursively delete all annotations of an annotatable object and its annotations.
+   *
    * @param annotatable Annotatable object of which annotations will be deleted.
    */
   private void deleteAnnotations(Annotatable annotatable) {

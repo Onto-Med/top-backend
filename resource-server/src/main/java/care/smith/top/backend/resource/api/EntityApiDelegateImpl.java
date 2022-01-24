@@ -3,7 +3,6 @@ package care.smith.top.backend.resource.api;
 import care.smith.top.backend.api.EntityApiDelegate;
 import care.smith.top.backend.model.Entity;
 import care.smith.top.backend.resource.service.EntityService;
-import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

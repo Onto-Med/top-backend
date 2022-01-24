@@ -9,7 +9,7 @@ import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Relationship;
 import org.springframework.security.core.userdetails.User;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -19,7 +19,7 @@ import java.util.UUID;
 public class Class extends Annotatable {
   @Id private final UUID uuid;
   @Version private Long nodeVersion;
-  @CreatedDate private LocalDateTime createdAt;
+  @CreatedDate private Instant createdAt;
   @CreatedBy private User createdBy;
 
   @Relationship(type = "IS_FORK_OF")

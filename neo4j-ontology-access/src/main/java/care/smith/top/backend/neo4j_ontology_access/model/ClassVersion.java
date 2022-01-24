@@ -10,7 +10,7 @@ import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Relationship;
 import org.springframework.security.core.userdetails.User;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -26,9 +26,9 @@ public class ClassVersion extends Annotatable {
   @Id @GeneratedValue private Long id;
   @Version private Long nodeVersion;
   @CreatedBy private User user;
-  @CreatedDate private LocalDateTime createdAt;
+  @CreatedDate private Instant createdAt;
   private int version;
-  private LocalDateTime hiddenAt;
+  private Instant hiddenAt;
   private String name;
 
   @Relationship(type = "HAS_EXPRESSION")
@@ -69,6 +69,11 @@ public class ClassVersion extends Annotatable {
     return this;
   }
 
+  public ClassVersion hide() {
+    this.setHiddenAt(Instant.now());
+    return this;
+  }
+
   public boolean isHidden() {
     return hiddenAt != null;
   }
@@ -95,11 +100,15 @@ public class ClassVersion extends Annotatable {
     return nodeVersion;
   }
 
-  public LocalDateTime getHiddenAt() {
+  public Instant getCreatedAt() {
+    return createdAt;
+  }
+
+  public Instant getHiddenAt() {
     return hiddenAt;
   }
 
-  public ClassVersion setHiddenAt(LocalDateTime hiddenAt) {
+  public ClassVersion setHiddenAt(Instant hiddenAt) {
     this.hiddenAt = hiddenAt;
     return this;
   }
