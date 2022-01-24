@@ -22,6 +22,11 @@ public class OrganisationApiDelegateImpl implements OrganisationApiDelegate {
   }
 
   @Override
+  public ResponseEntity<Organisation> updateOrganisationByName(String organisationName, Organisation organisation, List<String> include) {
+    return new ResponseEntity<>(organisationService.updateOrganisationById(organisationName, organisation), HttpStatus.OK);
+  }
+
+  @Override
   public ResponseEntity<Void> deleteOrganisationByName(
       String organisationName, List<String> include) {
     organisationService.deleteOrganisationByName(organisationName);

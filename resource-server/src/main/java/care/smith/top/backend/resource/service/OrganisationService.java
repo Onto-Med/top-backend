@@ -13,6 +13,7 @@ import java.util.Collections;
 
 @Service
 public class OrganisationService {
+  private final String directoryType = "organisation";
   @Autowired DirectoryRepository directoryRepository;
 
   public Organisation createOrganisation(Organisation organisation) {
@@ -28,20 +29,17 @@ public class OrganisationService {
     }
     // TODO: update top-api to use strings as ids
     Directory directory = new Directory(organisation.getOrganisationId().toString());
-    directory.setName(organisation.getName());
-    directory.setDescription(organisation.getDescription());
-    directory.setTypes(Collections.singleton("organisation"));
-    // TODO: set super directories
-    directory = directoryRepository.save(directory);
 
-    Organisation result = new Organisation();
-    result.setOrganisationId(Integer.parseInt(directory.getId()));
-    result.setName(directory.getName());
-    result.setDescription(directory.getDescription());
-    result.setCreatedAt(directory.getCreatedAt().atOffset(ZoneOffset.UTC));
-    // TODO: get super directories
+    return directoryToOrganisation(directoryRepository.save(populate(directory, organisation)));
+  }
 
-    return result;
+  public Organisation updateOrganisationById(String id, Organisation organisation) {
+    Directory directory =
+        directoryRepository
+            .findById(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+    return directoryToOrganisation(directoryRepository.save(populate(directory, organisation)));
   }
 
   public void deleteOrganisationByName(String organisationName) {
@@ -52,5 +50,44 @@ public class OrganisationService {
 
     // TODO: handle subdirectories and content
     directoryRepository.delete(directory);
+  }
+
+  /**
+   * Transform a {@link Directory} object with type {@link OrganisationService#directoryType} to an
+   * {@link Organisation} object.
+   *
+   * @param directory The directory to be transformed.
+   * @return The resulting organisation object.
+   */
+  private Organisation directoryToOrganisation(Directory directory) {
+    if (!directory.getTypes().contains(directoryType))
+      throw new ResponseStatusException(
+          HttpStatus.INTERNAL_SERVER_ERROR,
+          String.format("Directory is not of type %s", directoryType));
+
+    Organisation organisation = new Organisation();
+    organisation.setOrganisationId(Integer.parseInt(directory.getId()));
+    organisation.setName(directory.getName());
+    organisation.setDescription(directory.getDescription());
+    organisation.setCreatedAt(directory.getCreatedAt().atOffset(ZoneOffset.UTC));
+    // TODO: get super directories
+
+    return organisation;
+  }
+
+  /**
+   * Populates the given {@link Directory} object with values from the given {@link Organisation}
+   * object.
+   *
+   * @param directory The directory to be populated with data.
+   * @param organisation The organisation providing data.
+   * @return The modified directory.
+   */
+  private Directory populate(Directory directory, Organisation organisation) {
+    return directory
+        .setName(organisation.getName())
+        .setDescription(organisation.getDescription())
+        .setTypes(Collections.singleton(directoryType));
+    // TODO: set super directories
   }
 }
