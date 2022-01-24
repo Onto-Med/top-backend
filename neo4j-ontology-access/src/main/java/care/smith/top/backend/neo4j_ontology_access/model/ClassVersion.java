@@ -24,15 +24,12 @@ import java.util.Set;
 @Node
 public class ClassVersion extends Annotatable {
   @Id @GeneratedValue private Long id;
-  @Version private long version;
-
-  private String name;
-
+  @Version private Long nodeVersion;
   @CreatedBy private User user;
-
   @CreatedDate private LocalDateTime createdAt;
-
+  private Long version;
   private LocalDateTime hiddenAt;
+  private String name;
 
   @Relationship(type = "HAS_EXPRESSION")
   private Set<Expression> expressions;
@@ -57,10 +54,6 @@ public class ClassVersion extends Annotatable {
     return this;
   }
 
-  public void setExpressions(Set<Expression> expressions) {
-    this.expressions = expressions;
-  }
-
   public ClassVersion addEquivalentClass(ClassVersion equivalentClass) {
     return addEquivalentClasses(Collections.singleton(equivalentClass));
   }
@@ -76,7 +69,38 @@ public class ClassVersion extends Annotatable {
     return this;
   }
 
+  public boolean isHidden() {
+    return hiddenAt != null;
+  }
+
+  public Set<Expression> getExpressions() {
+    return expressions;
+  }
+
+  public ClassVersion setExpressions(Set<Expression> expressions) {
+    this.expressions = expressions;
+    return this;
+  }
+
   public long getVersion() {
     return version;
+  }
+
+  public ClassVersion setVersion(Long version) {
+    this.version = version;
+    return this;
+  }
+
+  public Long getNodeVersion() {
+    return nodeVersion;
+  }
+
+  public LocalDateTime getHiddenAt() {
+    return hiddenAt;
+  }
+
+  public ClassVersion setHiddenAt(LocalDateTime hiddenAt) {
+    this.hiddenAt = hiddenAt;
+    return this;
   }
 }
