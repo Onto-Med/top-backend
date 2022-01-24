@@ -1,6 +1,7 @@
 package care.smith.top.backend.neo4j_ontology_access.model;
 
 import org.springframework.data.annotation.*;
+import org.springframework.data.neo4j.core.schema.DynamicLabels;
 import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Relationship;
@@ -33,7 +34,8 @@ public class Directory {
   /** Further descriptions. */
   private String description;
   /** Determins, what this directory is representing. */
-  private String type;
+  @DynamicLabels
+  private Set<String> types;
   /** Custom properties can be stored in this field for instance in JSON format. */
   private String properties;
 
@@ -102,12 +104,12 @@ public class Directory {
     return this;
   }
 
-  public String getType() {
-    return type;
+  public Set<String> getTypes() {
+    return types;
   }
 
-  public Directory setType(String type) {
-    this.type = type;
+  public Directory setTypes(Set<String> types) {
+    this.types = types;
     return this;
   }
 
