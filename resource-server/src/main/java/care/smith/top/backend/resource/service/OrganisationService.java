@@ -10,6 +10,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.ZoneOffset;
 import java.util.Collections;
+import java.util.List;
 
 @Service
 public class OrganisationService {
@@ -50,6 +51,13 @@ public class OrganisationService {
 
     // TODO: handle subdirectories and content
     directoryRepository.delete(directory);
+  }
+
+  public Organisation getOrganisation(String organisationName, List<String> include) {
+    return directoryToOrganisation(
+        directoryRepository
+            .findById(organisationName)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND)));
   }
 
   /**
