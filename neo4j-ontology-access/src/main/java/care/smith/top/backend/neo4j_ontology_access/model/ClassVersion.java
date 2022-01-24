@@ -27,7 +27,7 @@ public class ClassVersion extends Annotatable {
   @Version private Long nodeVersion;
   @CreatedBy private User user;
   @CreatedDate private LocalDateTime createdAt;
-  private Long version;
+  private int version;
   private LocalDateTime hiddenAt;
   private String name;
 
@@ -82,11 +82,11 @@ public class ClassVersion extends Annotatable {
     return this;
   }
 
-  public long getVersion() {
+  public int getVersion() {
     return version;
   }
 
-  public ClassVersion setVersion(Long version) {
+  public ClassVersion setVersion(int version) {
     this.version = version;
     return this;
   }

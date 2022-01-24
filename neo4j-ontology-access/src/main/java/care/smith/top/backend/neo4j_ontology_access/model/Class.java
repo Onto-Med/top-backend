@@ -11,6 +11,7 @@ import org.springframework.security.core.userdetails.User;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -39,12 +40,27 @@ public class Class extends Annotatable {
    * Add new version for this class. The version will get assigned a version number.
    *
    * @param version The new version.
-   * @return This class object.
+   * @return This Class object.
    */
   public Class createVersion(ClassVersion version) {
     if (versions == null) versions = new HashSet<>();
-    this.versions.add(version.setVersion((long) (versions.size() + 1)));
+    this.versions.add(version.setVersion(versions.size() + 1));
     return this;
+  }
+
+  /**
+   * Get the specified version of this class. If parameter version is null, return the current
+   * version.
+   *
+   * @param version The requested version number.
+   * @return A {@link ClassVersion} object for this Class object.
+   */
+  public Optional<ClassVersion> getVersion(Integer version) {
+    if (version == null) {
+      return getCurrentVersion();
+    } else {
+      return getVersions().stream().filter(v -> v.getVersion() == version).findFirst();
+    }
   }
 
   public UUID getUuid() {
@@ -64,8 +80,8 @@ public class Class extends Annotatable {
     return versions;
   }
 
-  public ClassVersion getCurrentVersion() {
-    return currentVersion;
+  public Optional<ClassVersion> getCurrentVersion() {
+    return Optional.ofNullable(currentVersion);
   }
 
   public Class setCurrentVersion(ClassVersion currentVersion) {
