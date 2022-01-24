@@ -31,6 +31,9 @@ public class Class extends Annotatable {
   @Relationship(type = "CURRENT_VERSION")
   private ClassVersion currentVersion;
 
+  @Relationship(type = "IS_SUBCLASS_OF")
+  private ClassRelation superClassRelation;
+
   @PersistenceConstructor
   public Class(UUID uuid) {
     this.uuid = uuid;
@@ -91,5 +94,14 @@ public class Class extends Annotatable {
 
   public Long getNodeVersion() {
     return nodeVersion;
+  }
+
+  public ClassRelation getSuperClassRelation() {
+    return superClassRelation;
+  }
+
+  public Class setSuperClassRelation(ClassRelation superClassRelation) {
+    this.superClassRelation = superClassRelation;
+    return this;
   }
 }
