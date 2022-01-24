@@ -4,6 +4,8 @@ import care.smith.top.backend.model.Organisation;
 import care.smith.top.backend.neo4j_ontology_access.model.Directory;
 import care.smith.top.backend.resource.repository.DirectoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -11,10 +13,13 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class OrganisationService {
   private final String directoryType = "organisation";
+  private final int pageSize = 10;
+
   @Autowired DirectoryRepository directoryRepository;
 
   public Organisation createOrganisation(Organisation organisation) {
@@ -58,6 +63,14 @@ public class OrganisationService {
         directoryRepository
             .findById(organisationName)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND)));
+  }
+
+  public List<Organisation> getOrganisations(List<String> include, String name, Integer page) {
+    return directoryRepository
+        .findAllByName(name, PageRequest.of(page, pageSize, Sort.by("name")))
+        .stream()
+        .map(this::directoryToOrganisation)
+        .collect(Collectors.toList());
   }
 
   /**
