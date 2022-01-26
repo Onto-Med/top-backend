@@ -12,7 +12,7 @@ import org.springframework.data.neo4j.core.schema.Relationship;
  */
 @Node
 public class ClassRelation {
-  @Id @GeneratedValue private final Long id;
+  @Id @GeneratedValue private Long id;
 
   @Relationship(type = "HAS_SUPERCLASS")
   private Class superclass;
@@ -21,9 +21,7 @@ public class ClassRelation {
   private ClassRelationOwner owner;
 
   @PersistenceConstructor
-  public ClassRelation(Long id) {
-    this.id = id;
-  }
+  public ClassRelation() {}
 
   public Long getId() {
     return id;
