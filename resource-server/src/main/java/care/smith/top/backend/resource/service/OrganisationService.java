@@ -2,7 +2,7 @@ package care.smith.top.backend.resource.service;
 
 import care.smith.top.backend.model.Organisation;
 import care.smith.top.backend.neo4j_ontology_access.model.Directory;
-import care.smith.top.backend.resource.repository.DirectoryRepository;
+import care.smith.top.backend.neo4j_ontology_access.repository.DirectoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;

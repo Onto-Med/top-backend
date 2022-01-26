@@ -8,7 +8,7 @@ import org.springframework.data.neo4j.repository.config.EnableNeo4jRepositories;
 
 @SpringBootApplication
 @ComponentScan("care.smith.top.backend")
-@EnableNeo4jRepositories
+@EnableNeo4jRepositories("care.smith.top.backend.neo4j_ontology_access")
 @EnableNeo4jAuditing
 public class TopBackendApplication {
 

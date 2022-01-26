@@ -1,4 +1,4 @@
-package care.smith.top.backend.resource.repository;
+package care.smith.top.backend.neo4j_ontology_access.repository;
 
 import care.smith.top.backend.neo4j_ontology_access.model.Annotation;
 import org.springframework.data.repository.PagingAndSortingRepository;
