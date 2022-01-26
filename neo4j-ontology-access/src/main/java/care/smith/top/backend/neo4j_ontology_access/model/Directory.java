@@ -35,7 +35,7 @@ public class Directory {
   private String description;
   /** Determins, what this directory is representing. */
   @DynamicLabels
-  private Set<String> types;
+  private Set<String> types = new HashSet<>();
   /** Custom properties can be stored in this field for instance in JSON format. */
   private String properties;
 
