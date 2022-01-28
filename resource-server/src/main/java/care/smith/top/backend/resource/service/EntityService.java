@@ -180,7 +180,7 @@ public class EntityService {
             p ->
                 accessor.setPropertyValue(
                     p + "s",
-                    classVersionRepository.findAnnotationsByProperty(classVersion, p).stream()
+                    annotationRepository.findByClassVersionAndProperty(classVersion, p).stream()
                         .map(
                             a ->
                                 new LocalisableText()
