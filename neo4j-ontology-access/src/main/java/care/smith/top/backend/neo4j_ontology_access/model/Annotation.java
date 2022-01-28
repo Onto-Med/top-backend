@@ -1,17 +1,17 @@
 package care.smith.top.backend.neo4j_ontology_access.model;
 
-import org.springframework.data.neo4j.core.schema.GeneratedValue;
-import org.springframework.data.neo4j.core.schema.Id;
-import org.springframework.data.neo4j.core.schema.Node;
-import org.springframework.data.neo4j.core.schema.Relationship;
+import org.springframework.data.neo4j.core.schema.*;
 
+import java.util.Collections;
 import java.util.Date;
+import java.util.Set;
 
 /** Example: (:Annotation:String:Title { value: 'Weight', language: 'en', index: 1 }) */
 @Node
 public class Annotation extends Annotatable {
   @Id @GeneratedValue private Long id;
 
+  @DynamicLabels private Set<String> dynamicLabels;
   private String datatype;
   private String property;
   private String stringValue;
@@ -58,7 +58,7 @@ public class Annotation extends Annotatable {
   }
 
   private Annotation(String property, String language, Integer index) {
-    this.property = property;
+    this.setProperty(property);
     this.language = language;
     this.index = index;
   }
@@ -108,6 +108,7 @@ public class Annotation extends Annotatable {
 
   public Annotation setProperty(String property) {
     this.property = property;
+    dynamicLabels = Collections.singleton(property);
     return this;
   }
 
@@ -163,5 +164,9 @@ public class Annotation extends Annotatable {
   public Annotation setClassValue(ClassVersion classValue) {
     this.classValue = classValue;
     return this;
+  }
+
+  public Set<String> getDynamicLabels() {
+    return dynamicLabels;
   }
 }
