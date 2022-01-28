@@ -137,4 +137,13 @@ public class ClassVersion extends Annotatable {
   public String getName() {
     return name;
   }
+
+  public ClassVersion setName(String name) {
+    this.name = name;
+    return this;
+  }
+
+  public Long getId() {
+    return id;
+  }
 }
