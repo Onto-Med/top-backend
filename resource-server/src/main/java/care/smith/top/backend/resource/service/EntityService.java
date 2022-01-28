@@ -1,13 +1,12 @@
 package care.smith.top.backend.resource.service;
 
+import care.smith.top.backend.model.Category;
 import care.smith.top.backend.model.Entity;
 import care.smith.top.backend.model.LocalisableText;
+import care.smith.top.backend.model.Phenotype;
 import care.smith.top.backend.neo4j_ontology_access.model.Class;
 import care.smith.top.backend.neo4j_ontology_access.model.*;
-import care.smith.top.backend.neo4j_ontology_access.repository.AnnotationRepository;
-import care.smith.top.backend.neo4j_ontology_access.repository.ClassRepository;
-import care.smith.top.backend.neo4j_ontology_access.repository.ClassVersionRepository;
-import care.smith.top.backend.neo4j_ontology_access.repository.ExpressionRepository;
+import care.smith.top.backend.neo4j_ontology_access.repository.*;
 import org.springframework.beans.PropertyAccessor;
 import org.springframework.beans.PropertyAccessorFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.ZoneOffset;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -26,16 +24,52 @@ public class EntityService {
   @Autowired ClassVersionRepository classVersionRepository;
   @Autowired AnnotationRepository annotationRepository;
   @Autowired ExpressionRepository expressionRepository;
+  @Autowired RepositoryRepository repositoryRepository;
 
   @Transactional
   public Entity createEntity(String organisationName, String repositoryName, Entity entity) {
     if (classRepository.existsById(entity.getId()))
       throw new ResponseStatusException(HttpStatus.CONFLICT);
+    Repository repository =
+        repositoryRepository
+            .findByIdAndSuperDirectoryId(repositoryName, organisationName)
+            .orElseThrow(
+                () ->
+                    new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        String.format("Repository '%s' does not exist!", repositoryName)));
 
     Class cls = new Class(entity.getId());
     cls.createVersion(buildClassVersion(entity), true);
 
-    return classToEntity(classRepository.save(cls));
+    List<UUID> superClasses = new ArrayList<>();
+    if (entity instanceof Category) {
+      Category category = (Category) entity;
+      if (category.getSuperCategories() != null)
+        superClasses.addAll(
+            category.getSuperCategories().stream().map(Entity::getId).collect(Collectors.toList()));
+    }
+
+    if (entity instanceof Phenotype) {
+      Phenotype phenotype = (Phenotype) entity;
+      if (phenotype.getSuperPhenotype() != null)
+        superClasses.add(phenotype.getSuperPhenotype().getId());
+    }
+
+    if (superClasses.isEmpty()) {
+      cls.addSuperClassRelation(
+          new ClassRelation().setIndex(entity.getIndex()));
+    } else {
+      superClasses.forEach(
+          c ->
+              cls.addSuperClassRelation(
+                  new ClassRelation().setIndex(entity.getIndex()).setSuperclass(new Class(c))));
+    }
+
+    Class result = classRepository.save(cls);
+
+    result.getSuperClassRelations().forEach(rel -> repositoryRepository.addClassRelation(repository, rel));
+    return classToEntity(result);
   }
 
   public Entity loadEntity(
@@ -44,24 +78,11 @@ public class EntityService {
         classRepository
             .findById(id)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-
     ClassVersion classVersion =
         cls.getVersion(version)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-    Entity entity = new Entity();
-    entity.setId(cls.getUuid());
-    entity.setVersion(classVersion.getVersion());
-    entity.setCreatedAt(classVersion.getCreatedAt().atOffset(ZoneOffset.UTC));
-    if (classVersion.getHiddenAt() != null)
-      entity.setHiddenAt(classVersion.getHiddenAt().atOffset(ZoneOffset.UTC));
-    entity.setTitles(
-        classVersion.getAnnotations().stream()
-            .filter(a -> a.getProperty().equals("title"))
-            .map(a -> new LocalisableText().lang(a.getLanguage()).text(a.getStringValue()))
-            .collect(Collectors.toList()));
-
-    return entity;
+    return classVersionToEntity(classVersion);
   }
 
   @Transactional
@@ -154,7 +175,7 @@ public class EntityService {
     entity.setVersion(classVersion.getVersion());
 
     Set<ClassRelation> superClasses = classVersion.getaClass().getSuperClassRelations();
-    if (superClasses.stream().findFirst().isPresent())
+    if (superClasses != null && superClasses.stream().findFirst().isPresent())
       entity.setIndex(superClasses.stream().findFirst().get().getIndex());
     entity.setCreatedAt(classVersion.getCreatedAtOffset());
     entity.setHiddenAt(classVersion.getHiddenAtOffset());
@@ -162,17 +183,18 @@ public class EntityService {
     // from top-api model.
     // TODO: entity.setRefer(); <- insert URI
 
-    classVersion
-        .getEquivalentClasses()
-        .forEach(
-            e -> {
-              Entity equivalentEntity = new Entity();
-              equivalentEntity.setVersion(e.getVersion());
-              equivalentEntity.setId(e.getaClass().getUuid());
-              // TODO:
-              // equivalentEntity.setRepository(e.getaClass().getSuperClassRelation().getRepository());
-              entity.addEquivalentEntitiesItem(equivalentEntity);
-            });
+    if (classVersion.getEquivalentClasses() != null)
+      classVersion
+          .getEquivalentClasses()
+          .forEach(
+              e -> {
+                Entity equivalentEntity = new Entity();
+                equivalentEntity.setVersion(e.getVersion());
+                equivalentEntity.setId(e.getaClass().getUuid());
+                // TODO:
+                // equivalentEntity.setRepository(e.getaClass().getSuperClassRelation().getRepository());
+                entity.addEquivalentEntitiesItem(equivalentEntity);
+              });
 
     PropertyAccessor accessor = PropertyAccessorFactory.forBeanPropertyAccess(entity);
     Arrays.asList("title", "synonym", "description")
