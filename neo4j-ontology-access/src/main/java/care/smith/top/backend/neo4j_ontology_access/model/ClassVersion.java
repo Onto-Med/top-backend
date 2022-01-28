@@ -14,6 +14,7 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * Example:
@@ -27,6 +28,7 @@ public class ClassVersion extends Annotatable {
   @Version private Long nodeVersion;
   @CreatedBy private User user;
   @CreatedDate private Instant createdAt;
+  private UUID classId;
   private int version;
   private Instant hiddenAt;
   private String name;
@@ -64,13 +66,17 @@ public class ClassVersion extends Annotatable {
     return this;
   }
 
-  public ClassVersion setEquivalentClasses(Set<ClassVersion> equivalentClasses) {
-    this.equivalentClasses = equivalentClasses;
+  public ClassVersion hide() {
+    this.setHiddenAt(Instant.now());
     return this;
   }
 
-  public ClassVersion hide() {
-    this.setHiddenAt(Instant.now());
+  public Set<ClassVersion> getEquivalentClasses() {
+    return equivalentClasses;
+  }
+
+  public ClassVersion setEquivalentClasses(Set<ClassVersion> equivalentClasses) {
+    this.equivalentClasses = equivalentClasses;
     return this;
   }
 
@@ -110,6 +116,15 @@ public class ClassVersion extends Annotatable {
 
   public ClassVersion setHiddenAt(Instant hiddenAt) {
     this.hiddenAt = hiddenAt;
+    return this;
+  }
+
+  public UUID getClassId() {
+    return classId;
+  }
+
+  public ClassVersion setClassId(UUID classId) {
+    this.classId = classId;
     return this;
   }
 }

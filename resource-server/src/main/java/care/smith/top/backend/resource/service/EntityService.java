@@ -131,6 +131,7 @@ public class EntityService {
   private ClassVersion buildClassVersion(Entity entity) {
     return (ClassVersion)
         new ClassVersion()
+            .setClassId(entity.getId())
             .addAnnotations(
                 entity.getTitles().stream()
                     .map(t -> new Annotation("title", t.getText(), t.getLang(), null))
