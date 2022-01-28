@@ -32,7 +32,7 @@ public class Class extends Annotatable {
   private ClassVersion currentVersion;
 
   @Relationship(type = "IS_SUBCLASS_OF")
-  private ClassRelation superClassRelation;
+  private Set<ClassRelation> superClassRelations;
 
   @PersistenceConstructor
   public Class(UUID uuid) {
@@ -107,12 +107,18 @@ public class Class extends Annotatable {
     return nodeVersion;
   }
 
-  public ClassRelation getSuperClassRelation() {
-    return superClassRelation;
+  public Set<ClassRelation> getSuperClassRelations() {
+    return superClassRelations;
   }
 
-  public Class setSuperClassRelation(ClassRelation superClassRelation) {
-    this.superClassRelation = superClassRelation;
+  public Class setSuperClassRelations(Set<ClassRelation> superClassRelations) {
+    this.superClassRelations = superClassRelations;
+    return this;
+  }
+
+  public Class addSuperClassRelation(ClassRelation superClassRelation) {
+    if (superClassRelations == null) superClassRelations = new HashSet<>();
+    superClassRelations.add(superClassRelation);
     return this;
   }
 }

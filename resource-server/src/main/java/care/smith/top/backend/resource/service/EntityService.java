@@ -2,10 +2,8 @@ package care.smith.top.backend.resource.service;
 
 import care.smith.top.backend.model.Entity;
 import care.smith.top.backend.model.LocalisableText;
-import care.smith.top.backend.neo4j_ontology_access.model.Annotatable;
-import care.smith.top.backend.neo4j_ontology_access.model.Annotation;
 import care.smith.top.backend.neo4j_ontology_access.model.Class;
-import care.smith.top.backend.neo4j_ontology_access.model.ClassVersion;
+import care.smith.top.backend.neo4j_ontology_access.model.*;
 import care.smith.top.backend.neo4j_ontology_access.repository.AnnotationRepository;
 import care.smith.top.backend.neo4j_ontology_access.repository.ClassRepository;
 import care.smith.top.backend.neo4j_ontology_access.repository.ClassVersionRepository;
@@ -19,10 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.ZoneOffset;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -157,7 +152,10 @@ public class EntityService {
     // TODO: entity.setRepository(classVersion.getaClass().getSuperClassRelation().getRepository());
     entity.setId(classVersion.getaClass().getUuid());
     entity.setVersion(classVersion.getVersion());
-    entity.setIndex(classVersion.getaClass().getSuperClassRelation().getIndex());
+
+    Set<ClassRelation> superClasses = classVersion.getaClass().getSuperClassRelations();
+    if (superClasses.stream().findFirst().isPresent())
+      entity.setIndex(superClasses.stream().findFirst().get().getIndex());
     entity.setCreatedAt(classVersion.getCreatedAt().atOffset(ZoneOffset.UTC));
     entity.setHiddenAt(classVersion.getHiddenAt().atOffset(ZoneOffset.UTC));
     // TODO: entity.setAuthor(classVersion.getUser()); Map User to UserAccount, or drop UserAccount
@@ -171,7 +169,8 @@ public class EntityService {
               Entity equivalentEntity = new Entity();
               equivalentEntity.setVersion(e.getVersion());
               equivalentEntity.setId(e.getaClass().getUuid());
-              // TODO: equivalentEntity.setRepository(e.getaClass().getSuperClassRelation().getRepository());
+              // TODO:
+              // equivalentEntity.setRepository(e.getaClass().getSuperClassRelation().getRepository());
               entity.addEquivalentEntitiesItem(equivalentEntity);
             });
 
