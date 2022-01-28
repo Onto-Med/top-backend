@@ -14,6 +14,9 @@ import org.springframework.data.neo4j.core.schema.Relationship;
 public class ClassRelation {
   @Id @GeneratedValue private Long id;
 
+  /** Use this property to sort subclasses below a superclass. */
+  private Integer index;
+
   @Relationship(type = "HAS_SUPERCLASS")
   private Class superclass;
 
@@ -42,6 +45,15 @@ public class ClassRelation {
 
   public ClassRelation setRepository(ClassRelationOwner owner) {
     this.owner = owner;
+    return this;
+  }
+
+  public Integer getIndex() {
+    return index;
+  }
+
+  public ClassRelation setIndex(Integer index) {
+    this.index = index;
     return this;
   }
 }
