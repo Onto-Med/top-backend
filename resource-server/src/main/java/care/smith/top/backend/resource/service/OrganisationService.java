@@ -91,7 +91,9 @@ public class OrganisationService {
     organisation.setName(directory.getName());
     organisation.setDescription(directory.getDescription());
     organisation.setCreatedAt(directory.getCreatedAt().atOffset(ZoneOffset.UTC));
-    // TODO: get super directories
+    directory.getSuperDirectories().stream()
+        .findFirst()
+        .ifPresent(value -> organisation.setSuperOrganisation(directoryToOrganisation(value)));
 
     return organisation;
   }
@@ -105,10 +107,25 @@ public class OrganisationService {
    * @return The modified directory.
    */
   private Directory populate(Directory directory, Organisation organisation) {
+    if (organisation.getSuperOrganisation() != null
+        && organisation.getSuperOrganisation().getOrganisationId() != null) {
+      String superOrganisationId =
+          organisation.getSuperOrganisation().getOrganisationId().toString();
+      directory.setSuperDirectories(
+          Collections.singleton(
+              directoryRepository
+                  .findById(superOrganisationId)
+                  .orElseThrow(
+                      () ->
+                          new ResponseStatusException(
+                              HttpStatus.CONFLICT,
+                              String.format(
+                                  "Super organisation %s does not exist.", superOrganisationId)))));
+    }
+
     return directory
         .setName(organisation.getName())
         .setDescription(organisation.getDescription())
         .setTypes(Collections.singleton(directoryType));
-    // TODO: set super directories
   }
 }
