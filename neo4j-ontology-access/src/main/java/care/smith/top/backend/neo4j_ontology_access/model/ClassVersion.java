@@ -39,6 +39,9 @@ public class ClassVersion extends Annotatable {
   @Relationship(type = "IS_EQUIVALENT_TO")
   private Set<ClassVersion> equivalentClasses;
 
+  @Relationship(type = "IS_VERSION_OF")
+  private Class aClass;
+
   public ClassVersion() {}
 
   @PersistenceConstructor
@@ -69,6 +72,15 @@ public class ClassVersion extends Annotatable {
   public ClassVersion hide() {
     this.setHiddenAt(Instant.now());
     return this;
+  }
+
+  public ClassVersion setaClass(Class aClass) {
+    this.aClass = aClass;
+    return this;
+  }
+
+  public Class getaClass() {
+    return aClass;
   }
 
   public Set<ClassVersion> getEquivalentClasses() {

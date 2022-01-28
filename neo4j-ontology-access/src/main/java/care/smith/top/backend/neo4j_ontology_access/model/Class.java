@@ -40,7 +40,7 @@ public class Class extends Annotatable {
   }
 
   /**
-   * Add new version for this class. The version will get assigned a version number and the UUID of this class.
+   * Add new version for this class. The version will get assigned a version number and this class.
    *
    * @param classVersion The new version.
    * @param setCurrent If true, given {@link ClassVersion} will be set to the current version of
@@ -53,7 +53,7 @@ public class Class extends Annotatable {
     int version = 1;
     if (getCurrentVersion().isPresent()) version = getCurrentVersion().get().getVersion() + 1;
 
-    versions.add(classVersion.setVersion(version).setClassId(getUuid()));
+    versions.add(classVersion.setVersion(version).setaClass(this));
     if (setCurrent) setCurrentVersion(classVersion);
 
     return this;
