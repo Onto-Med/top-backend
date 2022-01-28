@@ -1,6 +1,7 @@
 package care.smith.top.backend.neo4j_ontology_access.model;
 
 import org.springframework.data.neo4j.core.schema.*;
+import org.springframework.util.StringUtils;
 
 import java.util.Collections;
 import java.util.Date;
@@ -27,10 +28,18 @@ public class Annotation extends Annotatable {
 
   public Annotation() {}
 
+  public Annotation(String property, String stringValue, String language) {
+    this(property, stringValue, language, null);
+  }
+
   public Annotation(String property, String stringValue, String language, Integer index) {
     this(property, language, index);
     this.datatype = "string";
     this.stringValue = stringValue;
+  }
+
+  public Annotation(String property, Date dateValue, String language) {
+    this(property, dateValue, language, null);
   }
 
   public Annotation(String property, Date dateValue, String language, Integer index) {
@@ -39,16 +48,28 @@ public class Annotation extends Annotatable {
     this.dateValue = dateValue;
   }
 
+  public Annotation(String property, Double doubleValue, String language) {
+    this(property, doubleValue, language, null);
+  }
+
   public Annotation(String property, Double decimalValue, String language, Integer index) {
     this(property, language, index);
     this.datatype = "decimal";
     this.decimalValue = decimalValue;
   }
 
+  public Annotation(String property, Boolean booleanValue, String language) {
+    this(property, booleanValue, language, null);
+  }
+
   public Annotation(String property, Boolean booleanValue, String language, Integer index) {
     this(property, language, index);
     this.datatype = "decimal";
     this.booleanValue = booleanValue;
+  }
+
+  public Annotation(String property, ClassVersion classValue, String language) {
+    this(property, classValue, language, null);
   }
 
   public Annotation(String property, ClassVersion classValue, String language, Integer index) {
