@@ -1,7 +1,9 @@
 package care.smith.top.backend.resource.api;
 
 import care.smith.top.backend.api.EntityApiDelegate;
+import care.smith.top.backend.model.DataType;
 import care.smith.top.backend.model.Entity;
+import care.smith.top.backend.model.EntityType;
 import care.smith.top.backend.resource.service.EntityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -43,5 +45,15 @@ public class EntityApiDelegateImpl implements EntityApiDelegate {
       Boolean permanent) {
     entityService.deleteEntity(organisationName, repositoryName, id, version, permanent);
     return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+  }
+
+  @Override
+  public ResponseEntity<Entity> updateEntityById(String organisationName, String repositoryName, UUID id, Entity entity, Integer version, List<String> include) {
+    return new ResponseEntity<>(entityService.updateEntityById(organisationName, repositoryName, id, entity, include), HttpStatus.OK);
+  }
+
+  @Override
+  public ResponseEntity<List<Entity>> getEntities(String organisationName, String repositoryName, List<String> include, String name, EntityType type, DataType dataType, Integer page) {
+    return EntityApiDelegate.super.getEntities(organisationName, repositoryName, include, name, type, dataType, page);
   }
 }
