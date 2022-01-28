@@ -96,6 +96,9 @@ public class Class extends Annotatable {
   }
 
   public Class setCurrentVersion(ClassVersion currentVersion) {
+    if (!versions.contains(currentVersion))
+      throw new UnsupportedOperationException(
+          String.format("%s does not belong to '%s'!", currentVersion.getClass().getName(), uuid));
     this.currentVersion = currentVersion;
     return this;
   }
