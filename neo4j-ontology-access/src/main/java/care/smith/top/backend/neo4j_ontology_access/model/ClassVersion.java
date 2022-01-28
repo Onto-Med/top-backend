@@ -11,6 +11,8 @@ import org.springframework.data.neo4j.core.schema.Relationship;
 import org.springframework.security.core.userdetails.User;
 
 import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -121,6 +123,11 @@ public class ClassVersion extends Annotatable {
     return createdAt;
   }
 
+  public OffsetDateTime getCreatedAtOffset() {
+    if (getCreatedAt() == null) return null;
+    return getCreatedAt().atOffset(ZoneOffset.UTC);
+  }
+
   public Instant getHiddenAt() {
     return hiddenAt;
   }
@@ -128,6 +135,11 @@ public class ClassVersion extends Annotatable {
   public ClassVersion setHiddenAt(Instant hiddenAt) {
     this.hiddenAt = hiddenAt;
     return this;
+  }
+
+  public OffsetDateTime getHiddenAtOffset() {
+    if (getHiddenAt() == null) return null;
+    return getHiddenAt().atOffset(ZoneOffset.UTC);
   }
 
   public User getUser() {

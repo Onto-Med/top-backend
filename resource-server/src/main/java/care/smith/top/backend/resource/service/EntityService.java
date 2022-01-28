@@ -156,8 +156,8 @@ public class EntityService {
     Set<ClassRelation> superClasses = classVersion.getaClass().getSuperClassRelations();
     if (superClasses.stream().findFirst().isPresent())
       entity.setIndex(superClasses.stream().findFirst().get().getIndex());
-    entity.setCreatedAt(classVersion.getCreatedAt().atOffset(ZoneOffset.UTC));
-    entity.setHiddenAt(classVersion.getHiddenAt().atOffset(ZoneOffset.UTC));
+    entity.setCreatedAt(classVersion.getCreatedAtOffset());
+    entity.setHiddenAt(classVersion.getHiddenAtOffset());
     // TODO: entity.setAuthor(classVersion.getUser()); Map User to UserAccount, or drop UserAccount
     // from top-api model.
     // TODO: entity.setRefer(); <- insert URI

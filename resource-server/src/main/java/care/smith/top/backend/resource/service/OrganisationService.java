@@ -90,7 +90,7 @@ public class OrganisationService {
     organisation.setOrganisationId(Integer.parseInt(directory.getId()));
     organisation.setName(directory.getName());
     organisation.setDescription(directory.getDescription());
-    organisation.setCreatedAt(directory.getCreatedAt().atOffset(ZoneOffset.UTC));
+    organisation.setCreatedAt(directory.getCreatedAtOffset());
     directory.getSuperDirectories().stream()
         .findFirst()
         .ifPresent(value -> organisation.setSuperOrganisation(directoryToOrganisation(value)));

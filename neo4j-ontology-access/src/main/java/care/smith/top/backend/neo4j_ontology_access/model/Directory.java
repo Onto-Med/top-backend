@@ -8,6 +8,8 @@ import org.springframework.data.neo4j.core.schema.Relationship;
 import org.springframework.security.core.userdetails.User;
 
 import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -81,6 +83,11 @@ public class Directory {
 
   public Instant getCreatedAt() {
     return createdAt;
+  }
+
+  public OffsetDateTime getCreatedAtOffset() {
+    if (getCreatedAt() == null) return null;
+    return getCreatedAt().atOffset(ZoneOffset.UTC);
   }
 
   public User getCreatedBy() {
