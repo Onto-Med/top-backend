@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -32,26 +33,12 @@ public class EntityService {
   public Entity createEntity(String organisationName, String repositoryName, Entity entity) {
     if (classRepository.existsById(entity.getId()))
       throw new ResponseStatusException(HttpStatus.CONFLICT);
+
     Class cls = new Class(entity.getId());
-    ClassVersion version = new ClassVersion();
-
-    version
-        .addAnnotations(
-            entity.getTitles().stream()
-                .map(t -> new Annotation("title", t.getText(), t.getLang(), null))
-                .collect(Collectors.toSet()))
-        .addAnnotations(
-            entity.getSynonyms().stream()
-                .map(s -> new Annotation("synonym", s.getText(), s.getLang(), null))
-                .collect(Collectors.toSet()))
-        .addAnnotations(
-            entity.getDescriptions().stream()
-                .map(d -> new Annotation("description", d.getText(), d.getLang(), null))
-                .collect(Collectors.toSet()));
-
-    cls.createVersion(version, true);
-
+    cls.createVersion(buildClassVersion(entity), true);
     classRepository.save(cls);
+
+    // TODO: map result of save() to entity
     return entity;
   }
 
@@ -107,6 +94,24 @@ public class EntityService {
     }
   }
 
+  public Entity updateEntityById(
+      String organisationName,
+      String repositoryName,
+      UUID id,
+      Entity entity,
+      List<String> include) {
+    Class cls =
+        classRepository
+            .findById(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+    cls.createVersion(buildClassVersion(entity), true);
+    classRepository.save(cls);
+
+    // TODO: map result of save() to entity
+    return entity;
+  }
+
   /**
    * Recursively delete all annotations of an annotatable object and its annotations.
    *
@@ -115,5 +120,28 @@ public class EntityService {
   private void deleteAnnotations(Annotatable annotatable) {
     annotatable.getAnnotations().forEach(this::deleteAnnotations);
     annotationRepository.deleteAll(annotatable.getAnnotations());
+  }
+
+  /**
+   * Build a new {@link ClassVersion} object from an {@link Entity} object.
+   *
+   * @param entity The entity that provides data for the {@link ClassVersion} object fields.
+   * @return The resulting {@link ClassVersion} object.
+   */
+  private ClassVersion buildClassVersion(Entity entity) {
+    return (ClassVersion)
+        new ClassVersion()
+            .addAnnotations(
+                entity.getTitles().stream()
+                    .map(t -> new Annotation("title", t.getText(), t.getLang(), null))
+                    .collect(Collectors.toSet()))
+            .addAnnotations(
+                entity.getSynonyms().stream()
+                    .map(s -> new Annotation("synonym", s.getText(), s.getLang(), null))
+                    .collect(Collectors.toSet()))
+            .addAnnotations(
+                entity.getDescriptions().stream()
+                    .map(d -> new Annotation("description", d.getText(), d.getLang(), null))
+                    .collect(Collectors.toSet()));
   }
 }
