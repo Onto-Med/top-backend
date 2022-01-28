@@ -37,7 +37,7 @@ public class OrganisationApiDelegateImpl implements OrganisationApiDelegate {
 
   @Override
   public ResponseEntity<List<Organisation>> getOrganisations(List<String> include, String name, Integer page) {
-    return new ResponseEntity<>(organisationService.getOrganisations(include, name, page), HttpStatus.OK);
+    return new ResponseEntity<>(organisationService.getOrganisations(name, page, include), HttpStatus.OK);
   }
 
   @Override

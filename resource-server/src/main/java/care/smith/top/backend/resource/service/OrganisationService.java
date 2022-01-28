@@ -65,7 +65,7 @@ public class OrganisationService {
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND)));
   }
 
-  public List<Organisation> getOrganisations(List<String> include, String name, Integer page) {
+  public List<Organisation> getOrganisations(String name, Integer page, List<String> include) {
     return directoryRepository
         .findAllByName(name, PageRequest.of(page, pageSize, Sort.by("name")))
         .stream()
