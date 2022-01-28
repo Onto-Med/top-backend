@@ -1,11 +1,12 @@
 package care.smith.top.backend.neo4j_ontology_access.model;
 
+import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.neo4j.core.schema.Node;
 
 import java.util.Collections;
 
 /** Repositories are included in {@link Directory}s and can contain ontologies and classes. */
-@Node
+@Node("Repository")
 public class Repository extends Directory implements ClassRelationOwner {
   /** Determins whether this repository is a primary (aka. public) repository. */
   private boolean primary;
@@ -15,6 +16,7 @@ public class Repository extends Directory implements ClassRelationOwner {
     this.setTypes(Collections.singleton(this.getClass().getName()));
   }
 
+  @PersistenceConstructor
   public Repository(String id) {
     super(id);
     this.setTypes(Collections.singleton(this.getClass().getName()));
