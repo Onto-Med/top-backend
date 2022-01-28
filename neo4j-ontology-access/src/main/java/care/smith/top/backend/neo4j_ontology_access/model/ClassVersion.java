@@ -139,4 +139,12 @@ public class ClassVersion extends Annotatable {
     this.classId = classId;
     return this;
   }
+
+  public User getUser() {
+    return user;
+  }
+
+  public String getName() {
+    return name;
+  }
 }
