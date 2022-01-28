@@ -10,6 +10,8 @@ import care.smith.top.backend.neo4j_ontology_access.repository.AnnotationReposit
 import care.smith.top.backend.neo4j_ontology_access.repository.ClassRepository;
 import care.smith.top.backend.neo4j_ontology_access.repository.ClassVersionRepository;
 import care.smith.top.backend.neo4j_ontology_access.repository.ExpressionRepository;
+import org.springframework.beans.PropertyAccessor;
+import org.springframework.beans.PropertyAccessorFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -17,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.ZoneOffset;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -36,10 +39,8 @@ public class EntityService {
 
     Class cls = new Class(entity.getId());
     cls.createVersion(buildClassVersion(entity), true);
-    classRepository.save(cls);
 
-    // TODO: map result of save() to entity
-    return entity;
+    return classToEntity(classRepository.save(cls));
   }
 
   public Entity loadEntity(
@@ -106,10 +107,7 @@ public class EntityService {
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
     cls.createVersion(buildClassVersion(entity), true);
-    classRepository.save(cls);
-
-    // TODO: map result of save() to entity
-    return entity;
+    return classToEntity(classRepository.save(cls));
   }
 
   /**
@@ -129,9 +127,9 @@ public class EntityService {
    * @return The resulting {@link ClassVersion} object.
    */
   private ClassVersion buildClassVersion(Entity entity) {
+    // TODO: add all annotations, expressions and properties
     return (ClassVersion)
         new ClassVersion()
-            .setClassId(entity.getId())
             .addAnnotations(
                 entity.getTitles().stream()
                     .map(t -> new Annotation("title", t.getText(), t.getLang(), null))
@@ -144,5 +142,71 @@ public class EntityService {
                 entity.getDescriptions().stream()
                     .map(d -> new Annotation("description", d.getText(), d.getLang(), null))
                     .collect(Collectors.toSet()));
+  }
+
+  /**
+   * Transforms the given {@link ClassVersion} object to an {@link Entity} object.
+   *
+   * @param classVersion The {@link ClassVersion} object to be transformed.
+   * @return The resulting {@link Entity} object.
+   */
+  private Entity classVersionToEntity(ClassVersion classVersion) {
+    Entity entity = new Entity();
+
+    // There can be multiple repositories! How to get the correct one?
+    // TODO: entity.setRepository(classVersion.getaClass().getSuperClassRelation().getRepository());
+    entity.setId(classVersion.getaClass().getUuid());
+    entity.setVersion(classVersion.getVersion());
+    entity.setIndex(classVersion.getaClass().getSuperClassRelation().getIndex());
+    entity.setCreatedAt(classVersion.getCreatedAt().atOffset(ZoneOffset.UTC));
+    entity.setHiddenAt(classVersion.getHiddenAt().atOffset(ZoneOffset.UTC));
+    // TODO: entity.setAuthor(classVersion.getUser()); Map User to UserAccount, or drop UserAccount
+    // from top-api model.
+    // TODO: entity.setRefer(); <- insert URI
+
+    classVersion
+        .getEquivalentClasses()
+        .forEach(
+            e -> {
+              Entity equivalentEntity = new Entity();
+              equivalentEntity.setVersion(e.getVersion());
+              equivalentEntity.setId(e.getaClass().getUuid());
+              // TODO: equivalentEntity.setRepository(e.getaClass().getSuperClassRelation().getRepository());
+              entity.addEquivalentEntitiesItem(equivalentEntity);
+            });
+
+    PropertyAccessor accessor = PropertyAccessorFactory.forBeanPropertyAccess(entity);
+    Arrays.asList("title", "synonym", "description")
+        .forEach(
+            p ->
+                accessor.setPropertyValue(
+                    p + "s",
+                    classVersionRepository.findAnnotationsByProperty(classVersion, p).stream()
+                        .map(
+                            a ->
+                                new LocalisableText()
+                                    .text(a.getStringValue())
+                                    .lang(a.getLanguage()))
+                        .collect(Collectors.toList())));
+
+    // TODO: entity.setEntityType();
+    // TODO: entity.setCodes();
+
+    return entity;
+  }
+
+  /**
+   * Transforms the given {@link Class} object's <u>current version</u> to an {@link Entity} object.
+   *
+   * @param cls The {@link Class} object to be transformed.
+   * @return The resulting {@link Entity} object.
+   */
+  private Entity classToEntity(Class cls) {
+    return classVersionToEntity(
+        cls.getCurrentVersion()
+            .orElseThrow(
+                () ->
+                    new ResponseStatusException(
+                        HttpStatus.INTERNAL_SERVER_ERROR, "Entity had no version!")));
   }
 }
