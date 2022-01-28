@@ -49,7 +49,7 @@ public class EntityService {
                 .map(d -> new Annotation("description", d.getText(), d.getLang(), null))
                 .collect(Collectors.toSet()));
 
-    cls.createVersion(version).setCurrentVersion(version);
+    cls.createVersion(version, true);
 
     classRepository.save(cls);
     return entity;

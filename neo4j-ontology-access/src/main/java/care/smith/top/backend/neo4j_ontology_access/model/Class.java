@@ -42,12 +42,20 @@ public class Class extends Annotatable {
   /**
    * Add new version for this class. The version will get assigned a version number.
    *
-   * @param version The new version.
-   * @return This Class object.
+   * @param classVersion The new version.
+   * @param setCurrent If true, given {@link ClassVersion} will be set to the current version of
+   *     this {@link Class} object.
+   * @return This {@link Class} object.
    */
-  public Class createVersion(ClassVersion version) {
+  public Class createVersion(ClassVersion classVersion, boolean setCurrent) {
     if (versions == null) versions = new HashSet<>();
-    this.versions.add(version.setVersion(versions.size() + 1));
+
+    int version = 1;
+    if (getCurrentVersion().isPresent()) version = getCurrentVersion().get().getVersion() + 1;
+
+    versions.add(classVersion.setVersion(version));
+    if (setCurrent) setCurrentVersion(classVersion);
+
     return this;
   }
 
