@@ -67,7 +67,7 @@ public class OrganisationService {
 
   public List<Organisation> getOrganisations(String name, Integer page, List<String> include) {
     return directoryRepository
-        .findAllByName(name, PageRequest.of(page, pageSize, Sort.by("name")))
+        .findByNameContaining(name, PageRequest.of(page, pageSize, Sort.by("name")))
         .stream()
         .map(this::directoryToOrganisation)
         .collect(Collectors.toList());

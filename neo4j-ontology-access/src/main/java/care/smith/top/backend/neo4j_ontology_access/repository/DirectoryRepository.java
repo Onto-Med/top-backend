@@ -8,6 +8,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface DirectoryRepository extends PagingAndSortingRepository<Directory, String> {
-  // TODO: not working, maybe query must be specified:
-  Page<Directory> findAllByName(String name, Pageable pageable);
+  Page<Directory> findByNameContaining(String name, Pageable pageable);
 }
