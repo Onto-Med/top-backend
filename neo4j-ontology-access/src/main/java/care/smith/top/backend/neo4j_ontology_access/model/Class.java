@@ -17,8 +17,8 @@ import java.util.UUID;
 
 @Node
 public class Class extends Annotatable {
-  @Id private final UUID uuid;
-  @Version private Long nodeVersion;
+  @Id private final UUID id;
+  @Version private Long  nodeVersion;
   @CreatedDate private Instant createdAt;
   @CreatedBy private User createdBy;
 
@@ -37,8 +37,8 @@ public class Class extends Annotatable {
   private String ownerId;
 
   @PersistenceConstructor
-  public Class(UUID uuid) {
-    this.uuid = uuid;
+  public Class(UUID id) {
+    this.id = id;
   }
 
   /**
@@ -76,8 +76,8 @@ public class Class extends Annotatable {
     }
   }
 
-  public UUID getUuid() {
-    return uuid;
+  public UUID getId() {
+    return id;
   }
 
   public Class getForkedClass() {
@@ -100,7 +100,7 @@ public class Class extends Annotatable {
   public Class setCurrentVersion(ClassVersion currentVersion) {
     if (!versions.contains(currentVersion))
       throw new UnsupportedOperationException(
-          String.format("%s does not belong to '%s'!", currentVersion.getClass().getName(), uuid));
+          String.format("%s does not belong to '%s'!", currentVersion.getClass().getName(), id));
     this.currentVersion = currentVersion;
     return this;
   }

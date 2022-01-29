@@ -57,10 +57,7 @@ public class EntityService {
         superClasses.add(phenotype.getSuperPhenotype().getId());
     }
 
-    if (superClasses.isEmpty()) {
-      cls.addSuperClassRelation(
-          new ClassRelation().setIndex(entity.getIndex()).setOwnerId(repositoryName));
-    } else {
+    if (!superClasses.isEmpty()) {
       superClasses.forEach(
           c ->
               cls.addSuperClassRelation(
@@ -68,6 +65,9 @@ public class EntityService {
     }
 
     Class result = classRepository.save(cls);
+
+    if (superClasses.isEmpty())
+      repositoryRepository.addRootClass(repository, result, entity.getIndex());
 
     return classToEntity(result);
   }
@@ -171,7 +171,7 @@ public class EntityService {
 
     // There can be multiple repositories! How to get the correct one?
     // TODO: entity.setRepository(classVersion.getaClass().getSuperClassRelation().getRepository());
-    entity.setId(classVersion.getaClass().getUuid());
+    entity.setId(classVersion.getaClass().getId());
     entity.setVersion(classVersion.getVersion());
 
     Set<ClassRelation> superClasses = classVersion.getaClass().getSuperClassRelations();
@@ -190,7 +190,7 @@ public class EntityService {
               e -> {
                 Entity equivalentEntity = new Entity();
                 equivalentEntity.setVersion(e.getVersion());
-                equivalentEntity.setId(e.getaClass().getUuid());
+                equivalentEntity.setId(e.getaClass().getId());
                 // TODO:
                 // equivalentEntity.setRepository(e.getaClass().getSuperClassRelation().getRepository());
                 entity.addEquivalentEntitiesItem(equivalentEntity);
