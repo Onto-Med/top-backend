@@ -34,6 +34,8 @@ public class Class extends Annotatable {
   @Relationship(type = "IS_SUBCLASS_OF")
   private Set<ClassRelation> superClassRelations;
 
+  private String ownerId;
+
   @PersistenceConstructor
   public Class(UUID uuid) {
     this.uuid = uuid;
@@ -119,6 +121,15 @@ public class Class extends Annotatable {
   public Class addSuperClassRelation(ClassRelation superClassRelation) {
     if (superClassRelations == null) superClassRelations = new HashSet<>();
     superClassRelations.add(superClassRelation);
+    return this;
+  }
+
+  public String getOwnerId() {
+    return ownerId;
+  }
+
+  public Class setOwnerId(String ownerId) {
+    this.ownerId = ownerId;
     return this;
   }
 }

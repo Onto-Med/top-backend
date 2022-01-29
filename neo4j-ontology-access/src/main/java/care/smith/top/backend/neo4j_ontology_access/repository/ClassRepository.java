@@ -12,7 +12,7 @@ import java.util.stream.Stream;
 @org.springframework.stereotype.Repository
 public interface ClassRepository extends PagingAndSortingRepository<Class, UUID> {
   @Query(
-      "MATCH (super:Class {uuid: $cls.__id__}) <-[:HAS_SUPERCLASS]- (cr:ClassRelation) -[:BELONGS_TO]-> (:Directory:Repository {id: $repository.__id__}) "
+      "MATCH (super:Class {uuid: $cls.__id__}) <-[:HAS_SUPERCLASS]- (cr:ClassRelation { ownerId: $repository.__id__ }) "
           + "MATCH (cr) <-[:IS_SUBCLASS_OF]- (sub:Class) "
           + "RETURN sub ORDER BY sub.index")
   Stream<Class> findSubclasses(@Param("cls") Class cls, @Param("repository") Repository repository);

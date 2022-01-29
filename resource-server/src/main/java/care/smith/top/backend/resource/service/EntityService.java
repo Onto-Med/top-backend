@@ -40,6 +40,7 @@ public class EntityService {
                         String.format("Repository '%s' does not exist!", repositoryName)));
 
     Class cls = new Class(entity.getId());
+    cls.setOwnerId(repositoryName);
     cls.createVersion(buildClassVersion(entity), true);
 
     List<UUID> superClasses = new ArrayList<>();
@@ -58,17 +59,16 @@ public class EntityService {
 
     if (superClasses.isEmpty()) {
       cls.addSuperClassRelation(
-          new ClassRelation().setIndex(entity.getIndex()));
+          new ClassRelation().setIndex(entity.getIndex()).setOwnerId(repositoryName));
     } else {
       superClasses.forEach(
           c ->
               cls.addSuperClassRelation(
-                  new ClassRelation().setIndex(entity.getIndex()).setSuperclass(new Class(c))));
+                  new ClassRelation().setIndex(entity.getIndex()).setSuperclass(new Class(c)).setOwnerId(repositoryName)));
     }
 
     Class result = classRepository.save(cls);
 
-    result.getSuperClassRelations().forEach(rel -> repositoryRepository.addClassRelation(repository, rel));
     return classToEntity(result);
   }
 

@@ -20,7 +20,7 @@ public class ClassRepositoryTest extends RepositoryTest {
     Repository repository = new Repository();
 
     for (int i = 0; i < 10; i++) {
-      ClassRelation relation = new ClassRelation().setSuperclass(cls).setRepository(repository);
+      ClassRelation relation = new ClassRelation().setSuperclass(cls).setOwnerId(repository.getId());
       Class subclass = new Class(UUID.randomUUID()).addSuperClassRelation(relation);
       classRepository.save(subclass);
     }

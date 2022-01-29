@@ -17,14 +17,4 @@ public interface RepositoryRepository extends PagingAndSortingRepository<Reposit
   Optional<Repository> findByIdAndSuperDirectoryId(
       @Param("repositoryId") String repositoryId,
       @Param("superDirectoryId") String superDirectoryId);
-
-  @Query(
-      "MATCH (cr:ClassRelation) "
-          + "WHERE id(cr) = $classRelation.__id__ "
-          + "MATCH (r:Repository { id: $repository.__id__ }) "
-          + "CREATE (cr) -[:BELONGS_TO]-> (r) "
-          + "RETURN r")
-  Repository addClassRelation(
-      @Param("repository") Repository repository,
-      @Param("classRelation") ClassRelation classRelation);
 }

@@ -20,8 +20,7 @@ public class ClassRelation {
   @Relationship(type = "HAS_SUPERCLASS")
   private Class superclass;
 
-  @Relationship(type = "BELONGS_TO")
-  private ClassRelationOwner owner;
+  private String ownerId;
 
   @PersistenceConstructor
   public ClassRelation() {}
@@ -39,12 +38,12 @@ public class ClassRelation {
     return this;
   }
 
-  public ClassRelationOwner getRepository() {
-    return owner;
+  public String getOwnerId() {
+    return ownerId;
   }
 
-  public ClassRelation setRepository(ClassRelationOwner owner) {
-    this.owner = owner;
+  public ClassRelation setOwnerId(String ownerId) {
+    this.ownerId = ownerId;
     return this;
   }
 
