@@ -115,6 +115,28 @@ public class EntityService {
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
     cls.createVersion(buildClassVersion(entity), true);
+
+    List<UUID> superClasses = new ArrayList<>();
+    if (entity instanceof Category) {
+      Category category = (Category) entity;
+      if (category.getSuperCategories() != null)
+        superClasses.addAll(
+          category.getSuperCategories().stream().map(Entity::getId).collect(Collectors.toList()));
+    }
+
+    if (entity instanceof Phenotype) {
+      Phenotype phenotype = (Phenotype) entity;
+      if (phenotype.getSuperPhenotype() != null)
+        superClasses.add(phenotype.getSuperPhenotype().getId());
+    }
+
+    if (!superClasses.isEmpty()) {
+      superClasses.forEach(
+        c ->
+          cls.addSuperClassRelation(
+            new ClassRelation(new Class(c), repositoryId, entity.getIndex())));
+    }
+
     return classToEntity(classRepository.save(cls));
   }
 
