@@ -44,12 +44,18 @@ public class RepositoryService {
    * @return The resulting {@link care.smith.top.backend.model.Repository} object.
    */
   private care.smith.top.backend.model.Repository repositoryToApiPojo(Repository repository) {
-    return new care.smith.top.backend.model.Repository()
-        .createdAt(repository.getCreatedAtOffset())
-        .id(repository.getId())
-        .name(repository.getName())
-        .description(repository.getDescription())
-        .organisation(new Organisation());
+    care.smith.top.backend.model.Repository data =
+        new care.smith.top.backend.model.Repository()
+            .createdAt(repository.getCreatedAtOffset())
+            .id(repository.getId())
+            .name(repository.getName())
+            .description(repository.getDescription());
+
+    repository.getSuperDirectories().stream()
+        .findFirst()
+        .ifPresent(o -> data.setOrganisation(new Organisation().id(o.getId())));
+
+    return data;
   }
 
   private Directory getOrganisation(String organisationId) {
