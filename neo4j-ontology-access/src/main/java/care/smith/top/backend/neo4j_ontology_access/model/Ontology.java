@@ -1,5 +1,6 @@
 package care.smith.top.backend.neo4j_ontology_access.model;
 
+import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Relationship;
 
@@ -16,6 +17,15 @@ public class Ontology extends Directory {
 
   @Relationship(type = "CURRENT_VERSION")
   private OntologyVersion currentVersion;
+
+  public Ontology() {
+    super();
+  }
+
+  @PersistenceConstructor
+  public Ontology(String id) {
+    super(id);
+  }
 
   public Ontology createVersion(OntologyVersion version) {
     if (versions == null) versions = new HashSet<>();
