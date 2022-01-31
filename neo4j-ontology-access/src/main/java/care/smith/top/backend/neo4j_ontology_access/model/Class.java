@@ -18,7 +18,7 @@ import java.util.UUID;
 @Node
 public class Class extends Annotatable {
   @Id private final UUID id;
-  @Version private Long  nodeVersion;
+  @Version private Long nodeVersion;
   @CreatedDate private Instant createdAt;
   @CreatedBy private User createdBy;
 
@@ -39,6 +39,10 @@ public class Class extends Annotatable {
   @PersistenceConstructor
   public Class(UUID id) {
     this.id = id;
+  }
+
+  public Class() {
+    this(UUID.randomUUID());
   }
 
   /**
@@ -74,6 +78,12 @@ public class Class extends Annotatable {
     } else {
       return getVersions().stream().filter(v -> v.getVersion() == version).findFirst();
     }
+  }
+
+  public Class addSuperClassRelation(ClassRelation superClassRelation) {
+    if (superClassRelations == null) superClassRelations = new HashSet<>();
+    superClassRelations.add(superClassRelation);
+    return this;
   }
 
   public UUID getId() {
@@ -115,12 +125,6 @@ public class Class extends Annotatable {
 
   public Class setSuperClassRelations(Set<ClassRelation> superClassRelations) {
     this.superClassRelations = superClassRelations;
-    return this;
-  }
-
-  public Class addSuperClassRelation(ClassRelation superClassRelation) {
-    if (superClassRelations == null) superClassRelations = new HashSet<>();
-    superClassRelations.add(superClassRelation);
     return this;
   }
 
