@@ -13,7 +13,7 @@ class DirectoryRepositoryTest extends RepositoryTest {
   @Autowired DirectoryRepository directoryRepository;
 
   @Test
-  void findByName() {
+  void findByNameContaining() {
     String name1 = "Example Organisation";
     String name2 = "Other Organisation";
 
