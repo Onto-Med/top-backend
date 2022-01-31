@@ -60,8 +60,7 @@ public class EntityService {
     return classToEntity(classRepository.save(cls));
   }
 
-  public Entity loadEntity(
-      String organisationId, String repositoryId, UUID id, Integer version) {
+  public Entity loadEntity(String organisationId, String repositoryId, UUID id, Integer version) {
     Repository repository = getRepository(organisationId, repositoryId);
     Class cls =
         classRepository
@@ -103,11 +102,7 @@ public class EntityService {
   }
 
   public Entity updateEntityById(
-      String organisationId,
-      String repositoryId,
-      UUID id,
-      Entity entity,
-      List<String> include) {
+      String organisationId, String repositoryId, UUID id, Entity entity, List<String> include) {
     Repository repository = getRepository(organisationId, repositoryId);
     Class cls =
         classRepository
@@ -121,7 +116,7 @@ public class EntityService {
       Category category = (Category) entity;
       if (category.getSuperCategories() != null)
         superClasses.addAll(
-          category.getSuperCategories().stream().map(Entity::getId).collect(Collectors.toList()));
+            category.getSuperCategories().stream().map(Entity::getId).collect(Collectors.toList()));
     }
 
     if (entity instanceof Phenotype) {
@@ -132,9 +127,9 @@ public class EntityService {
 
     if (!superClasses.isEmpty()) {
       superClasses.forEach(
-        c ->
-          cls.addSuperClassRelation(
-            new ClassRelation(new Class(c), repositoryId, entity.getIndex())));
+          c ->
+              cls.addSuperClassRelation(
+                  new ClassRelation(new Class(c), repositoryId, entity.getIndex())));
     }
 
     return classToEntity(classRepository.save(cls));
@@ -175,20 +170,62 @@ public class EntityService {
    * @return The resulting {@link ClassVersion} object.
    */
   private ClassVersion buildClassVersion(Entity entity) {
-    // TODO: add all annotations, expressions and properties
+    ClassVersion classVersion = new ClassVersion();
+
+    Set<ClassVersion> equivalentEntities = new HashSet<>();
+    entity
+        .getEquivalentEntities()
+        .forEach(
+            e ->
+                classVersionRepository
+                    .findByClassIdAndVersion(e.getId(), e.getVersion())
+                    .ifPresent(equivalentEntities::add));
+    classVersion.addEquivalentClasses(equivalentEntities);
+
+    if (entity instanceof Phenotype) {
+      Phenotype phenotype = (Phenotype) entity;
+      if (phenotype.getScore() != null)
+        classVersion.addAnnotation(
+            new Annotation("score", phenotype.getScore().doubleValue(), null));
+      if (phenotype.getDataType() != null)
+        classVersion.addAnnotation(
+            new Annotation("dataType", phenotype.getDataType().getValue(), null));
+      // TODO: convert formula to string or store components as annotations
+      //      if (phenotype.getFormula() != null)
+      //        classVersion.addAnnotation(new Annotation("formula", phenotype.getFormula(), null));
+      if (phenotype.getUnits() != null)
+        classVersion.addAnnotations(
+            phenotype.getUnits().stream()
+                .map(u -> new Annotation("unit", u.getUnit(), null))
+                .collect(Collectors.toSet()));
+      // TODO: convert expression to string and apply variables
+      //      if (phenotype.getExpression() != null)
+      //        phenotype.getExpression()
+      // TODO: add restrictions
+    }
+
+    // TODO: rework class id or apply workaround for codes with missing UUID
+    //    if (entity.getCodes() != null) {
+    //      entity.getCodes().forEach(c -> {
+    //        classRepository.findById(c.getCode()).ifPresent(codeClass ->
+    // classVersion.addAnnotation(new Annotation("code", codeClass, null)));
+    //      });
+    //    }
+
     return (ClassVersion)
-        new ClassVersion()
+        classVersion
+            .addAnnotation(new Annotation("type", entity.getEntityType().getValue(), null))
             .addAnnotations(
                 entity.getTitles().stream()
-                    .map(t -> new Annotation("title", t.getText(), t.getLang(), null))
+                    .map(t -> new Annotation("title", t.getText(), t.getLang()))
                     .collect(Collectors.toSet()))
             .addAnnotations(
                 entity.getSynonyms().stream()
-                    .map(s -> new Annotation("synonym", s.getText(), s.getLang(), null))
+                    .map(s -> new Annotation("synonym", s.getText(), s.getLang()))
                     .collect(Collectors.toSet()))
             .addAnnotations(
                 entity.getDescriptions().stream()
-                    .map(d -> new Annotation("description", d.getText(), d.getLang(), null))
+                    .map(d -> new Annotation("description", d.getText(), d.getLang()))
                     .collect(Collectors.toSet()));
   }
 
@@ -199,8 +236,9 @@ public class EntityService {
    * @return The resulting {@link Entity} object.
    */
   private Entity classVersionToEntity(ClassVersion classVersion) {
-    Entity                                  entity     = new Entity();
-    care.smith.top.backend.model.Repository repository = new care.smith.top.backend.model.Repository();
+    Entity entity = new Entity();
+    care.smith.top.backend.model.Repository repository =
+        new care.smith.top.backend.model.Repository();
     repository.setId(classVersion.getaClass().getRepositoryId());
 
     entity.setRepository(repository);
@@ -228,7 +266,7 @@ public class EntityService {
               });
 
     PropertyAccessor accessor = PropertyAccessorFactory.forBeanPropertyAccess(entity);
-    Arrays.asList("title", "synonym", "description")
+    Arrays.asList("title", "synonym", "description", "dataType")
         .forEach(
             p ->
                 accessor.setPropertyValue(
@@ -241,8 +279,8 @@ public class EntityService {
                                     .lang(a.getLanguage()))
                         .collect(Collectors.toList())));
 
-    // TODO: entity.setEntityType();
     // TODO: entity.setCodes();
+    // TODO: entity.setExpression();
 
     return entity;
   }
