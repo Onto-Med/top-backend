@@ -34,7 +34,7 @@ public class Class extends Annotatable {
   @Relationship(type = "IS_SUBCLASS_OF")
   private Set<ClassRelation> superClassRelations;
 
-  private String ownerId;
+  private String repositoryId;
 
   @PersistenceConstructor
   public Class(UUID id) {
@@ -124,12 +124,12 @@ public class Class extends Annotatable {
     return this;
   }
 
-  public String getOwnerId() {
-    return ownerId;
+  public String getRepositoryId() {
+    return repositoryId;
   }
 
-  public Class setOwnerId(String ownerId) {
-    this.ownerId = ownerId;
+  public Class setRepositoryId(String repositoryId) {
+    this.repositoryId = repositoryId;
     return this;
   }
 }

@@ -40,7 +40,7 @@ public class EntityService {
                         String.format("Repository '%s' does not exist!", repositoryName)));
 
     Class cls = new Class(entity.getId());
-    cls.setOwnerId(repositoryName);
+    cls.setRepositoryId(repositoryName);
     cls.createVersion(buildClassVersion(entity), true);
 
     List<UUID> superClasses = new ArrayList<>();
