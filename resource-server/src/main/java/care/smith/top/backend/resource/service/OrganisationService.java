@@ -10,7 +10,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -30,11 +29,11 @@ public class OrganisationService {
     // throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
     // userDetails.getUsername());
 
-    if (directoryRepository.findById(organisation.getOrganisationId().toString()).isPresent()) {
+    if (directoryRepository.findById(organisation.getId()).isPresent()) {
       throw new ResponseStatusException(HttpStatus.CONFLICT);
     }
     // TODO: update top-api to use strings as ids
-    Directory directory = new Directory(organisation.getOrganisationId().toString());
+    Directory directory = new Directory(organisation.getId());
 
     return directoryToOrganisation(directoryRepository.save(populate(directory, organisation)));
   }
@@ -87,7 +86,7 @@ public class OrganisationService {
           String.format("Directory is not of type %s", directoryType));
 
     Organisation organisation = new Organisation();
-    organisation.setOrganisationId(Integer.parseInt(directory.getId()));
+    organisation.setId(directory.getId());
     organisation.setName(directory.getName());
     organisation.setDescription(directory.getDescription());
     organisation.setCreatedAt(directory.getCreatedAtOffset());
@@ -108,9 +107,8 @@ public class OrganisationService {
    */
   private Directory populate(Directory directory, Organisation organisation) {
     if (organisation.getSuperOrganisation() != null
-        && organisation.getSuperOrganisation().getOrganisationId() != null) {
-      String superOrganisationId =
-          organisation.getSuperOrganisation().getOrganisationId().toString();
+        && organisation.getSuperOrganisation().getId() != null) {
+      String superOrganisationId = organisation.getSuperOrganisation().getId();
       directory.setSuperDirectories(
           Collections.singleton(
               directoryRepository
