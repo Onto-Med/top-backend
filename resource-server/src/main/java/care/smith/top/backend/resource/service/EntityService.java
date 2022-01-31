@@ -78,9 +78,10 @@ public class EntityService {
   @Transactional
   public void deleteEntity(
       String organisationId, String repositoryId, UUID id, Integer version, boolean permanent) {
+    Repository repository = getRepository(organisationId, repositoryId);
     Class cls =
         classRepository
-            .findById(id)
+            .findByIdAndRepositoryId(id, repository.getId())
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
     Optional<ClassVersion> optional;
@@ -107,9 +108,10 @@ public class EntityService {
       UUID id,
       Entity entity,
       List<String> include) {
+    Repository repository = getRepository(organisationId, repositoryId);
     Class cls =
         classRepository
-            .findById(id)
+            .findByIdAndRepositoryId(id, repository.getId())
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
     cls.createVersion(buildClassVersion(entity), true);
