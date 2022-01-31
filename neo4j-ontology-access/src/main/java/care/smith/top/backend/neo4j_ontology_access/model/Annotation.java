@@ -21,7 +21,7 @@ public class Annotation extends Annotatable {
   private Boolean booleanValue;
 
   @Relationship(type = "HAS_CLASS_VALUE")
-  private ClassVersion classValue;
+  private Class classValue;
 
   private String language;
   private Integer index;
@@ -68,11 +68,11 @@ public class Annotation extends Annotatable {
     this.booleanValue = booleanValue;
   }
 
-  public Annotation(String property, ClassVersion classValue, String language) {
+  public Annotation(String property, Class classValue, String language) {
     this(property, classValue, language, null);
   }
 
-  public Annotation(String property, ClassVersion classValue, String language, Integer index) {
+  public Annotation(String property, Class classValue, String language, Integer index) {
     this(property, language, index);
     this.datatype = "class";
     this.classValue = classValue;
@@ -178,11 +178,11 @@ public class Annotation extends Annotatable {
     return this;
   }
 
-  public ClassVersion getClassValue() {
+  public Class getClassValue() {
     return classValue;
   }
 
-  public Annotation setClassValue(ClassVersion classValue) {
+  public Annotation setClassValue(Class classValue) {
     this.classValue = classValue;
     return this;
   }

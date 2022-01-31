@@ -21,15 +21,15 @@ public class Expression {
   private String expression;
   private String type;
   private Integer index;
-  private Set<ClassVersion> components;
+  private Set<Class> components;
 
   public Expression() {}
 
-  public Expression addComponent(ClassVersion component) {
+  public Expression addComponent(Class component) {
     return addComponents(Collections.singleton(component));
   }
 
-  public Expression addComponents(Set<ClassVersion> components) {
+  public Expression addComponents(Set<Class> components) {
     if (this.components == null) this.components = new HashSet<>();
     this.components.addAll(components);
     return this;
@@ -66,11 +66,11 @@ public class Expression {
     return this;
   }
 
-  public Set<ClassVersion> getComponents() {
+  public Set<Class> getComponents() {
     return components;
   }
 
-  public Expression setComponents(Set<ClassVersion> components) {
+  public Expression setComponents(Set<Class> components) {
     this.components = components;
     return this;
   }
