@@ -30,13 +30,7 @@ public class EntityService {
   public Entity createEntity(String organisationName, String repositoryName, Entity entity) {
     if (classRepository.existsById(entity.getId()))
       throw new ResponseStatusException(HttpStatus.CONFLICT);
-    repositoryRepository
-        .findByIdAndSuperDirectoryId(repositoryName, organisationName)
-        .orElseThrow(
-            () ->
-                new ResponseStatusException(
-                    HttpStatus.NOT_FOUND,
-                    String.format("Repository '%s' does not exist!", repositoryName)));
+    getRepository(organisationName, repositoryName);
 
     Class cls = new Class(entity.getId());
     cls.setRepositoryId(repositoryName);
@@ -118,6 +112,24 @@ public class EntityService {
 
     cls.createVersion(buildClassVersion(entity), true);
     return classToEntity(classRepository.save(cls));
+  }
+
+  /**
+   * Get {@link Repository} by repositoryId and directoryId. If the repository does not exist or
+   * is not associated with the directory, this method will throw an exception.
+   *
+   * @param organisationId ID of the {@link Directory}
+   * @param repositoryId ID of the {@link Repository}
+   * @return
+   */
+  private Repository getRepository(String organisationId, String repositoryId) {
+    return repositoryRepository
+        .findByIdAndSuperDirectoryId(repositoryId, organisationId)
+        .orElseThrow(
+            () ->
+                new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    String.format("Repository '%s' does not exist!", repositoryId)));
   }
 
   /**
