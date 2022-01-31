@@ -30,14 +30,13 @@ public class EntityService {
   public Entity createEntity(String organisationName, String repositoryName, Entity entity) {
     if (classRepository.existsById(entity.getId()))
       throw new ResponseStatusException(HttpStatus.CONFLICT);
-    Repository repository =
-        repositoryRepository
-            .findByIdAndSuperDirectoryId(repositoryName, organisationName)
-            .orElseThrow(
-                () ->
-                    new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        String.format("Repository '%s' does not exist!", repositoryName)));
+    repositoryRepository
+        .findByIdAndSuperDirectoryId(repositoryName, organisationName)
+        .orElseThrow(
+            () ->
+                new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    String.format("Repository '%s' does not exist!", repositoryName)));
 
     Class cls = new Class(entity.getId());
     cls.setRepositoryId(repositoryName);
@@ -61,15 +60,13 @@ public class EntityService {
       superClasses.forEach(
           c ->
               cls.addSuperClassRelation(
-                  new ClassRelation().setIndex(entity.getIndex()).setSuperclass(new Class(c)).setOwnerId(repositoryName)));
+                  new ClassRelation()
+                      .setIndex(entity.getIndex())
+                      .setSuperclass(new Class(c))
+                      .setOwnerId(repositoryName)));
     }
 
-    Class result = classRepository.save(cls);
-
-    if (superClasses.isEmpty())
-      repositoryRepository.addRootClass(repository, result, entity.getIndex());
-
-    return classToEntity(result);
+    return classToEntity(classRepository.save(cls));
   }
 
   public Entity loadEntity(

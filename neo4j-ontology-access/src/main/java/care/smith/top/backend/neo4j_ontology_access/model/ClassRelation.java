@@ -2,28 +2,33 @@ package care.smith.top.backend.neo4j_ontology_access.model;
 
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.neo4j.core.schema.GeneratedValue;
-import org.springframework.data.neo4j.core.schema.Id;
-import org.springframework.data.neo4j.core.schema.Node;
-import org.springframework.data.neo4j.core.schema.Relationship;
+import org.springframework.data.neo4j.core.schema.RelationshipId;
+import org.springframework.data.neo4j.core.schema.RelationshipProperties;
+import org.springframework.data.neo4j.core.schema.TargetNode;
 
 /**
  * This class describes relations between classes (super-sub-class relations). Relations always
  * belong to a repository or ontology. If there is no superclass, the subclass is a root node.
  */
-@Node
+@RelationshipProperties
 public class ClassRelation {
-  @Id @GeneratedValue private Long id;
+  @RelationshipId @GeneratedValue private Long id;
+  @TargetNode private Class superclass;
 
   /** Use this property to sort subclasses below a superclass. */
   private Integer index;
 
-  @Relationship(type = "HAS_SUPERCLASS")
-  private Class superclass;
-
+  /** This is the ID of the repository or ontology, where this relation was defined. */
   private String ownerId;
 
   @PersistenceConstructor
   public ClassRelation() {}
+
+  public ClassRelation(Class superClass, String ownerId, Integer index) {
+    this.superclass = superClass;
+    this.ownerId = ownerId;
+    this.index = index;
+  }
 
   public Long getId() {
     return id;
