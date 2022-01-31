@@ -37,6 +37,13 @@ public class RepositoryService {
     return repositoryToApiPojo(repositoryRepository.save(repository));
   }
 
+  public void deleteRepository(String repositoryId, String organisationId, List<String> include) {
+    repositoryRepository.delete(
+        repositoryRepository
+            .findByIdAndSuperDirectoryId(repositoryId, organisationId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND)));
+  }
+
   /**
    * Convert {@link Repository} object to {@link care.smith.top.backend.model.Repository} object.
    *

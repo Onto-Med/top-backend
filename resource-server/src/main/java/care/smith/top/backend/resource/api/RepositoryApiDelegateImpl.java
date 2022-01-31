@@ -17,13 +17,16 @@ public class RepositoryApiDelegateImpl implements RepositoryApiDelegate {
   @Override
   public ResponseEntity<Repository> createRepository(
       String organisationId, Repository repository, List<String> include) {
-    return new ResponseEntity<>(repositoryService.createRepository(organisationId, repository, include), HttpStatus.CREATED);
+    return new ResponseEntity<>(
+        repositoryService.createRepository(organisationId, repository, include),
+        HttpStatus.CREATED);
   }
 
   @Override
   public ResponseEntity<Void> deleteRepositoryById(
       String repositoryId, String organisationId, List<String> include) {
-    return RepositoryApiDelegate.super.deleteRepositoryById(repositoryId, organisationId, include);
+    repositoryService.deleteRepository(repositoryId, organisationId, include);
+    return new ResponseEntity<>(HttpStatus.NO_CONTENT);
   }
 
   @Override
