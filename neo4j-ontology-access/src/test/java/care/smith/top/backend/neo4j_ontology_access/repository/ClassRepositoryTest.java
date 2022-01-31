@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Arrays;
 import java.util.Set;
-import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -18,14 +17,13 @@ public class ClassRepositoryTest extends RepositoryTest {
 
   @Test
   public void findSubclasses() {
-    UUID superclassUuid = UUID.randomUUID();
-    Class cls = new Class(superclassUuid);
+    Class cls = new Class();
     Repository repository = new Repository();
 
     for (int i = 0; i < 10; i++) {
       ClassRelation relation =
           new ClassRelation().setSuperclass(cls).setOwnerId(repository.getId());
-      Class subclass = new Class(UUID.randomUUID()).addSuperClassRelation(relation);
+      Class subclass = new Class().addSuperClassRelation(relation);
       classRepository.save(subclass);
     }
 
@@ -35,12 +33,12 @@ public class ClassRepositoryTest extends RepositoryTest {
 
   @Test
   void findRootClassesByRepository() {
-    Repository repository = new Repository("repo");
+    Repository repository = new Repository();
     repository = repositoryRepository.save(repository);
 
-    Class superClass = new Class(UUID.randomUUID()).setRepositoryId(repository.getId());
+    Class superClass = new Class().setRepositoryId(repository.getId());
     Class subClass =
-        new Class(UUID.randomUUID())
+        new Class()
             .setRepositoryId(repository.getId())
             .addSuperClassRelation(new ClassRelation(superClass, repository.getId(), 1));
 
