@@ -68,7 +68,8 @@ public class EntityService {
             .findByIdAndRepositoryId(id, repository.getId())
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     ClassVersion classVersion =
-        cls.getVersion(version)
+        classVersionRepository
+            .findByClassIdAndVersion(cls.getId(), version)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
     return classVersionToEntity(classVersion);
