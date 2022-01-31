@@ -44,6 +44,15 @@ public class RepositoryService {
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND)));
   }
 
+  public care.smith.top.backend.model.Repository getRepository(
+      String organisationId, String repositoryId, List<String> include) {
+    // TODO: include organisation if requested
+    return repositoryToApiPojo(
+        repositoryRepository
+            .findByIdAndSuperDirectoryId(repositoryId, organisationId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND)));
+  }
+
   /**
    * Convert {@link Repository} object to {@link care.smith.top.backend.model.Repository} object.
    *
