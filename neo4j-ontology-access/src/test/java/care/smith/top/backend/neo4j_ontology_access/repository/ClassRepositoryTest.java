@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Arrays;
 import java.util.Set;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -29,6 +30,20 @@ public class ClassRepositoryTest extends RepositoryTest {
 
     assertThat(classRepository.count()).isEqualTo(11);
     assertThat(classRepository.findSubclasses(cls, repository).count()).isEqualTo(10);
+  }
+
+  @Test
+  void findByIdAndRepositoryId() {
+    String repositoryId = UUID.randomUUID().toString();
+    Class cls = new Class().setRepositoryId(repositoryId);
+    classRepository.save(cls);
+
+    assertThat(classRepository.findByIdAndRepositoryId(cls.getId(), repositoryId))
+        .hasValueSatisfying(
+            c -> {
+              assertThat(c.getId()).isEqualTo(cls.getId());
+              assertThat(c.getRepositoryId()).isEqualTo(repositoryId);
+            });
   }
 
   @Test

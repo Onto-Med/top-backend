@@ -62,9 +62,10 @@ public class EntityService {
 
   public Entity loadEntity(
       String organisationName, String repositoryName, UUID id, Integer version) {
+    Repository repository = getRepository(organisationName, repositoryName);
     Class cls =
         classRepository
-            .findById(id)
+            .findByIdAndRepositoryId(id, repository.getId())
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     ClassVersion classVersion =
         cls.getVersion(version)
@@ -115,8 +116,8 @@ public class EntityService {
   }
 
   /**
-   * Get {@link Repository} by repositoryId and directoryId. If the repository does not exist or
-   * is not associated with the directory, this method will throw an exception.
+   * Get {@link Repository} by repositoryId and directoryId. If the repository does not exist or is
+   * not associated with the directory, this method will throw an exception.
    *
    * @param organisationId ID of the {@link Directory}
    * @param repositoryId ID of the {@link Repository}

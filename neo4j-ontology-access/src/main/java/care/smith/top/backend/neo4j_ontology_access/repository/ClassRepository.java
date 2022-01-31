@@ -6,6 +6,7 @@ import org.springframework.data.neo4j.repository.query.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Stream;
@@ -23,4 +24,6 @@ public interface ClassRepository extends PagingAndSortingRepository<Class, UUID>
       + "WHERE NOT (c) -[:IS_SUBCLASS_OF]-> () "
       + "RETURN c")
   Set<Class> findRootClassesByRepository(@Param("repository") Repository repository);
+
+  Optional<Class> findByIdAndRepositoryId(UUID id, String repositoryId);
 }
