@@ -175,10 +175,11 @@ public class EntityService {
    * @return The resulting {@link Entity} object.
    */
   private Entity classVersionToEntity(ClassVersion classVersion) {
-    Entity entity = new Entity();
+    Entity                                  entity     = new Entity();
+    care.smith.top.backend.model.Repository repository = new care.smith.top.backend.model.Repository();
+    repository.setId(classVersion.getaClass().getRepositoryId());
 
-    // There can be multiple repositories! How to get the correct one?
-    // TODO: entity.setRepository(classVersion.getaClass().getSuperClassRelation().getRepository());
+    entity.setRepository(repository);
     entity.setId(classVersion.getaClass().getId());
     entity.setVersion(classVersion.getVersion());
 
@@ -199,8 +200,6 @@ public class EntityService {
                 Entity equivalentEntity = new Entity();
                 equivalentEntity.setVersion(e.getVersion());
                 equivalentEntity.setId(e.getaClass().getId());
-                // TODO:
-                // equivalentEntity.setRepository(e.getaClass().getSuperClassRelation().getRepository());
                 entity.addEquivalentEntitiesItem(equivalentEntity);
               });
 
