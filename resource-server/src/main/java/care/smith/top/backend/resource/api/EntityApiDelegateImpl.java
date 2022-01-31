@@ -19,41 +19,41 @@ public class EntityApiDelegateImpl implements EntityApiDelegate {
 
   @Override
   public ResponseEntity<Entity> createEntity(
-      String organisationName, String repositoryName, Entity entity, List<String> include) {
+      String organisationId, String repositoryId, Entity entity, List<String> include) {
     return new ResponseEntity<>(
-        entityService.createEntity(organisationName, repositoryName, entity), HttpStatus.CREATED);
+        entityService.createEntity(organisationId, repositoryId, entity), HttpStatus.CREATED);
   }
 
   @Override
   public ResponseEntity<Entity> getEntityById(
-      String organisationName,
-      String repositoryName,
+      String organisationId,
+      String repositoryId,
       UUID id,
       Integer version,
       List<String> include) {
     return new ResponseEntity<>(
-        entityService.loadEntity(organisationName, repositoryName, id, version), HttpStatus.OK);
+        entityService.loadEntity(organisationId, repositoryId, id, version), HttpStatus.OK);
   }
 
   @Override
   public ResponseEntity<Void> deleteEntityById(
-      String organisationName,
-      String repositoryName,
+      String organisationId,
+      String repositoryId,
       UUID id,
       Integer version,
       List<String> include,
       Boolean permanent) {
-    entityService.deleteEntity(organisationName, repositoryName, id, version, permanent);
+    entityService.deleteEntity(organisationId, repositoryId, id, version, permanent);
     return new ResponseEntity<>(HttpStatus.NO_CONTENT);
   }
 
   @Override
-  public ResponseEntity<Entity> updateEntityById(String organisationName, String repositoryName, UUID id, Entity entity, Integer version, List<String> include) {
-    return new ResponseEntity<>(entityService.updateEntityById(organisationName, repositoryName, id, entity, include), HttpStatus.OK);
+  public ResponseEntity<Entity> updateEntityById(String organisationId, String repositoryId, UUID id, Entity entity, Integer version, List<String> include) {
+    return new ResponseEntity<>(entityService.updateEntityById(organisationId, repositoryId, id, entity, include), HttpStatus.OK);
   }
 
   @Override
-  public ResponseEntity<List<Entity>> getEntities(String organisationName, String repositoryName, List<String> include, String name, EntityType type, DataType dataType, Integer page) {
-    return EntityApiDelegate.super.getEntities(organisationName, repositoryName, include, name, type, dataType, page);
+  public ResponseEntity<List<Entity>> getEntities(String organisationId, String repositoryId, List<String> include, String name, EntityType type, DataType dataType, Integer page) {
+    return EntityApiDelegate.super.getEntities(organisationId, repositoryId, include, name, type, dataType, page);
   }
 }

@@ -22,17 +22,17 @@ public class OrganisationApiDelegateImpl implements OrganisationApiDelegate {
   }
 
   @Override
-  public ResponseEntity<Organisation> updateOrganisationByName(
-      String organisationName, Organisation organisation, List<String> include) {
+  public ResponseEntity<Organisation> updateOrganisationById(
+      String organisationId, Organisation organisation, List<String> include) {
     return new ResponseEntity<>(
-        organisationService.updateOrganisationById(organisationName, organisation), HttpStatus.OK);
+        organisationService.updateOrganisationById(organisationId, organisation), HttpStatus.OK);
   }
 
   @Override
-  public ResponseEntity<Organisation> getOrganisationByName(
-      String organisationName, List<String> include) {
+  public ResponseEntity<Organisation> getOrganisationById(
+      String organisationId, List<String> include) {
     return new ResponseEntity<>(
-        organisationService.getOrganisation(organisationName, include), HttpStatus.OK);
+        organisationService.getOrganisation(organisationId, include), HttpStatus.OK);
   }
 
   @Override
@@ -41,9 +41,9 @@ public class OrganisationApiDelegateImpl implements OrganisationApiDelegate {
   }
 
   @Override
-  public ResponseEntity<Void> deleteOrganisationByName(
-      String organisationName, List<String> include) {
-    organisationService.deleteOrganisationByName(organisationName);
+  public ResponseEntity<Void> deleteOrganisationById(
+      String organisationId, List<String> include) {
+    organisationService.deleteOrganisationByName(organisationId);
     return new ResponseEntity<>(HttpStatus.NO_CONTENT);
   }
 }

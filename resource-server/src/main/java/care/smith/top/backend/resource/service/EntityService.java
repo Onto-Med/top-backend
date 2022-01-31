@@ -27,13 +27,13 @@ public class EntityService {
   @Autowired RepositoryRepository repositoryRepository;
 
   @Transactional
-  public Entity createEntity(String organisationName, String repositoryName, Entity entity) {
+  public Entity createEntity(String organisationId, String repositoryId, Entity entity) {
     if (classRepository.existsById(entity.getId()))
       throw new ResponseStatusException(HttpStatus.CONFLICT);
-    getRepository(organisationName, repositoryName);
+    getRepository(organisationId, repositoryId);
 
     Class cls = new Class(entity.getId());
-    cls.setRepositoryId(repositoryName);
+    cls.setRepositoryId(repositoryId);
     cls.createVersion(buildClassVersion(entity), true);
 
     List<UUID> superClasses = new ArrayList<>();
@@ -54,15 +54,15 @@ public class EntityService {
       superClasses.forEach(
           c ->
               cls.addSuperClassRelation(
-                  new ClassRelation(new Class(c), repositoryName, entity.getIndex())));
+                  new ClassRelation(new Class(c), repositoryId, entity.getIndex())));
     }
 
     return classToEntity(classRepository.save(cls));
   }
 
   public Entity loadEntity(
-      String organisationName, String repositoryName, UUID id, Integer version) {
-    Repository repository = getRepository(organisationName, repositoryName);
+      String organisationId, String repositoryId, UUID id, Integer version) {
+    Repository repository = getRepository(organisationId, repositoryId);
     Class cls =
         classRepository
             .findByIdAndRepositoryId(id, repository.getId())
@@ -77,7 +77,7 @@ public class EntityService {
 
   @Transactional
   public void deleteEntity(
-      String organisationName, String repositoryName, UUID id, Integer version, boolean permanent) {
+      String organisationId, String repositoryId, UUID id, Integer version, boolean permanent) {
     Class cls =
         classRepository
             .findById(id)
@@ -102,8 +102,8 @@ public class EntityService {
   }
 
   public Entity updateEntityById(
-      String organisationName,
-      String repositoryName,
+      String organisationId,
+      String repositoryId,
       UUID id,
       Entity entity,
       List<String> include) {
