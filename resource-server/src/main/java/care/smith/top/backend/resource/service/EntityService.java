@@ -60,10 +60,7 @@ public class EntityService {
       superClasses.forEach(
           c ->
               cls.addSuperClassRelation(
-                  new ClassRelation()
-                      .setIndex(entity.getIndex())
-                      .setSuperclass(new Class(c))
-                      .setOwnerId(repositoryName)));
+                  new ClassRelation(new Class(c), repositoryName, entity.getIndex())));
     }
 
     return classToEntity(classRepository.save(cls));
