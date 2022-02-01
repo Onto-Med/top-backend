@@ -1,6 +1,8 @@
 package care.smith.top.backend.neo4j_ontology_access.repository;
 
 import care.smith.top.backend.neo4j_ontology_access.model.Repository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.neo4j.repository.query.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.repository.query.Param;
@@ -27,4 +29,6 @@ public interface RepositoryRepository extends PagingAndSortingRepository<Reposit
   Optional<Repository> findByIdAndSuperDirectoryId(
       @Param("repositoryId") String repositoryId,
       @Param("superDirectoryId") String superDirectoryId);
+
+  Page<Repository> findByNameContaining(String name, Pageable pageable);
 }

@@ -6,15 +6,22 @@ import care.smith.top.backend.neo4j_ontology_access.model.Repository;
 import care.smith.top.backend.neo4j_ontology_access.repository.DirectoryRepository;
 import care.smith.top.backend.neo4j_ontology_access.repository.RepositoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class RepositoryService {
+  @Value("${spring.paging.page-size:10}")
+  private int pageSize;
+
   @Autowired private RepositoryRepository repositoryRepository;
   @Autowired private DirectoryRepository directoryRepository;
 
@@ -96,5 +103,15 @@ public class RepositoryService {
                 new ResponseStatusException(
                     HttpStatus.NOT_FOUND,
                     String.format("Organisation '%s' does not exist!", organisationId)));
+  }
+
+  public List<care.smith.top.backend.model.Repository> getRepositories(
+      List<String> include, String name, Integer page) {
+    // TODO: check if user has read permission
+    return repositoryRepository
+        .findByNameContaining(name, PageRequest.of(page, pageSize, Sort.by("name")))
+        .stream()
+        .map(this::repositoryToApiPojo)
+        .collect(Collectors.toList());
   }
 }
