@@ -4,6 +4,7 @@ import care.smith.top.backend.model.Organisation;
 import care.smith.top.backend.neo4j_ontology_access.model.Directory;
 import care.smith.top.backend.neo4j_ontology_access.repository.DirectoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -16,8 +17,10 @@ import java.util.stream.Collectors;
 
 @Service
 public class OrganisationService {
+  @Value("${spring.paging.page-size:10}")
+  private int pageSize = 10;
+
   private final String directoryType = "organisation";
-  private final int pageSize = 10;
 
   @Autowired DirectoryRepository directoryRepository;
 

@@ -10,10 +10,8 @@ logging:
 spring:
   neo4j:
     uri: bolt://${DB_HOST}:${DB_PORT}
-  data:
-    neo4j:
-      username: ${DB_USER}
-      password: ${DB_PASS}
+    username: ${DB_USER}
+    password: ${DB_PASS}
   security:
     cors:
       allowed-origins: "*"
@@ -22,3 +20,5 @@ spring:
         jwt:
           issuer-url: http://localhost:8080/auth/realms/dev
           jwk-set-uri: http://localhost:8080/auth/realms/dev/protocol/openid-connect/certs
+  paging:
+    page-size: 10
