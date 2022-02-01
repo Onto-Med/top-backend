@@ -53,6 +53,20 @@ public class RepositoryService {
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND)));
   }
 
+  public care.smith.top.backend.model.Repository updateRepository(
+      String organisationId,
+      String repositoryId,
+      care.smith.top.backend.model.Repository data,
+      List<String> include) {
+    Repository repository =
+        repositoryRepository
+            .findByIdAndSuperDirectoryId(repositoryId, organisationId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+    repository.setName(data.getName()).setDescription(data.getDescription());
+    return repositoryToApiPojo(repositoryRepository.save(repository));
+  }
+
   /**
    * Convert {@link Repository} object to {@link care.smith.top.backend.model.Repository} object.
    *
