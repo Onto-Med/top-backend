@@ -1,15 +1,16 @@
 package care.smith.top.backend.resource.service;
 
-import care.smith.top.backend.model.Category;
-import care.smith.top.backend.model.Entity;
-import care.smith.top.backend.model.LocalisableText;
-import care.smith.top.backend.model.Phenotype;
+import care.smith.top.backend.model.*;
 import care.smith.top.backend.neo4j_ontology_access.model.Class;
 import care.smith.top.backend.neo4j_ontology_access.model.*;
+import care.smith.top.backend.neo4j_ontology_access.model.Repository;
 import care.smith.top.backend.neo4j_ontology_access.repository.*;
 import org.springframework.beans.PropertyAccessor;
 import org.springframework.beans.PropertyAccessorFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,11 +21,14 @@ import java.util.stream.Collectors;
 
 @Service
 public class EntityService {
-  @Autowired ClassRepository classRepository;
-  @Autowired ClassVersionRepository classVersionRepository;
-  @Autowired AnnotationRepository annotationRepository;
-  @Autowired ExpressionRepository expressionRepository;
-  @Autowired RepositoryRepository repositoryRepository;
+  @Value("spring.paging.pageSize:10")
+  private int pageSize;
+
+  @Autowired private ClassRepository classRepository;
+  @Autowired private ClassVersionRepository classVersionRepository;
+  @Autowired private AnnotationRepository annotationRepository;
+  @Autowired private ExpressionRepository expressionRepository;
+  @Autowired private RepositoryRepository repositoryRepository;
 
   @Transactional
   public Entity createEntity(String organisationId, String repositoryId, Entity entity) {
@@ -133,6 +137,27 @@ public class EntityService {
     }
 
     return classToEntity(classRepository.save(cls));
+  }
+
+  public List<Entity> getEntities(
+      String organisationId,
+      String repositoryId,
+      List<String> include,
+      String name,
+      EntityType type,
+      DataType dataType,
+      Integer page) {
+    getRepository(organisationId, repositoryId);
+    return classVersionRepository
+        .findByRepositoryIdAndNameContainingIgnoreCaseAndTypeAndDataType(
+            repositoryId,
+            name,
+            type.getValue(),
+            dataType.getValue(),
+            PageRequest.of(page, pageSize))
+        .stream()
+        .map(this::classVersionToEntity)
+        .collect(Collectors.toList());
   }
 
   /**

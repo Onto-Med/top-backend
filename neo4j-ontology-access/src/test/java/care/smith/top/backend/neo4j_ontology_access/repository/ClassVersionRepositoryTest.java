@@ -3,8 +3,14 @@ package care.smith.top.backend.neo4j_ontology_access.repository;
 import care.smith.top.backend.neo4j_ontology_access.model.Annotation;
 import care.smith.top.backend.neo4j_ontology_access.model.Class;
 import care.smith.top.backend.neo4j_ontology_access.model.ClassVersion;
+import care.smith.top.backend.neo4j_ontology_access.model.Repository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
+
+import java.time.Instant;
+import java.util.Arrays;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -65,5 +71,85 @@ class ClassVersionRepositoryTest extends RepositoryTest {
 
               assertThat(cv.getAnnotations("prefix").stream().findFirst()).isNotPresent();
             });
+  }
+
+  @Test
+  void findByRepositoryIdAndNameContainingIgnoreCaseAndTypeAndDataType() {
+    Repository repository = new Repository();
+
+    Class cls1 =
+        new Class()
+            .setRepositoryId(repository.getId())
+            .createVersion(
+                (ClassVersion)
+                    new ClassVersion()
+                        .setHiddenAt(Instant.now())
+                        .addAnnotation(new Annotation("title", "test name", "en")),
+                true)
+            .createVersion(
+                (ClassVersion)
+                    new ClassVersion()
+                        .setName("example")
+                        .addAnnotation(new Annotation("title", "test name", "en"))
+                        .addAnnotation(new Annotation("type", "type", null))
+                        .addAnnotation(new Annotation("dataType", "decimal", null)),
+                true);
+
+    Class cls2 =
+        new Class()
+            .setRepositoryId(repository.getId())
+            .createVersion(new ClassVersion().setName("example"), true);
+
+    classRepository.saveAll(Arrays.asList(cls1, cls2));
+
+    Slice<ClassVersion> result =
+        classVersionRepository.findByRepositoryIdAndNameContainingIgnoreCaseAndTypeAndDataType(
+            repository.getId(), "est", null, null, PageRequest.ofSize(10));
+
+    assertThat(result.getNumberOfElements()).isEqualTo(1);
+
+    assertThat(result.stream().findFirst())
+        .hasValueSatisfying(
+            cv -> {
+              assertThat(cv.getHiddenAt()).isNull();
+              assertThat(cv.getName()).isEqualTo("example");
+              assertThat(cv.getAnnotations("title").stream().findFirst())
+                  .hasValueSatisfying(t -> assertThat(t.getStringValue()).isEqualTo("test name"));
+            });
+
+    assertThat(
+            classVersionRepository
+                .findByRepositoryIdAndNameContainingIgnoreCaseAndTypeAndDataType(
+                    repository.getId(), null, "type", null, PageRequest.ofSize(10))
+                .getNumberOfElements())
+        .isEqualTo(1);
+
+    assertThat(
+            classVersionRepository
+                .findByRepositoryIdAndNameContainingIgnoreCaseAndTypeAndDataType(
+                    repository.getId(), null, null, "decimal", PageRequest.ofSize(10))
+                .getNumberOfElements())
+        .isEqualTo(1);
+
+    assertThat(
+            classVersionRepository
+                .findByRepositoryIdAndNameContainingIgnoreCaseAndTypeAndDataType(
+                    repository.getId(), "test", "type", "decimal", PageRequest.ofSize(10))
+                .getNumberOfElements())
+        .isEqualTo(1);
+
+    assertThat(
+            classVersionRepository
+                .findByRepositoryIdAndNameContainingIgnoreCaseAndTypeAndDataType(
+                    repository.getId(), null, null, null, PageRequest.ofSize(10))
+                .getNumberOfElements())
+        .isEqualTo(2);
+
+    assertThat(
+            classVersionRepository
+                .findByRepositoryIdAndNameContainingIgnoreCaseAndTypeAndDataType(
+                    repository.getId(), "example", null, null, PageRequest.ofSize(10))
+                .getNumberOfElements())
+        .isEqualTo(2);
   }
 }

@@ -26,11 +26,7 @@ public class EntityApiDelegateImpl implements EntityApiDelegate {
 
   @Override
   public ResponseEntity<Entity> getEntityById(
-      String organisationId,
-      String repositoryId,
-      UUID id,
-      Integer version,
-      List<String> include) {
+      String organisationId, String repositoryId, UUID id, Integer version, List<String> include) {
     return new ResponseEntity<>(
         entityService.loadEntity(organisationId, repositoryId, id, version), HttpStatus.OK);
   }
@@ -48,12 +44,30 @@ public class EntityApiDelegateImpl implements EntityApiDelegate {
   }
 
   @Override
-  public ResponseEntity<Entity> updateEntityById(String organisationId, String repositoryId, UUID id, Entity entity, Integer version, List<String> include) {
-    return new ResponseEntity<>(entityService.updateEntityById(organisationId, repositoryId, id, entity, include), HttpStatus.OK);
+  public ResponseEntity<Entity> updateEntityById(
+      String organisationId,
+      String repositoryId,
+      UUID id,
+      Entity entity,
+      Integer version,
+      List<String> include) {
+    return new ResponseEntity<>(
+        entityService.updateEntityById(organisationId, repositoryId, id, entity, include),
+        HttpStatus.OK);
   }
 
   @Override
-  public ResponseEntity<List<Entity>> getEntities(String organisationId, String repositoryId, List<String> include, String name, EntityType type, DataType dataType, Integer page) {
-    return EntityApiDelegate.super.getEntities(organisationId, repositoryId, include, name, type, dataType, page);
+  public ResponseEntity<List<Entity>> getEntities(
+      String organisationId,
+      String repositoryId,
+      List<String> include,
+      String name,
+      EntityType type,
+      DataType dataType,
+      Integer page) {
+    return new ResponseEntity<>(
+        entityService.getEntities(
+            organisationId, repositoryId, include, name, type, dataType, page),
+        HttpStatus.OK);
   }
 }
