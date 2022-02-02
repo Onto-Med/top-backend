@@ -33,6 +33,7 @@ public interface ClassVersionRepository extends PagingAndSortingRepository<Class
   Optional<ClassVersion> findByClassIdAndVersion(
       @Param("classId") UUID classId, @Param("version") Integer version);
 
+  // TODO: this query does not belong here because annotations are domain specific
   @Query(
       "MATCH (c:Class { repositoryId: $repositoryId }) -[cRel:CURRENT_VERSION]-> (cv:ClassVersion) "
           + "WHERE cv.hiddenAt IS NULL "
