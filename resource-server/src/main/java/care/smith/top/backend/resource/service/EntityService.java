@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class EntityService {
-  @Value("spring.paging.pageSize:10")
+  @Value("${spring.paging.page-size:10}")
   private int pageSize;
 
   @Autowired private ClassRepository classRepository;
