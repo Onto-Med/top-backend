@@ -293,21 +293,24 @@ public class EntityService {
     //      });
     //    }
 
-    return (ClassVersion)
-        classVersion
-            .addAnnotation(new Annotation("type", entity.getEntityType().getValue(), null))
-            .addAnnotations(
-                entity.getTitles().stream()
-                    .map(t -> new Annotation("title", t.getText(), t.getLang()))
-                    .collect(Collectors.toSet()))
-            .addAnnotations(
-                entity.getSynonyms().stream()
-                    .map(s -> new Annotation("synonym", s.getText(), s.getLang()))
-                    .collect(Collectors.toSet()))
-            .addAnnotations(
-                entity.getDescriptions().stream()
-                    .map(d -> new Annotation("description", d.getText(), d.getLang()))
-                    .collect(Collectors.toSet()));
+    classVersion.addAnnotation(new Annotation("type", entity.getEntityType().getValue(), null));
+    if (entity.getTitles() != null)
+      classVersion.addAnnotations(
+          entity.getTitles().stream()
+              .map(t -> new Annotation("title", t.getText(), t.getLang()))
+              .collect(Collectors.toSet()));
+    if (entity.getSynonyms() != null)
+      classVersion.addAnnotations(
+          entity.getSynonyms().stream()
+              .map(s -> new Annotation("synonym", s.getText(), s.getLang()))
+              .collect(Collectors.toSet()));
+    if (entity.getSynonyms() != null)
+      classVersion.addAnnotations(
+          entity.getDescriptions().stream()
+              .map(d -> new Annotation("description", d.getText(), d.getLang()))
+              .collect(Collectors.toSet()));
+
+    return classVersion;
   }
 
   /**
@@ -317,7 +320,40 @@ public class EntityService {
    * @return The resulting {@link Entity} object.
    */
   private Entity classVersionToEntity(ClassVersion classVersion) {
-    Entity entity = new Entity();
+    Category entity;
+
+    EntityType entityType =
+        EntityType.fromValue(
+            classVersion.getAnnotations("type").stream()
+                .findFirst()
+                .orElseThrow()
+                .getStringValue());
+
+    Set<ClassRelation> superClasses = classVersion.getaClass().getSuperClassRelations();
+
+    if (entityType.equals(EntityType.CATEGORY)) {
+      entity = new Category();
+      if (superClasses != null)
+        entity.setSuperCategories(
+            superClasses.stream()
+                .map(c -> (Category) new Category().id(c.getSuperclass().getId()))
+                .collect(Collectors.toList()));
+    } else if (entityType.equals(EntityType.PHENOTYPE_GROUP)) {
+      entity = new PhenotypeGroup();
+    } else {
+      entity = new Phenotype();
+
+      // TODO: entity.setDataType();
+      // TODO: entity.setExpression();
+      // TODO: entity.setSuperPhenotype();
+    }
+
+    if (superClasses != null)
+      entity.setSuperCategories(
+          superClasses.stream()
+              .map(c -> (Category) new Category().id(c.getSuperclass().getId()))
+              .collect(Collectors.toList()));
+
     care.smith.top.backend.model.Repository repository =
         new care.smith.top.backend.model.Repository();
     repository.setId(classVersion.getaClass().getRepositoryId());
@@ -325,15 +361,9 @@ public class EntityService {
     entity.setRepository(repository);
     entity.setId(classVersion.getaClass().getId());
     entity.setVersion(classVersion.getVersion());
-
-    Set<ClassRelation> superClasses = classVersion.getaClass().getSuperClassRelations();
-    if (superClasses != null && superClasses.stream().findFirst().isPresent())
-      entity.setIndex(superClasses.stream().findFirst().get().getIndex());
+    entity.setEntityType(entityType);
     entity.setCreatedAt(classVersion.getCreatedAtOffset());
     entity.setHiddenAt(classVersion.getHiddenAtOffset());
-    // TODO: entity.setAuthor(classVersion.getUser()); Map User to UserAccount, or drop UserAccount
-    // from top-api model.
-    // TODO: entity.setRefer(); <- insert URI
 
     if (classVersion.getEquivalentClasses() != null)
       classVersion
@@ -359,9 +389,14 @@ public class EntityService {
                                     .text(a.getStringValue())
                                     .lang(a.getLanguage()))
                         .collect(Collectors.toList())));
-    // TODO: entity.setDataType()
+
     // TODO: entity.setCodes();
-    // TODO: entity.setExpression();
+    // TODO: entity.setAuthor(classVersion.getUser()); Map User to UserAccount, or drop UserAccount
+    // from top-api model.
+    // TODO: entity.setRefer(); <- insert URI
+
+    // if (superClasses != null && superClasses.stream().findFirst().isPresent())
+    //   entity.setIndex(superClasses.stream().findFirst().get().getIndex());
 
     return entity;
   }
