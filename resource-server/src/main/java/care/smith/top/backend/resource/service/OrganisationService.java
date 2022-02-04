@@ -60,10 +60,10 @@ public class OrganisationService {
     directoryRepository.delete(directory);
   }
 
-  public Organisation getOrganisation(String organisationName, List<String> include) {
+  public Organisation getOrganisation(String organisationId, List<String> include) {
     return directoryToOrganisation(
         directoryRepository
-            .findById(organisationName)
+            .findById(organisationId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND)));
   }
 
