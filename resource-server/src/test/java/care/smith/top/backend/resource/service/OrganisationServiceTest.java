@@ -24,14 +24,17 @@ class OrganisationServiceTest extends Neo4jTest {
             .name("Super organisation")
             .description("Example description");
 
-    Organisation actual = organisationService.createOrganisation(superOrganisation);
-
-    assertThat(actual).isNotNull();
-    assertThat(actual.getId()).isEqualTo(superOrganisation.getId());
-    assertThat(actual.getName()).isEqualTo(superOrganisation.getName());
-    assertThat(actual.getDescription()).isEqualTo(superOrganisation.getDescription());
-    assertThat(actual.getCreatedAt()).isNotNull();
-    assertThat(actual.getSuperOrganisation()).isNull();
+    assertThat(organisationService.createOrganisation(superOrganisation))
+        .isNotNull()
+        .satisfies(
+            a -> {
+              assertThat(a).isNotNull();
+              assertThat(a.getId()).isEqualTo(superOrganisation.getId());
+              assertThat(a.getName()).isEqualTo(superOrganisation.getName());
+              assertThat(a.getDescription()).isEqualTo(superOrganisation.getDescription());
+              assertThat(a.getCreatedAt()).isNotNull();
+              assertThat(a.getSuperOrganisation()).isNull();
+            });
 
     assertThatThrownBy(() -> organisationService.createOrganisation(superOrganisation))
         .isInstanceOf(ResponseStatusException.class)
@@ -44,16 +47,19 @@ class OrganisationServiceTest extends Neo4jTest {
             .name("Sub organisation")
             .superOrganisation(superOrganisation);
 
-    actual = organisationService.createOrganisation(subOrganisation1);
-
-    assertThat(actual).isNotNull();
-    assertThat(actual.getId()).isEqualTo(subOrganisation1.getId());
-    assertThat(actual.getName()).isEqualTo(subOrganisation1.getName());
-    assertThat(actual.getDescription()).isNull();
-    assertThat(actual.getCreatedAt()).isNotNull();
-    assertThat(actual.getSuperOrganisation())
+    assertThat(organisationService.createOrganisation(subOrganisation1))
         .isNotNull()
-        .hasFieldOrPropertyWithValue("id", superOrganisation.getId());
+        .satisfies(
+            a -> {
+              assertThat(a).isNotNull();
+              assertThat(a.getId()).isEqualTo(subOrganisation1.getId());
+              assertThat(a.getName()).isEqualTo(subOrganisation1.getName());
+              assertThat(a.getDescription()).isNull();
+              assertThat(a.getCreatedAt()).isNotNull();
+              assertThat(a.getSuperOrganisation())
+                  .isNotNull()
+                  .hasFieldOrPropertyWithValue("id", superOrganisation.getId());
+            });
 
     /* Create another sub organisation */
     Organisation subOrganisation2 =
