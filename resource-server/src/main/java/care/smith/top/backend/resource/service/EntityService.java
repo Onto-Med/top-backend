@@ -2,8 +2,8 @@ package care.smith.top.backend.resource.service;
 
 import care.smith.top.backend.model.*;
 import care.smith.top.backend.neo4j_ontology_access.model.Class;
-import care.smith.top.backend.neo4j_ontology_access.model.*;
 import care.smith.top.backend.neo4j_ontology_access.model.Repository;
+import care.smith.top.backend.neo4j_ontology_access.model.*;
 import care.smith.top.backend.neo4j_ontology_access.repository.*;
 import org.neo4j.cypherdsl.core.*;
 import org.springframework.beans.PropertyAccessor;
@@ -16,8 +16,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.*;
 import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -31,6 +31,49 @@ public class EntityService {
   @Autowired private AnnotationRepository annotationRepository;
   @Autowired private ExpressionRepository expressionRepository;
   @Autowired private RepositoryRepository repositoryRepository;
+
+  static Statement findEntitiesMatchingCondition(
+      String repositoryId, String name, String type, String dataType) {
+    Node c = Cypher.node(Class.class.getName()).named("c");
+    Node cv = Cypher.node(ClassVersion.class.getName()).named("cv");
+    Node a = Cypher.node(Annotation.class.getName()).named("a");
+    Relationship cRel = c.relationshipTo(cv, "CURRENT_VERSION");
+    Relationship aRel = cv.relationshipTo(a, "HAS_ANNOTATION");
+
+    AtomicReference<StatementBuilder.OngoingReadingWithWhere> statement =
+        new AtomicReference<>(
+            Cypher.match(cRel)
+                .where(c.property("repositoryId").isEqualTo(Cypher.anonParameter(repositoryId)))
+                .and(cv.property("hiddenAt").isNull()));
+
+    // TODO: match name/title case-insensitive
+
+    Map<String, String> annotations = new HashMap<>();
+    annotations.put("type", type);
+    annotations.put("dataType", dataType);
+
+    annotations.forEach(
+        (p, v) -> {
+          if (p != null) {
+            statement.set(
+                statement
+                    .get()
+                    .match(aRel)
+                    .where(a.property("property").isEqualTo(Cypher.anonParameter(p)))
+                    .and(a.property("stringValue").isEqualTo(Cypher.anonParameter(v))));
+          }
+        });
+
+    return statement
+        .get()
+        .returning(
+            cv.getRequiredSymbolicName(),
+            Functions.collect(cRel),
+            Functions.collect(c),
+            Functions.collect(aRel),
+            Functions.collect(a))
+        .build();
+  }
 
   @Transactional
   public Entity createEntity(String organisationId, String repositoryId, Entity entity) {
@@ -169,49 +212,6 @@ public class EntityService {
         .stream()
         .map(this::classVersionToEntity)
         .collect(Collectors.toList());
-  }
-
-  static Statement findEntitiesMatchingCondition(
-      String repositoryId, String name, String type, String dataType) {
-    Node c = Cypher.node(Class.class.getName()).named("c");
-    Node cv = Cypher.node(ClassVersion.class.getName()).named("cv");
-    Node a = Cypher.node(Annotation.class.getName()).named("a");
-    Relationship cRel = c.relationshipTo(cv, "CURRENT_VERSION");
-    Relationship aRel = cv.relationshipTo(a, "HAS_ANNOTATION");
-
-    AtomicReference<StatementBuilder.OngoingReadingWithWhere> statement =
-        new AtomicReference<>(
-            Cypher.match(cRel)
-                .where(c.property("repositoryId").isEqualTo(Cypher.anonParameter(repositoryId)))
-                .and(cv.property("hiddenAt").isNull()));
-
-    // TODO: match name/title case-insensitive
-
-    Map<String, String> annotations = new HashMap<>();
-    annotations.put("type", type);
-    annotations.put("dataType", dataType);
-
-    annotations.forEach(
-        (p, v) -> {
-          if (p != null) {
-            statement.set(
-                statement
-                    .get()
-                    .match(aRel)
-                    .where(a.property("property").isEqualTo(Cypher.anonParameter(p)))
-                    .and(a.property("stringValue").isEqualTo(Cypher.anonParameter(v))));
-          }
-        });
-
-    return statement
-        .get()
-        .returning(
-            cv.getRequiredSymbolicName(),
-            Functions.collect(cRel),
-            Functions.collect(c),
-            Functions.collect(aRel),
-            Functions.collect(a))
-        .build();
   }
 
   /**
