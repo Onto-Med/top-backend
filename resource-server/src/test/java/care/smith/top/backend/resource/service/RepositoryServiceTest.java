@@ -111,7 +111,38 @@ class RepositoryServiceTest extends Neo4jTest {
   }
 
   @Test
-  void getRepository() {}
+  void getRepository() {
+    Organisation organisation =
+        organisationService.createOrganisation(new Organisation().id("org"));
+    Repository repository =
+        new Repository().id("repo").name("Repository").description("Some description");
+
+    assertThat(repositoryService.createRepository(organisation.getId(), repository, null))
+        .isNotNull();
+
+    assertThat(repositoryService.getRepository(organisation.getId(), repository.getId(), null))
+        .isNotNull()
+        .satisfies(
+            r -> {
+              assertThat(r.getId()).isEqualTo(repository.getId());
+              assertThat(r.getName()).isEqualTo(repository.getName());
+              assertThat(r.getDescription()).isEqualTo(repository.getDescription());
+              assertThat(r.getCreatedAt()).isNotNull();
+              assertThat(r.getOrganisation())
+                  .isNotNull()
+                  .hasFieldOrPropertyWithValue("id", organisation.getId());
+            });
+
+    assertThatThrownBy(
+            () -> repositoryService.getRepository(organisation.getId(), "does not exist", null))
+        .isInstanceOf(ResponseStatusException.class)
+        .hasFieldOrPropertyWithValue("status", HttpStatus.NOT_FOUND);
+
+    assertThatThrownBy(
+            () -> repositoryService.getRepository("does not exist", repository.getId(), null))
+        .isInstanceOf(ResponseStatusException.class)
+        .hasFieldOrPropertyWithValue("status", HttpStatus.NOT_FOUND);
+  }
 
   @Test
   void updateRepository() {}
