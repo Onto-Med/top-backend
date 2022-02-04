@@ -58,9 +58,18 @@ public class EntityService {
 
     if (!superClasses.isEmpty()) {
       superClasses.forEach(
-          c ->
-              cls.addSuperClassRelation(
-                  new ClassRelation(new Class(c), repositoryId, entity.getIndex())));
+          c -> {
+            Class superClass =
+                classRepository
+                    .findByIdAndRepositoryId(c, repositoryId)
+                    .orElseThrow(
+                        () ->
+                            new ResponseStatusException(
+                                HttpStatus.NOT_FOUND,
+                                String.format("Super class '%s' does not exist!", c)));
+            cls.addSuperClassRelation(
+                new ClassRelation(superClass, repositoryId, entity.getIndex()));
+          });
     }
 
     return classToEntity(classRepository.save(cls));
