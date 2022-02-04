@@ -19,13 +19,12 @@ class DirectoryRepositoryTest extends RepositoryTest {
 
     directoryRepository.saveAll(
         Arrays.asList(
-            new Directory().setName(name1),
+            new Directory().setName(name1).setDescription("Description"),
             new Directory().setName(name1 + "1"),
             new Directory().setName(name2)));
 
     assertThat(directoryRepository.findAll(Pageable.ofSize(10)).getTotalElements()).isEqualTo(3);
-    assertThat(
-            directoryRepository.findByNameContaining(name1, Pageable.unpaged()).getTotalElements())
-        .isEqualTo(2);
+    assertThat(directoryRepository.findByNameContainingIgnoreCase(name1)).size().isEqualTo(2);
+    assertThat(directoryRepository.findByDescriptionContainingIgnoreCase("desc")).size().isEqualTo(1);
   }
 }

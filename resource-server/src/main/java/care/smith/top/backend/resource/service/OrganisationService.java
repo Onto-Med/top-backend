@@ -5,8 +5,6 @@ import care.smith.top.backend.neo4j_ontology_access.model.Directory;
 import care.smith.top.backend.neo4j_ontology_access.repository.DirectoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -17,12 +15,11 @@ import java.util.stream.Collectors;
 
 @Service
 public class OrganisationService {
+  private final String directoryType = "organisation";
+  @Autowired DirectoryRepository directoryRepository;
+
   @Value("${spring.paging.page-size:10}")
   private int pageSize = 10;
-
-  private final String directoryType = "organisation";
-
-  @Autowired DirectoryRepository directoryRepository;
 
   public Organisation createOrganisation(Organisation organisation) {
     // TODO: use below code to get current user
@@ -68,9 +65,7 @@ public class OrganisationService {
   }
 
   public List<Organisation> getOrganisations(String name, Integer page, List<String> include) {
-    return directoryRepository
-        .findByNameContaining(name, PageRequest.of(page, pageSize, Sort.by("name")))
-        .stream()
+    return directoryRepository.findByNameContainingIgnoreCase(name).stream()
         .map(this::directoryToOrganisation)
         .collect(Collectors.toList());
   }
