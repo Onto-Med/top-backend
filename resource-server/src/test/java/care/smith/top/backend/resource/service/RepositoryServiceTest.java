@@ -206,5 +206,35 @@ class RepositoryServiceTest extends Neo4jTest {
   }
 
   @Test
-  void getRepositoriesByOrganisationId() {}
+  void getRepositoriesByOrganisationId() {
+    Organisation organisation1 =
+        organisationService.createOrganisation(new Organisation().id("org_1"));
+    Organisation organisation2 =
+        organisationService.createOrganisation(new Organisation().id("org_2"));
+    Repository repository1 =
+        repositoryService.createRepository(
+            organisation1.getId(), new Repository().id("repo_1").name("Repository"), null);
+    assertThat(
+            repositoryService.createRepository(
+                organisation2.getId(),
+                new Repository().id("repo_2").name("Another repository"),
+                null))
+        .isNotNull();
+
+    assertThat(
+            repositoryService.getRepositoriesByOrganisationId(
+                organisation1.getId(), null, "another", 1))
+        .isNullOrEmpty();
+
+    assertThat(
+            repositoryService.getRepositoriesByOrganisationId(
+                organisation1.getId(), null, "repo", 1))
+        .isNotEmpty()
+        .allMatch(r -> r.getId().equals(repository1.getId()))
+        .size()
+        .isEqualTo(1);
+
+    assertThat(repositoryService.getRepositoriesByOrganisationId("something else", null, "repo", 1))
+        .isNullOrEmpty();
+  }
 }
