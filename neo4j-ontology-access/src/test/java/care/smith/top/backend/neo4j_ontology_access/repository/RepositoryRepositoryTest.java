@@ -4,7 +4,7 @@ import care.smith.top.backend.neo4j_ontology_access.model.Directory;
 import care.smith.top.backend.neo4j_ontology_access.model.Repository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
 
 import java.util.Arrays;
 
@@ -42,10 +42,9 @@ public class RepositoryRepositoryTest extends RepositoryTest {
     repositoryRepository.saveAll(Arrays.asList(repository1, repository2));
 
     assertThat(
-            repositoryRepository
-                .findByNameContainingAndSuperDirectoryId(
-                    "repo", directory.getId(), Pageable.ofSize(10))
-                .getNumberOfElements())
+            repositoryRepository.findByNameContainingAndSuperDirectoryId(
+                "repo", directory.getId(), PageRequest.of(0, 10)))
+        .size()
         .isEqualTo(1);
   }
 }
