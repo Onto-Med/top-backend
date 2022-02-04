@@ -139,7 +139,22 @@ class OrganisationServiceTest extends Neo4jTest {
   }
 
   @Test
-  void deleteOrganisationByName() {}
+  void deleteOrganisationByName() {
+    Organisation superOrganisation = new Organisation().id("super_org");
+    organisationService.createOrganisation(superOrganisation);
+
+    Organisation subOrganisation =
+        new Organisation().id("sub_org").superOrganisation(superOrganisation);
+    organisationService.createOrganisation(subOrganisation);
+
+    assertThatCode(() -> organisationService.deleteOrganisationById(superOrganisation.getId()))
+        .doesNotThrowAnyException();
+
+    assertThat(directoryRepository.findById(superOrganisation.getId())).isEmpty();
+    assertThat(directoryRepository.findById(subOrganisation.getId()))
+        .isPresent()
+        .hasValueSatisfying(d -> assertThat(d.getSuperDirectories()).size().isEqualTo(0));
+  }
 
   @Test
   void getOrganisation() {}
