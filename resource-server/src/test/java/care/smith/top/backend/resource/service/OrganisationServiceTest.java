@@ -157,7 +157,37 @@ class OrganisationServiceTest extends Neo4jTest {
   }
 
   @Test
-  void getOrganisation() {}
+  void getOrganisation() {
+    Organisation superOrganisation = new Organisation().id("super_org").name("Super organisation");
+    organisationService.createOrganisation(superOrganisation);
+
+    Organisation subOrganisation =
+        new Organisation()
+            .id("sub_org")
+            .name("Sub organisation")
+            .superOrganisation(superOrganisation);
+    organisationService.createOrganisation(subOrganisation);
+
+    assertThat(organisationService.getOrganisation(subOrganisation.getId(), null))
+        .isNotNull()
+        .satisfies(
+            a -> {
+              assertThat(a.getId()).isEqualTo(subOrganisation.getId());
+              assertThat(a.getName()).isEqualTo(subOrganisation.getName());
+              assertThat(a.getDescription()).isNull();
+              assertThat(a.getCreatedAt()).isNotNull();
+              assertThat(a.getSuperOrganisation())
+                  .isNotNull()
+                  .satisfies(
+                      o -> {
+                        assertThat(o.getId()).isEqualTo(superOrganisation.getId());
+                        assertThat(o.getName()).isEqualTo(superOrganisation.getName());
+                        assertThat(o.getDescription()).isNull();
+                        assertThat(o.getCreatedAt()).isNotNull();
+                        assertThat(o.getSuperOrganisation()).isNull();
+                      });
+            });
+  }
 
   @Test
   void getOrganisations() {}
