@@ -7,8 +7,10 @@ import org.neo4j.harness.Neo4jBuilders;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
+@Transactional
 public class Neo4jTest {
   private static Neo4j embeddedDatabaseServer;
 
