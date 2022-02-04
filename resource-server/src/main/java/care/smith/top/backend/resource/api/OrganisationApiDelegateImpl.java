@@ -43,7 +43,7 @@ public class OrganisationApiDelegateImpl implements OrganisationApiDelegate {
   @Override
   public ResponseEntity<Void> deleteOrganisationById(
       String organisationId, List<String> include) {
-    organisationService.deleteOrganisationByName(organisationId);
+    organisationService.deleteOrganisationById(organisationId);
     return new ResponseEntity<>(HttpStatus.NO_CONTENT);
   }
 }

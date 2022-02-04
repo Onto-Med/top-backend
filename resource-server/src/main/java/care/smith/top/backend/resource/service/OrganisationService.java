@@ -50,10 +50,10 @@ public class OrganisationService {
     return directoryToOrganisation(directoryRepository.save(populate(directory, organisation)));
   }
 
-  public void deleteOrganisationByName(String organisationName) {
+  public void deleteOrganisationById(String organisationId) {
     Directory directory =
         directoryRepository
-            .findById(organisationName)
+            .findById(organisationId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
     // TODO: handle subdirectories and content
