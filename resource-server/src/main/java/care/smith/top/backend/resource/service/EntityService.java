@@ -251,15 +251,17 @@ public class EntityService {
   private ClassVersion buildClassVersion(Entity entity) {
     ClassVersion classVersion = new ClassVersion();
 
-    Set<ClassVersion> equivalentEntities = new HashSet<>();
-    entity
-        .getEquivalentEntities()
-        .forEach(
-            e ->
-                classVersionRepository
-                    .findByClassIdAndVersion(e.getId(), e.getVersion())
-                    .ifPresent(equivalentEntities::add));
-    classVersion.addEquivalentClasses(equivalentEntities);
+    if (entity.getEquivalentEntities() != null) {
+      Set<ClassVersion> equivalentEntities = new HashSet<>();
+      entity
+          .getEquivalentEntities()
+          .forEach(
+              e ->
+                  classVersionRepository
+                      .findByClassIdAndVersion(e.getId(), e.getVersion())
+                      .ifPresent(equivalentEntities::add));
+      classVersion.addEquivalentClasses(equivalentEntities);
+    }
 
     if (entity instanceof Phenotype) {
       Phenotype phenotype = (Phenotype) entity;
