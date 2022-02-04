@@ -345,7 +345,7 @@ public class EntityService {
               });
 
     PropertyAccessor accessor = PropertyAccessorFactory.forBeanPropertyAccess(entity);
-    Arrays.asList("title", "synonym", "description", "dataType")
+    Arrays.asList("title", "synonym", "description")
         .forEach(
             p ->
                 accessor.setPropertyValue(
@@ -357,7 +357,7 @@ public class EntityService {
                                     .text(a.getStringValue())
                                     .lang(a.getLanguage()))
                         .collect(Collectors.toList())));
-
+    // TODO: entity.setDataType()
     // TODO: entity.setCodes();
     // TODO: entity.setExpression();
 
