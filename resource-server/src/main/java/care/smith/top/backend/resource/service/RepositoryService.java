@@ -119,7 +119,7 @@ public class RepositoryService {
       String organisationId, List<String> include, String name, Integer page) {
     return repositoryRepository
         .findByNameContainingAndSuperDirectoryId(
-            name, organisationId, PageRequest.of(page, pageSize, Sort.by("r.name")))
+            name, organisationId, PageRequest.of(page - 1, pageSize, Sort.by("r.name")))
         .stream()
         .map(this::repositoryToApiPojo)
         .collect(Collectors.toList());
