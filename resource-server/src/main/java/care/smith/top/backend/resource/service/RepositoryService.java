@@ -109,7 +109,7 @@ public class RepositoryService {
       List<String> include, String name, Integer page) {
     // TODO: check if user has read permission
     return repositoryRepository
-        .findByNameContaining(name, PageRequest.of(page, pageSize, Sort.by("name")))
+        .findByNameContainingIgnoreCase(name)
         .stream()
         .map(this::repositoryToApiPojo)
         .collect(Collectors.toList());
