@@ -2,19 +2,20 @@ package care.smith.top.backend.resource.service;
 
 import care.smith.top.backend.model.Organisation;
 import care.smith.top.backend.model.Repository;
+import care.smith.top.backend.neo4j_ontology_access.repository.DirectoryRepository;
 import care.smith.top.backend.neo4j_ontology_access.repository.RepositoryRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.*;
 
 class RepositoryServiceTest extends Neo4jTest {
   @Autowired RepositoryService repositoryService;
   @Autowired OrganisationService organisationService;
   @Autowired RepositoryRepository repositoryRepository;
+  @Autowired DirectoryRepository directoryRepository;
 
   @Test
   void createRepository() {
@@ -40,6 +41,11 @@ class RepositoryServiceTest extends Neo4jTest {
                   .isNotNull()
                   .hasFieldOrPropertyWithValue("id", organisation.getId());
             });
+
+    assertThat(
+            repositoryRepository.findByIdAndSuperDirectoryId(
+                repository.getId(), organisation.getId()))
+        .isPresent();
 
     assertThatThrownBy(
             () -> repositoryService.createRepository(organisation.getId(), repository, null))
@@ -67,7 +73,42 @@ class RepositoryServiceTest extends Neo4jTest {
   }
 
   @Test
-  void deleteRepository() {}
+  void deleteRepository() {
+    Organisation organisation =
+        organisationService.createOrganisation(new Organisation().id("org"));
+    Repository repository1 =
+        new Repository().id("repo_1").name("Repository 1").description("Some description");
+    Repository repository2 =
+        new Repository().id("repo_2").name("Repository 2").description("Some description");
+
+    assertThat(repositoryService.createRepository(organisation.getId(), repository1, null))
+        .isNotNull();
+
+    assertThat(repositoryService.createRepository(organisation.getId(), repository2, null))
+        .isNotNull();
+
+    assertThatCode(
+            () ->
+                repositoryService.deleteRepository(repository1.getId(), organisation.getId(), null))
+        .doesNotThrowAnyException();
+
+    assertThat(
+            repositoryRepository.findByIdAndSuperDirectoryId(
+                repository1.getId(), organisation.getId()))
+        .isNotPresent();
+
+    assertThat(directoryRepository.findById(organisation.getId())).isPresent();
+
+    assertThat(
+            repositoryRepository.findByIdAndSuperDirectoryId(
+                repository2.getId(), organisation.getId()))
+        .isPresent()
+        .hasValueSatisfying(
+            r ->
+                assertThat(r.getSuperDirectories())
+                    .isNotEmpty()
+                    .allMatch(d -> d.getId().equals(organisation.getId())));
+  }
 
   @Test
   void getRepository() {}
