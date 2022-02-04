@@ -196,5 +196,24 @@ class OrganisationServiceTest extends Neo4jTest {
   }
 
   @Test
-  void getOrganisations() {}
+  void getOrganisations() {
+    organisationService.createOrganisation(new Organisation().id("org_1").name("Organisation"));
+    organisationService.createOrganisation(
+        new Organisation().id("org_2").name("Other organisation"));
+
+    assertThat(organisationService.getOrganisations("Organ", 1, null))
+        .isNotEmpty()
+        .anyMatch(o -> o.getId().equals("org_1"))
+        .anyMatch(o -> o.getId().equals("org_2"))
+        .size()
+        .isEqualTo(2);
+
+    assertThat(organisationService.getOrganisations("other", 1, null))
+        .isNotEmpty()
+        .anyMatch(o -> o.getId().equals("org_2"))
+        .size()
+        .isEqualTo(1);
+
+    assertThat(organisationService.getOrganisations("not matching string", 1, null)).isEmpty();
+  }
 }
