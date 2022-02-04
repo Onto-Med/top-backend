@@ -25,8 +25,8 @@ public interface RepositoryRepository extends PagingAndSortingRepository<Reposit
    * @return An {@link Optional<Repository>} containing the matching repository.
    */
   @Query(
-      "MATCH (r:Repository { id: $repositoryId }) -[:BELONGS_TO*]-> (d:Directory { id: $superDirectoryId }) "
-          + "RETURN r")
+      "MATCH p = (r:Repository { id: $repositoryId }) -[:BELONGS_TO*]-> (:Directory { id: $superDirectoryId }) "
+          + "RETURN r, collect(relationships(p)), collect(nodes(p))")
   Optional<Repository> findByIdAndSuperDirectoryId(
       @Param("repositoryId") String repositoryId,
       @Param("superDirectoryId") String superDirectoryId);
