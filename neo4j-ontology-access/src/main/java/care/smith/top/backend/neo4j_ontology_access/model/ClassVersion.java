@@ -43,6 +43,9 @@ public class ClassVersion extends Annotatable {
   @Relationship(type = "IS_VERSION_OF")
   private Class aClass;
 
+  @Relationship(type = "PREVIOUS_VERSION")
+  private ClassVersion previousVersion;
+
   public ClassVersion() {}
 
   @PersistenceConstructor
@@ -157,5 +160,14 @@ public class ClassVersion extends Annotatable {
 
   public Long getId() {
     return id;
+  }
+
+  public ClassVersion getPreviousVersion() {
+    return previousVersion;
+  }
+
+  public ClassVersion setPreviousVersion(ClassVersion previousVersion) {
+    this.previousVersion = previousVersion;
+    return this;
   }
 }
