@@ -23,6 +23,7 @@ public abstract class Annotatable {
   }
 
   public Set<Annotation> getAnnotations(String property) {
+    if (annotations == null) return new HashSet<>();
     return annotations.stream()
         .filter(a -> property.equals(a.getProperty()))
         .collect(Collectors.toSet());
