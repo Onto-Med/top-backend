@@ -3,6 +3,7 @@ package care.smith.top.backend.neo4j_ontology_access.model;
 import org.springframework.data.neo4j.core.schema.*;
 import org.springframework.util.StringUtils;
 
+import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Set;
@@ -15,9 +16,9 @@ public class Annotation extends Annotatable {
   @DynamicLabels private Set<String> dynamicLabels;
   private String datatype;
   private String property;
-  private String stringValue;
-  private Date dateValue;
-  private Double decimalValue;
+  private String  stringValue;
+  private Instant dateValue;
+  private Double  decimalValue;
   private Boolean booleanValue;
 
   @Relationship(type = "HAS_CLASS_VALUE")
@@ -38,11 +39,11 @@ public class Annotation extends Annotatable {
     this.stringValue = stringValue;
   }
 
-  public Annotation(String property, Date dateValue, String language) {
+  public Annotation(String property, Instant dateValue, String language) {
     this(property, dateValue, language, null);
   }
 
-  public Annotation(String property, Date dateValue, String language, Integer index) {
+  public Annotation(String property, Instant dateValue, String language, Integer index) {
     this(property, language, index);
     this.datatype = "string";
     this.dateValue = dateValue;
@@ -142,11 +143,11 @@ public class Annotation extends Annotatable {
     return this;
   }
 
-  public Date getDateValue() {
+  public Instant getDateValue() {
     return dateValue;
   }
 
-  public Annotation setDateValue(Date dateValue) {
+  public Annotation setDateValue(Instant dateValue) {
     this.dateValue = dateValue;
     return this;
   }
