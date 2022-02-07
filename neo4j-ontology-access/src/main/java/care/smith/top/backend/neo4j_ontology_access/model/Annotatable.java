@@ -2,10 +2,7 @@ package care.smith.top.backend.neo4j_ontology_access.model;
 
 import org.springframework.data.neo4j.core.schema.Relationship;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public abstract class Annotatable {
@@ -17,8 +14,10 @@ public abstract class Annotatable {
   }
 
   public Annotatable addAnnotations(Set<Annotation> annotations) {
+    if (annotations == null) return this;
     if (this.annotations == null) this.annotations = new HashSet<>();
-    this.annotations.addAll(annotations);
+    this.annotations.addAll(
+        annotations.stream().filter(Objects::nonNull).collect(Collectors.toSet()));
     return this;
   }
 
