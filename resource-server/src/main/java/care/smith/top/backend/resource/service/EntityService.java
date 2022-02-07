@@ -14,8 +14,11 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.math.BigDecimal;
+import java.time.ZoneOffset;
 import java.util.Set;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
@@ -191,7 +194,7 @@ public class EntityService {
                   new ClassRelation(new Class(c), repositoryId, entity.getIndex())));
     }
 
-    return classToEntity(classRepository.save(cls));
+    return classToEntity(classRepository.save(cls), repositoryId);
   }
 
   public List<Entity> getEntities(
@@ -211,7 +214,7 @@ public class EntityService {
             dataType.getValue(),
             PageRequest.of(page, pageSize))
         .stream()
-        .map(this::classVersionToEntity)
+        .map(cv -> this.classVersionToEntity(cv, repositoryId))
         .collect(Collectors.toList());
   }
 
@@ -272,18 +275,17 @@ public class EntityService {
       if (phenotype.getDataType() != null)
         classVersion.addAnnotation(
             new Annotation("dataType", phenotype.getDataType().getValue(), null));
-      // TODO: convert formula to string or store components as annotations
-      //      if (phenotype.getFormula() != null)
-      //        classVersion.addAnnotation(new Annotation("formula", phenotype.getFormula(), null));
       if (phenotype.getUnits() != null)
         classVersion.addAnnotations(
-            phenotype.getUnits().stream()
-                .map(u -> new Annotation("unit", u.getUnit(), null))
-                .collect(Collectors.toSet()));
+            phenotype.getUnits().stream().map(this::fromUnit).collect(Collectors.toSet()));
+      if (phenotype.getRestriction() != null)
+        classVersion.addAnnotation(fromRestriction(phenotype.getRestriction()));
       // TODO: convert expression to string and apply variables
-      //      if (phenotype.getExpression() != null)
-      //        phenotype.getExpression()
-      // TODO: add restrictions
+      // if (phenotype.getExpression() != null)
+      //   phenotype.getExpression()
+      // TODO: convert formula to string or store components as annotations
+      // if (phenotype.getFormula() != null)
+      //   classVersion.addAnnotation(new Annotation("formula", phenotype.getFormula(), null));
     }
 
     // TODO: rework class id or apply workaround for codes with missing UUID
@@ -314,6 +316,75 @@ public class EntityService {
     return classVersion;
   }
 
+  private Annotation fromRestriction(Restriction restriction) {
+    if (restriction == null || restriction.getType() == null) return null;
+
+    Annotation annotation =
+        (Annotation)
+            new Annotation()
+                .setProperty("restriction")
+                .addAnnotation(new Annotation("type", restriction.getType().getValue(), null))
+                .addAnnotation(new Annotation("negated", restriction.isNegated(), null))
+                .addAnnotation(
+                    new Annotation("quantor", restriction.getQuantor().getValue(), null));
+
+    if (restriction instanceof NumberRestriction) {
+      if (((NumberRestriction) restriction).getMinOperator() != null)
+        annotation.addAnnotation(
+            new Annotation(
+                "minOperator",
+                ((NumberRestriction) restriction).getMinOperator().getValue(),
+                null));
+      if (((NumberRestriction) restriction).getMaxOperator() != null)
+        annotation.addAnnotation(
+            new Annotation(
+                "maxOperator",
+                ((NumberRestriction) restriction).getMaxOperator().getValue(),
+                null));
+      if (((NumberRestriction) restriction).getValues() != null)
+        annotation.addAnnotations(
+            ((NumberRestriction) restriction)
+                .getValues().stream()
+                    .map(v -> new Annotation("value", v.doubleValue(), null))
+                    .collect(Collectors.toSet()));
+    } else if (restriction instanceof StringRestriction) {
+      if (((StringRestriction) restriction).getValues() != null)
+        annotation.addAnnotations(
+            ((StringRestriction) restriction)
+                .getValues().stream()
+                    .map(v -> new Annotation("value", v, null))
+                    .collect(Collectors.toSet()));
+    } else if (restriction instanceof DateTimeRestriction) {
+      if (((DateTimeRestriction) restriction).getMinOperator() != null)
+        annotation.addAnnotation(
+            new Annotation(
+                "minOperator",
+                ((DateTimeRestriction) restriction).getMinOperator().getValue(),
+                null));
+      if (((DateTimeRestriction) restriction).getMaxOperator() != null)
+        annotation.addAnnotation(
+            new Annotation(
+                "maxOperator",
+                ((DateTimeRestriction) restriction).getMaxOperator().getValue(),
+                null));
+      if (((DateTimeRestriction) restriction).getValues() != null)
+        annotation.addAnnotations(
+            ((DateTimeRestriction) restriction)
+                .getValues().stream()
+                    .map(v -> new Annotation("value", v.toInstant(), null))
+                    .collect(Collectors.toSet()));
+    } else if (restriction instanceof BooleanRestriction) {
+      if (((BooleanRestriction) restriction).getValues() != null)
+        annotation.addAnnotations(
+            ((BooleanRestriction) restriction)
+                .getValues().stream()
+                    .map(v -> new Annotation("value", v, null))
+                    .collect(Collectors.toSet()));
+    }
+
+    return annotation;
+  }
+
   /**
    * Transforms the given {@link ClassVersion} object to an {@link Entity} object.
    *
@@ -338,9 +409,35 @@ public class EntityService {
     } else {
       entity = new Phenotype();
 
-      // TODO: entity.setDataType();
-      // TODO: entity.setExpression();
-      // TODO: entity.setSuperPhenotype();
+      if (classVersion.getAnnotation("dataType").isPresent())
+        ((Phenotype) entity)
+            .setDataType(
+                DataType.fromValue(classVersion.getAnnotation("dataType").get().getStringValue()));
+
+      if (Arrays.asList(
+              EntityType.SINGLE_RESTRICTION,
+              EntityType.COMBINED_RESTRICTION,
+              EntityType.DERIVED_RESTRICTION)
+          .contains(entityType)) {
+        superClasses.stream()
+            .findFirst()
+            .ifPresent(
+                c ->
+                    ((Phenotype) entity)
+                        .setSuperPhenotype((Phenotype) new Phenotype().id(c.getaClass().getId())));
+        classVersion
+            .getAnnotation("score")
+            .ifPresent(s -> ((Phenotype) entity).setScore(BigDecimal.valueOf(s.getDecimalValue())));
+        classVersion
+            .getAnnotation("restriction")
+            .ifPresent(r -> ((Phenotype) entity).setRestriction(toRestriction(r)));
+      } else {
+        classVersion
+            .getAnnotations("unit")
+            .forEach(a -> ((Phenotype) entity).addUnitsItem(toUnit(a)));
+      }
+
+      // TODO, if present: entity.setExpression();
     }
 
     if (superClasses != null
@@ -401,6 +498,96 @@ public class EntityService {
     //   entity.setIndex(superClasses.stream().findFirst().get().getIndex());
 
     return entity;
+  }
+
+  private Restriction toRestriction(Annotation annotation) {
+    if (annotation == null) return null;
+    if (annotation.getAnnotation("type").isEmpty()) return null;
+    DataType type = DataType.fromValue(annotation.getAnnotation("type").get().getStringValue());
+
+    Restriction restriction;
+
+    if (type == DataType.STRING) {
+      restriction = new StringRestriction();
+      annotation
+          .getAnnotations("value")
+          .forEach(v -> ((StringRestriction) restriction).addValuesItem(v.getStringValue()));
+    } else if (type == DataType.NUMBER) {
+      restriction = new NumberRestriction();
+      annotation
+          .getAnnotations("value")
+          .forEach(
+              v ->
+                  ((NumberRestriction) restriction)
+                      .addValuesItem(BigDecimal.valueOf(v.getDecimalValue())));
+      annotation.getAnnotations("minOperator").stream()
+          .findFirst()
+          .ifPresent(
+              o ->
+                  ((NumberRestriction) restriction)
+                      .setMinOperator(RestrictionOperator.fromValue(o.getStringValue())));
+      annotation.getAnnotations("maxOperator").stream()
+          .findFirst()
+          .ifPresent(
+              o ->
+                  ((NumberRestriction) restriction)
+                      .setMaxOperator(RestrictionOperator.fromValue(o.getStringValue())));
+    } else if (type == DataType.DATE_TIME) {
+      restriction = new DateTimeRestriction();
+      annotation
+          .getAnnotations("value")
+          .forEach(
+              v ->
+                  ((DateTimeRestriction) restriction)
+                      .addValuesItem(v.getDateValue().atOffset(ZoneOffset.UTC)));
+      annotation.getAnnotations("minOperator").stream()
+          .findFirst()
+          .ifPresent(
+              o ->
+                  ((DateTimeRestriction) restriction)
+                      .setMinOperator(RestrictionOperator.fromValue(o.getStringValue())));
+      annotation.getAnnotations("maxOperator").stream()
+          .findFirst()
+          .ifPresent(
+              o ->
+                  ((DateTimeRestriction) restriction)
+                      .setMaxOperator(RestrictionOperator.fromValue(o.getStringValue())));
+    } else if (type == DataType.BOOLEAN) {
+      restriction = new BooleanRestriction();
+      annotation
+          .getAnnotations("value")
+          .forEach(v -> ((BooleanRestriction) restriction).addValuesItem(v.getBooleanValue()));
+    } else return null;
+
+    restriction.setType(type);
+    annotation.getAnnotation("negated").ifPresent(a -> restriction.setNegated(a.getBooleanValue()));
+    annotation
+        .getAnnotation("quantor")
+        .ifPresent(a -> restriction.setQuantor(Quantor.fromValue(a.getStringValue())));
+
+    return restriction;
+  }
+
+  private Unit toUnit(Annotation annotation) {
+    if (annotation == null
+        || !"unit".equals(annotation.getProperty())
+        || !StringUtils.hasText(annotation.getStringValue())) return null;
+
+    Unit unit = new Unit().unit(annotation.getStringValue());
+    annotation.getAnnotation("preferred").ifPresent(a -> unit.preferred(a.getBooleanValue()));
+
+    return unit;
+  }
+
+  private Annotation fromUnit(Unit unit) {
+    if (unit == null || !StringUtils.hasText(unit.getUnit())) return null;
+
+    return (Annotation)
+        new Annotation()
+            .setProperty("unit")
+            .setStringValue(unit.getUnit())
+            .addAnnotation(
+                new Annotation().setProperty("preferred").setBooleanValue(unit.isPreferred()));
   }
 
   /**
