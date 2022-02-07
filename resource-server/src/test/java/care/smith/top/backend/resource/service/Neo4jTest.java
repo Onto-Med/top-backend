@@ -5,12 +5,14 @@ import org.junit.jupiter.api.BeforeAll;
 import org.neo4j.harness.Neo4j;
 import org.neo4j.harness.Neo4jBuilders;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
 @Transactional
+@DirtiesContext
 public class Neo4jTest {
   private static Neo4j embeddedDatabaseServer;
 
