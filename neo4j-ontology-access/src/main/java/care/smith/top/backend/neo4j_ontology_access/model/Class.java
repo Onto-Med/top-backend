@@ -25,9 +25,6 @@ public class Class extends Annotatable {
   @Relationship(type = "IS_FORK_OF")
   private Class forkedClass;
 
-  @Relationship(type = "HAS_VERSION")
-  private Set<ClassVersion> versions;
-
   @Relationship(type = "CURRENT_VERSION")
   private ClassVersion currentVersion;
 
@@ -43,41 +40,6 @@ public class Class extends Annotatable {
 
   public Class() {
     this(UUID.randomUUID());
-  }
-
-  /**
-   * Add new version for this class. The version will get assigned a version number and this class.
-   *
-   * @param classVersion The new version.
-   * @param setCurrent If true, given {@link ClassVersion} will be set to the current version of
-   *     this {@link Class} object.
-   * @return This {@link Class} object.
-   */
-  public Class createVersion(ClassVersion classVersion, boolean setCurrent) {
-    if (versions == null) versions = new HashSet<>();
-
-    int version = 1;
-    if (getCurrentVersion().isPresent()) version = getCurrentVersion().get().getVersion() + 1;
-
-    versions.add(classVersion.setVersion(version).setaClass(this));
-    if (setCurrent) setCurrentVersion(classVersion);
-
-    return this;
-  }
-
-  /**
-   * Get the specified version of this class. If parameter version is null, return the current
-   * version.
-   *
-   * @param version The requested version number.
-   * @return A {@link ClassVersion} object for this Class object.
-   */
-  public Optional<ClassVersion> getVersion(Integer version) {
-    if (version == null) {
-      return getCurrentVersion();
-    } else {
-      return getVersions().stream().filter(v -> v.getVersion() == version).findFirst();
-    }
   }
 
   public Class addSuperClassRelation(ClassRelation superClassRelation) {
@@ -99,18 +61,12 @@ public class Class extends Annotatable {
     return this;
   }
 
-  public Set<ClassVersion> getVersions() {
-    return versions;
-  }
-
   public Optional<ClassVersion> getCurrentVersion() {
     return Optional.ofNullable(currentVersion);
   }
 
   public Class setCurrentVersion(ClassVersion currentVersion) {
-    if (!versions.contains(currentVersion))
-      throw new UnsupportedOperationException(
-          String.format("%s does not belong to '%s'!", currentVersion.getClass().getName(), id));
+    currentVersion.setaClass(this);
     this.currentVersion = currentVersion;
     return this;
   }

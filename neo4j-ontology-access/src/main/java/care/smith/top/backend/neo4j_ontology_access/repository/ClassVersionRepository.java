@@ -1,7 +1,6 @@
 package care.smith.top.backend.neo4j_ontology_access.repository;
 
 import care.smith.top.backend.neo4j_ontology_access.model.ClassVersion;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.neo4j.repository.query.Query;
@@ -9,7 +8,6 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 

@@ -5,6 +5,7 @@ import care.smith.top.backend.neo4j_ontology_access.model.Class;
 import care.smith.top.backend.neo4j_ontology_access.model.ClassVersion;
 import care.smith.top.backend.neo4j_ontology_access.model.Repository;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
@@ -28,9 +29,10 @@ class ClassVersionRepositoryTest extends RepositoryTest {
     ClassVersion classVersion =
         (ClassVersion)
             new ClassVersion()
+                .setVersion(classRepository.getNextVersion(cls))
                 .addAnnotation(annotation)
                 .addAnnotation(new Annotation("description", "example description", "de"));
-    cls.createVersion(classVersion, true);
+    cls.setCurrentVersion(classVersion);
 
     classRepository.save(cls);
 
@@ -40,7 +42,7 @@ class ClassVersionRepositoryTest extends RepositoryTest {
         .hasValueSatisfying(
             cv -> {
               assertThat(cv.getaClass().getId()).isEqualTo(cls.getId());
-              assertThat(cv.getVersion()).isEqualTo(classVersion.getVersion());
+              assertThat(cv.getVersion()).isEqualTo(1);
               assertThat(cv.getAnnotations()).size().isEqualTo(2);
 
               assertThat(cv.getAnnotations("description").stream().findFirst())
@@ -80,25 +82,25 @@ class ClassVersionRepositoryTest extends RepositoryTest {
     Class cls1 =
         new Class()
             .setRepositoryId(repository.getId())
-            .createVersion(
+            .setCurrentVersion(
                 (ClassVersion)
                     new ClassVersion()
                         .setHiddenAt(Instant.now())
-                        .addAnnotation(new Annotation("title", "test name", "en")),
-                true)
-            .createVersion(
+                        .setVersion(1)
+                        .addAnnotation(new Annotation("title", "test name", "en")))
+            .setCurrentVersion(
                 (ClassVersion)
                     new ClassVersion()
                         .setName("example")
+                        .setVersion(2)
                         .addAnnotation(new Annotation("title", "test name", "en"))
                         .addAnnotation(new Annotation("type", "type", null))
-                        .addAnnotation(new Annotation("dataType", "decimal", null)),
-                true);
+                        .addAnnotation(new Annotation("dataType", "decimal", null)));
 
     Class cls2 =
         new Class()
             .setRepositoryId(repository.getId())
-            .createVersion(new ClassVersion().setName("example"), true);
+            .setCurrentVersion(new ClassVersion().setName("example").setVersion(1));
 
     classRepository.saveAll(Arrays.asList(cls1, cls2));
 

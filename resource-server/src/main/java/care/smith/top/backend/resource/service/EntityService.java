@@ -83,7 +83,7 @@ public class EntityService {
 
     Class cls = new Class(entity.getId());
     cls.setRepositoryId(repositoryId);
-    cls.createVersion(buildClassVersion(entity), true);
+    cls.setCurrentVersion(buildClassVersion(entity).setVersion(1));
 
     List<UUID> superClasses = new ArrayList<>();
     if (entity instanceof Category) {
@@ -145,7 +145,7 @@ public class EntityService {
     if (version == null) {
       optional = cls.getCurrentVersion();
     } else {
-      optional = cls.getVersions().stream().filter(v -> v.getVersion() == version).findFirst();
+      optional = classVersionRepository.findByClassIdAndVersion(cls.getId(), version);
     }
     ClassVersion classVersion =
         optional.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -167,7 +167,8 @@ public class EntityService {
             .findByIdAndRepositoryId(id, repository.getId())
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-    cls.createVersion(buildClassVersion(entity), true);
+    cls.setCurrentVersion(
+        buildClassVersion(entity).setVersion(classRepository.getNextVersion(cls)));
 
     List<UUID> superClasses = new ArrayList<>();
     if (entity instanceof Category) {

@@ -2,8 +2,10 @@ package care.smith.top.backend.neo4j_ontology_access.repository;
 
 import care.smith.top.backend.neo4j_ontology_access.model.Class;
 import care.smith.top.backend.neo4j_ontology_access.model.ClassRelation;
+import care.smith.top.backend.neo4j_ontology_access.model.ClassVersion;
 import care.smith.top.backend.neo4j_ontology_access.model.Repository;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Arrays;
@@ -30,6 +32,24 @@ public class ClassRepositoryTest extends RepositoryTest {
 
     assertThat(classRepository.count()).isEqualTo(11);
     assertThat(classRepository.findSubclasses(cls, repository).count()).isEqualTo(10);
+  }
+
+  @Test
+  void getNextVersion() {
+    assertThat(classRepository.getNextVersion(null)).isEqualTo(1);
+
+    Class cls = classRepository.save(new Class());
+    assertThat(classRepository.getNextVersion(cls)).isEqualTo(1);
+
+    ClassVersion classVersion = new ClassVersion().setVersion(1);
+    cls.setCurrentVersion(classVersion);
+
+    cls = classRepository.save(cls);
+    assertThat(cls.getCurrentVersion())
+        .isPresent()
+        .hasValueSatisfying(cv -> assertThat(cv.getVersion()).isEqualTo(1));
+
+    assertThat(classRepository.getNextVersion(cls)).isEqualTo(2);
   }
 
   @Test
