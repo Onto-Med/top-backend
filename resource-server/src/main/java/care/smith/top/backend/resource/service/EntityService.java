@@ -115,7 +115,7 @@ public class EntityService {
           });
     }
 
-    return classToEntity(classRepository.save(cls));
+    return classToEntity(classRepository.save(cls), repositoryId);
   }
 
   public Entity loadEntity(String organisationId, String repositoryId, UUID id, Integer version) {
@@ -129,7 +129,7 @@ public class EntityService {
             .findByClassIdAndVersion(cls.getId(), version)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-    return classVersionToEntity(classVersion);
+    return classVersionToEntity(classVersion, repositoryId);
   }
 
   @Transactional
@@ -318,27 +318,21 @@ public class EntityService {
    * Transforms the given {@link ClassVersion} object to an {@link Entity} object.
    *
    * @param classVersion The {@link ClassVersion} object to be transformed.
+   * @param ownerId The owner this relation belongs to ({@link Repository} or {@link OntologyVersion}).
    * @return The resulting {@link Entity} object.
    */
-  private Entity classVersionToEntity(ClassVersion classVersion) {
+  private Entity classVersionToEntity(ClassVersion classVersion, String ownerId) {
     Category entity;
 
     EntityType entityType =
-        EntityType.fromValue(
-            classVersion.getAnnotations("type").stream()
-                .findFirst()
-                .orElseThrow()
-                .getStringValue());
+        EntityType.fromValue(classVersion.getAnnotation("type").orElseThrow().getStringValue());
 
-    Set<ClassRelation> superClasses = classVersion.getaClass().getSuperClassRelations();
+    Set<ClassVersion> superClasses =
+        classVersionRepository.getCurrentSuperClassVersionsByOwnerId(
+            classVersion.getaClass(), ownerId);
 
     if (entityType.equals(EntityType.CATEGORY)) {
       entity = new Category();
-      if (superClasses != null)
-        entity.setSuperCategories(
-            superClasses.stream()
-                .map(c -> (Category) new Category().id(c.getSuperclass().getId()))
-                .collect(Collectors.toList()));
     } else if (entityType.equals(EntityType.PHENOTYPE_GROUP)) {
       entity = new PhenotypeGroup();
     } else {
@@ -349,10 +343,16 @@ public class EntityService {
       // TODO: entity.setSuperPhenotype();
     }
 
-    if (superClasses != null)
+    if (superClasses != null
+        && Arrays.asList(
+                EntityType.CATEGORY,
+                EntityType.SINGLE_PHENOTYPE,
+                EntityType.COMBINED_PHENOTYPE,
+                EntityType.DERIVED_PHENOTYPE)
+            .contains(entityType))
       entity.setSuperCategories(
           superClasses.stream()
-              .map(c -> (Category) new Category().id(c.getSuperclass().getId()))
+              .map(c -> (Category) new Category().id(c.getaClass().getId()))
               .collect(Collectors.toList()));
 
     care.smith.top.backend.model.Repository repository =
@@ -396,6 +396,7 @@ public class EntityService {
     // from top-api model.
     // TODO: entity.setRefer(); <- insert URI
 
+    // TODO: set index from class relation
     // if (superClasses != null && superClasses.stream().findFirst().isPresent())
     //   entity.setIndex(superClasses.stream().findFirst().get().getIndex());
 
@@ -408,12 +409,13 @@ public class EntityService {
    * @param cls The {@link Class} object to be transformed.
    * @return The resulting {@link Entity} object.
    */
-  private Entity classToEntity(Class cls) {
+  private Entity classToEntity(Class cls, String ownerId) {
     return classVersionToEntity(
         cls.getCurrentVersion()
             .orElseThrow(
                 () ->
                     new ResponseStatusException(
-                        HttpStatus.INTERNAL_SERVER_ERROR, "Entity had no version!")));
+                        HttpStatus.INTERNAL_SERVER_ERROR, "Entity had no version!")),
+        ownerId);
   }
 }
