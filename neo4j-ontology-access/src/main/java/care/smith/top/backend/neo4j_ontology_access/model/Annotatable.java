@@ -4,6 +4,7 @@ import org.springframework.data.neo4j.core.schema.Relationship;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -25,6 +26,10 @@ public abstract class Annotatable {
     return annotations.stream()
         .filter(a -> property.equals(a.getProperty()))
         .collect(Collectors.toSet());
+  }
+
+  public Optional<Annotation> getAnnotation(String property) {
+    return getAnnotations(property).stream().findFirst();
   }
 
   public Set<Annotation> getAnnotations() {
