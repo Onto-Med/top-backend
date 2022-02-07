@@ -48,6 +48,12 @@ public class Class extends Annotatable {
     return this;
   }
 
+  public Class addSuperClass(Class superClass, String ownerId, Integer index) {
+    addSuperClassRelation(
+        new ClassRelation().setSuperclass(superClass).setOwnerId(ownerId).setIndex(index));
+    return this;
+  }
+
   public UUID getId() {
     return id;
   }

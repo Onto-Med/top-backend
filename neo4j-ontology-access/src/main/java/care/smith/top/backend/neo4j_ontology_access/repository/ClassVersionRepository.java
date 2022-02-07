@@ -1,5 +1,6 @@
 package care.smith.top.backend.neo4j_ontology_access.repository;
 
+import care.smith.top.backend.neo4j_ontology_access.model.Class;
 import care.smith.top.backend.neo4j_ontology_access.model.ClassVersion;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -9,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 @Repository
@@ -52,4 +54,13 @@ public interface ClassVersionRepository extends PagingAndSortingRepository<Class
       @Param("type") String type,
       @Param("dataType") String dataType,
       @Param("pageable") Pageable pageable);
+
+  @Query(
+      "MATCH (:Class { id: $cls.__id__ }) -[:IS_SUBCLASS_OF { ownerId: $ownerId }]-> (c:Class) -[:CURRENT_VERSION]-> (cv:ClassVersion) "
+          + "MATCH (cv) -[cRel:IS_VERSION_OF]-> (c) "
+          + "WITH cv, collect(cRel) AS cRel, collect(c) AS c "
+          + "OPTIONAL MATCH a = (cv) -[:HAS_ANNOTATION*]-> (:Annotation) "
+          + "RETURN cv, cRel, c, collect(nodes(a)), collect(relationships(a))")
+  Set<ClassVersion> getCurrentSuperClassVersionsByOwnerId(
+      @Param("cls") Class cls, @Param("ownerId") String ownerId);
 }
