@@ -114,15 +114,7 @@ class ClassVersionRepositoryTest extends RepositoryTest {
                     new ClassVersion()
                         .setHiddenAt(Instant.now())
                         .setVersion(1)
-                        .addAnnotation(new Annotation("title", "test name", "en")))
-            .setCurrentVersion(
-                (ClassVersion)
-                    new ClassVersion()
-                        .setName("example")
-                        .setVersion(2)
-                        .addAnnotation(new Annotation("title", "test name", "en"))
-                        .addAnnotation(new Annotation("type", "type", null))
-                        .addAnnotation(new Annotation("dataType", "decimal", null)));
+                        .addAnnotation(new Annotation("title", "test name", "en")));
 
     Class cls2 =
         new Class()
@@ -131,11 +123,21 @@ class ClassVersionRepositoryTest extends RepositoryTest {
 
     classRepository.saveAll(Arrays.asList(cls1, cls2));
 
+    cls1.setCurrentVersion(
+        (ClassVersion)
+            new ClassVersion()
+                .setName("example")
+                .setVersion(2)
+                .addAnnotation(new Annotation("title", "test name", "en"))
+                .addAnnotation(new Annotation("type", "type", null))
+                .addAnnotation(new Annotation("dataType", "decimal", null)));
+    classRepository.save(cls1);
+
     Slice<ClassVersion> result =
         classVersionRepository.findByRepositoryIdAndNameContainingIgnoreCaseAndTypeAndDataType(
             repository.getId(), "est", null, null, PageRequest.ofSize(10));
 
-    assertThat(result.getNumberOfElements()).isEqualTo(1);
+    assertThat(result).size().isEqualTo(1);
 
     assertThat(result.stream().findFirst())
         .hasValueSatisfying(
