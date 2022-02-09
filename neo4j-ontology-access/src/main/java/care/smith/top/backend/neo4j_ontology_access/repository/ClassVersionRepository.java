@@ -41,7 +41,8 @@ public interface ClassVersionRepository extends PagingAndSortingRepository<Class
    *     object with all related annotations.
    */
   @Query(
-      "MATCH (c:Class { id: $classId }) -[cRel:CURRENT_VERSION]-> (cv:ClassVersion) "
+      "MATCH (c:Class { id: $classId }) -[:CURRENT_VERSION]-> (cv:ClassVersion) "
+          + "MATCH (cv) -[cRel:IS_VERSION_OF]-> (c) "
           + "WITH cv, collect(cRel) as cRel, collect(c) as c "
           + "OPTIONAL MATCH a = (cv) -[:HAS_ANNOTATION*]-> (:Annotation) "
           + "RETURN cv, cRel, c, collect(nodes(a)), collect(relationships(a))")
@@ -102,4 +103,10 @@ public interface ClassVersionRepository extends PagingAndSortingRepository<Class
           + "RETURN previous "
           + "ORDER BY length(p) LIMIT 1")
   Optional<ClassVersion> getPreviousUnhidden(@Param("classVersion") ClassVersion classVersion);
+
+  @Query(
+      "MATCH (cv:ClassVersion) "
+          + "WHERE id(cv) = $classVersion.__id__ "
+          + "SET cv.hiddenAt = datetime()")
+  void hide(@Param("classVersion") ClassVersion classVersion);
 }
