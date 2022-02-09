@@ -211,7 +211,40 @@ class EntityServiceTest extends Neo4jTest {
   }
 
   @Test
-  void loadEntity() {}
+  void loadEntity() {
+    Organisation organisation =
+        organisationService.createOrganisation(new Organisation().id("org"));
+    Repository repository =
+        repositoryService.createRepository(organisation.getId(), new Repository().id("repo"), null);
+
+    Category category =
+        (Category)
+            new Category()
+                .id(UUID.randomUUID())
+                .entityType(EntityType.CATEGORY)
+                .addTitlesItem(new LocalisableText().text("category").lang("en"));
+
+    assertThat(entityService.createEntity(organisation.getId(), repository.getId(), category))
+        .isNotNull();
+
+    assertThat(
+            entityService.loadEntity(organisation.getId(), repository.getId(), category.getId(), 1))
+        .isNotNull()
+        .isInstanceOf(Category.class)
+        .satisfies(
+            c -> {
+              assertThat(c.getId()).isEqualTo(category.getId());
+              assertThat(c.getEntityType()).isEqualTo(category.getEntityType());
+              assertThat(c.getTitles()).isNotEmpty().size().isEqualTo(1);
+            });
+
+    assertThatThrownBy(
+            () ->
+                entityService.loadEntity(
+                    organisation.getId(), repository.getId(), category.getId(), 2))
+        .isInstanceOf(ResponseStatusException.class)
+        .hasFieldOrPropertyWithValue("status", HttpStatus.NOT_FOUND);
+  }
 
   @Test
   void deleteEntity() {}
