@@ -183,4 +183,20 @@ class ClassVersionRepositoryTest extends RepositoryTest {
                 .getNumberOfElements())
         .isEqualTo(2);
   }
+
+  @Test
+  void findCurrentByClassId() {
+    Class cls = new Class().setCurrentVersion(new ClassVersion().setVersion(1));
+    assertThat(classRepository.save(cls)).isNotNull();
+    cls.setCurrentVersion(new ClassVersion().setVersion(classRepository.getNextVersion(cls)));
+    assertThat(classRepository.save(cls)).isNotNull();
+
+    Slice<ClassVersion> result =
+        classVersionRepository.findByClassId(cls.getId(), PageRequest.ofSize(10));
+    assertThat(result).size().isEqualTo(2);
+
+    assertThat(classVersionRepository.findCurrentByClassId(cls.getId()))
+        .isPresent()
+        .hasValueSatisfying(cv -> assertThat(cv.getVersion()).isEqualTo(2));
+  }
 }

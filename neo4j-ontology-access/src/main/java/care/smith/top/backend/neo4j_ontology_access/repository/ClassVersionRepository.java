@@ -33,6 +33,35 @@ public interface ClassVersionRepository extends PagingAndSortingRepository<Class
   Optional<ClassVersion> findByClassIdAndVersion(
       @Param("classId") UUID classId, @Param("version") Integer version);
 
+  /**
+   * Search for current {@link ClassVersion} {@link Class}.
+   *
+   * @param classId The classId.
+   * @return An {@link Optional<ClassVersion>} object containing the matching {@link ClassVersion}
+   *     object with all related annotations.
+   */
+  @Query(
+      "MATCH (c:Class { id: $classId }) -[cRel:CURRENT_VERSION]-> (cv:ClassVersion) "
+          + "WITH cv, collect(cRel) as cRel, collect(c) as c "
+          + "OPTIONAL MATCH a = (cv) -[:HAS_ANNOTATION*]-> (:Annotation) "
+          + "RETURN cv, cRel, c, collect(nodes(a)), collect(relationships(a))")
+  Optional<ClassVersion> findCurrentByClassId(@Param("classId") UUID classId);
+
+  /**
+   * Get all versions of a {@link Class}.
+   *
+   * @param classId The classId.
+   * @return A {@link Slice<ClassVersion>} containing the versions.
+   */
+  @Query(
+      "MATCH (cv:ClassVersion) -[cRel:IS_VERSION_OF]-> (c:Class { id: $classId }) "
+          + "WITH cv, collect(cRel) as cRel, collect(c) as c "
+          + "OPTIONAL MATCH a = (cv) -[:HAS_ANNOTATION*]-> (:Annotation) "
+          + "RETURN cv, cRel, c, collect(nodes(a)), collect(relationships(a)) "
+          + ":#{orderBy(#pageable)} SKIP $skip LIMIT $limit")
+  Slice<ClassVersion> findByClassId(
+      @Param("classId") UUID classId, @Param("pageable") Pageable pageable);
+
   // TODO: this query does not belong here because annotations are domain specific
   @Query(
       "MATCH (c:Class { repositoryId: $repositoryId }) -[cRel:CURRENT_VERSION]-> (cv:ClassVersion) "
