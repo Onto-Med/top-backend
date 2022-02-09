@@ -127,10 +127,15 @@ public class EntityService {
         classRepository
             .findByIdAndRepositoryId(id, repository.getId())
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+    Optional<ClassVersion> optional;
+    if (version == null) {
+      optional = classVersionRepository.findCurrentByClassId(cls.getId());
+    } else {
+      optional = classVersionRepository.findByClassIdAndVersion(cls.getId(), version);
+    }
     ClassVersion classVersion =
-        classVersionRepository
-            .findByClassIdAndVersion(cls.getId(), version)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        optional.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
     return classVersionToEntity(classVersion, repositoryId);
   }
@@ -146,19 +151,23 @@ public class EntityService {
 
     Optional<ClassVersion> optional;
     if (version == null) {
-      optional = cls.getCurrentVersion();
+      optional = classVersionRepository.findCurrentByClassId(cls.getId());
     } else {
       optional = classVersionRepository.findByClassIdAndVersion(cls.getId(), version);
     }
     ClassVersion classVersion =
         optional.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
+    classVersionRepository
+        .getPreviousUnhidden(classVersion)
+        .ifPresent(cv -> classRepository.setCurrent(cls, cv));
+
     if (permanent) {
       deleteAnnotations(classVersion);
       expressionRepository.deleteAll(classVersion.getExpressions());
       classVersionRepository.delete(classVersion);
     } else {
-      if (!classVersion.isHidden()) classVersionRepository.save(classVersion.hide());
+      if (!classVersion.isHidden()) classVersionRepository.hide(classVersion);
     }
   }
 
@@ -170,8 +179,12 @@ public class EntityService {
             .findByIdAndRepositoryId(id, repository.getId())
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-    cls.setCurrentVersion(
-        buildClassVersion(entity).setVersion(classRepository.getNextVersion(cls)));
+    ClassVersion newVersion =
+        buildClassVersion(entity).setVersion(classRepository.getNextVersion(cls));
+    classVersionRepository
+        .findCurrentByClassId(cls.getId())
+        .ifPresent(newVersion::setPreviousVersion);
+    cls.setCurrentVersion(newVersion);
 
     List<UUID> superClasses = new ArrayList<>();
     if (entity instanceof Category) {
@@ -482,8 +495,8 @@ public class EntityService {
               .collect(Collectors.toList()));
 
     care.smith.top.backend.model.Repository repository =
-        new care.smith.top.backend.model.Repository();
-    repository.setId(classVersion.getaClass().getRepositoryId());
+        new care.smith.top.backend.model.Repository()
+            .id(classVersion.getaClass().getRepositoryId());
 
     entity.setRepository(repository);
     entity.setId(classVersion.getaClass().getId());
