@@ -92,4 +92,14 @@ public interface ClassVersionRepository extends PagingAndSortingRepository<Class
           + "RETURN cv, cRel, c, collect(nodes(a)), collect(relationships(a))")
   Set<ClassVersion> getCurrentSuperClassVersionsByOwnerId(
       @Param("cls") Class cls, @Param("ownerId") String ownerId);
+
+  @Query(
+      "MATCH (current:ClassVersion) -[:IS_VERSION_OF]-> (c:Class)"
+          + "WHERE id(current) = $classVersion.__id__ "
+          + "MATCH (previous:ClassVersion) -[:IS_VERSION_OF]-> (c:Class) "
+          + "WHERE previous.hiddenAt IS NULL AND id(current) <> id(previous) "
+          + "MATCH p = shortestPath((current) -[:PREVIOUS_VERSION*]-> (previous)) "
+          + "RETURN previous "
+          + "ORDER BY length(p) LIMIT 1")
+  Optional<ClassVersion> getPreviousUnhidden(@Param("classVersion") ClassVersion classVersion);
 }

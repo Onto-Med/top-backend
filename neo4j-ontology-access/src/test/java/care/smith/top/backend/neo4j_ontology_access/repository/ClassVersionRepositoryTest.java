@@ -11,6 +11,7 @@ import org.springframework.data.domain.Slice;
 
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -198,5 +199,23 @@ class ClassVersionRepositoryTest extends RepositoryTest {
     assertThat(classVersionRepository.findCurrentByClassId(cls.getId()))
         .isPresent()
         .hasValueSatisfying(cv -> assertThat(cv.getVersion()).isEqualTo(2));
+  }
+
+  @Test
+  void getPreviousUnhidden() {
+    Class cls = new Class().setCurrentVersion(new ClassVersion().setVersion(1));
+    assertThat(classRepository.save(cls)).isNotNull();
+
+    cls.setCurrentVersion(new ClassVersion().setVersion(classRepository.getNextVersion(cls)));
+    assertThat(classRepository.save(cls)).isNotNull();
+
+    Optional<ClassVersion> classVersion = classVersionRepository.findCurrentByClassId(cls.getId());
+    assertThat(classVersion)
+        .isPresent()
+        .hasValueSatisfying(cv -> assertThat(cv.getVersion()).isEqualTo(2));
+
+    assertThat(classVersionRepository.getPreviousUnhidden(classVersion.get()))
+        .isPresent()
+        .hasValueSatisfying(cv -> assertThat(cv.getVersion()).isEqualTo(1));
   }
 }
