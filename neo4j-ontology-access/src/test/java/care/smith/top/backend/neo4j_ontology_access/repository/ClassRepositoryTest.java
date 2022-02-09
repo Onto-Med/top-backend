@@ -31,7 +31,7 @@ public class ClassRepositoryTest extends RepositoryTest {
     }
 
     assertThat(classRepository.count()).isEqualTo(11);
-    assertThat(classRepository.findSubclasses(cls, repository).count()).isEqualTo(10);
+    assertThat(classRepository.findSubclasses(cls.getId(), repository.getId()).count()).isEqualTo(10);
   }
 
   @Test
