@@ -17,7 +17,8 @@ public interface ClassRepository extends PagingAndSortingRepository<Class, UUID>
   @Query(
       "MATCH (super:Class {id: $classId}) <-[:IS_SUBCLASS_OF { ownerId: $repositoryId }]- (sub:Class) "
           + "RETURN sub ORDER BY sub.index")
-  Stream<Class> findSubclasses(@Param("classId") UUID id, @Param("repositoryId") String repositoryId);
+  Stream<Class> findSubclasses(
+      @Param("classId") UUID id, @Param("repositoryId") String repositoryId);
 
   @Query(
       "MATCH (c:Class { repositoryId: $repository.__id__ }) "
