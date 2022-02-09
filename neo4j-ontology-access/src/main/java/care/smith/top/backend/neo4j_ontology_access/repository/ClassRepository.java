@@ -42,4 +42,13 @@ public interface ClassRepository extends PagingAndSortingRepository<Class, UUID>
           + "WITH max(cv.version) AS version "
           + "RETURN CASE version WHEN NULL THEN 0 ELSE version END + 1")
   Integer getNextVersion(@Param("cls") Class cls);
+
+  @Query(
+      "MATCH (c:Class { id: $cls.__id__ }) "
+          + "MATCH (cv:ClassVersion) "
+          + "WHERE cv.hiddenAt IS NULL AND id(cv) = $classVersion.__id__ "
+          + "OPTIONAL MATCH (c) -[rel:CURRENT_VERSION]-> (:ClassVersion) "
+          + "DELETE rel "
+          + "CREATE (c) -[:CURRENT_VERSION]-> (cv) ")
+  void setCurrent(@Param("cls") Class cls, @Param("classVersion") ClassVersion classVersion);
 }
