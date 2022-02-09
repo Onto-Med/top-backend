@@ -97,7 +97,7 @@ class EntityServiceTest extends Neo4jTest {
             });
 
     /* Create restricted phenotype */
-    Phenotype restrictedPhenotype =
+    Phenotype restrictedPhenotype1 =
         new Phenotype()
             .score(BigDecimal.valueOf(10))
             .restriction(
@@ -106,7 +106,7 @@ class EntityServiceTest extends Neo4jTest {
                     .minOperator(RestrictionOperator.GREATER_THAN)
                     .quantor(Quantor.SOME)
                     .type(DataType.NUMBER));
-    restrictedPhenotype
+    restrictedPhenotype1
         .superPhenotype(abstractPhenotype)
         .id(UUID.randomUUID())
         .entityType(EntityType.SINGLE_RESTRICTION)
@@ -114,12 +114,12 @@ class EntityServiceTest extends Neo4jTest {
 
     assertThat(
             entityService.createEntity(
-                organisation.getId(), repository.getId(), restrictedPhenotype))
+                organisation.getId(), repository.getId(), restrictedPhenotype1))
         .isNotNull()
         .isInstanceOf(Phenotype.class)
         .satisfies(
             rp -> {
-              assertThat(rp.getId()).isEqualTo(restrictedPhenotype.getId());
+              assertThat(rp.getId()).isEqualTo(restrictedPhenotype1.getId());
               assertThat(rp.getVersion()).isEqualTo(1);
               assertThat(rp.getEntityType()).isEqualTo(EntityType.SINGLE_RESTRICTION);
               assertThat(((Phenotype) rp).getSuperPhenotype())
@@ -148,6 +148,66 @@ class EntityServiceTest extends Neo4jTest {
                             .isEqualTo(1);
                       });
             });
+
+    Phenotype restrictedPhenotype2 =
+        new Phenotype()
+            .score(BigDecimal.valueOf(-5))
+            .restriction(
+                new NumberRestriction()
+                    .addValuesItem(BigDecimal.valueOf(50))
+                    .maxOperator(RestrictionOperator.LESS_THAN_OR_EQUAL_TO)
+                    .quantor(Quantor.ALL)
+                    .type(DataType.NUMBER));
+    restrictedPhenotype2
+        .superPhenotype(abstractPhenotype)
+        .id(UUID.randomUUID())
+        .entityType(EntityType.SINGLE_RESTRICTION)
+        .addTitlesItem(new LocalisableText().text("<= 50cm").lang("en"));
+
+    assertThat(
+            entityService.createEntity(
+                organisation.getId(), repository.getId(), restrictedPhenotype2))
+        .isNotNull()
+        .isInstanceOf(Phenotype.class)
+        .satisfies(
+            rp -> {
+              assertThat(((Phenotype) rp).getSuperPhenotype())
+                  .hasFieldOrPropertyWithValue("id", abstractPhenotype.getId());
+              assertThat(rp.getTitles())
+                  .allMatch(t -> t.getText().equals("<= 50cm") && t.getLang().equals("en"))
+                  .size()
+                  .isEqualTo(1);
+              assertThat(((Phenotype) rp).getScore().compareTo(BigDecimal.valueOf(-5)))
+                  .isEqualTo(0);
+              assertThat(((Phenotype) rp).getRestriction())
+                  .isNotNull()
+                  .isInstanceOf(NumberRestriction.class)
+                  .satisfies(
+                      r -> {
+                        assertThat(r.getQuantor()).isEqualTo(Quantor.ALL);
+                        assertThat(((NumberRestriction) r).getMinOperator()).isNull();
+                        assertThat(((NumberRestriction) r).getMaxOperator())
+                            .isNotNull()
+                            .isEqualTo(RestrictionOperator.LESS_THAN_OR_EQUAL_TO);
+                        assertThat(((NumberRestriction) r).getValues())
+                            .allMatch(v -> v.compareTo(BigDecimal.valueOf(50)) == 0)
+                            .size()
+                            .isEqualTo(1);
+                      });
+            });
+
+    assertThat(
+            classRepository.findByIdAndRepositoryId(abstractPhenotype.getId(), repository.getId()))
+        .isPresent();
+    assertThat(classRepository.findSubclasses(abstractPhenotype.getId(), repository.getId()))
+        .isNotEmpty()
+        .size()
+        .isEqualTo(2);
+
+    assertThat(entityService.getRestrictions(repository.getId(), abstractPhenotype))
+        .isNotEmpty()
+        .size()
+        .isEqualTo(2);
   }
 
   @Test

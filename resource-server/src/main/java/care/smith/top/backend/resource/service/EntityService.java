@@ -214,8 +214,46 @@ public class EntityService {
             dataType.getValue(),
             PageRequest.of(page, pageSize))
         .stream()
-        .map(cv -> this.classVersionToEntity(cv, repositoryId))
+        .map(cv -> classVersionToEntity(cv, repositoryId))
         .collect(Collectors.toList());
+  }
+
+  public List<Entity> getRestrictions(String ownerId, Phenotype abstractPhenotype) {
+    if (!isAbstract(abstractPhenotype.getEntityType())) return new ArrayList<>();
+    return classRepository
+        .findSubclasses(abstractPhenotype.getId(), ownerId)
+        .map(
+            cls -> {
+              Optional<Class> classVersion =
+                  classRepository.findByIdAndRepositoryId(cls.getId(), ownerId);
+              return classVersion.map(aClass -> classToEntity(aClass, ownerId)).orElse(null);
+            })
+        .filter(Objects::nonNull)
+        .collect(Collectors.toList());
+  }
+
+  private boolean isAbstract(EntityType entityType) {
+    return Arrays.asList(
+            EntityType.SINGLE_PHENOTYPE,
+            EntityType.COMBINED_PHENOTYPE,
+            EntityType.DERIVED_PHENOTYPE)
+        .contains(entityType);
+  }
+
+  private boolean isRestricted(EntityType entityType) {
+    return Arrays.asList(
+            EntityType.SINGLE_RESTRICTION,
+            EntityType.COMBINED_RESTRICTION,
+            EntityType.DERIVED_RESTRICTION)
+        .contains(entityType);
+  }
+
+  private boolean isPhenotype(EntityType entityType) {
+    return isAbstract(entityType) || isRestricted(entityType);
+  }
+
+  private boolean isCategory(EntityType entityType) {
+    return EntityType.CATEGORY.equals(entityType);
   }
 
   /**
@@ -224,7 +262,7 @@ public class EntityService {
    *
    * @param organisationId ID of the {@link Directory}
    * @param repositoryId ID of the {@link Repository}
-   * @return
+   * @return The matching repository, if it exists.
    */
   private Repository getRepository(String organisationId, String repositoryId) {
     return repositoryRepository
@@ -389,7 +427,8 @@ public class EntityService {
    * Transforms the given {@link ClassVersion} object to an {@link Entity} object.
    *
    * @param classVersion The {@link ClassVersion} object to be transformed.
-   * @param ownerId The owner this relation belongs to ({@link Repository} or {@link OntologyVersion}).
+   * @param ownerId The owner this relation belongs to ({@link Repository} or {@link
+   *     OntologyVersion}).
    * @return The resulting {@link Entity} object.
    */
   private Entity classVersionToEntity(ClassVersion classVersion, String ownerId) {
@@ -414,11 +453,7 @@ public class EntityService {
             .setDataType(
                 DataType.fromValue(classVersion.getAnnotation("dataType").get().getStringValue()));
 
-      if (Arrays.asList(
-              EntityType.SINGLE_RESTRICTION,
-              EntityType.COMBINED_RESTRICTION,
-              EntityType.DERIVED_RESTRICTION)
-          .contains(entityType)) {
+      if (isRestricted(entityType)) {
         superClasses.stream()
             .findFirst()
             .ifPresent(
@@ -440,13 +475,7 @@ public class EntityService {
       // TODO, if present: entity.setExpression();
     }
 
-    if (superClasses != null
-        && Arrays.asList(
-                EntityType.CATEGORY,
-                EntityType.SINGLE_PHENOTYPE,
-                EntityType.COMBINED_PHENOTYPE,
-                EntityType.DERIVED_PHENOTYPE)
-            .contains(entityType))
+    if (superClasses != null && !isRestricted(entityType))
       entity.setSuperCategories(
           superClasses.stream()
               .map(c -> (Category) new Category().id(c.getaClass().getId()))
