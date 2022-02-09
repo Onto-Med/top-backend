@@ -12,8 +12,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.*;
 
 class EntityServiceTest extends Neo4jTest {
   @Autowired OrganisationService organisationService;
@@ -216,7 +215,6 @@ class EntityServiceTest extends Neo4jTest {
         organisationService.createOrganisation(new Organisation().id("org"));
     Repository repository =
         repositoryService.createRepository(organisation.getId(), new Repository().id("repo"), null);
-
     Category category =
         (Category)
             new Category()
@@ -247,7 +245,94 @@ class EntityServiceTest extends Neo4jTest {
   }
 
   @Test
-  void deleteEntity() {}
+  void deleteEntity() {
+    Organisation organisation =
+        organisationService.createOrganisation(new Organisation().id("org"));
+    Repository repository =
+        repositoryService.createRepository(organisation.getId(), new Repository().id("repo"), null);
+    Phenotype phenotype =
+        (Phenotype) new Phenotype().id(UUID.randomUUID()).entityType(EntityType.SINGLE_PHENOTYPE);
+
+    assertThat(entityService.createEntity(organisation.getId(), repository.getId(), phenotype))
+        .isNotNull()
+        .isInstanceOf(Phenotype.class)
+        .satisfies(p -> assertThat(p.getVersion()).isEqualTo(1));
+
+    assertThat(
+            entityService.updateEntityById(
+                organisation.getId(), repository.getId(), phenotype.getId(), phenotype, null))
+        .isNotNull()
+        .isInstanceOf(Phenotype.class)
+        .satisfies(p -> assertThat(p.getVersion()).isEqualTo(2));
+
+    assertThatThrownBy(
+            () ->
+                entityService.deleteEntity(
+                    organisation.getId(), repository.getId(), phenotype.getId(), 3, false))
+        .isInstanceOf(ResponseStatusException.class)
+        .hasFieldOrPropertyWithValue("status", HttpStatus.NOT_FOUND);
+
+    assertThat(classVersionRepository.findCurrentByClassId(phenotype.getId()))
+        .isPresent()
+        .hasValueSatisfying(
+            cv -> {
+              assertThat(cv.getaClass()).isNotNull();
+              assertThat(cv.getVersion()).isEqualTo(2);
+            });
+
+    // Hide
+    assertThatCode(
+            () ->
+                entityService.deleteEntity(
+                    organisation.getId(), repository.getId(), phenotype.getId(), 2, false))
+        .doesNotThrowAnyException();
+
+    assertThat(classVersionRepository.findCurrentByClassId(phenotype.getId()))
+        .isPresent()
+        .hasValueSatisfying(
+            cv -> {
+              assertThat(cv.getaClass()).isNotNull();
+              assertThat(cv.getVersion()).isEqualTo(1);
+            });
+
+    assertThat(classVersionRepository.findByClassIdAndVersion(phenotype.getId(), 2))
+        .isPresent()
+        .hasValueSatisfying(
+            cv -> {
+              assertThat(cv.getHiddenAt()).isNotNull();
+              assertThat(cv.getaClass()).isNotNull();
+            });
+
+    assertThat(
+            entityService.loadEntity(
+                organisation.getId(), repository.getId(), phenotype.getId(), null))
+        .isNotNull()
+        .satisfies(p -> assertThat(p.getVersion()).isEqualTo(1));
+
+    assertThat(
+            entityService.loadEntity(
+                organisation.getId(), repository.getId(), phenotype.getId(), 2))
+        .isNotNull()
+        .satisfies(
+            p -> {
+              assertThat(p.getVersion()).isEqualTo(2);
+              assertThat(p.getHiddenAt()).isNotNull();
+            });
+
+    // Delete permanently
+    assertThatCode(
+            () ->
+                entityService.deleteEntity(
+                    organisation.getId(), repository.getId(), phenotype.getId(), 2, true))
+        .doesNotThrowAnyException();
+
+    assertThatThrownBy(
+            () ->
+                entityService.loadEntity(
+                    organisation.getId(), repository.getId(), phenotype.getId(), 2))
+        .isInstanceOf(ResponseStatusException.class)
+        .hasFieldOrPropertyWithValue("status", HttpStatus.NOT_FOUND);
+  }
 
   @Test
   void updateEntityById() {}
