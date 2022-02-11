@@ -125,10 +125,14 @@ class EntityServiceTest extends Neo4jTest {
                       f ->
                           assertThat(f.getOperator())
                               .isEqualTo(abstractPhenotype.getFormula().getOperator()));
-              assertThat(((Phenotype) p).getExpression()).isNotNull().satisfies(e -> {
-                  assertThat(e.getType()).isEqualTo(abstractPhenotype.getExpression().getType());
-                  assertThat(e.getOperands()).size().isEqualTo(1);
-              });
+              assertThat(((Phenotype) p).getExpression())
+                  .isNotNull()
+                  .satisfies(
+                      e -> {
+                        assertThat(e.getType())
+                            .isEqualTo(abstractPhenotype.getExpression().getType());
+                        assertThat(e.getOperands()).size().isEqualTo(1);
+                      });
             });
 
     /* Create restricted phenotype */
