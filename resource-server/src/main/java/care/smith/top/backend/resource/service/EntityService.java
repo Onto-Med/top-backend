@@ -1,8 +1,8 @@
 package care.smith.top.backend.resource.service;
 
 import care.smith.top.backend.model.*;
+import care.smith.top.backend.model.Expression;
 import care.smith.top.backend.neo4j_ontology_access.model.Class;
-import care.smith.top.backend.neo4j_ontology_access.model.Expression;
 import care.smith.top.backend.neo4j_ontology_access.model.Repository;
 import care.smith.top.backend.neo4j_ontology_access.model.*;
 import care.smith.top.backend.neo4j_ontology_access.repository.*;
@@ -345,9 +345,8 @@ public class EntityService {
             phenotype.getUnits().stream().map(this::fromUnit).collect(Collectors.toSet()));
       if (phenotype.getRestriction() != null)
         classVersion.addAnnotation(fromRestriction(phenotype.getRestriction()));
-      // TODO: convert expression to string and apply variables
-      // if (phenotype.getExpression() != null)
-      //   phenotype.getExpression()
+      if (phenotype.getExpression() != null)
+        classVersion.addAnnotation(fromExpression(phenotype.getExpression()));
       if (phenotype.getFormula() != null)
         classVersion.addAnnotation(fromFormula(phenotype.getFormula()));
     }
@@ -387,8 +386,36 @@ public class EntityService {
     return classVersion;
   }
 
+  private Annotation fromExpression(Expression expression) {
+    // TODO: only allow phenotypes from accessible repositories
+    if (expression.getId() != null && ExpressionType.CLASS.equals(expression.getType())) {
+      Optional<Class> cls = classRepository.findById(expression.getId());
+      if (cls.isPresent()) return new Annotation("expression", cls.get(), null);
+    }
+
+    Annotation annotation = new Annotation("expression", expression.getType().getValue(), null);
+    if (expression.getOperands() != null)
+      annotation.addAnnotations(
+          expression.getOperands().stream().map(this::fromExpression).collect(Collectors.toSet()));
+    return annotation;
+  }
+
+  private Expression toExpression(Annotation annotation) {
+    if (annotation.getClassValue() != null)
+      return new Expression().id(annotation.getClassValue().getId()).type(ExpressionType.CLASS);
+
+    Expression expression =
+        new Expression().type(ExpressionType.fromValue(annotation.getStringValue()));
+    if (annotation.getAnnotations() != null)
+      expression.setOperands(
+          annotation.getAnnotations().stream()
+              .map(this::toExpression)
+              .collect(Collectors.toList()));
+    return expression;
+  }
+
   private Annotation fromFormula(Formula formula) {
-    // TODO: only allow classes from accessible repositories
+    // TODO: only allow phenotypes from accessible repositories
     // TODO: expand formula model in top-api, currently there are not scalars supported
     if (formula.getId() != null
         && FormulaOperator.CLASS.equals(formula.getOperator())
@@ -532,7 +559,9 @@ public class EntityService {
             .forEach(a -> ((Phenotype) entity).addUnitsItem(toUnit(a)));
       }
 
-      // TODO, if present: entity.setExpression();
+      classVersion
+          .getAnnotation("expression")
+          .ifPresent(a -> ((Phenotype) entity).setExpression(toExpression(a)));
       classVersion
           .getAnnotation("formula")
           .ifPresent(a -> ((Phenotype) entity).setFormula(toFormula(a)));
