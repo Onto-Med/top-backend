@@ -506,6 +506,7 @@ public class EntityService {
       }
 
       // TODO, if present: entity.setExpression();
+      // TODO, if present: entity.setFormula();
     }
 
     if (superClasses != null && !isRestricted(entityType))
