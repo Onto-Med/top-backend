@@ -35,6 +35,8 @@ class EntityServiceTest extends Neo4jTest {
     Repository codeRepository =
         repositoryService.createRepository(
             organisation.getId(), new Repository().id("http://loinc.org"), null);
+
+    // TODO: use codeRepository service, when available
     Class code = classRepository.save(new Class("1234").setRepositoryId(codeRepository.getId()));
 
     assertThat(code)
