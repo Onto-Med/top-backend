@@ -97,6 +97,7 @@ class EntityServiceTest extends Neo4jTest {
     Phenotype abstractPhenotype = new Phenotype().addUnitsItem(new Unit().unit("cm"));
     abstractPhenotype
         .addSuperCategoriesItem(category)
+        .index(5)
         .id(UUID.randomUUID().toString())
         .entityType(EntityType.SINGLE_PHENOTYPE);
 
@@ -112,6 +113,7 @@ class EntityServiceTest extends Neo4jTest {
               assertThat(((Phenotype) p).getSuperPhenotype()).isNull();
               assertThat(((Phenotype) p).getSuperCategories())
                   .allMatch(c -> c.getId().equals(category.getId()));
+              assertThat(p.getIndex()).isEqualTo(5);
               assertThat(((Phenotype) p).getUnits()).allMatch(u -> u.getUnit().equals("cm"));
             });
 

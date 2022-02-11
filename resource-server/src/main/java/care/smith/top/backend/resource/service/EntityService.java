@@ -564,9 +564,10 @@ public class EntityService {
     // from top-api model.
     // TODO: entity.setRefer(); <- insert URI
 
-    // TODO: set index from class relation
-    // if (superClasses != null && superClasses.stream().findFirst().isPresent())
-    //   entity.setIndex(superClasses.stream().findFirst().get().getIndex());
+    if (classVersion.getaClass().getSuperClassRelations() != null)
+      classVersion.getaClass().getSuperClassRelations().stream()
+          .findFirst()
+          .ifPresent(sc -> entity.setIndex(sc.getIndex()));
 
     return entity;
   }
