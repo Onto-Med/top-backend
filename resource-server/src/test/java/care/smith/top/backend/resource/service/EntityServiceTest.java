@@ -2,7 +2,6 @@ package care.smith.top.backend.resource.service;
 
 import care.smith.top.backend.model.*;
 import care.smith.top.backend.neo4j_ontology_access.model.Class;
-import care.smith.top.backend.neo4j_ontology_access.repository.AnnotationRepository;
 import care.smith.top.backend.neo4j_ontology_access.repository.ClassRepository;
 import care.smith.top.backend.neo4j_ontology_access.repository.ClassVersionRepository;
 import org.junit.jupiter.api.Test;
