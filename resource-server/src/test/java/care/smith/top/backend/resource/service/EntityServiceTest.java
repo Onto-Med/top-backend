@@ -1,6 +1,7 @@
 package care.smith.top.backend.resource.service;
 
 import care.smith.top.backend.model.*;
+import care.smith.top.backend.neo4j_ontology_access.model.Class;
 import care.smith.top.backend.neo4j_ontology_access.repository.AnnotationRepository;
 import care.smith.top.backend.neo4j_ontology_access.repository.ClassRepository;
 import care.smith.top.backend.neo4j_ontology_access.repository.ClassVersionRepository;
@@ -10,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
+import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 
@@ -30,6 +32,19 @@ class EntityServiceTest extends Neo4jTest {
     Repository repository =
         repositoryService.createRepository(organisation.getId(), new Repository().id("repo"), null);
 
+    Repository codeRepository =
+        repositoryService.createRepository(
+            organisation.getId(), new Repository().id("http://loinc.org"), null);
+    Class code = classRepository.save(new Class("1234").setRepositoryId(codeRepository.getId()));
+
+    assertThat(code)
+        .isNotNull()
+        .satisfies(
+            c -> {
+              assertThat(c.getId()).isEqualTo("1234");
+              assertThat(c.getRepositoryId()).isEqualTo(codeRepository.getId());
+            });
+
     /* Create category */
     Category category = new Category();
     category
@@ -37,7 +52,11 @@ class EntityServiceTest extends Neo4jTest {
         .entityType(EntityType.CATEGORY)
         .addTitlesItem(new LocalisableText().text("Category").lang("en"))
         .addDescriptionsItem(new LocalisableText().text("Some description").lang("en"))
-        .addSynonymsItem(new LocalisableText().text("Some synonym").lang("en"));
+        .addSynonymsItem(new LocalisableText().text("Some synonym").lang("en"))
+        .addCodesItem(
+            new Code()
+                .code(code.getId())
+                .codeSystem(new CodeSystem().uri(URI.create(codeRepository.getId()))));
 
     assertThatThrownBy(
             () -> entityService.createEntity("does not exist", repository.getId(), category))
@@ -58,7 +77,7 @@ class EntityServiceTest extends Neo4jTest {
               assertThat(c.getEntityType()).isEqualTo(category.getEntityType());
               assertThat(c.getDescriptions()).isEqualTo(category.getDescriptions());
               assertThat(c.getEquivalentEntities()).isNullOrEmpty();
-              assertThat(c.getCodes()).isNullOrEmpty();
+              assertThat(c.getCodes()).isNotEmpty();
               assertThat(c.getCreatedAt()).isNotNull();
               assertThat(c.getHiddenAt()).isNull();
               assertThat(c.getSynonyms()).isEqualTo(category.getSynonyms());
@@ -252,7 +271,10 @@ class EntityServiceTest extends Neo4jTest {
     Repository repository =
         repositoryService.createRepository(organisation.getId(), new Repository().id("repo"), null);
     Phenotype phenotype =
-        (Phenotype) new Phenotype().id(UUID.randomUUID().toString()).entityType(EntityType.SINGLE_PHENOTYPE);
+        (Phenotype)
+            new Phenotype()
+                .id(UUID.randomUUID().toString())
+                .entityType(EntityType.SINGLE_PHENOTYPE);
 
     assertThat(entityService.createEntity(organisation.getId(), repository.getId(), phenotype))
         .isNotNull()

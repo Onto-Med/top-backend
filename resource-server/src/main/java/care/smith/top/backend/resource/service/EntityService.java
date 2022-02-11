@@ -18,6 +18,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
+import java.net.URI;
 import java.time.ZoneOffset;
 import java.util.Set;
 import java.util.*;
@@ -142,7 +143,7 @@ public class EntityService {
 
   @Transactional
   public void deleteEntity(
-          String organisationId, String repositoryId, String id, Integer version, boolean permanent) {
+      String organisationId, String repositoryId, String id, Integer version, boolean permanent) {
     Repository repository = getRepository(organisationId, repositoryId);
     Class cls =
         classRepository
@@ -172,7 +173,7 @@ public class EntityService {
   }
 
   public Entity updateEntityById(
-          String organisationId, String repositoryId, String id, Entity entity, List<String> include) {
+      String organisationId, String repositoryId, String id, Entity entity, List<String> include) {
     Repository repository = getRepository(organisationId, repositoryId);
     Class cls =
         classRepository
@@ -351,13 +352,18 @@ public class EntityService {
       //   classVersion.addAnnotation(new Annotation("formula", phenotype.getFormula(), null));
     }
 
-    // TODO: rework class id or apply workaround for codes with missing UUID
-    //    if (entity.getCodes() != null) {
-    //      entity.getCodes().forEach(c -> {
-    //        classRepository.findById(c.getCode()).ifPresent(codeClass ->
-    // classVersion.addAnnotation(new Annotation("code", codeClass, null)));
-    //      });
-    //    }
+    if (entity.getCodes() != null) {
+      entity
+          .getCodes()
+          .forEach(
+              c ->
+                  classRepository
+                      .findByIdAndRepositoryId(c.getCode(), c.getCodeSystem().getUri().toString())
+                      .ifPresent(
+                          codeClass ->
+                              classVersion.addAnnotation(new Annotation("code", codeClass, null))));
+    }
+
     if (entity.getEntityType() == null)
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "entityType is missing");
 
@@ -544,7 +550,16 @@ public class EntityService {
                                     .lang(a.getLanguage()))
                         .collect(Collectors.toList())));
 
-    // TODO: entity.setCodes();
+    entity.setCodes(
+        annotationRepository.findByClassVersionAndProperty(classVersion, "code").stream()
+            .map(
+                a ->
+                    new Code()
+                        .code(a.getClassValue().getId())
+                        .codeSystem(
+                            new CodeSystem().uri(URI.create(a.getClassValue().getRepositoryId()))))
+            .collect(Collectors.toList()));
+
     // TODO: entity.setAuthor(classVersion.getUser()); Map User to UserAccount, or drop UserAccount
     // from top-api model.
     // TODO: entity.setRefer(); <- insert URI
