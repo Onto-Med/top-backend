@@ -12,10 +12,11 @@ import java.util.Set;
 @Repository
 public interface AnnotationRepository extends PagingAndSortingRepository<Annotation, Long> {
   @Query(
-    "MATCH (cv:ClassVersion) -[:HAS_ANNOTATION]-> (a:Annotation) "
-      + "WHERE id(cv) = $classVersion.__id__ "
-      + "AND a.property = $property "
-      + "RETURN a")
+      "MATCH (cv:ClassVersion) -[:HAS_ANNOTATION]-> (a:Annotation) "
+          + "WHERE id(cv) = $classVersion.__id__ "
+          + "AND a.property = $property "
+          + "OPTIONAL MATCH (a) -[cRel:HAS_CLASS_VALUE]-> (c:Class) "
+          + "RETURN a, cRel, c")
   Set<Annotation> findByClassVersionAndProperty(
-    @Param("classVersion") ClassVersion classVersion, @Param("property") String property);
+      @Param("classVersion") ClassVersion classVersion, @Param("property") String property);
 }
