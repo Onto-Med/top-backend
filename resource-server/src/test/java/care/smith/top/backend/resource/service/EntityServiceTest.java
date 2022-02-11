@@ -23,7 +23,6 @@ class EntityServiceTest extends Neo4jTest {
   @Autowired EntityService entityService;
   @Autowired ClassRepository classRepository;
   @Autowired ClassVersionRepository classVersionRepository;
-  @Autowired AnnotationRepository annotationRepository;
 
   @Test
   void createEntity() {
