@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.*;
@@ -335,7 +336,76 @@ class EntityServiceTest extends Neo4jTest {
   }
 
   @Test
-  void updateEntityById() {}
+  void updateEntityById() {
+    Organisation organisation =
+        organisationService.createOrganisation(new Organisation().id("org"));
+    Repository repository =
+        repositoryService.createRepository(organisation.getId(), new Repository().id("repo"), null);
+    Category category =
+        (Category) new Category().id(UUID.randomUUID()).entityType(EntityType.CATEGORY);
+
+    assertThatCode(
+            () -> entityService.createEntity(organisation.getId(), repository.getId(), category))
+        .doesNotThrowAnyException();
+
+    Phenotype phenotype =
+        (Phenotype)
+            new Phenotype()
+                .addSuperCategoriesItem(category)
+                .id(UUID.randomUUID())
+                .entityType(EntityType.SINGLE_PHENOTYPE)
+                .addTitlesItem(new LocalisableText().text("Height").lang("en"));
+
+    assertThat(entityService.createEntity(organisation.getId(), repository.getId(), phenotype))
+        .isNotNull()
+        .isInstanceOf(Phenotype.class)
+        .satisfies(
+            p -> {
+              assertThat(p.getVersion()).isEqualTo(1);
+              assertThat(p.getTitles()).size().isEqualTo(1);
+            });
+
+    phenotype.addTitlesItem(new LocalisableText().text("Größe").lang("de"));
+
+    assertThat(
+            entityService.updateEntityById(
+                organisation.getId(), repository.getId(), phenotype.getId(), phenotype, null))
+        .isNotNull()
+        .isInstanceOf(Phenotype.class)
+        .satisfies(
+            p -> {
+              assertThat(p.getVersion()).isEqualTo(2);
+              assertThat(p.getTitles()).size().isEqualTo(2);
+              assertThat(((Phenotype) p).getSuperCategories()).size().isEqualTo(1);
+            });
+
+    phenotype.setTitles(List.of(new LocalisableText().text("大きさ").lang("jp")));
+
+    assertThat(
+            entityService.updateEntityById(
+                organisation.getId(), repository.getId(), phenotype.getId(), phenotype, null))
+        .isNotNull()
+        .isInstanceOf(Phenotype.class)
+        .satisfies(
+            p -> {
+              assertThat(p.getVersion()).isEqualTo(3);
+              assertThat(p.getTitles()).size().isEqualTo(1);
+              assertThat(((Phenotype) p).getSuperCategories()).size().isEqualTo(1);
+            });
+
+    phenotype.setEntityType(EntityType.COMBINED_PHENOTYPE);
+
+    assertThatThrownBy(
+            () ->
+                entityService.updateEntityById(
+                    organisation.getId(), repository.getId(), phenotype.getId(), phenotype, null))
+        .isInstanceOf(ResponseStatusException.class)
+        .hasFieldOrPropertyWithValue("status", HttpStatus.CONFLICT);
+
+    assertThat(classVersionRepository.findCurrentByClassId(phenotype.getId()))
+        .isPresent()
+        .hasValueSatisfying(cv -> assertThat(cv.getVersion()).isEqualTo(3));
+  }
 
   @Test
   void getEntities() {}
