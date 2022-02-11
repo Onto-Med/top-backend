@@ -2,6 +2,7 @@ package care.smith.top.backend.resource.service;
 
 import care.smith.top.backend.model.*;
 import care.smith.top.backend.neo4j_ontology_access.model.Class;
+import care.smith.top.backend.neo4j_ontology_access.model.Expression;
 import care.smith.top.backend.neo4j_ontology_access.model.Repository;
 import care.smith.top.backend.neo4j_ontology_access.model.*;
 import care.smith.top.backend.neo4j_ontology_access.repository.*;
@@ -347,9 +348,8 @@ public class EntityService {
       // TODO: convert expression to string and apply variables
       // if (phenotype.getExpression() != null)
       //   phenotype.getExpression()
-      // TODO: convert formula to string or store components as annotations
-      // if (phenotype.getFormula() != null)
-      //   classVersion.addAnnotation(new Annotation("formula", phenotype.getFormula(), null));
+      if (phenotype.getFormula() != null)
+        classVersion.addAnnotation(fromFormula(phenotype.getFormula()));
     }
 
     if (entity.getCodes() != null) {
@@ -385,6 +385,33 @@ public class EntityService {
               .collect(Collectors.toSet()));
 
     return classVersion;
+  }
+
+  private Annotation fromFormula(Formula formula) {
+    // TODO: only allow classes from accessible repositories
+    // TODO: expand formula model in top-api, currently there are not scalars supported
+    if (formula.getId() != null
+        && FormulaOperator.CLASS.equals(formula.getOperator())
+        && classRepository.findById(formula.getId()).isPresent())
+      return new Annotation("formula", classRepository.findById(formula.getId()).get(), null);
+
+    Annotation annotation = new Annotation("formula", formula.getOperator().getValue(), null);
+    if (formula.getOperands() != null)
+      annotation.addAnnotations(
+          formula.getOperands().stream().map(this::fromFormula).collect(Collectors.toSet()));
+    return annotation;
+  }
+
+  private Formula toFormula(Annotation annotation) {
+    if (annotation.getClassValue() != null)
+      return new Formula().id(annotation.getClassValue().getId()).operator(FormulaOperator.CLASS);
+
+    Formula formula =
+        new Formula().operator(FormulaOperator.fromValue(annotation.getStringValue()));
+    if (annotation.getAnnotations() != null)
+      formula.operands(
+          annotation.getAnnotations().stream().map(this::toFormula).collect(Collectors.toList()));
+    return formula;
   }
 
   private Annotation fromRestriction(Restriction restriction) {
@@ -506,7 +533,9 @@ public class EntityService {
       }
 
       // TODO, if present: entity.setExpression();
-      // TODO, if present: entity.setFormula();
+      classVersion
+          .getAnnotation("formula")
+          .ifPresent(a -> ((Phenotype) entity).setFormula(toFormula(a)));
     }
 
     if (superClasses != null && !isRestricted(entityType))
