@@ -183,7 +183,19 @@ public class EntityService {
         buildClassVersion(entity).setVersion(classRepository.getNextVersion(cls));
     classVersionRepository
         .findCurrentByClassId(cls.getId())
-        .ifPresent(newVersion::setPreviousVersion);
+        .ifPresent(
+            previousVersion -> {
+              previousVersion
+                  .getAnnotation("type")
+                  .ifPresent(
+                      type -> {
+                        if (!Objects.equals(
+                            type.getStringValue(), entity.getEntityType().getValue()))
+                          throw new ResponseStatusException(
+                              HttpStatus.CONFLICT, "entityType does not match");
+                      });
+              newVersion.setPreviousVersion(previousVersion);
+            });
     cls.setCurrentVersion(newVersion);
 
     List<UUID> superClasses = new ArrayList<>();
