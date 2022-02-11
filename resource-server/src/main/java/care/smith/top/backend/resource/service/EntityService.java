@@ -358,6 +358,8 @@ public class EntityService {
     // classVersion.addAnnotation(new Annotation("code", codeClass, null)));
     //      });
     //    }
+    if (entity.getEntityType() == null)
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "entityType is missing");
 
     classVersion.addAnnotation(new Annotation("type", entity.getEntityType().getValue(), null));
     if (entity.getTitles() != null)
