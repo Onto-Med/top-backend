@@ -17,7 +17,7 @@ import java.util.UUID;
 
 @Node
 public class Class extends Annotatable {
-  @Id private final UUID id;
+  @Id private final String id;
   @Version private Long nodeVersion;
   @CreatedDate private Instant createdAt;
   @CreatedBy private User createdBy;
@@ -34,12 +34,12 @@ public class Class extends Annotatable {
   private String repositoryId;
 
   @PersistenceConstructor
-  public Class(UUID id) {
+  public Class(String id) {
     this.id = id;
   }
 
   public Class() {
-    this(UUID.randomUUID());
+    this(UUID.randomUUID().toString());
   }
 
   public Class addSuperClassRelation(ClassRelation superClassRelation) {
@@ -54,7 +54,7 @@ public class Class extends Annotatable {
     return this;
   }
 
-  public UUID getId() {
+  public String getId() {
     return id;
   }
 

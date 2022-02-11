@@ -33,7 +33,7 @@ class EntityServiceTest extends Neo4jTest {
     /* Create category */
     Category category = new Category();
     category
-        .id(UUID.randomUUID())
+        .id(UUID.randomUUID().toString())
         .entityType(EntityType.CATEGORY)
         .addTitlesItem(new LocalisableText().text("Category").lang("en"))
         .addDescriptionsItem(new LocalisableText().text("Some description").lang("en"))
@@ -78,7 +78,7 @@ class EntityServiceTest extends Neo4jTest {
     Phenotype abstractPhenotype = new Phenotype().addUnitsItem(new Unit().unit("cm"));
     abstractPhenotype
         .addSuperCategoriesItem(category)
-        .id(UUID.randomUUID())
+        .id(UUID.randomUUID().toString())
         .entityType(EntityType.SINGLE_PHENOTYPE);
 
     assertThat(
@@ -108,7 +108,7 @@ class EntityServiceTest extends Neo4jTest {
                     .type(DataType.NUMBER));
     restrictedPhenotype1
         .superPhenotype(abstractPhenotype)
-        .id(UUID.randomUUID())
+        .id(UUID.randomUUID().toString())
         .entityType(EntityType.SINGLE_RESTRICTION)
         .addTitlesItem(new LocalisableText().text("> 50cm").lang("en"));
 
@@ -160,7 +160,7 @@ class EntityServiceTest extends Neo4jTest {
                     .type(DataType.NUMBER));
     restrictedPhenotype2
         .superPhenotype(abstractPhenotype)
-        .id(UUID.randomUUID())
+        .id(UUID.randomUUID().toString())
         .entityType(EntityType.SINGLE_RESTRICTION)
         .addTitlesItem(new LocalisableText().text("<= 50cm").lang("en"));
 
@@ -219,7 +219,7 @@ class EntityServiceTest extends Neo4jTest {
     Category category =
         (Category)
             new Category()
-                .id(UUID.randomUUID())
+                .id(UUID.randomUUID().toString())
                 .entityType(EntityType.CATEGORY)
                 .addTitlesItem(new LocalisableText().text("category").lang("en"));
 
@@ -252,7 +252,7 @@ class EntityServiceTest extends Neo4jTest {
     Repository repository =
         repositoryService.createRepository(organisation.getId(), new Repository().id("repo"), null);
     Phenotype phenotype =
-        (Phenotype) new Phenotype().id(UUID.randomUUID()).entityType(EntityType.SINGLE_PHENOTYPE);
+        (Phenotype) new Phenotype().id(UUID.randomUUID().toString()).entityType(EntityType.SINGLE_PHENOTYPE);
 
     assertThat(entityService.createEntity(organisation.getId(), repository.getId(), phenotype))
         .isNotNull()
@@ -342,7 +342,7 @@ class EntityServiceTest extends Neo4jTest {
     Repository repository =
         repositoryService.createRepository(organisation.getId(), new Repository().id("repo"), null);
     Category category =
-        (Category) new Category().id(UUID.randomUUID()).entityType(EntityType.CATEGORY);
+        (Category) new Category().id(UUID.randomUUID().toString()).entityType(EntityType.CATEGORY);
 
     assertThatCode(
             () -> entityService.createEntity(organisation.getId(), repository.getId(), category))
@@ -352,7 +352,7 @@ class EntityServiceTest extends Neo4jTest {
         (Phenotype)
             new Phenotype()
                 .addSuperCategoriesItem(category)
-                .id(UUID.randomUUID())
+                .id(UUID.randomUUID().toString())
                 .entityType(EntityType.SINGLE_PHENOTYPE)
                 .addTitlesItem(new LocalisableText().text("Height").lang("en"));
 

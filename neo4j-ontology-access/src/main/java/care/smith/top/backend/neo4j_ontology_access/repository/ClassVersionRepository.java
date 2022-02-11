@@ -11,7 +11,6 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 
 @Repository
 public interface ClassVersionRepository extends PagingAndSortingRepository<ClassVersion, Long> {
@@ -31,7 +30,7 @@ public interface ClassVersionRepository extends PagingAndSortingRepository<Class
           + "OPTIONAL MATCH a = (cv) -[:HAS_ANNOTATION*]-> (:Annotation) "
           + "RETURN cv, cRel, c, collect(nodes(a)), collect(relationships(a))")
   Optional<ClassVersion> findByClassIdAndVersion(
-      @Param("classId") UUID classId, @Param("version") Integer version);
+          @Param("classId") String classId, @Param("version") Integer version);
 
   /**
    * Search for current {@link ClassVersion} {@link Class}.
@@ -46,7 +45,7 @@ public interface ClassVersionRepository extends PagingAndSortingRepository<Class
           + "WITH cv, collect(cRel) as cRel, collect(c) as c "
           + "OPTIONAL MATCH a = (cv) -[:HAS_ANNOTATION*]-> (:Annotation) "
           + "RETURN cv, cRel, c, collect(nodes(a)), collect(relationships(a))")
-  Optional<ClassVersion> findCurrentByClassId(@Param("classId") UUID classId);
+  Optional<ClassVersion> findCurrentByClassId(@Param("classId") String classId);
 
   /**
    * Get all versions of a {@link Class}.
@@ -61,7 +60,7 @@ public interface ClassVersionRepository extends PagingAndSortingRepository<Class
           + "RETURN cv, cRel, c, collect(nodes(a)), collect(relationships(a)) "
           + ":#{orderBy(#pageable)} SKIP $skip LIMIT $limit")
   Slice<ClassVersion> findByClassId(
-      @Param("classId") UUID classId, @Param("pageable") Pageable pageable);
+          @Param("classId") String classId, @Param("pageable") Pageable pageable);
 
   // TODO: this query does not belong here because annotations are domain specific
   @Query(

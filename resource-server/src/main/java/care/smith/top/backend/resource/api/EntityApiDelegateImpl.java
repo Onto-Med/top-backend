@@ -26,7 +26,7 @@ public class EntityApiDelegateImpl implements EntityApiDelegate {
 
   @Override
   public ResponseEntity<Entity> getEntityById(
-      String organisationId, String repositoryId, UUID id, Integer version, List<String> include) {
+      String organisationId, String repositoryId, String id, Integer version, List<String> include) {
     return new ResponseEntity<>(
         entityService.loadEntity(organisationId, repositoryId, id, version), HttpStatus.OK);
   }
@@ -35,7 +35,7 @@ public class EntityApiDelegateImpl implements EntityApiDelegate {
   public ResponseEntity<Void> deleteEntityById(
       String organisationId,
       String repositoryId,
-      UUID id,
+      String id,
       Integer version,
       List<String> include,
       Boolean permanent) {
@@ -47,7 +47,7 @@ public class EntityApiDelegateImpl implements EntityApiDelegate {
   public ResponseEntity<Entity> updateEntityById(
       String organisationId,
       String repositoryId,
-      UUID id,
+      String id,
       Entity entity,
       Integer version,
       List<String> include) {

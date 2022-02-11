@@ -88,7 +88,7 @@ public class EntityService {
     cls.setRepositoryId(repositoryId);
     cls.setCurrentVersion(buildClassVersion(entity).setVersion(1));
 
-    List<UUID> superClasses = new ArrayList<>();
+    List<String> superClasses = new ArrayList<>();
     if (entity instanceof Category) {
       Category category = (Category) entity;
       if (category.getSuperCategories() != null)
@@ -121,7 +121,7 @@ public class EntityService {
     return classToEntity(classRepository.save(cls), repositoryId);
   }
 
-  public Entity loadEntity(String organisationId, String repositoryId, UUID id, Integer version) {
+  public Entity loadEntity(String organisationId, String repositoryId, String id, Integer version) {
     Repository repository = getRepository(organisationId, repositoryId);
     Class cls =
         classRepository
@@ -142,7 +142,7 @@ public class EntityService {
 
   @Transactional
   public void deleteEntity(
-      String organisationId, String repositoryId, UUID id, Integer version, boolean permanent) {
+          String organisationId, String repositoryId, String id, Integer version, boolean permanent) {
     Repository repository = getRepository(organisationId, repositoryId);
     Class cls =
         classRepository
@@ -172,7 +172,7 @@ public class EntityService {
   }
 
   public Entity updateEntityById(
-      String organisationId, String repositoryId, UUID id, Entity entity, List<String> include) {
+          String organisationId, String repositoryId, String id, Entity entity, List<String> include) {
     Repository repository = getRepository(organisationId, repositoryId);
     Class cls =
         classRepository
@@ -198,7 +198,7 @@ public class EntityService {
             });
     cls.setCurrentVersion(newVersion);
 
-    List<UUID> superClasses = new ArrayList<>();
+    List<String> superClasses = new ArrayList<>();
     if (entity instanceof Category) {
       Category category = (Category) entity;
       if (category.getSuperCategories() != null)

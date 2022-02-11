@@ -9,16 +9,15 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 import java.util.stream.Stream;
 
 @org.springframework.stereotype.Repository
-public interface ClassRepository extends PagingAndSortingRepository<Class, UUID> {
+public interface ClassRepository extends PagingAndSortingRepository<Class, String> {
   @Query(
       "MATCH (super:Class {id: $classId}) <-[:IS_SUBCLASS_OF { ownerId: $repositoryId }]- (sub:Class) "
           + "RETURN sub ORDER BY sub.index")
   Stream<Class> findSubclasses(
-      @Param("classId") UUID id, @Param("repositoryId") String repositoryId);
+          @Param("classId") String id, @Param("repositoryId") String repositoryId);
 
   @Query(
       "MATCH (c:Class { repositoryId: $repository.__id__ }) "
@@ -26,7 +25,7 @@ public interface ClassRepository extends PagingAndSortingRepository<Class, UUID>
           + "RETURN c")
   Set<Class> findRootClassesByRepository(@Param("repository") Repository repository);
 
-  Optional<Class> findByIdAndRepositoryId(UUID id, String repositoryId);
+  Optional<Class> findByIdAndRepositoryId(String id, String repositoryId);
 
   /**
    * Get a new version number for the given {@link Class} object. The returned number is the highest
