@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class OrganisationService {
-  private final String directoryType = "organisation";
+  private final String directoryType = "Organisation";
   @Autowired DirectoryRepository directoryRepository;
 
   @Value("${spring.paging.page-size:10}")
