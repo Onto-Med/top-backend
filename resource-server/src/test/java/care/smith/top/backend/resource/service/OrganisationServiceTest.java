@@ -215,5 +215,7 @@ class OrganisationServiceTest extends Neo4jTest {
         .isEqualTo(1);
 
     assertThat(organisationService.getOrganisations("not matching string", 1, null)).isEmpty();
+
+    assertThat(organisationService.getOrganisations(null, 1, null)).size().isEqualTo(2);
   }
 }

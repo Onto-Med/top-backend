@@ -5,6 +5,8 @@ import care.smith.top.backend.neo4j_ontology_access.model.Directory;
 import care.smith.top.backend.neo4j_ontology_access.repository.DirectoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.util.Streamable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -65,9 +67,13 @@ public class OrganisationService {
   }
 
   public List<Organisation> getOrganisations(String name, Integer page, List<String> include) {
-    return directoryRepository.findByNameContainingIgnoreCase(name).stream()
-        .map(this::directoryToOrganisation)
-        .collect(Collectors.toList());
+    Streamable<Directory> result;
+    if (name == null) {
+      result = directoryRepository.findAll(PageRequest.of(page - 1, pageSize));
+    } else {
+      result = directoryRepository.findByNameContainingIgnoreCase(name);
+    }
+    return result.map(this::directoryToOrganisation).stream().collect(Collectors.toList());
   }
 
   /**
