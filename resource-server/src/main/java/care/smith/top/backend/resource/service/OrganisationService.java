@@ -123,6 +123,8 @@ public class OrganisationService {
                               HttpStatus.CONFLICT,
                               String.format(
                                   "Super organisation %s does not exist.", superOrganisationId)))));
+    } else {
+      directory.setSuperDirectories(null);
     }
 
     return directory
