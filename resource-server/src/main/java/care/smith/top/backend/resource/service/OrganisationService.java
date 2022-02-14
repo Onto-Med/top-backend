@@ -5,7 +5,6 @@ import care.smith.top.backend.neo4j_ontology_access.model.Directory;
 import care.smith.top.backend.neo4j_ontology_access.repository.DirectoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.util.Streamable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -13,6 +12,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,10 +31,11 @@ public class OrganisationService {
     // throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
     // userDetails.getUsername());
 
-    if (directoryRepository.findById(organisation.getId()).isPresent()) {
+    if (organisation.getId() == null) organisation.id(UUID.randomUUID().toString());
+
+    if (directoryRepository.findById(organisation.getId()).isPresent())
       throw new ResponseStatusException(HttpStatus.CONFLICT);
-    }
-    // TODO: update top-api to use strings as ids
+
     Directory directory = new Directory(organisation.getId());
 
     return directoryToOrganisation(directoryRepository.save(populate(directory, organisation)));
@@ -67,12 +68,10 @@ public class OrganisationService {
   }
 
   public List<Organisation> getOrganisations(String name, Integer page, List<String> include) {
-    Streamable<Directory> result;
-    if (name == null) {
-      result = directoryRepository.findAll(PageRequest.of(page - 1, pageSize));
-    } else {
-      result = directoryRepository.findByNameContainingIgnoreCase(name);
-    }
+    Streamable<Directory> result = directoryRepository.findByType("Organisation");
+    // TODO: use QuerydslPredicateExecutor for repository to build extended queries
+    if (name != null) result = result.and(directoryRepository.findByNameContainingIgnoreCase(name));
+
     return result.map(this::directoryToOrganisation).stream().collect(Collectors.toList());
   }
 
