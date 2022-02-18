@@ -234,6 +234,13 @@ class RepositoryServiceTest extends Neo4jTest {
         .size()
         .isEqualTo(1);
 
+    assertThat(
+            repositoryService.getRepositoriesByOrganisationId(organisation1.getId(), null, null, 1))
+        .isNotEmpty()
+        .allMatch(r -> r.getId().equals(repository1.getId()))
+        .size()
+        .isEqualTo(1);
+
     assertThat(repositoryService.getRepositoriesByOrganisationId("something else", null, "repo", 1))
         .isNullOrEmpty();
   }

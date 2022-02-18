@@ -35,7 +35,7 @@ public interface RepositoryRepository extends PagingAndSortingRepository<Reposit
 
   @Query(
       "MATCH p = (r:Repository) -[:BELONGS_TO*]-> (:Directory { id: $superDirectoryId }) "
-          + "WHERE r.name =~ '(?i).*' + $name + '.*' "
+          + "WHERE CASE $name WHEN NULL THEN true ELSE r.name =~ '(?i).*' + $name + '.*' END "
           + "RETURN r, collect(relationships(p)), collect(nodes(p)) "
           + ":#{orderBy(#pageable)} SKIP $skip LIMIT $limit")
   Slice<Repository> findByNameContainingAndSuperDirectoryId(
