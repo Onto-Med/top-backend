@@ -11,7 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.UUID;
 
 @Service
 public class EntityApiDelegateImpl implements EntityApiDelegate {
@@ -26,7 +25,11 @@ public class EntityApiDelegateImpl implements EntityApiDelegate {
 
   @Override
   public ResponseEntity<Entity> getEntityById(
-      String organisationId, String repositoryId, String id, Integer version, List<String> include) {
+      String organisationId,
+      String repositoryId,
+      String id,
+      Integer version,
+      List<String> include) {
     return new ResponseEntity<>(
         entityService.loadEntity(organisationId, repositoryId, id, version), HttpStatus.OK);
   }
@@ -69,5 +72,12 @@ public class EntityApiDelegateImpl implements EntityApiDelegate {
         entityService.getEntities(
             organisationId, repositoryId, include, name, type, dataType, page),
         HttpStatus.OK);
+  }
+
+  @Override
+  public ResponseEntity<List<Entity>> getEntityVersionsById(
+      String organisationId, String repositoryId, String id, List<String> include) {
+    return new ResponseEntity<>(
+        entityService.getVersions(organisationId, repositoryId, id, include), HttpStatus.OK);
   }
 }

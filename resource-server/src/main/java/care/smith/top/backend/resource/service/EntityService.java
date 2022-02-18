@@ -1,7 +1,7 @@
 package care.smith.top.backend.resource.service;
 
-import care.smith.top.backend.model.*;
 import care.smith.top.backend.model.Expression;
+import care.smith.top.backend.model.*;
 import care.smith.top.backend.neo4j_ontology_access.model.Class;
 import care.smith.top.backend.neo4j_ontology_access.model.Repository;
 import care.smith.top.backend.neo4j_ontology_access.model.*;
@@ -257,6 +257,16 @@ public class EntityService {
               return classVersion.map(aClass -> classToEntity(aClass, ownerId)).orElse(null);
             })
         .filter(Objects::nonNull)
+        .collect(Collectors.toList());
+  }
+
+  public List<Entity> getVersions(
+      String organisationId, String repositoryId, String id, List<String> include) {
+    Repository repository = getRepository(organisationId, repositoryId);
+    return classVersionRepository
+        .findByClassId(id, PageRequest.ofSize(10))
+        .map(cv -> classVersionToEntity(cv, repositoryId))
+        .stream()
         .collect(Collectors.toList());
   }
 
