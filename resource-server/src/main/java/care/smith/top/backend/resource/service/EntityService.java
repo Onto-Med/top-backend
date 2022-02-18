@@ -233,13 +233,14 @@ public class EntityService {
       DataType dataType,
       Integer page) {
     getRepository(organisationId, repositoryId);
+    int requestedPage = page != null ? page - 1 : 0;
     return classVersionRepository
         .findByRepositoryIdAndNameContainingIgnoreCaseAndTypeAndDataType(
             repositoryId,
             name,
-            type.getValue(),
-            dataType.getValue(),
-            PageRequest.of(page, pageSize))
+            type != null ? type.getValue() : null,
+            dataType != null ? dataType.getValue() : null,
+            PageRequest.of(requestedPage, pageSize))
         .stream()
         .map(cv -> classVersionToEntity(cv, repositoryId))
         .collect(Collectors.toList());
