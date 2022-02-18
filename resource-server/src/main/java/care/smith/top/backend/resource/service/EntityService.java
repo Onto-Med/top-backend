@@ -453,7 +453,7 @@ public class EntityService {
   }
 
   private Annotation fromRestriction(Restriction restriction) {
-    if (restriction == null || restriction.getType() == null) return null;
+    if (restriction == null || restriction.getType() == null || restriction.getQuantor() == null) return null;
 
     Annotation annotation =
         (Annotation)
