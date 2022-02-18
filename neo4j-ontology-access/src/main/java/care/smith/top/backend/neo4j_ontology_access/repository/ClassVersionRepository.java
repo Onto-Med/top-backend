@@ -30,7 +30,7 @@ public interface ClassVersionRepository extends PagingAndSortingRepository<Class
           + "OPTIONAL MATCH a = (cv) -[:HAS_ANNOTATION*]-> (:Annotation) "
           + "RETURN cv, cRel, c, collect(nodes(a)), collect(relationships(a))")
   Optional<ClassVersion> findByClassIdAndVersion(
-          @Param("classId") String classId, @Param("version") Integer version);
+      @Param("classId") String classId, @Param("version") Integer version);
 
   /**
    * Search for current {@link ClassVersion} {@link Class}.
@@ -60,12 +60,13 @@ public interface ClassVersionRepository extends PagingAndSortingRepository<Class
           + "RETURN cv, cRel, c, collect(nodes(a)), collect(relationships(a)) "
           + ":#{orderBy(#pageable)} SKIP $skip LIMIT $limit")
   Slice<ClassVersion> findByClassId(
-          @Param("classId") String classId, @Param("pageable") Pageable pageable);
+      @Param("classId") String classId, @Param("pageable") Pageable pageable);
 
   // TODO: this query does not belong here because annotations are domain specific
   @Query(
-      "MATCH (c:Class { repositoryId: $repositoryId }) -[cRel:CURRENT_VERSION]-> (cv:ClassVersion) "
+      "MATCH (c:Class { repositoryId: $repositoryId }) -[:CURRENT_VERSION]-> (cv:ClassVersion) "
           + "WHERE cv.hiddenAt IS NULL "
+          + "MATCH (cv) -[cRel:IS_VERSION_OF]-> (c) "
           + "OPTIONAL MATCH (cv) -[:HAS_ANNOTATION]-> (title:Annotation { property: 'title' }) "
           + "OPTIONAL MATCH (cv) -[:HAS_ANNOTATION]-> (type:Annotation { property: 'type' }) "
           + "OPTIONAL MATCH (cv) -[:HAS_ANNOTATION]-> (dataType:Annotation { property: 'dataType' }) "
