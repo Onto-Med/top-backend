@@ -270,6 +270,23 @@ public class EntityService {
         .collect(Collectors.toList());
   }
 
+  public List<Entity> getSubclasses(
+      String organisationId, String repositoryId, String id, List<String> include) {
+    Repository repository = getRepository(organisationId, repositoryId);
+    return classRepository
+        .findSubclasses(id, repository.getId())
+        .map(
+            c -> {
+              Entity entity = null;
+              try {
+                entity = classToEntity(c, repository.getId());
+              } catch (ResponseStatusException ignored) {
+              }
+              return entity;
+            })
+        .collect(Collectors.toList());
+  }
+
   private boolean isAbstract(EntityType entityType) {
     return Arrays.asList(
             EntityType.SINGLE_PHENOTYPE,
@@ -453,7 +470,8 @@ public class EntityService {
   }
 
   private Annotation fromRestriction(Restriction restriction) {
-    if (restriction == null || restriction.getType() == null || restriction.getQuantor() == null) return null;
+    if (restriction == null || restriction.getType() == null || restriction.getQuantor() == null)
+      return null;
 
     Annotation annotation =
         (Annotation)
@@ -734,17 +752,22 @@ public class EntityService {
 
   /**
    * Transforms the given {@link Class} object's <u>current version</u> to an {@link Entity} object.
+   * If corresponding class version was not loaded from DB, this method will try to load the current
+   * version of the class.
    *
    * @param cls The {@link Class} object to be transformed.
    * @return The resulting {@link Entity} object.
+   * @throws ResponseStatusException If the provided class has no current version.
    */
-  private Entity classToEntity(Class cls, String ownerId) {
-    return classVersionToEntity(
+  private Entity classToEntity(Class cls, String ownerId) throws ResponseStatusException {
+    ClassVersion current =
         cls.getCurrentVersion()
+            .or(() -> classVersionRepository.findCurrentByClassId(cls.getId()))
             .orElseThrow(
                 () ->
                     new ResponseStatusException(
-                        HttpStatus.INTERNAL_SERVER_ERROR, "Entity had no version!")),
-        ownerId);
+                        HttpStatus.INTERNAL_SERVER_ERROR, "Entity had no version!"));
+
+    return classVersionToEntity(current, ownerId);
   }
 }

@@ -11,6 +11,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.net.URI;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -22,6 +23,69 @@ class EntityServiceTest extends Neo4jTest {
   @Autowired EntityService entityService;
   @Autowired ClassRepository classRepository;
   @Autowired ClassVersionRepository classVersionRepository;
+
+  @Test
+  void getSubclasses() {
+    Organisation organisation =
+        organisationService.createOrganisation(new Organisation().id("org"));
+    Repository repository =
+        repositoryService.createRepository(organisation.getId(), new Repository().id("repo"), null);
+
+    Category superCat = (Category) new Category().entityType(EntityType.CATEGORY).id("super_cat");
+    Category subCat1 =
+        (Category)
+            new Category()
+                .superCategories(Collections.singletonList(superCat))
+                .entityType(EntityType.CATEGORY)
+                .id("sub_cat_1");
+    Category subCat2 =
+        (Category)
+            new Category()
+                .superCategories(Collections.singletonList(superCat))
+                .entityType(EntityType.CATEGORY)
+                .id("sub_cat_2");
+    Category subCat3 =
+        (Category)
+            new Category()
+                .superCategories(Collections.singletonList(subCat1))
+                .entityType(EntityType.CATEGORY)
+                .id("sub_cat_3");
+
+    assertThatCode(
+            () -> entityService.createEntity(organisation.getId(), repository.getId(), superCat))
+        .doesNotThrowAnyException();
+    assertThatCode(
+            () -> entityService.createEntity(organisation.getId(), repository.getId(), subCat1))
+        .doesNotThrowAnyException();
+    assertThatCode(
+            () -> entityService.createEntity(organisation.getId(), repository.getId(), subCat2))
+        .doesNotThrowAnyException();
+    assertThatCode(
+            () -> entityService.createEntity(organisation.getId(), repository.getId(), subCat3))
+        .doesNotThrowAnyException();
+
+    assertThat(
+            entityService.getSubclasses(
+                organisation.getId(), repository.getId(), superCat.getId(), null))
+        .isNotEmpty()
+        .anySatisfy((sub) -> assertThat(sub.getId()).isEqualTo(subCat1.getId()))
+        .anySatisfy((sub) -> assertThat(sub.getId()).isEqualTo(subCat2.getId()))
+        .size()
+        .isEqualTo(2);
+
+    assertThat(
+            entityService.getSubclasses(
+                organisation.getId(), repository.getId(), subCat1.getId(), null))
+        .isNotEmpty()
+        .allSatisfy((sub) -> assertThat(sub.getId()).isEqualTo(subCat3.getId()))
+        .size()
+        .isEqualTo(1);
+
+    assertThat(
+            entityService.getSubclasses(
+                organisation.getId(), repository.getId(), subCat2.getId(), null))
+        .isNullOrEmpty();
+  }
 
   @Test
   void createEntity() {

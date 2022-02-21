@@ -80,4 +80,11 @@ public class EntityApiDelegateImpl implements EntityApiDelegate {
     return new ResponseEntity<>(
         entityService.getVersions(organisationId, repositoryId, id, include), HttpStatus.OK);
   }
+
+  @Override
+  public ResponseEntity<List<Entity>> getSubclassesById(
+      String organisationId, String repositoryId, String id, List<String> include) {
+    return new ResponseEntity<>(
+        entityService.getSubclasses(organisationId, repositoryId, id, include), HttpStatus.OK);
+  }
 }
