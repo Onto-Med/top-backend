@@ -287,6 +287,30 @@ public class EntityService {
     return classToEntity(classRepository.save(cls), repositoryId);
   }
 
+  public List<Entity> getEntities(List<String> include, String name, Integer page) {
+    int requestedPage = page != null ? page - 1 : 0;
+    return classVersionRepository
+        .findByNameContainingIgnoreCaseAndTypeAndDataType(
+            name, null, null, PageRequest.of(requestedPage, pageSize))
+        .stream()
+        .map(cv -> classVersionToEntity(cv, cv.getaClass().getRepositoryId()))
+        .collect(Collectors.toList());
+  }
+
+  public List<Entity> getRootEntitiesByRepositoryId(
+      String organisationId,
+      String repositoryId,
+      List<String> include,
+      String name,
+      EntityType type,
+      DataType dataType,
+      Integer page) {
+    Repository repository = getRepository(organisationId, repositoryId);
+    return classRepository.findRootClassesByRepository(repository).stream()
+        .map(c -> classToEntity(c, repository.getId()))
+        .collect(Collectors.toList());
+  }
+
   /**
    * Build a new {@link ClassVersion} object from an {@link Entity} object.
    *

@@ -85,6 +85,28 @@ public interface ClassVersionRepository extends PagingAndSortingRepository<Class
       @Param("dataType") String dataType,
       @Param("pageable") Pageable pageable);
 
+  // TODO: this query does not belong here because annotations are domain specific
+  @Query(
+    "MATCH (c:Class) -[:CURRENT_VERSION]-> (cv:ClassVersion) "
+      + "WHERE cv.hiddenAt IS NULL "
+      + "MATCH (cv) -[cRel:IS_VERSION_OF]-> (c) "
+      + "OPTIONAL MATCH (cv) -[:HAS_ANNOTATION]-> (title:Annotation { property: 'title' }) "
+      + "OPTIONAL MATCH (cv) -[:HAS_ANNOTATION]-> (type:Annotation { property: 'type' }) "
+      + "OPTIONAL MATCH (cv) -[:HAS_ANNOTATION]-> (dataType:Annotation { property: 'dataType' }) "
+      + "WITH c, cRel, cv, title, type, dataType "
+      + "WHERE ($name IS NULL OR cv.name =~ '(?i).*' + $name + '.*' OR title.stringValue =~ '(?i).*' + $name + '.*') "
+      + "AND ($type IS NULL OR type.stringValue = $type) "
+      + "AND ($dataType IS NULL OR dataType.stringValue = $dataType) "
+      + "WITH cv, collect(cRel) as cRel, collect(c) as c "
+      + "OPTIONAL MATCH a = (cv) -[:HAS_ANNOTATION*]-> (:Annotation) "
+      + "RETURN cv, cRel, c, collect(nodes(a)), collect(relationships(a)) "
+      + ":#{orderBy(#pageable)} SKIP $skip LIMIT $limit")
+  Slice<ClassVersion> findByNameContainingIgnoreCaseAndTypeAndDataType(
+    @Param("name") String name,
+    @Param("type") String type,
+    @Param("dataType") String dataType,
+    @Param("pageable") Pageable pageable);
+
   @Query(
       "MATCH (:Class { id: $cls.__id__ }) -[:IS_SUBCLASS_OF { ownerId: $ownerId }]-> (c:Class) -[:CURRENT_VERSION]-> (cv:ClassVersion) "
           + "MATCH (cv) -[cRel:IS_VERSION_OF]-> (c) "

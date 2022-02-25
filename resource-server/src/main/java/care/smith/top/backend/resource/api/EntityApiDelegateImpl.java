@@ -75,6 +75,26 @@ public class EntityApiDelegateImpl implements EntityApiDelegate {
   }
 
   @Override
+  public ResponseEntity<List<Entity>> getEntities(List<String> include, String name, Integer page) {
+    return new ResponseEntity<>(entityService.getEntities(include, name, page), HttpStatus.OK);
+  }
+
+  @Override
+  public ResponseEntity<List<Entity>> getRootEntitiesByRepositoryId(
+      String organisationId,
+      String repositoryId,
+      List<String> include,
+      String name,
+      EntityType type,
+      DataType dataType,
+      Integer page) {
+    return new ResponseEntity<>(
+        entityService.getRootEntitiesByRepositoryId(
+            organisationId, repositoryId, include, name, type, dataType, page),
+        HttpStatus.OK);
+  }
+
+  @Override
   public ResponseEntity<List<Entity>> getEntityVersionsById(
       String organisationId, String repositoryId, String id, List<String> include) {
     return new ResponseEntity<>(
