@@ -290,8 +290,8 @@ public class EntityService {
   public List<Entity> getEntities(List<String> include, String name, List<EntityType> type, DataType dataType, Integer page) {
     int requestedPage = page != null ? page - 1 : 0;
     return classVersionRepository
-        .findByNameContainingIgnoreCaseAndTypeAndDataType(
-            name, null, null, PageRequest.of(requestedPage, pageSize))
+        .findByRepositoryIdAndNameContainingIgnoreCaseAndTypeAndDataType(
+            null, name, null, null, PageRequest.of(requestedPage, pageSize))
         .stream()
         .map(cv -> classVersionToEntity(cv, cv.getaClass().getRepositoryId()))
         .collect(Collectors.toList());
