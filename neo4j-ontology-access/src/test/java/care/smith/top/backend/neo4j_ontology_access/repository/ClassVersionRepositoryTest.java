@@ -11,6 +11,8 @@ import org.springframework.data.domain.Slice;
 
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -152,7 +154,7 @@ class ClassVersionRepositoryTest extends RepositoryTest {
     assertThat(
             classVersionRepository
                 .findByRepositoryIdAndNameContainingIgnoreCaseAndTypeAndDataType(
-                    repository.getId(), null, "type", null, PageRequest.ofSize(10))
+                    repository.getId(), null, List.of("type"), null, PageRequest.ofSize(10))
                 .getNumberOfElements())
         .isEqualTo(1);
 
@@ -166,7 +168,7 @@ class ClassVersionRepositoryTest extends RepositoryTest {
     assertThat(
             classVersionRepository
                 .findByRepositoryIdAndNameContainingIgnoreCaseAndTypeAndDataType(
-                    repository.getId(), "test", "type", "decimal", PageRequest.ofSize(10))
+                    repository.getId(), "test", List.of("type"), "decimal", PageRequest.ofSize(10))
                 .getNumberOfElements())
         .isEqualTo(1);
 

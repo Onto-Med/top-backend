@@ -159,7 +159,7 @@ public class EntityService {
       String repositoryId,
       List<String> include,
       String name,
-      EntityType type,
+      List<EntityType> type,
       DataType dataType,
       Integer page) {
     getRepository(organisationId, repositoryId);
@@ -168,7 +168,7 @@ public class EntityService {
         .findByRepositoryIdAndNameContainingIgnoreCaseAndTypeAndDataType(
             repositoryId,
             name,
-            type != null ? type.getValue() : null,
+            type != null ? type.stream().map(EntityType::getValue).collect(Collectors.toList()) : null,
             dataType != null ? dataType.getValue() : null,
             PageRequest.of(requestedPage, pageSize))
         .stream()
@@ -287,7 +287,7 @@ public class EntityService {
     return classToEntity(classRepository.save(cls), repositoryId);
   }
 
-  public List<Entity> getEntities(List<String> include, String name, Integer page) {
+  public List<Entity> getEntities(List<String> include, String name, List<EntityType> type, DataType dataType, Integer page) {
     int requestedPage = page != null ? page - 1 : 0;
     return classVersionRepository
         .findByNameContainingIgnoreCaseAndTypeAndDataType(
@@ -302,7 +302,7 @@ public class EntityService {
       String repositoryId,
       List<String> include,
       String name,
-      EntityType type,
+      List<EntityType> type,
       DataType dataType,
       Integer page) {
     Repository repository = getRepository(organisationId, repositoryId);

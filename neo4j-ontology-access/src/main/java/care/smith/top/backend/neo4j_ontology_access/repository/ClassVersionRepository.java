@@ -9,6 +9,7 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -72,7 +73,7 @@ public interface ClassVersionRepository extends PagingAndSortingRepository<Class
           + "OPTIONAL MATCH (cv) -[:HAS_ANNOTATION]-> (dataType:Annotation { property: 'dataType' }) "
           + "WITH c, cRel, cv, title, type, dataType "
           + "WHERE ($name IS NULL OR cv.name =~ '(?i).*' + $name + '.*' OR title.stringValue =~ '(?i).*' + $name + '.*') "
-          + "AND ($type IS NULL OR type.stringValue = $type) "
+          + "AND ($type IS NULL OR type.stringValue IN $type) "
           + "AND ($dataType IS NULL OR dataType.stringValue = $dataType) "
           + "WITH cv, collect(cRel) as cRel, collect(c) as c "
           + "OPTIONAL MATCH a = (cv) -[:HAS_ANNOTATION*]-> (:Annotation) "
@@ -81,7 +82,7 @@ public interface ClassVersionRepository extends PagingAndSortingRepository<Class
   Slice<ClassVersion> findByRepositoryIdAndNameContainingIgnoreCaseAndTypeAndDataType(
       @Param("repositoryId") String repositoryId,
       @Param("name") String name,
-      @Param("type") String type,
+      @Param("type") List<String> type,
       @Param("dataType") String dataType,
       @Param("pageable") Pageable pageable);
 
@@ -95,7 +96,7 @@ public interface ClassVersionRepository extends PagingAndSortingRepository<Class
       + "OPTIONAL MATCH (cv) -[:HAS_ANNOTATION]-> (dataType:Annotation { property: 'dataType' }) "
       + "WITH c, cRel, cv, title, type, dataType "
       + "WHERE ($name IS NULL OR cv.name =~ '(?i).*' + $name + '.*' OR title.stringValue =~ '(?i).*' + $name + '.*') "
-      + "AND ($type IS NULL OR type.stringValue = $type) "
+      + "AND ($type IS NULL OR type.stringValue IN $type) "
       + "AND ($dataType IS NULL OR dataType.stringValue = $dataType) "
       + "WITH cv, collect(cRel) as cRel, collect(c) as c "
       + "OPTIONAL MATCH a = (cv) -[:HAS_ANNOTATION*]-> (:Annotation) "
@@ -103,7 +104,7 @@ public interface ClassVersionRepository extends PagingAndSortingRepository<Class
       + ":#{orderBy(#pageable)} SKIP $skip LIMIT $limit")
   Slice<ClassVersion> findByNameContainingIgnoreCaseAndTypeAndDataType(
     @Param("name") String name,
-    @Param("type") String type,
+    @Param("type") List<String> type,
     @Param("dataType") String dataType,
     @Param("pageable") Pageable pageable);
 

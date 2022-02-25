@@ -65,7 +65,7 @@ public class EntityApiDelegateImpl implements EntityApiDelegate {
       String repositoryId,
       List<String> include,
       String name,
-      EntityType type,
+      List<EntityType> type,
       DataType dataType,
       Integer page) {
     return new ResponseEntity<>(
@@ -75,8 +75,8 @@ public class EntityApiDelegateImpl implements EntityApiDelegate {
   }
 
   @Override
-  public ResponseEntity<List<Entity>> getEntities(List<String> include, String name, Integer page) {
-    return new ResponseEntity<>(entityService.getEntities(include, name, page), HttpStatus.OK);
+  public ResponseEntity<List<Entity>> getEntities(List<String> include, String name, List<EntityType> type, DataType dataType, Integer page) {
+    return new ResponseEntity<>(entityService.getEntities(include, name, type, dataType, page), HttpStatus.OK);
   }
 
   @Override
@@ -85,7 +85,7 @@ public class EntityApiDelegateImpl implements EntityApiDelegate {
       String repositoryId,
       List<String> include,
       String name,
-      EntityType type,
+      List<EntityType> type,
       DataType dataType,
       Integer page) {
     return new ResponseEntity<>(
