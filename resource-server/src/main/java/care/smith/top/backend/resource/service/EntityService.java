@@ -294,7 +294,11 @@ public class EntityService {
     int requestedPage = page != null ? page - 1 : 0;
     return classVersionRepository
         .findByRepositoryIdAndNameContainingIgnoreCaseAndTypeAndDataType(
-            null, name, null, null, PageRequest.of(requestedPage, pageSize))
+            null,
+            name,
+            type != null ? type.stream().map(EntityType::getValue).collect(Collectors.toList()) : null,
+            null,
+            PageRequest.of(requestedPage, pageSize))
         .stream()
         .map(cv -> classVersionToEntity(cv, cv.getaClass().getRepositoryId()))
         .collect(Collectors.toList());
