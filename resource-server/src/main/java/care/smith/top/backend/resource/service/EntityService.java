@@ -154,7 +154,7 @@ public class EntityService {
     }
   }
 
-  public List<Entity> getEntities(
+  public List<Entity> getEntitiesByRepositoryId(
       String organisationId,
       String repositoryId,
       List<String> include,

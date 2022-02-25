@@ -60,7 +60,7 @@ public class EntityApiDelegateImpl implements EntityApiDelegate {
   }
 
   @Override
-  public ResponseEntity<List<Entity>> getEntities(
+  public ResponseEntity<List<Entity>> getEntitiesByRepositoryId(
       String organisationId,
       String repositoryId,
       List<String> include,
@@ -69,7 +69,7 @@ public class EntityApiDelegateImpl implements EntityApiDelegate {
       DataType dataType,
       Integer page) {
     return new ResponseEntity<>(
-        entityService.getEntities(
+        entityService.getEntitiesByRepositoryId(
             organisationId, repositoryId, include, name, type, dataType, page),
         HttpStatus.OK);
   }
