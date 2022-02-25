@@ -168,7 +168,9 @@ public class EntityService {
         .findByRepositoryIdAndNameContainingIgnoreCaseAndTypeAndDataType(
             repositoryId,
             name,
-            type != null ? type.stream().map(EntityType::getValue).collect(Collectors.toList()) : null,
+            type != null
+                ? type.stream().map(EntityType::getValue).collect(Collectors.toList())
+                : null,
             dataType != null ? dataType.getValue() : null,
             PageRequest.of(requestedPage, pageSize))
         .stream()
@@ -287,7 +289,8 @@ public class EntityService {
     return classToEntity(classRepository.save(cls), repositoryId);
   }
 
-  public List<Entity> getEntities(List<String> include, String name, List<EntityType> type, DataType dataType, Integer page) {
+  public List<Entity> getEntities(
+      List<String> include, String name, List<EntityType> type, DataType dataType, Integer page) {
     int requestedPage = page != null ? page - 1 : 0;
     return classVersionRepository
         .findByRepositoryIdAndNameContainingIgnoreCaseAndTypeAndDataType(
@@ -470,9 +473,18 @@ public class EntityService {
               .map(c -> (Category) new Category().id(c.getaClass().getId()))
               .collect(Collectors.toList()));
 
+    Repository repo =
+        repositoryRepository
+            .findById(classVersion.getaClass().getRepositoryId())
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
     care.smith.top.backend.model.Repository repository =
-        new care.smith.top.backend.model.Repository()
-            .id(classVersion.getaClass().getRepositoryId());
+        new care.smith.top.backend.model.Repository().id(repo.getId()).name(repo.getName());
+
+    repo.getSuperDirectories().stream()
+        .findFirst()
+        .ifPresent(
+            d -> repository.setOrganisation(new Organisation().id(d.getId()).name(d.getName())));
 
     entity.setRepository(repository);
     entity.setId(classVersion.getaClass().getId());
