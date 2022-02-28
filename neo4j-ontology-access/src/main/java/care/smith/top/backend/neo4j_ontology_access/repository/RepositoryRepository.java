@@ -31,7 +31,12 @@ public interface RepositoryRepository extends PagingAndSortingRepository<Reposit
       @Param("repositoryId") String repositoryId,
       @Param("superDirectoryId") String superDirectoryId);
 
-  Streamable<Repository> findByNameContainingIgnoreCase(String name);
+  @Query(
+    "MATCH p = (r:Repository) -[:BELONGS_TO*]-> (:Directory) "
+      + "WHERE CASE $name WHEN NULL THEN true ELSE r.name =~ '(?i).*' + $name + '.*' END "
+      + "RETURN r, collect(relationships(p)), collect(nodes(p)) "
+      + ":#{orderBy(#pageable)} SKIP $skip LIMIT $limit")
+  Slice<Repository> findByNameContainingIgnoreCase(@Param("name") String name, @Param("pagabe") Pageable pageable);
 
   @Query(
       "MATCH p = (r:Repository) -[:BELONGS_TO*]-> (:Directory { id: $superDirectoryId }) "

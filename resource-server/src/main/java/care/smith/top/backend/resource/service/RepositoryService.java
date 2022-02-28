@@ -108,8 +108,9 @@ public class RepositoryService {
   public List<care.smith.top.backend.model.Repository> getRepositories(
       List<String> include, String name, Integer page) {
     // TODO: check if user has read permission
+    int requestedPage = page == null ? 0 : page - 1;
     return repositoryRepository
-        .findByNameContainingIgnoreCase(name)
+        .findByNameContainingIgnoreCase(name, PageRequest.of(requestedPage, pageSize, Sort.by("r.name")))
         .stream()
         .map(this::repositoryToApiPojo)
         .collect(Collectors.toList());
