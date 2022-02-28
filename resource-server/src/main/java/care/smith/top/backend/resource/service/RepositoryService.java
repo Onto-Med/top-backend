@@ -90,7 +90,7 @@ public class RepositoryService {
 
     repository.getSuperDirectories().stream()
         .findFirst()
-        .ifPresent(o -> data.setOrganisation(new Organisation().id(o.getId())));
+        .ifPresent(o -> data.setOrganisation(new Organisation().name(o.getName()).id(o.getId())));
 
     return data;
   }
