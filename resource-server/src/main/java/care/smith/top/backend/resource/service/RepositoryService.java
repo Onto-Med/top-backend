@@ -74,6 +74,29 @@ public class RepositoryService {
     return repositoryToApiPojo(repositoryRepository.save(repository));
   }
 
+  public List<care.smith.top.backend.model.Repository> getRepositories(
+      List<String> include, String name, Integer page) {
+    // TODO: check if user has read permission
+    int requestedPage = page == null ? 0 : page - 1;
+    return repositoryRepository
+        .findByNameContainingIgnoreCase(
+            name, PageRequest.of(requestedPage, pageSize, Sort.by("r.name")))
+        .stream()
+        .map(this::repositoryToApiPojo)
+        .collect(Collectors.toList());
+  }
+
+  public List<care.smith.top.backend.model.Repository> getRepositoriesByOrganisationId(
+      String organisationId, List<String> include, String name, Integer page) {
+    int requestedPage = page == null ? 0 : page - 1;
+    return repositoryRepository
+        .findByNameContainingAndSuperDirectoryId(
+            name, organisationId, PageRequest.of(requestedPage, pageSize, Sort.by("r.name")))
+        .stream()
+        .map(this::repositoryToApiPojo)
+        .collect(Collectors.toList());
+  }
+
   /**
    * Convert {@link Repository} object to {@link care.smith.top.backend.model.Repository} object.
    *
@@ -103,27 +126,5 @@ public class RepositoryService {
                 new ResponseStatusException(
                     HttpStatus.NOT_FOUND,
                     String.format("Organisation '%s' does not exist!", organisationId)));
-  }
-
-  public List<care.smith.top.backend.model.Repository> getRepositories(
-      List<String> include, String name, Integer page) {
-    // TODO: check if user has read permission
-    int requestedPage = page == null ? 0 : page - 1;
-    return repositoryRepository
-        .findByNameContainingIgnoreCase(name, PageRequest.of(requestedPage, pageSize, Sort.by("r.name")))
-        .stream()
-        .map(this::repositoryToApiPojo)
-        .collect(Collectors.toList());
-  }
-
-  public List<care.smith.top.backend.model.Repository> getRepositoriesByOrganisationId(
-      String organisationId, List<String> include, String name, Integer page) {
-    int requestedPage = page == null ? 0 : page - 1;
-    return repositoryRepository
-        .findByNameContainingAndSuperDirectoryId(
-            name, organisationId, PageRequest.of(requestedPage, pageSize, Sort.by("r.name")))
-        .stream()
-        .map(this::repositoryToApiPojo)
-        .collect(Collectors.toList());
   }
 }
