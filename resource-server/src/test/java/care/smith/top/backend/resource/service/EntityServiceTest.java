@@ -80,7 +80,6 @@ class EntityServiceTest extends Neo4jTest {
               assertThat(c.getEquivalentEntities()).isNullOrEmpty();
               assertThat(c.getCodes()).isNotEmpty();
               assertThat(c.getCreatedAt()).isNotNull();
-              assertThat(c.getHiddenAt()).isNull();
               assertThat(c.getSynonyms()).isEqualTo(category.getSynonyms());
               assertThat(c.getVersion()).isEqualTo(1);
               assertThat(c.getRepository())
@@ -251,6 +250,74 @@ class EntityServiceTest extends Neo4jTest {
   }
 
   @Test
+  void deleteVersion() {
+    Organisation organisation =
+        organisationService.createOrganisation(new Organisation().id("org"));
+    Repository repository =
+        repositoryService.createRepository(organisation.getId(), new Repository().id("repo"), null);
+    Phenotype phenotype =
+        (Phenotype)
+            new Phenotype()
+                .id(UUID.randomUUID().toString())
+                .entityType(EntityType.SINGLE_PHENOTYPE);
+
+    assertThat(entityService.createEntity(organisation.getId(), repository.getId(), phenotype))
+        .isNotNull()
+        .isInstanceOf(Phenotype.class)
+        .satisfies(p -> assertThat(p.getVersion()).isEqualTo(1));
+
+    assertThat(
+            entityService.updateEntityById(
+                organisation.getId(), repository.getId(), phenotype.getId(), phenotype, null))
+        .isNotNull()
+        .isInstanceOf(Phenotype.class)
+        .satisfies(p -> assertThat(p.getVersion()).isEqualTo(2));
+
+    assertThatThrownBy(
+            () ->
+                entityService.deleteVersion(
+                    organisation.getId(), repository.getId(), phenotype.getId(), 3))
+        .isInstanceOf(ResponseStatusException.class)
+        .hasFieldOrPropertyWithValue("status", HttpStatus.NOT_FOUND);
+
+    assertThat(classVersionRepository.findCurrentByClassId(phenotype.getId()))
+        .isPresent()
+        .hasValueSatisfying(
+            cv -> {
+              assertThat(cv.getaClass()).isNotNull();
+              assertThat(cv.getVersion()).isEqualTo(2);
+            });
+
+    // Delete
+    assertThatCode(
+            () ->
+                entityService.deleteVersion(
+                    organisation.getId(), repository.getId(), phenotype.getId(), 2))
+        .doesNotThrowAnyException();
+
+    assertThat(classVersionRepository.findCurrentByClassId(phenotype.getId()))
+        .isPresent()
+        .hasValueSatisfying(
+            cv -> {
+              assertThat(cv.getaClass()).isNotNull();
+              assertThat(cv.getVersion()).isEqualTo(1);
+            });
+
+    assertThat(
+            entityService.loadEntity(
+                organisation.getId(), repository.getId(), phenotype.getId(), null))
+        .isNotNull()
+        .satisfies(p -> assertThat(p.getVersion()).isEqualTo(1));
+
+    assertThatThrownBy(
+            () ->
+                entityService.loadEntity(
+                    organisation.getId(), repository.getId(), phenotype.getId(), 2))
+        .isInstanceOf(ResponseStatusException.class)
+        .hasFieldOrPropertyWithValue("status", HttpStatus.NOT_FOUND);
+  }
+
+  @Test
   void deleteEntity() {
     Organisation organisation =
         organisationService.createOrganisation(new Organisation().id("org"));
@@ -276,69 +343,20 @@ class EntityServiceTest extends Neo4jTest {
 
     assertThatThrownBy(
             () ->
-                entityService.deleteEntity(
-                    organisation.getId(), repository.getId(), phenotype.getId(), 3, false))
+                entityService.deleteEntity(organisation.getId(), repository.getId(), "invalid id"))
         .isInstanceOf(ResponseStatusException.class)
         .hasFieldOrPropertyWithValue("status", HttpStatus.NOT_FOUND);
 
-    assertThat(classVersionRepository.findCurrentByClassId(phenotype.getId()))
-        .isPresent()
-        .hasValueSatisfying(
-            cv -> {
-              assertThat(cv.getaClass()).isNotNull();
-              assertThat(cv.getVersion()).isEqualTo(2);
-            });
-
-    // Hide
     assertThatCode(
             () ->
                 entityService.deleteEntity(
-                    organisation.getId(), repository.getId(), phenotype.getId(), 2, false))
-        .doesNotThrowAnyException();
-
-    assertThat(classVersionRepository.findCurrentByClassId(phenotype.getId()))
-        .isPresent()
-        .hasValueSatisfying(
-            cv -> {
-              assertThat(cv.getaClass()).isNotNull();
-              assertThat(cv.getVersion()).isEqualTo(1);
-            });
-
-    assertThat(classVersionRepository.findByClassIdAndVersion(phenotype.getId(), 2))
-        .isPresent()
-        .hasValueSatisfying(
-            cv -> {
-              assertThat(cv.getHiddenAt()).isNotNull();
-              assertThat(cv.getaClass()).isNotNull();
-            });
-
-    assertThat(
-            entityService.loadEntity(
-                organisation.getId(), repository.getId(), phenotype.getId(), null))
-        .isNotNull()
-        .satisfies(p -> assertThat(p.getVersion()).isEqualTo(1));
-
-    assertThat(
-            entityService.loadEntity(
-                organisation.getId(), repository.getId(), phenotype.getId(), 2))
-        .isNotNull()
-        .satisfies(
-            p -> {
-              assertThat(p.getVersion()).isEqualTo(2);
-              assertThat(p.getHiddenAt()).isNotNull();
-            });
-
-    // Delete permanently
-    assertThatCode(
-            () ->
-                entityService.deleteEntity(
-                    organisation.getId(), repository.getId(), phenotype.getId(), 2, true))
+                    organisation.getId(), repository.getId(), phenotype.getId()))
         .doesNotThrowAnyException();
 
     assertThatThrownBy(
             () ->
                 entityService.loadEntity(
-                    organisation.getId(), repository.getId(), phenotype.getId(), 2))
+                    organisation.getId(), repository.getId(), phenotype.getId(), null))
         .isInstanceOf(ResponseStatusException.class)
         .hasFieldOrPropertyWithValue("status", HttpStatus.NOT_FOUND);
   }

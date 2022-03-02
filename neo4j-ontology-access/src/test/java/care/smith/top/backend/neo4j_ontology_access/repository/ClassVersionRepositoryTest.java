@@ -216,7 +216,7 @@ class ClassVersionRepositoryTest extends RepositoryTest {
         .isPresent()
         .hasValueSatisfying(cv -> assertThat(cv.getVersion()).isEqualTo(2));
 
-    assertThat(classVersionRepository.getPreviousUnhidden(classVersion.get()))
+    assertThat(classVersionRepository.getPrevious(classVersion.get()))
         .isPresent()
         .hasValueSatisfying(cv -> assertThat(cv.getVersion()).isEqualTo(1));
   }

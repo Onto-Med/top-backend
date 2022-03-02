@@ -12,6 +12,7 @@ import org.springframework.beans.PropertyAccessorFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -124,34 +125,55 @@ public class EntityService {
   }
 
   @Transactional
-  public void deleteEntity(
-      String organisationId, String repositoryId, String id, Integer version, boolean permanent) {
+  public void deleteEntity(String organisationId, String repositoryId, String id) {
     Repository repository = getRepository(organisationId, repositoryId);
     Class cls =
         classRepository
             .findByIdAndRepositoryId(id, repository.getId())
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-    Optional<ClassVersion> optional;
-    if (version == null) {
-      optional = classVersionRepository.findCurrentByClassId(cls.getId());
-    } else {
-      optional = classVersionRepository.findByClassIdAndVersion(cls.getId(), version);
-    }
+    classVersionRepository
+        .findAllByClassId(cls.getId())
+        .forEach(this::deleteVersion);
+    classRepository.delete(cls);
+  }
+
+  @Transactional
+  public void deleteVersion(
+      String organisationId, String repositoryId, String id, Integer version) {
+    Repository repository = getRepository(organisationId, repositoryId);
+    Class cls =
+        classRepository
+            .findByIdAndRepositoryId(id, repository.getId())
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
     ClassVersion classVersion =
-        optional.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+            classVersionRepository.findByClassIdAndVersion(cls.getId(), version).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
     classVersionRepository
-        .getPreviousUnhidden(classVersion)
+        .getPrevious(classVersion)
         .ifPresent(cv -> classRepository.setCurrent(cls, cv));
 
-    if (permanent) {
-      deleteAnnotations(classVersion);
-      expressionRepository.deleteAll(classVersion.getExpressions());
-      classVersionRepository.delete(classVersion);
-    } else {
-      if (!classVersion.isHidden()) classVersionRepository.hide(classVersion);
-    }
+    deleteAnnotations(classVersion);
+    expressionRepository.deleteAll(classVersion.getExpressions());
+    classVersionRepository.delete(classVersion);
+  }
+
+  public List<Entity> getEntities(
+      List<String> include, String name, List<EntityType> type, DataType dataType, Integer page) {
+    int requestedPage = page != null ? page - 1 : 0;
+    return classVersionRepository
+        .findByRepositoryIdAndNameContainingIgnoreCaseAndTypeAndDataType(
+            null,
+            name,
+            type != null
+                ? type.stream().map(EntityType::getValue).collect(Collectors.toList())
+                : null,
+            null,
+            PageRequest.of(requestedPage, pageSize))
+        .stream()
+        .map(cv -> classVersionToEntity(cv, cv.getaClass().getRepositoryId()))
+        .collect(Collectors.toList());
   }
 
   public List<Entity> getEntitiesByRepositoryId(
@@ -189,6 +211,20 @@ public class EntityService {
               return classVersion.map(aClass -> classToEntity(aClass, ownerId)).orElse(null);
             })
         .filter(Objects::nonNull)
+        .collect(Collectors.toList());
+  }
+
+  public List<Entity> getRootEntitiesByRepositoryId(
+      String organisationId,
+      String repositoryId,
+      List<String> include,
+      String name,
+      List<EntityType> type,
+      DataType dataType,
+      Integer page) {
+    Repository repository = getRepository(organisationId, repositoryId);
+    return classRepository.findRootClassesByRepository(repository).stream()
+        .map(c -> classToEntity(c, repository.getId()))
         .collect(Collectors.toList());
   }
 
@@ -287,35 +323,6 @@ public class EntityService {
     }
 
     return classToEntity(classRepository.save(cls), repositoryId);
-  }
-
-  public List<Entity> getEntities(
-      List<String> include, String name, List<EntityType> type, DataType dataType, Integer page) {
-    int requestedPage = page != null ? page - 1 : 0;
-    return classVersionRepository
-        .findByRepositoryIdAndNameContainingIgnoreCaseAndTypeAndDataType(
-            null,
-            name,
-            type != null ? type.stream().map(EntityType::getValue).collect(Collectors.toList()) : null,
-            null,
-            PageRequest.of(requestedPage, pageSize))
-        .stream()
-        .map(cv -> classVersionToEntity(cv, cv.getaClass().getRepositoryId()))
-        .collect(Collectors.toList());
-  }
-
-  public List<Entity> getRootEntitiesByRepositoryId(
-      String organisationId,
-      String repositoryId,
-      List<String> include,
-      String name,
-      List<EntityType> type,
-      DataType dataType,
-      Integer page) {
-    Repository repository = getRepository(organisationId, repositoryId);
-    return classRepository.findRootClassesByRepository(repository).stream()
-        .map(c -> classToEntity(c, repository.getId()))
-        .collect(Collectors.toList());
   }
 
   /**
@@ -495,7 +502,6 @@ public class EntityService {
     entity.setVersion(classVersion.getVersion());
     entity.setEntityType(entityType);
     entity.setCreatedAt(classVersion.getCreatedAtOffset());
-    entity.setHiddenAt(classVersion.getHiddenAtOffset());
 
     if (classVersion.getEquivalentClasses() != null)
       classVersion
@@ -552,6 +558,13 @@ public class EntityService {
   private void deleteAnnotations(Annotatable annotatable) {
     annotatable.getAnnotations().forEach(this::deleteAnnotations);
     annotationRepository.deleteAll(annotatable.getAnnotations());
+  }
+
+  @Transactional
+  private void deleteVersion(ClassVersion classVersion) {
+    deleteAnnotations(classVersion);
+    expressionRepository.deleteAll(classVersion.getExpressions());
+    classVersionRepository.delete(classVersion);
   }
 
   private Annotation fromExpression(Expression expression) {

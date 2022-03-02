@@ -40,9 +40,12 @@ public class EntityApiDelegateImpl implements EntityApiDelegate {
       String repositoryId,
       String id,
       Integer version,
-      List<String> include,
-      Boolean permanent) {
-    entityService.deleteEntity(organisationId, repositoryId, id, version, permanent);
+      List<String> include) {
+    if (version != null) {
+      entityService.deleteVersion(organisationId, repositoryId, id, version);
+    } else {
+      entityService.deleteEntity(organisationId, repositoryId, id);
+    }
     return new ResponseEntity<>(HttpStatus.NO_CONTENT);
   }
 
@@ -75,8 +78,10 @@ public class EntityApiDelegateImpl implements EntityApiDelegate {
   }
 
   @Override
-  public ResponseEntity<List<Entity>> getEntities(List<String> include, String name, List<EntityType> type, DataType dataType, Integer page) {
-    return new ResponseEntity<>(entityService.getEntities(include, name, type, dataType, page), HttpStatus.OK);
+  public ResponseEntity<List<Entity>> getEntities(
+      List<String> include, String name, List<EntityType> type, DataType dataType, Integer page) {
+    return new ResponseEntity<>(
+        entityService.getEntities(include, name, type, dataType, page), HttpStatus.OK);
   }
 
   @Override

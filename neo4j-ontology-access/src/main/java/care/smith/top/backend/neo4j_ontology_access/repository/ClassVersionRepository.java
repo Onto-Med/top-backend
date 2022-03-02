@@ -49,9 +49,10 @@ public interface ClassVersionRepository extends PagingAndSortingRepository<Class
   Optional<ClassVersion> findCurrentByClassId(@Param("classId") String classId);
 
   /**
-   * Get all versions of a {@link Class}.
+   * Get a page of versions of a {@link Class}.
    *
    * @param classId The classId.
+   * @param pageable The page request.
    * @return A {@link Slice<ClassVersion>} containing the versions.
    */
   @Query(
@@ -62,6 +63,19 @@ public interface ClassVersionRepository extends PagingAndSortingRepository<Class
           + ":#{orderBy(#pageable)} SKIP $skip LIMIT $limit")
   Slice<ClassVersion> findByClassId(
       @Param("classId") String classId, @Param("pageable") Pageable pageable);
+
+  /**
+   * Get all versions of a {@link Class}.
+   *
+   * @param classId The classId.
+   * @return A {@link Set<ClassVersion>} containing the versions.
+   */
+  @Query(
+      "MATCH (cv:ClassVersion) -[cRel:IS_VERSION_OF]-> (c:Class { id: $classId }) "
+          + "WITH cv, collect(cRel) as cRel, collect(c) as c "
+          + "OPTIONAL MATCH a = (cv) -[:HAS_ANNOTATION*]-> (:Annotation) "
+          + "RETURN cv, cRel, c, collect(nodes(a)), collect(relationships(a))")
+  Set<ClassVersion> findAllByClassId(@Param("classId") String classId);
 
   // TODO: this query does not belong here because annotations are domain specific
   @Query(
@@ -100,11 +114,11 @@ public interface ClassVersionRepository extends PagingAndSortingRepository<Class
       "MATCH (current:ClassVersion) -[:IS_VERSION_OF]-> (c:Class)"
           + "WHERE id(current) = $classVersion.__id__ "
           + "MATCH (previous:ClassVersion) -[:IS_VERSION_OF]-> (c:Class) "
-          + "WHERE previous.hiddenAt IS NULL AND id(current) <> id(previous) "
+          + "WHERE id(current) <> id(previous) "
           + "MATCH p = shortestPath((current) -[:PREVIOUS_VERSION*]-> (previous)) "
           + "RETURN previous "
           + "ORDER BY length(p) LIMIT 1")
-  Optional<ClassVersion> getPreviousUnhidden(@Param("classVersion") ClassVersion classVersion);
+  Optional<ClassVersion> getPrevious(@Param("classVersion") ClassVersion classVersion);
 
   @Query(
       "MATCH (cv:ClassVersion) "
