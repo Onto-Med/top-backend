@@ -12,6 +12,7 @@ import org.springframework.beans.PropertyAccessorFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -248,7 +249,7 @@ public class EntityService {
       String organisationId, String repositoryId, String id, List<String> include) {
     Repository repository = getRepository(organisationId, repositoryId);
     return classVersionRepository
-        .findByClassId(id, PageRequest.ofSize(10))
+        .findByClassId(id, PageRequest.of(0, 10, Sort.Direction.DESC, "cv.version"))
         .map(cv -> classVersionToEntity(cv, repositoryId))
         .stream()
         .collect(Collectors.toList());
