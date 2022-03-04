@@ -341,7 +341,7 @@ public class EntityService {
             .findByClassIdAndVersion(id, version)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND)));
 
-    return classToEntity(cls, repositoryId);
+    return classToEntity(classRepository.save(cls), repositoryId);
   }
 
   /**
