@@ -12,7 +12,6 @@ import org.springframework.beans.PropertyAccessorFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -132,9 +131,7 @@ public class EntityService {
             .findByIdAndRepositoryId(id, repository.getId())
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-    classVersionRepository
-        .findAllByClassId(cls.getId())
-        .forEach(this::deleteVersion);
+    classVersionRepository.findAllByClassId(cls.getId()).forEach(this::deleteVersion);
     classRepository.delete(cls);
   }
 
@@ -148,7 +145,9 @@ public class EntityService {
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
     ClassVersion classVersion =
-            classVersionRepository.findByClassIdAndVersion(cls.getId(), version).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        classVersionRepository
+            .findByClassIdAndVersion(cls.getId(), version)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
     classVersionRepository
         .getPrevious(classVersion)
@@ -323,6 +322,26 @@ public class EntityService {
     }
 
     return classToEntity(classRepository.save(cls), repositoryId);
+  }
+
+  public Entity setCurrentEntityVersion(
+      String organisationId,
+      String repositoryId,
+      String id,
+      Integer version,
+      List<String> include) {
+    Repository repository = getRepository(organisationId, repositoryId);
+    Class cls =
+        classRepository
+            .findByIdAndRepositoryId(id, repository.getId())
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+    cls.setCurrentVersion(
+        classVersionRepository
+            .findByClassIdAndVersion(id, version)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND)));
+
+    return classToEntity(cls, repositoryId);
   }
 
   /**
