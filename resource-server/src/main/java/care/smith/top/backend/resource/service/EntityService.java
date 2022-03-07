@@ -137,10 +137,7 @@ public class EntityService {
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
     // TODO: update subcategories and phenotypes
-    // TODO: delete restrictions
-
-    classVersionRepository.findAllByClassId(cls.getId()).forEach(this::deleteVersion);
-    classRepository.delete(cls);
+    deleteClass(cls);
   }
 
   @Transactional
@@ -160,6 +157,8 @@ public class EntityService {
     classVersionRepository
         .getPrevious(classVersion)
         .ifPresent(cv -> classRepository.setCurrent(cls, cv));
+
+    // TODO: connect previous with next version
 
     deleteAnnotations(classVersion);
     expressionRepository.deleteAll(classVersion.getExpressions());
@@ -344,6 +343,23 @@ public class EntityService {
     return classToEntity(classRepository.save(cls), repositoryId);
   }
 
+  private void deleteClass(Class cls) {
+    EntityType entityType =
+        EntityType.fromValue(
+            cls.getTypes().stream()
+                .findFirst()
+                .orElseThrow(
+                    () ->
+                        new ResponseStatusException(
+                            HttpStatus.INTERNAL_SERVER_ERROR, "Entity has no entityType!")));
+
+    if (isAbstract(entityType))
+      classRepository.findSubclasses(cls.getId(), cls.getRepositoryId()).forEach(this::deleteClass);
+
+    classVersionRepository.findAllByClassId(cls.getId()).forEach(this::deleteVersion);
+    classRepository.delete(cls);
+  }
+
   /**
    * Build a new {@link ClassVersion} object from an {@link Entity} object.
    *
@@ -503,7 +519,10 @@ public class EntityService {
     if (superClasses != null && !isRestricted(entityType))
       entity.setSuperCategories(
           superClasses.stream()
-              .map(c -> (Category) new Category().id(c.getaClass().getId()).entityType(EntityType.CATEGORY))
+              .map(
+                  c ->
+                      (Category)
+                          new Category().id(c.getaClass().getId()).entityType(EntityType.CATEGORY))
               .collect(Collectors.toList()));
 
     Repository repo =
