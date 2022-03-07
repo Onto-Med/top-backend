@@ -64,6 +64,12 @@ public class Class extends Annotatable {
     return this;
   }
 
+  public Class addSuperClassRelations(Set<ClassRelation> superClassRelations) {
+    if (this.superClassRelations == null) this.superClassRelations = new HashSet<>();
+    this.superClassRelations.addAll(superClassRelations);
+    return this;
+  }
+
   public String getId() {
     return id;
   }
