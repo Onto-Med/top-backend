@@ -4,6 +4,7 @@ import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.annotation.Version;
+import org.springframework.data.neo4j.core.schema.DynamicLabels;
 import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Relationship;
@@ -21,6 +22,9 @@ public class Class extends Annotatable {
   @Version private Long nodeVersion;
   @CreatedDate private Instant createdAt;
   @CreatedBy private User createdBy;
+
+  /** Determins, what this class is representing. */
+  @DynamicLabels private Set<String> types = new HashSet<>();
 
   @Relationship(type = "IS_FORK_OF")
   private Class forkedClass;
@@ -97,6 +101,15 @@ public class Class extends Annotatable {
 
   public Class setRepositoryId(String repositoryId) {
     this.repositoryId = repositoryId;
+    return this;
+  }
+
+  public Set<String> getTypes() {
+    return types;
+  }
+
+  public Class setTypes(Set<String> types) {
+    this.types = types;
     return this;
   }
 }
