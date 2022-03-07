@@ -503,7 +503,7 @@ public class EntityService {
     if (superClasses != null && !isRestricted(entityType))
       entity.setSuperCategories(
           superClasses.stream()
-              .map(c -> (Category) new Category().id(c.getaClass().getId()))
+              .map(c -> (Category) new Category().id(c.getaClass().getId()).entityType(EntityType.CATEGORY))
               .collect(Collectors.toList()));
 
     Repository repo =
