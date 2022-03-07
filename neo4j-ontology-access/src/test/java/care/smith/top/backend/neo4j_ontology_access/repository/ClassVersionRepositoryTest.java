@@ -9,9 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 
-import java.time.Instant;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -115,7 +113,6 @@ class ClassVersionRepositoryTest extends RepositoryTest {
             .setCurrentVersion(
                 (ClassVersion)
                     new ClassVersion()
-                        .setHiddenAt(Instant.now())
                         .setVersion(1)
                         .addAnnotation(new Annotation("title", "test name", "en")));
 
@@ -145,7 +142,6 @@ class ClassVersionRepositoryTest extends RepositoryTest {
     assertThat(result.stream().findFirst())
         .hasValueSatisfying(
             cv -> {
-              assertThat(cv.getHiddenAt()).isNull();
               assertThat(cv.getName()).isEqualTo("example");
               assertThat(cv.getAnnotations("title").stream().findFirst())
                   .hasValueSatisfying(t -> assertThat(t.getStringValue()).isEqualTo("test name"));

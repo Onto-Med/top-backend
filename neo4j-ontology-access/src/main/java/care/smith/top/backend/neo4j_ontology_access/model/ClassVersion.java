@@ -31,7 +31,6 @@ public class ClassVersion extends Annotatable {
   @CreatedDate private Instant createdAt;
 
   private int version;
-  private Instant hiddenAt;
   private String name;
 
   @Relationship(type = "HAS_EXPRESSION")
@@ -73,11 +72,6 @@ public class ClassVersion extends Annotatable {
     return this;
   }
 
-  public ClassVersion hide() {
-    this.setHiddenAt(Instant.now());
-    return this;
-  }
-
   public Class getaClass() {
     return aClass;
   }
@@ -94,10 +88,6 @@ public class ClassVersion extends Annotatable {
   public ClassVersion setEquivalentClasses(Set<ClassVersion> equivalentClasses) {
     this.equivalentClasses = equivalentClasses;
     return this;
-  }
-
-  public boolean isHidden() {
-    return hiddenAt != null;
   }
 
   public Set<Expression> getExpressions() {
@@ -129,20 +119,6 @@ public class ClassVersion extends Annotatable {
   public OffsetDateTime getCreatedAtOffset() {
     if (getCreatedAt() == null) return null;
     return getCreatedAt().atOffset(ZoneOffset.UTC);
-  }
-
-  public Instant getHiddenAt() {
-    return hiddenAt;
-  }
-
-  public ClassVersion setHiddenAt(Instant hiddenAt) {
-    this.hiddenAt = hiddenAt;
-    return this;
-  }
-
-  public OffsetDateTime getHiddenAtOffset() {
-    if (getHiddenAt() == null) return null;
-    return getHiddenAt().atOffset(ZoneOffset.UTC);
   }
 
   public User getUser() {
