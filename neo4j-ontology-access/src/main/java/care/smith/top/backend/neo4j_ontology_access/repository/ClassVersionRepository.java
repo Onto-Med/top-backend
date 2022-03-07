@@ -82,7 +82,7 @@ public interface ClassVersionRepository extends PagingAndSortingRepository<Class
       "MATCH (c:Class) -[:CURRENT_VERSION]-> (cv:ClassVersion) "
           + "WHERE ($repositoryId IS NULL OR c.repositoryId = $repositoryId) "
           + "AND cv.hiddenAt IS NULL "
-          + "AND ($type IS NULL OR ANY(l in labels(c) WHERE l = $type)) "
+          + "AND ($type IS NULL OR ANY(l in labels(c) WHERE l IN $type)) "
           + "MATCH (cv) -[cRel:IS_VERSION_OF]-> (c) "
           + "OPTIONAL MATCH (cv) -[:HAS_ANNOTATION]-> (title:Annotation { property: 'title' }) "
           + "OPTIONAL MATCH (cv) -[:HAS_ANNOTATION]-> (type:Annotation { property: 'type' }) "
