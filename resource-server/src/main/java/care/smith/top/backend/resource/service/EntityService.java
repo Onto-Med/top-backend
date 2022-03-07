@@ -87,9 +87,13 @@ public class EntityService {
       throw new ResponseStatusException(HttpStatus.CONFLICT);
     getRepository(organisationId, repositoryId);
 
+    if (entity.getEntityType() == null)
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "entityType is missing");
+
     Class cls = new Class(entity.getId());
     cls.setRepositoryId(repositoryId);
     cls.setCurrentVersion(buildClassVersion(entity).setVersion(1));
+    cls.addType(entity.getEntityType().getValue());
 
     List<String> superClasses = new ArrayList<>();
     if (entity instanceof Category) {
@@ -131,6 +135,9 @@ public class EntityService {
         classRepository
             .findByIdAndRepositoryId(id, repository.getId())
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+    // TODO: update subcategories and phenotypes
+    // TODO: delete restrictions
 
     classVersionRepository.findAllByClassId(cls.getId()).forEach(this::deleteVersion);
     classRepository.delete(cls);
@@ -282,23 +289,15 @@ public class EntityService {
             .findByIdAndRepositoryId(id, repository.getId())
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
+    if (cls.getTypes() == null || !cls.getTypes().contains(entity.getEntityType().getValue()))
+      throw new ResponseStatusException(HttpStatus.CONFLICT, "entityType does not match");
+
+    // TODO: previous version should be the one with highest version number!
     ClassVersion newVersion =
         buildClassVersion(entity).setVersion(classRepository.getNextVersion(cls));
     classVersionRepository
         .findCurrentByClassId(cls.getId())
-        .ifPresent(
-            previousVersion -> {
-              previousVersion
-                  .getAnnotation("type")
-                  .ifPresent(
-                      type -> {
-                        if (!Objects.equals(
-                            type.getStringValue(), entity.getEntityType().getValue()))
-                          throw new ResponseStatusException(
-                              HttpStatus.CONFLICT, "entityType does not match");
-                      });
-              newVersion.setPreviousVersion(previousVersion);
-            });
+        .ifPresent(newVersion::setPreviousVersion);
     cls.setCurrentVersion(newVersion);
 
     List<String> superClasses = new ArrayList<>();
@@ -397,10 +396,6 @@ public class EntityService {
                               classVersion.addAnnotation(new Annotation("code", codeClass, null))));
     }
 
-    if (entity.getEntityType() == null)
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "entityType is missing");
-
-    classVersion.addAnnotation(new Annotation("type", entity.getEntityType().getValue(), null));
     if (entity.getTitles() != null)
       classVersion.addAnnotations(
           entity.getTitles().stream()
@@ -453,7 +448,14 @@ public class EntityService {
     Category entity;
 
     EntityType entityType =
-        EntityType.fromValue(classVersion.getAnnotation("type").orElseThrow().getStringValue());
+        EntityType.fromValue(
+            classVersion.getaClass().getTypes().stream()
+                .findFirst()
+                .orElseThrow(
+                    () ->
+                        new ResponseStatusException(
+                            HttpStatus.INTERNAL_SERVER_ERROR,
+                            "Class has no type and cannot be mapped to entity!")));
 
     Set<ClassVersion> superClasses =
         classVersionRepository.getCurrentSuperClassVersionsByOwnerId(
