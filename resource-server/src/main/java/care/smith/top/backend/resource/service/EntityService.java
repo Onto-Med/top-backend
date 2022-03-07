@@ -135,8 +135,6 @@ public class EntityService {
         classRepository
             .findByIdAndRepositoryId(id, repository.getId())
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-
-    // TODO: update subcategories and phenotypes
     deleteClass(cls);
   }
 
@@ -352,6 +350,28 @@ public class EntityService {
                     () ->
                         new ResponseStatusException(
                             HttpStatus.INTERNAL_SERVER_ERROR, "Entity has no entityType!")));
+
+    if (isCategory(entityType)) {
+      classRepository.saveAll(
+          classRepository
+              .findSubclasses(cls.getId(), cls.getRepositoryId())
+              .map(c -> classRepository.findById(c.getId()).orElse(null))
+              .filter(Objects::nonNull)
+              .peek(
+                  c ->
+                      c.setSuperClassRelations(
+                              c.getSuperClassRelations().stream()
+                                  .filter(
+                                      r ->
+                                          !r.getOwnerId().equals(cls.getRepositoryId())
+                                              || !r.getSuperclass().getId().equals(cls.getId()))
+                                  .collect(Collectors.toSet()))
+                          .addSuperClassRelations(
+                              cls.getSuperClassRelations().stream()
+                                  .map(ClassRelation::clone)
+                                  .collect(Collectors.toSet())))
+              .collect(Collectors.toList()));
+    }
 
     if (isAbstract(entityType))
       classRepository.findSubclasses(cls.getId(), cls.getRepositoryId()).forEach(this::deleteClass);

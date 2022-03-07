@@ -11,7 +11,7 @@ import org.springframework.data.neo4j.core.schema.TargetNode;
  * belong to a repository or ontology. If there is no superclass, the subclass is a root node.
  */
 @RelationshipProperties
-public class ClassRelation {
+public class ClassRelation implements Cloneable {
   @RelationshipId @GeneratedValue private Long id;
   @TargetNode private Class superclass;
 
@@ -28,6 +28,11 @@ public class ClassRelation {
     this.superclass = superClass;
     this.ownerId = ownerId;
     this.index = index;
+  }
+
+  @Override
+  public ClassRelation clone() {
+    return new ClassRelation().setOwnerId(ownerId).setIndex(index).setSuperclass(superclass);
   }
 
   public Long getId() {
