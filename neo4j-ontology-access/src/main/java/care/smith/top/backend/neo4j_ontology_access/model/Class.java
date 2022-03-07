@@ -58,6 +58,12 @@ public class Class extends Annotatable {
     return this;
   }
 
+  public Class addType(String type) {
+    if (types == null) types = new HashSet<>();
+    types.add(type);
+    return this;
+  }
+
   public String getId() {
     return id;
   }
