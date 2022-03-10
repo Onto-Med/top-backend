@@ -311,12 +311,21 @@ public class EntityService {
         superClasses.add(phenotype.getSuperPhenotype().getId());
     }
 
-    if (!superClasses.isEmpty()) {
-      superClasses.forEach(
-          c ->
-              cls.addSuperClassRelation(
-                  new ClassRelation(new Class(c), repositoryId, entity.getIndex())));
-    }
+    cls.setSuperClassRelations(
+        superClasses.stream()
+            .map(
+                c -> {
+                  Class superClass =
+                      classRepository
+                          .findByIdAndRepositoryId(c, repositoryId)
+                          .orElseThrow(
+                              () ->
+                                  new ResponseStatusException(
+                                      HttpStatus.NOT_FOUND,
+                                      String.format("Super class '%s' does not exist!", c)));
+                  return new ClassRelation(superClass, repositoryId, entity.getIndex());
+                })
+            .collect(Collectors.toSet()));
 
     return classToEntity(classRepository.save(cls), repositoryId);
   }
