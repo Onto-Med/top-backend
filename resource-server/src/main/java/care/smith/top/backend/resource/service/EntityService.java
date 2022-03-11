@@ -289,7 +289,6 @@ public class EntityService {
     if (cls.getTypes() == null || !cls.getTypes().contains(entity.getEntityType().getValue()))
       throw new ResponseStatusException(HttpStatus.CONFLICT, "entityType does not match");
 
-    // TODO: previous version should be the one with highest version number!
     ClassVersion newVersion =
         buildClassVersion(entity).setVersion(classRepository.getNextVersion(cls));
     classVersionRepository
