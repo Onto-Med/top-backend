@@ -652,7 +652,7 @@ public class EntityService {
 
   private Annotation fromExpression(Expression expression) {
     // TODO: only allow phenotypes from accessible repositories
-    if (expression.getId() != null && ExpressionType.CLASS.equals(expression.getType())) {
+    if (expression.getId() != null && ExpressionType.RESTRICTION.equals(expression.getType())) {
       Optional<Class> cls = classRepository.findById(expression.getId());
       if (cls.isPresent()) return new Annotation("expression", cls.get(), null);
     }
