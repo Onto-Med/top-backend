@@ -519,9 +519,22 @@ public class EntityService {
         superClasses.stream()
             .findFirst()
             .ifPresent(
-                c ->
-                    ((Phenotype) entity)
-                        .setSuperPhenotype((Phenotype) new Phenotype().id(c.getaClass().getId())));
+                c -> {
+                  String superType =
+                      c.getaClass().getTypes().stream()
+                          .findFirst()
+                          .orElseThrow(
+                              () ->
+                                  new ResponseStatusException(
+                                      HttpStatus.INTERNAL_SERVER_ERROR,
+                                      "Super phenotype has no entity type!"));
+                  ((Phenotype) entity)
+                      .setSuperPhenotype(
+                          (Phenotype)
+                              new Phenotype()
+                                  .id(c.getaClass().getId())
+                                  .entityType(EntityType.fromValue(superType)));
+                });
         classVersion
             .getAnnotation("score")
             .ifPresent(s -> ((Phenotype) entity).setScore(BigDecimal.valueOf(s.getDecimalValue())));
