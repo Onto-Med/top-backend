@@ -1,7 +1,9 @@
 package care.smith.top.backend.neo4j_ontology_access.repository;
 
 import care.smith.top.backend.neo4j_ontology_access.model.Annotation;
+import care.smith.top.backend.neo4j_ontology_access.model.Class;
 import care.smith.top.backend.neo4j_ontology_access.model.ClassVersion;
+import care.smith.top.backend.neo4j_ontology_access.model.Expression;
 import org.springframework.data.neo4j.repository.query.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.repository.query.Param;
@@ -11,6 +13,12 @@ import java.util.Set;
 
 @Repository
 public interface AnnotationRepository extends PagingAndSortingRepository<Annotation, Long> {
+  @Query(
+      "MATCH p = (a:Annotation { property: $property }) -[:HAS_CLASS_VALUE]-> (:Class { id: $cls.__id__ }) "
+          + "RETURN a, collect(nodes(p)), collect(relationships(p)) ")
+  Iterable<? extends Annotation> findAllByClassValueAndProperty(
+      @Param("cls") Class cls, @Param("property") String property);
+
   @Query(
       "MATCH (cv:ClassVersion) -[:HAS_ANNOTATION]-> (a:Annotation) "
           + "WHERE id(cv) = $classVersion.__id__ "

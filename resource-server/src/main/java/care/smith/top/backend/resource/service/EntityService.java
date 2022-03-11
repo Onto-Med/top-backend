@@ -383,6 +383,7 @@ public class EntityService {
       classRepository.findSubclasses(cls.getId(), cls.getRepositoryId()).forEach(this::deleteClass);
 
     classVersionRepository.findAllByClassId(cls.getId()).forEach(this::deleteVersion);
+    annotationRepository.deleteAll(annotationRepository.findAllByClassValueAndProperty(cls, "expression"));
     classRepository.delete(cls);
   }
 
