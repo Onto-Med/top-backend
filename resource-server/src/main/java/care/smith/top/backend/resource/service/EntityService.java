@@ -448,7 +448,7 @@ public class EntityService {
           entity.getSynonyms().stream()
               .map(s -> new Annotation("synonym", s.getText(), s.getLang()))
               .collect(Collectors.toSet()));
-    if (entity.getSynonyms() != null)
+    if (entity.getDescriptions() != null)
       classVersion.addAnnotations(
           entity.getDescriptions().stream()
               .map(d -> new Annotation("description", d.getText(), d.getLang()))
