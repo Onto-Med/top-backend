@@ -291,9 +291,6 @@ public class EntityService {
 
     ClassVersion newVersion =
         buildClassVersion(entity).setVersion(classRepository.getNextVersion(cls));
-    classVersionRepository
-        .findLatestByClassId(cls.getId())
-        .ifPresent(newVersion::setPreviousVersion);
     cls.setCurrentVersion(newVersion);
 
     List<String> superClasses = new ArrayList<>();
@@ -323,7 +320,13 @@ public class EntityService {
             .filter(Objects::nonNull)
             .collect(Collectors.toSet()));
 
-    return classToEntity(classRepository.save(cls), repositoryId);
+    Optional<ClassVersion> latestVersion = classVersionRepository.findLatestByClassId(cls.getId());
+
+    Entity result = classToEntity(classRepository.save(cls), repositoryId);
+
+    latestVersion.ifPresent((v) -> classVersionRepository.setPreviousVersion(newVersion, v));
+
+    return result;
   }
 
   public Entity setCurrentEntityVersion(
@@ -338,12 +341,14 @@ public class EntityService {
             .findByIdAndRepositoryId(id, repository.getId())
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-    cls.setCurrentVersion(
+    ClassVersion classVersion =
         classVersionRepository
             .findByClassIdAndVersion(id, version)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND)));
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-    return classToEntity(classRepository.save(cls), repositoryId);
+    classRepository.setCurrent(cls, classVersion);
+
+    return classToEntity(cls, repositoryId);
   }
 
   private void deleteClass(Class cls) {
@@ -382,7 +387,8 @@ public class EntityService {
       classRepository.findSubclasses(cls.getId(), cls.getRepositoryId()).forEach(this::deleteClass);
 
     classVersionRepository.findAllByClassId(cls.getId()).forEach(this::deleteVersion);
-    annotationRepository.deleteAll(annotationRepository.findAllByClassValueAndProperty(cls, "expression"));
+    annotationRepository.deleteAll(
+        annotationRepository.findAllByClassValueAndProperty(cls, "expression"));
     classRepository.delete(cls);
   }
 

@@ -136,8 +136,12 @@ public interface ClassVersionRepository extends PagingAndSortingRepository<Class
   Optional<ClassVersion> getPrevious(@Param("classVersion") ClassVersion classVersion);
 
   @Query(
-      "MATCH (cv:ClassVersion) "
-          + "WHERE id(cv) = $classVersion.__id__ "
-          + "SET cv.hiddenAt = datetime()")
-  void hide(@Param("classVersion") ClassVersion classVersion);
+      "MATCH (prev:ClassVersion) "
+          + "WHERE id(prev) = $previousClassVersion.__id__ "
+          + "MATCH (c:ClassVersion) "
+          + "WHERE id(c) = $classVersion.__id__ "
+          + "CREATE (c) -[:PREVIOUS_VERSION]-> (prev) ")
+  void setPreviousVersion(
+      @Param("classVersion") ClassVersion classVersion,
+      @Param("previousClassVersion") ClassVersion previousClassVersion);
 }
