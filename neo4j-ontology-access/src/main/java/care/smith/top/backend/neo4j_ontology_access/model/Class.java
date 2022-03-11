@@ -89,7 +89,6 @@ public class Class extends Annotatable {
 
   public Class setCurrentVersion(ClassVersion currentVersion) {
     currentVersion.setaClass(this);
-    if (this.currentVersion != null) currentVersion.setPreviousVersion(this.currentVersion);
     this.currentVersion = currentVersion;
     return this;
   }
