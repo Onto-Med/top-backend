@@ -293,7 +293,7 @@ public class EntityService {
     ClassVersion newVersion =
         buildClassVersion(entity).setVersion(classRepository.getNextVersion(cls));
     classVersionRepository
-        .findCurrentByClassId(cls.getId())
+        .findLatestByClassId(cls.getId())
         .ifPresent(newVersion::setPreviousVersion);
     cls.setCurrentVersion(newVersion);
 

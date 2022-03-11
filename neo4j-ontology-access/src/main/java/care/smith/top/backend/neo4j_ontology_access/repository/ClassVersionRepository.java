@@ -107,6 +107,15 @@ public interface ClassVersionRepository extends PagingAndSortingRepository<Class
       @Param("pageable") Pageable pageable);
 
   @Query(
+      "MATCH (c:Class { id: $classId }) <-[cRel:IS_VERSION_OF]- (cv:ClassVersion) "
+          + "WITH cv, collect(cRel) as cRel, collect(c) as c "
+          + "OPTIONAL MATCH p = (cv) -[:HAS_ANNOTATION*]-> (a:Annotation) "
+          + "OPTIONAL MATCH p2 = (a:Annotation) -[:HAS_CLASS_VALUE]-> (:Class) "
+          + "RETURN cv, cRel, c, collect(nodes(p)), collect(relationships(p)), collect(nodes(p2)), collect(relationships(p2)) "
+          + "ORDER BY cv.version DESC LIMIT 1 ")
+  Optional<ClassVersion> findLatestByClassId(@Param("classId") String classId);
+
+  @Query(
       "MATCH (:Class { id: $cls.__id__ }) -[:IS_SUBCLASS_OF { ownerId: $ownerId }]-> (c:Class) -[:CURRENT_VERSION]-> (cv:ClassVersion) "
           + "MATCH (cv) -[cRel:IS_VERSION_OF]-> (c) "
           + "WITH cv, collect(cRel) AS cRel, collect(c) AS c "
