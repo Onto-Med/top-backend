@@ -315,16 +315,13 @@ public class EntityService {
         superClasses.stream()
             .map(
                 c -> {
-                  Class superClass =
-                      classRepository
-                          .findByIdAndRepositoryId(c, repositoryId)
-                          .orElseThrow(
-                              () ->
-                                  new ResponseStatusException(
-                                      HttpStatus.NOT_FOUND,
-                                      String.format("Super class '%s' does not exist!", c)));
-                  return new ClassRelation(superClass, repositoryId, entity.getIndex());
+                  if (cls.getId().equals(c)) return null;
+                  Optional<Class> superClass =
+                      classRepository.findByIdAndRepositoryId(c, repositoryId);
+                  if (superClass.isEmpty()) return null;
+                  return new ClassRelation(superClass.get(), repositoryId, entity.getIndex());
                 })
+            .filter(Objects::nonNull)
             .collect(Collectors.toSet()));
 
     return classToEntity(classRepository.save(cls), repositoryId);
@@ -549,9 +546,12 @@ public class EntityService {
       entity.setSuperCategories(
           superClasses.stream()
               .map(
-                  c ->
-                      (Category)
-                          new Category().id(c.getaClass().getId()).entityType(EntityType.CATEGORY))
+                  c -> {
+                    if (c.getaClass().getId() == entity.getId()) return null;
+                    return (Category)
+                        new Category().id(c.getaClass().getId()).entityType(EntityType.CATEGORY);
+                  })
+              .filter(Objects::nonNull)
               .collect(Collectors.toList()));
 
     Repository repo =
