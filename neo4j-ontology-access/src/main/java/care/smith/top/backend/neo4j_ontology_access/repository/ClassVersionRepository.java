@@ -28,8 +28,9 @@ public interface ClassVersionRepository extends PagingAndSortingRepository<Class
   @Query(
       "MATCH (cv:ClassVersion { version: $version }) -[cRel:IS_VERSION_OF]-> (c:Class { id: $classId }) "
           + "WITH cv, collect(cRel) as cRel, collect(c) as c "
-          + "OPTIONAL MATCH a = (cv) -[:HAS_ANNOTATION*]-> (:Annotation) "
-          + "RETURN cv, cRel, c, collect(nodes(a)), collect(relationships(a))")
+          + "OPTIONAL MATCH p = (cv) -[:HAS_ANNOTATION*]-> (a:Annotation) "
+          + "OPTIONAL MATCH p2 = (a:Annotation) -[:HAS_CLASS_VALUE]-> (:Class) "
+          + "RETURN cv, cRel, c, collect(nodes(p)), collect(relationships(p)), collect(nodes(p2)), collect(relationships(p2)) ")
   Optional<ClassVersion> findByClassIdAndVersion(
       @Param("classId") String classId, @Param("version") Integer version);
 
@@ -44,8 +45,9 @@ public interface ClassVersionRepository extends PagingAndSortingRepository<Class
       "MATCH (c:Class { id: $classId }) -[:CURRENT_VERSION]-> (cv:ClassVersion) "
           + "MATCH (cv) -[cRel:IS_VERSION_OF]-> (c) "
           + "WITH cv, collect(cRel) as cRel, collect(c) as c "
-          + "OPTIONAL MATCH a = (cv) -[:HAS_ANNOTATION*]-> (:Annotation) "
-          + "RETURN cv, cRel, c, collect(nodes(a)), collect(relationships(a))")
+          + "OPTIONAL MATCH p = (cv) -[:HAS_ANNOTATION*]-> (a:Annotation) "
+          + "OPTIONAL MATCH p2 = (a:Annotation) -[:HAS_CLASS_VALUE]-> (:Class) "
+          + "RETURN cv, cRel, c, collect(nodes(p)), collect(relationships(p)), collect(nodes(p2)), collect(relationships(p2)) ")
   Optional<ClassVersion> findCurrentByClassId(@Param("classId") String classId);
 
   /**
@@ -58,8 +60,9 @@ public interface ClassVersionRepository extends PagingAndSortingRepository<Class
   @Query(
       "MATCH (cv:ClassVersion) -[cRel:IS_VERSION_OF]-> (c:Class { id: $classId }) "
           + "WITH cv, collect(cRel) as cRel, collect(c) as c "
-          + "OPTIONAL MATCH a = (cv) -[:HAS_ANNOTATION*]-> (:Annotation) "
-          + "RETURN cv, cRel, c, collect(nodes(a)), collect(relationships(a)) "
+          + "OPTIONAL MATCH p = (cv) -[:HAS_ANNOTATION*]-> (a:Annotation) "
+          + "OPTIONAL MATCH p2 = (a:Annotation) -[:HAS_CLASS_VALUE]-> (:Class) "
+          + "RETURN cv, cRel, c, collect(nodes(p)), collect(relationships(p)), collect(nodes(p2)), collect(relationships(p2)) "
           + ":#{orderBy(#pageable)} SKIP $skip LIMIT $limit")
   Slice<ClassVersion> findByClassId(
       @Param("classId") String classId, @Param("pageable") Pageable pageable);
@@ -73,8 +76,9 @@ public interface ClassVersionRepository extends PagingAndSortingRepository<Class
   @Query(
       "MATCH (cv:ClassVersion) -[cRel:IS_VERSION_OF]-> (c:Class { id: $classId }) "
           + "WITH cv, collect(cRel) as cRel, collect(c) as c "
-          + "OPTIONAL MATCH a = (cv) -[:HAS_ANNOTATION*]-> (:Annotation) "
-          + "RETURN cv, cRel, c, collect(nodes(a)), collect(relationships(a))")
+          + "OPTIONAL MATCH p = (cv) -[:HAS_ANNOTATION*]-> (a:Annotation) "
+          + "OPTIONAL MATCH p2 = (a:Annotation) -[:HAS_CLASS_VALUE]-> (:Class) "
+          + "RETURN cv, cRel, c, collect(nodes(p)), collect(relationships(p)), collect(nodes(p2)), collect(relationships(p2))")
   Set<ClassVersion> findAllByClassId(@Param("classId") String classId);
 
   // TODO: this query does not belong here because annotations are domain specific
@@ -91,8 +95,9 @@ public interface ClassVersionRepository extends PagingAndSortingRepository<Class
           + "WHERE ($name IS NULL OR cv.name =~ '(?i).*' + $name + '.*' OR title.stringValue =~ '(?i).*' + $name + '.*') "
           + "AND ($dataType IS NULL OR dataType.stringValue = $dataType) "
           + "WITH cv, collect(cRel) as cRel, collect(c) as c "
-          + "OPTIONAL MATCH a = (cv) -[:HAS_ANNOTATION*]-> (:Annotation) "
-          + "RETURN cv, cRel, c, collect(nodes(a)), collect(relationships(a)) "
+          + "OPTIONAL MATCH p = (cv) -[:HAS_ANNOTATION*]-> (a:Annotation) "
+          + "OPTIONAL MATCH p2 = (a:Annotation) -[:HAS_CLASS_VALUE]-> (:Class) "
+          + "RETURN cv, cRel, c, collect(nodes(p)), collect(relationships(p)), collect(nodes(p2)), collect(relationships(p2)) "
           + ":#{orderBy(#pageable)} SKIP $skip LIMIT $limit")
   Slice<ClassVersion> findByRepositoryIdAndNameContainingIgnoreCaseAndTypeAndDataType(
       @Param("repositoryId") String repositoryId,
@@ -105,8 +110,9 @@ public interface ClassVersionRepository extends PagingAndSortingRepository<Class
       "MATCH (:Class { id: $cls.__id__ }) -[:IS_SUBCLASS_OF { ownerId: $ownerId }]-> (c:Class) -[:CURRENT_VERSION]-> (cv:ClassVersion) "
           + "MATCH (cv) -[cRel:IS_VERSION_OF]-> (c) "
           + "WITH cv, collect(cRel) AS cRel, collect(c) AS c "
-          + "OPTIONAL MATCH a = (cv) -[:HAS_ANNOTATION*]-> (:Annotation) "
-          + "RETURN cv, cRel, c, collect(nodes(a)), collect(relationships(a))")
+          + "OPTIONAL MATCH p = (cv) -[:HAS_ANNOTATION*]-> (a:Annotation) "
+          + "OPTIONAL MATCH p2 = (a:Annotation) -[:HAS_CLASS_VALUE]-> (:Class) "
+          + "RETURN cv, cRel, c, collect(nodes(p)), collect(relationships(p)), collect(nodes(p2)), collect(relationships(p2)) ")
   Set<ClassVersion> getCurrentSuperClassVersionsByOwnerId(
       @Param("cls") Class cls, @Param("ownerId") String ownerId);
 
