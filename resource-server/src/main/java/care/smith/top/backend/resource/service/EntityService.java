@@ -804,7 +804,10 @@ public class EntityService {
 
   private Expression toExpression(Annotation annotation) {
     if (annotation.getClassValue() != null)
-      return new Expression().id(annotation.getClassValue().getId()).type(ExpressionType.RESTRICTION);
+      return new Expression()
+          .id(annotation.getClassValue().getId())
+          .type(ExpressionType.RESTRICTION);
+    if (annotation.getStringValue() == null) return null;
 
     Expression expression =
         new Expression().type(ExpressionType.fromValue(annotation.getStringValue()));
@@ -812,6 +815,7 @@ public class EntityService {
       expression.setOperands(
           annotation.getAnnotations().stream()
               .map(this::toExpression)
+              .filter(Objects::nonNull)
               .collect(Collectors.toList()));
     return expression;
   }
