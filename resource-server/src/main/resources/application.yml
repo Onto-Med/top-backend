@@ -22,4 +22,4 @@ spring:
           issuer-url: http://localhost:8080/auth/realms/dev
           jwk-set-uri: http://localhost:8080/auth/realms/dev/protocol/openid-connect/certs
   paging:
-    page-size: 10
+    page-size: 1000
