@@ -804,7 +804,7 @@ public class EntityService {
 
   private Expression toExpression(Annotation annotation) {
     if (annotation.getClassValue() != null)
-      return new Expression().id(annotation.getClassValue().getId()).type(ExpressionType.CLASS);
+      return new Expression().id(annotation.getClassValue().getId()).type(ExpressionType.RESTRICTION);
 
     Expression expression =
         new Expression().type(ExpressionType.fromValue(annotation.getStringValue()));
