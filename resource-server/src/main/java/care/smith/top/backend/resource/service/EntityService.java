@@ -681,7 +681,9 @@ public class EntityService {
     Annotation annotation = new Annotation("formula", formula.getOperator(), null);
     if (formula.getOperands() != null) {
       int i = 1;
-      formula.getOperands().forEach(o -> annotation.addAnnotation(fromFormula(o).setIndex(i)));
+      for (Formula operand : formula.getOperands()) {
+        annotation.addAnnotation(fromFormula(operand).setIndex(i++));
+      }
     }
     return annotation;
   }
