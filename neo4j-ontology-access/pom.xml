@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -11,41 +11,27 @@
     </parent>
 
     <groupId>care.smith.top.backend</groupId>
-    <artifactId>resource-server</artifactId>
+    <artifactId>neo4j-ontology-access</artifactId>
 
-    <name>TOP Resource Server</name>
-    <description>Spring Boot Resource Server of the TOP Framework</description>
+    <name>Neo4j Ontology Access</name>
+    <description>Read and write ontologies to Neo4j</description>
 
     <repositories>
-        <repository>
-            <id>top-api</id>
-            <url>https://maven.pkg.github.com/onto-med/top-api</url>
-        </repository>
         <repository>
             <id>simple-onto-api</id>
             <url>https://maven.pkg.github.com/onto-med/simple-onto-api</url>
         </repository>
     </repositories>
 
+    <properties>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+    </properties>
+
     <dependencies>
         <dependency>
-            <groupId>care.smith.top</groupId>
-            <artifactId>top-api</artifactId>
-            <version>0.3.2</version>
-        </dependency>
-        <dependency>
-           <groupId>care.smith.top.simple_onto_api</groupId>
-           <artifactId>simple-onto-api</artifactId>
-           <version>0.0.4</version>
-        </dependency>
-        <dependency>
-            <groupId>care.smith.top.backend</groupId>
-            <artifactId>neo4j-ontology-access</artifactId>
-            <version>${revision}</version>
-        </dependency>
-        <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+            <artifactId>spring-boot-starter-data-neo4j</artifactId>
             <version>${spring.boot.version}</version>
         </dependency>
         <dependency>

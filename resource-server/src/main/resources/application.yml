@@ -3,14 +3,16 @@ server:
   servlet:
     context-path: ${APP_PATH}
 
+logging:
+  level:
+    root: INFO
+
 spring:
-  jooq:
-    sql-dialect: Postgres
-  datasource:
-    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_DATABASE}
-    username: ${DB_USER}
-    password: ${DB_PASS}
-    driver-class-name: org.postgresql.Driver
+  neo4j:
+    uri: bolt://${DB_HOST}:${DB_PORT}
+    authentication:
+      username: ${DB_USER}
+      password: ${DB_PASS}
   security:
     cors:
       allowed-origins: "*"
@@ -19,3 +21,5 @@ spring:
         jwt:
           issuer-url: http://localhost:8080/auth/realms/dev
           jwk-set-uri: http://localhost:8080/auth/realms/dev/protocol/openid-connect/certs
+  paging:
+    page-size: 1000

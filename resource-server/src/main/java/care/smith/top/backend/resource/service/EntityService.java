@@ -1,113 +1,907 @@
 package care.smith.top.backend.resource.service;
 
-import care.smith.top.backend.model.Entity;
-import care.smith.top.backend.model.LocalisableText;
-import care.smith.top.data.Keys;
-import care.smith.top.data.tables.records.AnnotationRecord;
-import care.smith.top.data.tables.records.ClassRecord;
-import care.smith.top.data.tables.records.ClassVersionRecord;
-import care.smith.top.data.tables.records.PropertyRecord;
-import org.jooq.DSLContext;
-import org.jooq.Result;
+import care.smith.top.backend.model.*;
+import care.smith.top.backend.model.Expression;
+import care.smith.top.backend.neo4j_ontology_access.model.Class;
+import care.smith.top.backend.neo4j_ontology_access.model.Repository;
+import care.smith.top.backend.neo4j_ontology_access.model.*;
+import care.smith.top.backend.neo4j_ontology_access.repository.*;
+import org.neo4j.cypherdsl.core.*;
+import org.springframework.beans.PropertyAccessor;
+import org.springframework.beans.PropertyAccessorFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.OffsetDateTime;
-import java.util.UUID;
+import java.math.BigDecimal;
+import java.net.URI;
+import java.time.ZoneOffset;
+import java.util.Set;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
-
-import static care.smith.top.data.Tables.*;
 
 @Service
 public class EntityService {
-  @Autowired DSLContext context;
+  @Value("${spring.paging.page-size:10}")
+  private int pageSize;
 
-  public Entity loadEntity(
-      String organisationName, String repositoryName, UUID id, Integer version) {
-    ClassVersionRecord record = loadEntityRecord(organisationName, repositoryName, id, version);
-    if (record == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+  @Autowired private ClassRepository classRepository;
+  @Autowired private ClassVersionRepository classVersionRepository;
+  @Autowired private AnnotationRepository annotationRepository;
+  @Autowired private ExpressionRepository expressionRepository;
+  @Autowired private RepositoryRepository repositoryRepository;
 
-    return mapToEntity(record);
+  static Statement findEntitiesMatchingCondition(
+      String repositoryId, String name, String type, String dataType) {
+    Node c = Cypher.node(Class.class.getName()).named("c");
+    Node cv = Cypher.node(ClassVersion.class.getName()).named("cv");
+    Node a = Cypher.node(Annotation.class.getName()).named("a");
+    Relationship cRel = c.relationshipTo(cv, "CURRENT_VERSION");
+    Relationship aRel = cv.relationshipTo(a, "HAS_ANNOTATION");
+
+    AtomicReference<StatementBuilder.OngoingReadingWithWhere> statement =
+        new AtomicReference<>(
+            Cypher.match(cRel)
+                .where(c.property("repositoryId").isEqualTo(Cypher.anonParameter(repositoryId)))
+                .and(cv.property("hiddenAt").isNull()));
+
+    // TODO: match name/title case-insensitive
+
+    Map<String, String> annotations = new HashMap<>();
+    annotations.put("type", type);
+    annotations.put("dataType", dataType);
+
+    annotations.forEach(
+        (p, v) -> {
+          if (p != null) {
+            statement.set(
+                statement
+                    .get()
+                    .match(aRel)
+                    .where(a.property("property").isEqualTo(Cypher.anonParameter(p)))
+                    .and(a.property("stringValue").isEqualTo(Cypher.anonParameter(v))));
+          }
+        });
+
+    return statement
+        .get()
+        .returning(
+            cv.getRequiredSymbolicName(),
+            Functions.collect(cRel),
+            Functions.collect(c),
+            Functions.collect(aRel),
+            Functions.collect(a))
+        .build();
   }
 
-  public void deleteEntity(
-      String organisationName, String repositoryName, UUID id, Integer version, boolean permanent) {
-    ClassVersionRecord record = loadEntityRecord(organisationName, repositoryName, id, version);
-    if (record == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+  @Transactional
+  public Entity createEntity(String organisationId, String repositoryId, Entity entity) {
+    if (classRepository.existsById(entity.getId()))
+      throw new ResponseStatusException(HttpStatus.CONFLICT);
+    getRepository(organisationId, repositoryId);
 
-    if (permanent) {
-      record.delete();
-    } else {
-      record.setHiddenAt(OffsetDateTime.now());
-      record.update();
+    if (entity.getEntityType() == null)
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "entityType is missing");
+
+    Class cls = new Class(entity.getId());
+    cls.setRepositoryId(repositoryId);
+    cls.setCurrentVersion(buildClassVersion(entity).setVersion(1));
+    cls.addType(entity.getEntityType().getValue());
+
+    List<String> superClasses = new ArrayList<>();
+    if (entity instanceof Category) {
+      Category category = (Category) entity;
+      if (category.getSuperCategories() != null)
+        superClasses.addAll(
+            category.getSuperCategories().stream().map(Entity::getId).collect(Collectors.toList()));
     }
+
+    if (entity instanceof Phenotype) {
+      Phenotype phenotype = (Phenotype) entity;
+      if (phenotype.getSuperPhenotype() != null)
+        superClasses.add(phenotype.getSuperPhenotype().getId());
+    }
+
+    if (!superClasses.isEmpty()) {
+      superClasses.forEach(
+          c -> {
+            Class superClass =
+                classRepository
+                    .findByIdAndRepositoryId(c, repositoryId)
+                    .orElseThrow(
+                        () ->
+                            new ResponseStatusException(
+                                HttpStatus.NOT_FOUND,
+                                String.format("Super class '%s' does not exist!", c)));
+            cls.addSuperClassRelation(
+                new ClassRelation(superClass, repositoryId, entity.getIndex()));
+          });
+    }
+
+    return classToEntity(classRepository.save(cls), repositoryId);
   }
 
-  private Entity mapToEntity(ClassVersionRecord record) {
-    Entity entity = new Entity();
+  @Transactional
+  public void deleteEntity(String organisationId, String repositoryId, String id) {
+    Repository repository = getRepository(organisationId, repositoryId);
+    Class cls =
+        classRepository
+            .findByIdAndRepositoryId(id, repository.getId())
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    deleteClass(cls);
+  }
 
-    // TODO: implement mapping from DB...
-    ClassRecord classRecord = record.fetchParent(Keys.CLASS_VERSION__FK_CLASS_TO_CLASS_VERSION);
-    if (classRecord == null)
+  @Transactional
+  public void deleteVersion(
+      String organisationId, String repositoryId, String id, Integer version) {
+    Repository repository = getRepository(organisationId, repositoryId);
+    Class cls =
+        classRepository
+            .findByIdAndRepositoryId(id, repository.getId())
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+    ClassVersion classVersion =
+        classVersionRepository
+            .findByClassIdAndVersion(cls.getId(), version)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+    ClassVersion currentVersion =
+        classVersionRepository
+            .findCurrentByClassId(cls.getId())
+            .orElseThrow(
+                () ->
+                    new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Class does not have a current version."));
+
+    if (classVersion.equals(currentVersion))
       throw new ResponseStatusException(
-          HttpStatus.INTERNAL_SERVER_ERROR,
-          String.format("Class with ID '%d' does not exist.", record.getClassId()));
+          HttpStatus.NOT_ACCEPTABLE, "Current version of a class cannot be deleted.");
 
-    entity.setId(classRecord.getUuid());
-    entity.setCreatedAt(record.getCreatedAt());
-    entity.setVersion(record.getVersion());
+    classVersionRepository
+        .getPrevious(classVersion)
+        .ifPresent(cv -> classVersionRepository.setPreviousVersion(currentVersion, cv));
 
-    /**** Examples on how to get annotation "title" ***
-     * TODO: select one approach and delete the other one
-     */
+    deleteAnnotations(classVersion);
+    expressionRepository.deleteAll(classVersion.getExpressions());
+    classVersionRepository.delete(classVersion);
+  }
 
-    /** Via fetchChildren(): * */
-    Result<AnnotationRecord> annotations =
-        record.fetchChildren(Keys.ANNOTATION__FK_CLASS_VERSION_TO_ANNOTATION);
-    PropertyRecord titleProperty = context.fetchOne(PROPERTY, PROPERTY.NAME.eq("title"));
+  public List<Entity> getEntities(
+      List<String> include, String name, List<EntityType> type, DataType dataType, Integer page) {
+    int requestedPage = page != null ? page - 1 : 0;
+    return classVersionRepository
+        .findByRepositoryIdAndNameContainingIgnoreCaseAndTypeAndDataType(
+            null,
+            name,
+            type != null
+                ? type.stream().map(EntityType::getValue).collect(Collectors.toList())
+                : null,
+            null,
+            PageRequest.of(requestedPage, pageSize))
+        .stream()
+        .map(cv -> classVersionToEntity(cv, cv.getaClass().getRepositoryId()))
+        .collect(Collectors.toList());
+  }
 
-    if (titleProperty != null)
-      entity.setTitles(
-          annotations.stream()
-              .filter(a -> a.getPropertyId().equals(titleProperty.getPropertyId()))
+  public List<Entity> getEntitiesByRepositoryId(
+      String organisationId,
+      String repositoryId,
+      List<String> include,
+      String name,
+      List<EntityType> type,
+      DataType dataType,
+      Integer page) {
+    getRepository(organisationId, repositoryId);
+    int requestedPage = page != null ? page - 1 : 0;
+    return classVersionRepository
+        .findByRepositoryIdAndNameContainingIgnoreCaseAndTypeAndDataType(
+            repositoryId,
+            name,
+            type != null
+                ? type.stream().map(EntityType::getValue).collect(Collectors.toList())
+                : null,
+            dataType != null ? dataType.getValue() : null,
+            PageRequest.of(requestedPage, pageSize))
+        .stream()
+        .map(cv -> classVersionToEntity(cv, repositoryId))
+        .collect(Collectors.toList());
+  }
+
+  public List<Entity> getRestrictions(String ownerId, Phenotype abstractPhenotype) {
+    if (!isAbstract(abstractPhenotype.getEntityType())) return new ArrayList<>();
+    return classRepository
+        .findSubclasses(abstractPhenotype.getId(), ownerId)
+        .map(
+            cls -> {
+              Optional<Class> classVersion =
+                  classRepository.findByIdAndRepositoryId(cls.getId(), ownerId);
+              return classVersion.map(aClass -> classToEntity(aClass, ownerId)).orElse(null);
+            })
+        .filter(Objects::nonNull)
+        .collect(Collectors.toList());
+  }
+
+  public List<Entity> getRootEntitiesByRepositoryId(
+      String organisationId,
+      String repositoryId,
+      List<String> include,
+      String name,
+      List<EntityType> type,
+      DataType dataType,
+      Integer page) {
+    Repository repository = getRepository(organisationId, repositoryId);
+    return classRepository.findRootClassesByRepository(repository).stream()
+        .map(c -> classToEntity(c, repository.getId()))
+        .collect(Collectors.toList());
+  }
+
+  public List<Entity> getSubclasses(
+      String organisationId, String repositoryId, String id, List<String> include) {
+    Repository repository = getRepository(organisationId, repositoryId);
+    return classRepository
+        .findSubclasses(id, repository.getId())
+        .map(
+            c -> {
+              Entity entity = null;
+              try {
+                entity = classToEntity(c, repository.getId());
+              } catch (ResponseStatusException ignored) {
+              }
+              return entity;
+            })
+        .collect(Collectors.toList());
+  }
+
+  public List<Entity> getVersions(
+      String organisationId, String repositoryId, String id, List<String> include) {
+    Repository repository = getRepository(organisationId, repositoryId);
+    return classVersionRepository
+        .findByClassId(id, PageRequest.of(0, 10, Sort.Direction.DESC, "cv.version"))
+        .map(cv -> classVersionToEntity(cv, repositoryId))
+        .stream()
+        .collect(Collectors.toList());
+  }
+
+  public Entity loadEntity(String organisationId, String repositoryId, String id, Integer version) {
+    Repository repository = getRepository(organisationId, repositoryId);
+    Class cls =
+        classRepository
+            .findByIdAndRepositoryId(id, repository.getId())
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+    Optional<ClassVersion> optional;
+    if (version == null) {
+      optional = classVersionRepository.findCurrentByClassId(cls.getId());
+    } else {
+      optional = classVersionRepository.findByClassIdAndVersion(cls.getId(), version);
+    }
+    ClassVersion classVersion =
+        optional.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+    return classVersionToEntity(classVersion, repositoryId);
+  }
+
+  public Entity updateEntityById(
+      String organisationId, String repositoryId, String id, Entity entity, List<String> include) {
+    Repository repository = getRepository(organisationId, repositoryId);
+    Class cls =
+        classRepository
+            .findByIdAndRepositoryId(id, repository.getId())
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+    if (cls.getTypes() == null || !cls.getTypes().contains(entity.getEntityType().getValue()))
+      throw new ResponseStatusException(HttpStatus.CONFLICT, "entityType does not match");
+
+    ClassVersion newVersion =
+        buildClassVersion(entity).setVersion(classRepository.getNextVersion(cls));
+    cls.setCurrentVersion(newVersion);
+
+    List<String> superClasses = new ArrayList<>();
+    if (entity instanceof Category) {
+      Category category = (Category) entity;
+      if (category.getSuperCategories() != null)
+        superClasses.addAll(
+            category.getSuperCategories().stream().map(Entity::getId).collect(Collectors.toList()));
+    }
+
+    if (entity instanceof Phenotype) {
+      Phenotype phenotype = (Phenotype) entity;
+      if (phenotype.getSuperPhenotype() != null)
+        superClasses.add(phenotype.getSuperPhenotype().getId());
+    }
+
+    cls.setSuperClassRelations(
+        superClasses.stream()
+            .map(
+                c -> {
+                  if (cls.getId().equals(c)) return null;
+                  Optional<Class> superClass =
+                      classRepository.findByIdAndRepositoryId(c, repositoryId);
+                  if (superClass.isEmpty()) return null;
+                  return new ClassRelation(superClass.get(), repositoryId, entity.getIndex());
+                })
+            .filter(Objects::nonNull)
+            .collect(Collectors.toSet()));
+
+    Optional<ClassVersion> latestVersion = classVersionRepository.findLatestByClassId(cls.getId());
+
+    Entity result = classToEntity(classRepository.save(cls), repositoryId);
+
+    latestVersion.ifPresent((v) -> classVersionRepository.setPreviousVersion(newVersion, v));
+
+    return result;
+  }
+
+  public Entity setCurrentEntityVersion(
+      String organisationId,
+      String repositoryId,
+      String id,
+      Integer version,
+      List<String> include) {
+    Repository repository = getRepository(organisationId, repositoryId);
+    Class cls =
+        classRepository
+            .findByIdAndRepositoryId(id, repository.getId())
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+    ClassVersion classVersion =
+        classVersionRepository
+            .findByClassIdAndVersion(id, version)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+    classRepository.setCurrent(cls, classVersion);
+
+    return classToEntity(cls, repositoryId);
+  }
+
+  private void deleteClass(Class cls) {
+    EntityType entityType =
+        EntityType.fromValue(
+            cls.getTypes().stream()
+                .findFirst()
+                .orElseThrow(
+                    () ->
+                        new ResponseStatusException(
+                            HttpStatus.INTERNAL_SERVER_ERROR, "Entity has no entityType!")));
+
+    if (isCategory(entityType)) {
+      classRepository.saveAll(
+          classRepository
+              .findSubclasses(cls.getId(), cls.getRepositoryId())
+              .map(c -> classRepository.findById(c.getId()).orElse(null))
+              .filter(Objects::nonNull)
+              .peek(
+                  c ->
+                      c.setSuperClassRelations(
+                              c.getSuperClassRelations().stream()
+                                  .filter(
+                                      r ->
+                                          !r.getOwnerId().equals(cls.getRepositoryId())
+                                              || !r.getSuperclass().getId().equals(cls.getId()))
+                                  .collect(Collectors.toSet()))
+                          .addSuperClassRelations(
+                              cls.getSuperClassRelations().stream()
+                                  .map(ClassRelation::clone)
+                                  .collect(Collectors.toSet())))
+              .collect(Collectors.toList()));
+    }
+
+    if (isAbstract(entityType))
+      classRepository.findSubclasses(cls.getId(), cls.getRepositoryId()).forEach(this::deleteClass);
+
+    classVersionRepository.findAllByClassId(cls.getId()).forEach(this::deleteVersion);
+    annotationRepository.deleteAll(
+        annotationRepository.findAllByClassValueAndProperty(cls, "expression"));
+    classRepository.delete(cls);
+  }
+
+  /**
+   * Build a new {@link ClassVersion} object from an {@link Entity} object.
+   *
+   * @param entity The entity that provides data for the {@link ClassVersion} object fields.
+   * @return The resulting {@link ClassVersion} object.
+   */
+  private ClassVersion buildClassVersion(Entity entity) {
+    ClassVersion classVersion = new ClassVersion();
+
+    if (entity.getEquivalentEntities() != null) {
+      Set<ClassVersion> equivalentEntities = new HashSet<>();
+      entity
+          .getEquivalentEntities()
+          .forEach(
+              e ->
+                  classVersionRepository
+                      .findByClassIdAndVersion(e.getId(), e.getVersion())
+                      .ifPresent(equivalentEntities::add));
+      classVersion.addEquivalentClasses(equivalentEntities);
+    }
+
+    if (entity instanceof Phenotype) {
+      Phenotype phenotype = (Phenotype) entity;
+      if (phenotype.getScore() != null)
+        classVersion.addAnnotation(
+            new Annotation("score", phenotype.getScore().doubleValue(), null));
+      if (phenotype.getDataType() != null)
+        classVersion.addAnnotation(
+            new Annotation("dataType", phenotype.getDataType().getValue(), null));
+      if (phenotype.getUnits() != null)
+        classVersion.addAnnotations(
+            phenotype.getUnits().stream().map(this::fromUnit).collect(Collectors.toSet()));
+      if (phenotype.getRestriction() != null)
+        classVersion.addAnnotation(fromRestriction(phenotype.getRestriction()));
+      if (phenotype.getExpression() != null)
+        classVersion.addAnnotation(fromExpression(phenotype.getExpression()));
+    }
+
+    if (entity.getCodes() != null) {
+      entity
+          .getCodes()
+          .forEach(
+              c ->
+                  classRepository
+                      .findByIdAndRepositoryId(c.getCode(), c.getCodeSystem().getUri().toString())
+                      .ifPresent(
+                          codeClass ->
+                              classVersion.addAnnotation(new Annotation("code", codeClass, null))));
+    }
+
+    if (entity.getTitles() != null)
+      classVersion.addAnnotations(
+          entity.getTitles().stream()
+              .map(t -> new Annotation("title", t.getText(), t.getLang()))
+              .collect(Collectors.toSet()));
+    if (entity.getSynonyms() != null)
+      classVersion.addAnnotations(
+          entity.getSynonyms().stream()
+              .map(s -> new Annotation("synonym", s.getText(), s.getLang()))
+              .collect(Collectors.toSet()));
+    if (entity.getDescriptions() != null)
+      classVersion.addAnnotations(
+          entity.getDescriptions().stream()
+              .map(d -> new Annotation("description", d.getText(), d.getLang()))
+              .collect(Collectors.toSet()));
+
+    return classVersion;
+  }
+
+  /**
+   * Transforms the given {@link Class} object's <u>current version</u> to an {@link Entity} object.
+   * If corresponding class version was not loaded from DB, this method will try to load the current
+   * version of the class.
+   *
+   * @param cls The {@link Class} object to be transformed.
+   * @return The resulting {@link Entity} object.
+   * @throws ResponseStatusException If the provided class has no current version.
+   */
+  private Entity classToEntity(Class cls, String ownerId) throws ResponseStatusException {
+    ClassVersion current =
+        cls.getCurrentVersion()
+            .or(() -> classVersionRepository.findCurrentByClassId(cls.getId()))
+            .orElseThrow(
+                () ->
+                    new ResponseStatusException(
+                        HttpStatus.INTERNAL_SERVER_ERROR, "Entity had no version!"));
+
+    return classVersionToEntity(current, ownerId);
+  }
+
+  /**
+   * Transforms the given {@link ClassVersion} object to an {@link Entity} object.
+   *
+   * @param classVersion The {@link ClassVersion} object to be transformed.
+   * @param ownerId The owner this relation belongs to ({@link Repository} or {@link
+   *     OntologyVersion}).
+   * @return The resulting {@link Entity} object.
+   */
+  private Entity classVersionToEntity(ClassVersion classVersion, String ownerId) {
+    Category entity;
+
+    EntityType entityType =
+        EntityType.fromValue(
+            classVersion.getaClass().getTypes().stream()
+                .findFirst()
+                .orElseThrow(
+                    () ->
+                        new ResponseStatusException(
+                            HttpStatus.INTERNAL_SERVER_ERROR,
+                            "Class has no type and cannot be mapped to entity!")));
+
+    Set<ClassVersion> superClasses =
+        classVersionRepository.getCurrentSuperClassVersionsByOwnerId(
+            classVersion.getaClass(), ownerId);
+
+    if (entityType.equals(EntityType.CATEGORY)) {
+      entity = new Category();
+    } else if (entityType.equals(EntityType.PHENOTYPE_GROUP)) {
+      entity = new PhenotypeGroup();
+    } else {
+      entity = new Phenotype();
+
+      if (classVersion.getAnnotation("dataType").isPresent())
+        ((Phenotype) entity)
+            .setDataType(
+                DataType.fromValue(classVersion.getAnnotation("dataType").get().getStringValue()));
+
+      if (isRestricted(entityType)) {
+        superClasses.stream()
+            .findFirst()
+            .ifPresent(
+                c -> {
+                  String superType =
+                      c.getaClass().getTypes().stream()
+                          .findFirst()
+                          .orElseThrow(
+                              () ->
+                                  new ResponseStatusException(
+                                      HttpStatus.INTERNAL_SERVER_ERROR,
+                                      "Super phenotype has no entity type!"));
+                  ((Phenotype) entity)
+                      .setSuperPhenotype(
+                          (Phenotype)
+                              new Phenotype()
+                                  .id(c.getaClass().getId())
+                                  .entityType(EntityType.fromValue(superType)));
+                });
+        classVersion
+            .getAnnotation("score")
+            .ifPresent(s -> ((Phenotype) entity).setScore(BigDecimal.valueOf(s.getDecimalValue())));
+        classVersion
+            .getAnnotation("restriction")
+            .ifPresent(r -> ((Phenotype) entity).setRestriction(toRestriction(r)));
+      } else {
+        classVersion
+            .getAnnotations("unit")
+            .forEach(a -> ((Phenotype) entity).addUnitsItem(toUnit(a)));
+      }
+
+      classVersion
+          .getAnnotation("expression")
+          .ifPresent(a -> ((Phenotype) entity).setExpression(toExpression(a)));
+    }
+
+    if (superClasses != null && !isRestricted(entityType))
+      entity.setSuperCategories(
+          superClasses.stream()
               .map(
-                  a -> {
-                    LocalisableText title = new LocalisableText();
-                    title.setLang(a.getLanguage());
-                    title.setText(a.getStringValue());
-                    return title;
+                  c -> {
+                    if (Objects.equals(c.getaClass().getId(), entity.getId())) return null;
+                    return (Category)
+                        new Category().id(c.getaClass().getId()).entityType(EntityType.CATEGORY);
                   })
+              .filter(Objects::nonNull)
               .collect(Collectors.toList()));
 
-    /** Via fresh query * */
-    Result<AnnotationRecord> titles =
-        context.fetch(
-            ANNOTATION,
-            ANNOTATION
-                .CLASS_VERSION_ID
-                .eq(record.getClassId())
-                .and(ANNOTATION.property().NAME.eq("title")));
+    Repository repo =
+        repositoryRepository
+            .findById(classVersion.getaClass().getRepositoryId())
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-    entity.setTitles(
-        titles.stream()
+    care.smith.top.backend.model.Repository repository =
+        new care.smith.top.backend.model.Repository().id(repo.getId()).name(repo.getName());
+
+    repo.getSuperDirectories().stream()
+        .findFirst()
+        .ifPresent(
+            d -> repository.setOrganisation(new Organisation().id(d.getId()).name(d.getName())));
+
+    entity.setRepository(repository);
+    entity.setId(classVersion.getaClass().getId());
+    entity.setVersion(classVersion.getVersion());
+    entity.setEntityType(entityType);
+    entity.setCreatedAt(classVersion.getCreatedAtOffset());
+
+    if (classVersion.getEquivalentClasses() != null)
+      classVersion
+          .getEquivalentClasses()
+          .forEach(
+              e -> {
+                Entity equivalentEntity = new Entity();
+                equivalentEntity.setVersion(e.getVersion());
+                equivalentEntity.setId(e.getaClass().getId());
+                entity.addEquivalentEntitiesItem(equivalentEntity);
+              });
+
+    PropertyAccessor accessor = PropertyAccessorFactory.forBeanPropertyAccess(entity);
+    Arrays.asList("title", "synonym", "description")
+        .forEach(
+            p ->
+                accessor.setPropertyValue(
+                    p + "s",
+                    annotationRepository.findByClassVersionAndProperty(classVersion, p).stream()
+                        .map(
+                            a ->
+                                new LocalisableText()
+                                    .text(a.getStringValue())
+                                    .lang(a.getLanguage()))
+                        .collect(Collectors.toList())));
+
+    entity.setCodes(
+        annotationRepository.findByClassVersionAndProperty(classVersion, "code").stream()
             .map(
-                t -> {
-                  LocalisableText title = new LocalisableText();
-                  title.setLang(t.getLanguage());
-                  title.setText(t.getStringValue());
-                  return title;
-                })
+                a ->
+                    new Code()
+                        .code(a.getClassValue().getId())
+                        .codeSystem(
+                            new CodeSystem().uri(URI.create(a.getClassValue().getRepositoryId()))))
             .collect(Collectors.toList()));
+
+    // TODO: entity.setAuthor(classVersion.getUser()); Map User to UserAccount, or drop UserAccount
+    // from top-api model.
+    // TODO: entity.setRefer(); <- insert URI
+
+    if (classVersion.getaClass().getSuperClassRelations() != null)
+      classVersion.getaClass().getSuperClassRelations().stream()
+          .findFirst()
+          .ifPresent(sc -> entity.setIndex(sc.getIndex()));
 
     return entity;
   }
 
-  private ClassVersionRecord loadEntityRecord(
-      String organisationName, String repositoryName, UUID id, Integer version) {
-    // TODO: filter by organisationName and repositoryName
-    return context.fetchOne(
-        CLASS_VERSION, CLASS_VERSION.class_().UUID.eq(id).and(CLASS_VERSION.VERSION.eq(version)));
+  /**
+   * Recursively delete all annotations of an annotatable object and its annotations.
+   *
+   * @param annotatable Annotatable object of which annotations will be deleted.
+   */
+  private void deleteAnnotations(Annotatable annotatable) {
+    annotatable.getAnnotations().forEach(this::deleteAnnotations);
+    annotationRepository.deleteAll(annotatable.getAnnotations());
+  }
+
+  @Transactional
+  private void deleteVersion(ClassVersion classVersion) {
+    deleteAnnotations(classVersion);
+    expressionRepository.deleteAll(classVersion.getExpressions());
+    classVersionRepository.delete(classVersion);
+  }
+
+  private Annotation fromExpression(Expression expression) {
+    // TODO: only allow phenotypes from accessible repositories
+    if (expression.getId() != null && classRepository.findById(expression.getId()).isPresent())
+      return new Annotation("expression", classRepository.findById(expression.getId()).get(), null);
+
+    if (expression.getConstant() != null)
+      return new Annotation("expression", expression.getConstant().doubleValue(), null);
+
+    Annotation annotation = new Annotation("expression", expression.getOperator(), null);
+    if (expression.getOperands() != null) {
+      int i = 1;
+      for (Expression operand : expression.getOperands()) {
+        annotation.addAnnotation(fromExpression(operand).setIndex(i++));
+      }
+    }
+    return annotation;
+  }
+
+  private Annotation fromRestriction(Restriction restriction) {
+    if (restriction == null || restriction.getType() == null || restriction.getQuantor() == null)
+      return null;
+
+    Annotation annotation =
+        (Annotation)
+            new Annotation()
+                .setProperty("restriction")
+                .addAnnotation(new Annotation("type", restriction.getType().getValue(), null))
+                .addAnnotation(new Annotation("negated", restriction.isNegated(), null))
+                .addAnnotation(
+                    new Annotation("quantor", restriction.getQuantor().getValue(), null));
+
+    if (restriction instanceof NumberRestriction) {
+      if (((NumberRestriction) restriction).getMinOperator() != null)
+        annotation.addAnnotation(
+            new Annotation(
+                "minOperator",
+                ((NumberRestriction) restriction).getMinOperator().getValue(),
+                null));
+      if (((NumberRestriction) restriction).getMaxOperator() != null)
+        annotation.addAnnotation(
+            new Annotation(
+                "maxOperator",
+                ((NumberRestriction) restriction).getMaxOperator().getValue(),
+                null));
+      if (((NumberRestriction) restriction).getValues() != null)
+        annotation.addAnnotations(
+            ((NumberRestriction) restriction)
+                .getValues().stream()
+                    .map(v -> new Annotation("value", v.doubleValue(), null))
+                    .collect(Collectors.toSet()));
+    } else if (restriction instanceof StringRestriction) {
+      if (((StringRestriction) restriction).getValues() != null)
+        annotation.addAnnotations(
+            ((StringRestriction) restriction)
+                .getValues().stream()
+                    .map(v -> new Annotation("value", v, null))
+                    .collect(Collectors.toSet()));
+    } else if (restriction instanceof DateTimeRestriction) {
+      if (((DateTimeRestriction) restriction).getMinOperator() != null)
+        annotation.addAnnotation(
+            new Annotation(
+                "minOperator",
+                ((DateTimeRestriction) restriction).getMinOperator().getValue(),
+                null));
+      if (((DateTimeRestriction) restriction).getMaxOperator() != null)
+        annotation.addAnnotation(
+            new Annotation(
+                "maxOperator",
+                ((DateTimeRestriction) restriction).getMaxOperator().getValue(),
+                null));
+      if (((DateTimeRestriction) restriction).getValues() != null)
+        annotation.addAnnotations(
+            ((DateTimeRestriction) restriction)
+                .getValues().stream()
+                    .map(v -> new Annotation("value", v.toInstant(), null))
+                    .collect(Collectors.toSet()));
+    } else if (restriction instanceof BooleanRestriction) {
+      if (((BooleanRestriction) restriction).getValues() != null)
+        annotation.addAnnotations(
+            ((BooleanRestriction) restriction)
+                .getValues().stream()
+                    .map(v -> new Annotation("value", v, null))
+                    .collect(Collectors.toSet()));
+    }
+
+    return annotation;
+  }
+
+  private Annotation fromUnit(Unit unit) {
+    if (unit == null || !StringUtils.hasText(unit.getUnit())) return null;
+
+    return (Annotation)
+        new Annotation()
+            .setProperty("unit")
+            .setStringValue(unit.getUnit())
+            .addAnnotation(
+                new Annotation().setProperty("preferred").setBooleanValue(unit.isPreferred()));
+  }
+
+  /**
+   * Get {@link Repository} by repositoryId and directoryId. If the repository does not exist or is
+   * not associated with the directory, this method will throw an exception.
+   *
+   * @param organisationId ID of the {@link Directory}
+   * @param repositoryId ID of the {@link Repository}
+   * @return The matching repository, if it exists.
+   */
+  private Repository getRepository(String organisationId, String repositoryId) {
+    return repositoryRepository
+        .findByIdAndSuperDirectoryId(repositoryId, organisationId)
+        .orElseThrow(
+            () ->
+                new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    String.format("Repository '%s' does not exist!", repositoryId)));
+  }
+
+  private boolean isAbstract(EntityType entityType) {
+    return Arrays.asList(
+            EntityType.SINGLE_PHENOTYPE,
+            EntityType.COMBINED_PHENOTYPE,
+            EntityType.DERIVED_PHENOTYPE)
+        .contains(entityType);
+  }
+
+  private boolean isCategory(EntityType entityType) {
+    return EntityType.CATEGORY.equals(entityType);
+  }
+
+  private boolean isPhenotype(EntityType entityType) {
+    return isAbstract(entityType) || isRestricted(entityType);
+  }
+
+  private boolean isRestricted(EntityType entityType) {
+    return Arrays.asList(
+            EntityType.SINGLE_RESTRICTION,
+            EntityType.COMBINED_RESTRICTION,
+            EntityType.DERIVED_RESTRICTION)
+        .contains(entityType);
+  }
+
+  private Expression toExpression(Annotation annotation) {
+    if (annotation.getClassValue() != null)
+      return new Expression().operator("entity").id(annotation.getClassValue().getId());
+
+    if ("decimal".equals(annotation.getDatatype()))
+      return new Expression()
+          .operator("constant")
+          .constant(BigDecimal.valueOf(annotation.getDecimalValue()));
+
+    Expression expression = new Expression().operator(annotation.getStringValue());
+    if (annotation.getAnnotations() != null)
+      expression.operands(
+          annotation.getAnnotations().stream()
+              .sorted(
+                  (a, b) -> {
+                    if (a.getIndex() == null) return b.getIndex() == null ? 0 : -1;
+                    if (b.getIndex() == null) return 1;
+                    return a.getIndex().compareTo(b.getIndex());
+                  })
+              .map(this::toExpression)
+              .collect(Collectors.toList()));
+    return expression;
+  }
+
+  private Restriction toRestriction(Annotation annotation) {
+    if (annotation == null) return null;
+    if (annotation.getAnnotation("type").isEmpty()) return null;
+    DataType type = DataType.fromValue(annotation.getAnnotation("type").get().getStringValue());
+
+    Restriction restriction;
+
+    if (type == DataType.STRING) {
+      restriction = new StringRestriction();
+      annotation
+          .getAnnotations("value")
+          .forEach(v -> ((StringRestriction) restriction).addValuesItem(v.getStringValue()));
+    } else if (type == DataType.NUMBER) {
+      restriction = new NumberRestriction();
+      annotation
+          .getAnnotations("value")
+          .forEach(
+              v ->
+                  ((NumberRestriction) restriction)
+                      .addValuesItem(BigDecimal.valueOf(v.getDecimalValue())));
+      annotation.getAnnotations("minOperator").stream()
+          .findFirst()
+          .ifPresent(
+              o ->
+                  ((NumberRestriction) restriction)
+                      .setMinOperator(RestrictionOperator.fromValue(o.getStringValue())));
+      annotation.getAnnotations("maxOperator").stream()
+          .findFirst()
+          .ifPresent(
+              o ->
+                  ((NumberRestriction) restriction)
+                      .setMaxOperator(RestrictionOperator.fromValue(o.getStringValue())));
+    } else if (type == DataType.DATE_TIME) {
+      restriction = new DateTimeRestriction();
+      annotation
+          .getAnnotations("value")
+          .forEach(
+              v ->
+                  ((DateTimeRestriction) restriction)
+                      .addValuesItem(v.getDateValue().atOffset(ZoneOffset.UTC)));
+      annotation.getAnnotations("minOperator").stream()
+          .findFirst()
+          .ifPresent(
+              o ->
+                  ((DateTimeRestriction) restriction)
+                      .setMinOperator(RestrictionOperator.fromValue(o.getStringValue())));
+      annotation.getAnnotations("maxOperator").stream()
+          .findFirst()
+          .ifPresent(
+              o ->
+                  ((DateTimeRestriction) restriction)
+                      .setMaxOperator(RestrictionOperator.fromValue(o.getStringValue())));
+    } else if (type == DataType.BOOLEAN) {
+      restriction = new BooleanRestriction();
+      annotation
+          .getAnnotations("value")
+          .forEach(v -> ((BooleanRestriction) restriction).addValuesItem(v.getBooleanValue()));
+    } else return null;
+
+    restriction.setType(type);
+    annotation.getAnnotation("negated").ifPresent(a -> restriction.setNegated(a.getBooleanValue()));
+    annotation
+        .getAnnotation("quantor")
+        .ifPresent(a -> restriction.setQuantor(Quantor.fromValue(a.getStringValue())));
+
+    return restriction;
+  }
+
+  private Unit toUnit(Annotation annotation) {
+    if (annotation == null
+        || !"unit".equals(annotation.getProperty())
+        || !StringUtils.hasText(annotation.getStringValue())) return null;
+
+    Unit unit = new Unit().unit(annotation.getStringValue());
+    annotation.getAnnotation("preferred").ifPresent(a -> unit.preferred(a.getBooleanValue()));
+
+    return unit;
   }
 }
