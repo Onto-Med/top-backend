@@ -672,13 +672,14 @@ public class EntityService {
 
   private Annotation fromFormula(Formula formula) {
     // TODO: only allow phenotypes from accessible repositories
-    // TODO: expand formula model in top-api, currently there are not scalars supported
     if (formula.getId() != null
-        && FormulaOperator.CLASS.equals(formula.getOperator())
         && classRepository.findById(formula.getId()).isPresent())
       return new Annotation("formula", classRepository.findById(formula.getId()).get(), null);
 
-    Annotation annotation = new Annotation("formula", formula.getOperator().getValue(), null);
+    if (formula.getConstant() != null)
+      return new Annotation("formula", formula.getConstant().doubleValue(), null);
+
+    Annotation annotation = new Annotation("formula", formula.getOperator(), null);
     if (formula.getOperands() != null)
       annotation.addAnnotations(
           formula.getOperands().stream().map(this::fromFormula).collect(Collectors.toSet()));
@@ -828,10 +829,12 @@ public class EntityService {
 
   private Formula toFormula(Annotation annotation) {
     if (annotation.getClassValue() != null)
-      return new Formula().id(annotation.getClassValue().getId()).operator(FormulaOperator.CLASS);
+      return new Formula().operator("entity").id(annotation.getClassValue().getId());
 
-    Formula formula =
-        new Formula().operator(FormulaOperator.fromValue(annotation.getStringValue()));
+    if ("decimal".equals(annotation.getDatatype()))
+      return new Formula().operator("constant").constant(BigDecimal.valueOf(annotation.getDecimalValue()));
+
+    Formula formula = new Formula().operator(annotation.getStringValue());
     if (annotation.getAnnotations() != null)
       formula.operands(
           annotation.getAnnotations().stream().map(this::toFormula).collect(Collectors.toList()));

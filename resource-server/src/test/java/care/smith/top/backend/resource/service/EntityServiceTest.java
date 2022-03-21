@@ -96,7 +96,7 @@ class EntityServiceTest extends Neo4jTest {
     /* Create abstract phenotype */
     Phenotype abstractPhenotype = new Phenotype().addUnitsItem(new Unit().unit("cm"));
     abstractPhenotype
-        .formula(new Formula().operator(FormulaOperator.ADD))
+        .formula(new Formula().operator("add"))
         .expression(
             new Expression()
                 .type(ExpressionType.COMPLEMENT)
