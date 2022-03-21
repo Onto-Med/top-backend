@@ -152,11 +152,21 @@ public class EntityService {
             .findByClassIdAndVersion(cls.getId(), version)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
+    ClassVersion currentVersion =
+        classVersionRepository
+            .findCurrentByClassId(cls.getId())
+            .orElseThrow(
+                () ->
+                    new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Class does not have a current version."));
+
+    if (classVersion.equals(currentVersion))
+      throw new ResponseStatusException(
+          HttpStatus.NOT_ACCEPTABLE, "Current version of a class cannot be deleted.");
+
     classVersionRepository
         .getPrevious(classVersion)
-        .ifPresent(cv -> classRepository.setCurrent(cls, cv));
-
-    // TODO: connect previous with next version
+        .ifPresent(cv -> classVersionRepository.setPreviousVersion(currentVersion, cv));
 
     deleteAnnotations(classVersion);
     expressionRepository.deleteAll(classVersion.getExpressions());

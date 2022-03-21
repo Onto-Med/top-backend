@@ -96,7 +96,10 @@ class EntityServiceTest extends Neo4jTest {
     /* Create abstract phenotype */
     Phenotype abstractPhenotype = new Phenotype().addUnitsItem(new Unit().unit("cm"));
     abstractPhenotype
-        .expression(new Expression().operator("complement").addOperandsItem(new Expression().operator("entity")))
+        .expression(
+            new Expression()
+                .operator("complement")
+                .addOperandsItem(new Expression().operator("entity")))
         .addSuperCategoriesItem(category)
         .index(5)
         .id(UUID.randomUUID().toString())
@@ -264,10 +267,17 @@ class EntityServiceTest extends Neo4jTest {
         .isInstanceOf(Phenotype.class)
         .satisfies(p -> assertThat(p.getVersion()).isEqualTo(2));
 
+    assertThat(
+            entityService.updateEntityById(
+                organisation.getId(), repository.getId(), phenotype.getId(), phenotype, null))
+        .isNotNull()
+        .isInstanceOf(Phenotype.class)
+        .satisfies(p -> assertThat(p.getVersion()).isEqualTo(3));
+
     assertThatThrownBy(
             () ->
                 entityService.deleteVersion(
-                    organisation.getId(), repository.getId(), phenotype.getId(), 3))
+                    organisation.getId(), repository.getId(), phenotype.getId(), 4))
         .isInstanceOf(ResponseStatusException.class)
         .hasFieldOrPropertyWithValue("status", HttpStatus.NOT_FOUND);
 
@@ -276,7 +286,7 @@ class EntityServiceTest extends Neo4jTest {
         .hasValueSatisfying(
             cv -> {
               assertThat(cv.getaClass()).isNotNull();
-              assertThat(cv.getVersion()).isEqualTo(2);
+              assertThat(cv.getVersion()).isEqualTo(3);
             });
 
     // Delete
@@ -291,12 +301,21 @@ class EntityServiceTest extends Neo4jTest {
         .hasValueSatisfying(
             cv -> {
               assertThat(cv.getaClass()).isNotNull();
-              assertThat(cv.getVersion()).isEqualTo(1);
+              assertThat(cv.getVersion()).isEqualTo(3);
+              assertThat(classVersionRepository.getPrevious(cv))
+                  .isPresent()
+                  .hasValueSatisfying(prev -> assertThat(prev.getVersion()).isEqualTo(1));
             });
 
     assertThat(
             entityService.loadEntity(
                 organisation.getId(), repository.getId(), phenotype.getId(), null))
+        .isNotNull()
+        .satisfies(p -> assertThat(p.getVersion()).isEqualTo(3));
+
+    assertThat(
+            entityService.loadEntity(
+                organisation.getId(), repository.getId(), phenotype.getId(), 1))
         .isNotNull()
         .satisfies(p -> assertThat(p.getVersion()).isEqualTo(1));
 
