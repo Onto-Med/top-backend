@@ -1,7 +1,7 @@
 package care.smith.top.backend.resource.service;
 
-import care.smith.top.backend.model.Expression;
 import care.smith.top.backend.model.*;
+import care.smith.top.backend.model.Expression;
 import care.smith.top.backend.neo4j_ontology_access.model.Class;
 import care.smith.top.backend.neo4j_ontology_access.model.Repository;
 import care.smith.top.backend.neo4j_ontology_access.model.*;
@@ -428,8 +428,6 @@ public class EntityService {
         classVersion.addAnnotation(fromRestriction(phenotype.getRestriction()));
       if (phenotype.getExpression() != null)
         classVersion.addAnnotation(fromExpression(phenotype.getExpression()));
-      if (phenotype.getFormula() != null)
-        classVersion.addAnnotation(fromFormula(phenotype.getFormula()));
     }
 
     if (entity.getCodes() != null) {
@@ -556,9 +554,6 @@ public class EntityService {
       classVersion
           .getAnnotation("expression")
           .ifPresent(a -> ((Phenotype) entity).setExpression(toExpression(a)));
-      classVersion
-          .getAnnotation("formula")
-          .ifPresent(a -> ((Phenotype) entity).setFormula(toFormula(a)));
     }
 
     if (superClasses != null && !isRestricted(entityType))
@@ -658,31 +653,17 @@ public class EntityService {
 
   private Annotation fromExpression(Expression expression) {
     // TODO: only allow phenotypes from accessible repositories
-    if (expression.getId() != null && ExpressionType.RESTRICTION.equals(expression.getType())) {
-      Optional<Class> cls = classRepository.findById(expression.getId());
-      if (cls.isPresent()) return new Annotation("expression", cls.get(), null);
-    }
+    if (expression.getId() != null && classRepository.findById(expression.getId()).isPresent())
+      return new Annotation("expression", classRepository.findById(expression.getId()).get(), null);
 
-    Annotation annotation = new Annotation("expression", expression.getType().getValue(), null);
-    if (expression.getOperands() != null)
-      annotation.addAnnotations(
-          expression.getOperands().stream().map(this::fromExpression).collect(Collectors.toSet()));
-    return annotation;
-  }
+    if (expression.getConstant() != null)
+      return new Annotation("expression", expression.getConstant().doubleValue(), null);
 
-  private Annotation fromFormula(Formula formula) {
-    // TODO: only allow phenotypes from accessible repositories
-    if (formula.getId() != null && classRepository.findById(formula.getId()).isPresent())
-      return new Annotation("formula", classRepository.findById(formula.getId()).get(), null);
-
-    if (formula.getConstant() != null)
-      return new Annotation("formula", formula.getConstant().doubleValue(), null);
-
-    Annotation annotation = new Annotation("formula", formula.getOperator(), null);
-    if (formula.getOperands() != null) {
+    Annotation annotation = new Annotation("expression", expression.getOperator(), null);
+    if (expression.getOperands() != null) {
       int i = 1;
-      for (Formula operand : formula.getOperands()) {
-        annotation.addAnnotation(fromFormula(operand).setIndex(i++));
+      for (Expression operand : expression.getOperands()) {
+        annotation.addAnnotation(fromExpression(operand).setIndex(i++));
       }
     }
     return annotation;
@@ -813,34 +794,16 @@ public class EntityService {
 
   private Expression toExpression(Annotation annotation) {
     if (annotation.getClassValue() != null)
-      return new Expression()
-          .id(annotation.getClassValue().getId())
-          .type(ExpressionType.RESTRICTION);
-    if (annotation.getStringValue() == null) return null;
-
-    Expression expression =
-        new Expression().type(ExpressionType.fromValue(annotation.getStringValue()));
-    if (annotation.getAnnotations() != null)
-      expression.setOperands(
-          annotation.getAnnotations().stream()
-              .map(this::toExpression)
-              .filter(Objects::nonNull)
-              .collect(Collectors.toList()));
-    return expression;
-  }
-
-  private Formula toFormula(Annotation annotation) {
-    if (annotation.getClassValue() != null)
-      return new Formula().operator("entity").id(annotation.getClassValue().getId());
+      return new Expression().operator("entity").id(annotation.getClassValue().getId());
 
     if ("decimal".equals(annotation.getDatatype()))
-      return new Formula()
+      return new Expression()
           .operator("constant")
           .constant(BigDecimal.valueOf(annotation.getDecimalValue()));
 
-    Formula formula = new Formula().operator(annotation.getStringValue());
+    Expression expression = new Expression().operator(annotation.getStringValue());
     if (annotation.getAnnotations() != null)
-      formula.operands(
+      expression.operands(
           annotation.getAnnotations().stream()
               .sorted(
                   (a, b) -> {
@@ -848,9 +811,9 @@ public class EntityService {
                     if (b.getIndex() == null) return 1;
                     return a.getIndex().compareTo(b.getIndex());
                   })
-              .map(this::toFormula)
+              .map(this::toExpression)
               .collect(Collectors.toList()));
-    return formula;
+    return expression;
   }
 
   private Restriction toRestriction(Annotation annotation) {

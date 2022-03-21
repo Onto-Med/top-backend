@@ -96,11 +96,7 @@ class EntityServiceTest extends Neo4jTest {
     /* Create abstract phenotype */
     Phenotype abstractPhenotype = new Phenotype().addUnitsItem(new Unit().unit("cm"));
     abstractPhenotype
-        .formula(new Formula().operator("add"))
-        .expression(
-            new Expression()
-                .type(ExpressionType.COMPLEMENT)
-                .addOperandsItem(new Expression().type(ExpressionType.CLASS)))
+        .expression(new Expression().operator("complement").addOperandsItem(new Expression().operator("entity")))
         .addSuperCategoriesItem(category)
         .index(5)
         .id(UUID.randomUUID().toString())
@@ -120,17 +116,12 @@ class EntityServiceTest extends Neo4jTest {
                   .allMatch(c -> c.getId().equals(category.getId()));
               assertThat(p.getIndex()).isEqualTo(5);
               assertThat(((Phenotype) p).getUnits()).allMatch(u -> u.getUnit().equals("cm"));
-              assertThat(((Phenotype) p).getFormula())
-                  .satisfies(
-                      f ->
-                          assertThat(f.getOperator())
-                              .isEqualTo(abstractPhenotype.getFormula().getOperator()));
               assertThat(((Phenotype) p).getExpression())
                   .isNotNull()
                   .satisfies(
                       e -> {
-                        assertThat(e.getType())
-                            .isEqualTo(abstractPhenotype.getExpression().getType());
+                        assertThat(e.getOperator())
+                            .isEqualTo(abstractPhenotype.getExpression().getOperator());
                         assertThat(e.getOperands()).size().isEqualTo(1);
                       });
             });
