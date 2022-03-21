@@ -566,7 +566,7 @@ public class EntityService {
           superClasses.stream()
               .map(
                   c -> {
-                    if (c.getaClass().getId() == entity.getId()) return null;
+                    if (Objects.equals(c.getaClass().getId(), entity.getId())) return null;
                     return (Category)
                         new Category().id(c.getaClass().getId()).entityType(EntityType.CATEGORY);
                   })
@@ -672,17 +672,17 @@ public class EntityService {
 
   private Annotation fromFormula(Formula formula) {
     // TODO: only allow phenotypes from accessible repositories
-    if (formula.getId() != null
-        && classRepository.findById(formula.getId()).isPresent())
+    if (formula.getId() != null && classRepository.findById(formula.getId()).isPresent())
       return new Annotation("formula", classRepository.findById(formula.getId()).get(), null);
 
     if (formula.getConstant() != null)
       return new Annotation("formula", formula.getConstant().doubleValue(), null);
 
     Annotation annotation = new Annotation("formula", formula.getOperator(), null);
-    if (formula.getOperands() != null)
-      annotation.addAnnotations(
-          formula.getOperands().stream().map(this::fromFormula).collect(Collectors.toSet()));
+    if (formula.getOperands() != null) {
+      int i = 1;
+      formula.getOperands().forEach(o -> annotation.addAnnotation(fromFormula(o).setIndex(i)));
+    }
     return annotation;
   }
 
@@ -832,12 +832,22 @@ public class EntityService {
       return new Formula().operator("entity").id(annotation.getClassValue().getId());
 
     if ("decimal".equals(annotation.getDatatype()))
-      return new Formula().operator("constant").constant(BigDecimal.valueOf(annotation.getDecimalValue()));
+      return new Formula()
+          .operator("constant")
+          .constant(BigDecimal.valueOf(annotation.getDecimalValue()));
 
     Formula formula = new Formula().operator(annotation.getStringValue());
     if (annotation.getAnnotations() != null)
       formula.operands(
-          annotation.getAnnotations().stream().map(this::toFormula).collect(Collectors.toList()));
+          annotation.getAnnotations().stream()
+              .sorted(
+                  (a, b) -> {
+                    if (a.getIndex() == null) return b.getIndex() == null ? 0 : -1;
+                    if (b.getIndex() == null) return 1;
+                    return a.getIndex().compareTo(b.getIndex());
+                  })
+              .map(this::toFormula)
+              .collect(Collectors.toList()));
     return formula;
   }
 
