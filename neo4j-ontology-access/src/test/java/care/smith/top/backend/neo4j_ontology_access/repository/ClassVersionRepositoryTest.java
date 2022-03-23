@@ -10,6 +10,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -110,6 +111,7 @@ class ClassVersionRepositoryTest extends RepositoryTest {
     Class cls1 =
         new Class()
             .setRepositoryId(repository.getId())
+            .setTypes(Collections.singleton("type"))
             .setCurrentVersion(
                 (ClassVersion)
                     new ClassVersion()
@@ -129,7 +131,6 @@ class ClassVersionRepositoryTest extends RepositoryTest {
                 .setName("example")
                 .setVersion(2)
                 .addAnnotation(new Annotation("title", "test name", "en"))
-                .addAnnotation(new Annotation("type", "type", null))
                 .addAnnotation(new Annotation("dataType", "decimal", null)));
     classRepository.save(cls1);
 
@@ -200,11 +201,16 @@ class ClassVersionRepositoryTest extends RepositoryTest {
   }
 
   @Test
-  void getPreviousUnhidden() {
-    Class cls = new Class().setCurrentVersion(new ClassVersion().setVersion(1));
+  void getPrevious() {
+    ClassVersion previous = new ClassVersion().setVersion(1);
+    Class cls = new Class().setCurrentVersion(previous);
     assertThat(classRepository.save(cls)).isNotNull();
 
-    cls.setCurrentVersion(new ClassVersion().setVersion(classRepository.getNextVersion(cls)));
+    ClassVersion current =
+        new ClassVersion()
+            .setVersion(classRepository.getNextVersion(cls))
+            .setPreviousVersion(previous);
+    cls.setCurrentVersion(current);
     assertThat(classRepository.save(cls)).isNotNull();
 
     Optional<ClassVersion> classVersion = classVersionRepository.findCurrentByClassId(cls.getId());
@@ -216,4 +222,29 @@ class ClassVersionRepositoryTest extends RepositoryTest {
         .isPresent()
         .hasValueSatisfying(cv -> assertThat(cv.getVersion()).isEqualTo(1));
   }
+
+    @Test
+    void getNext() {
+        ClassVersion previous = new ClassVersion().setVersion(1);
+        Class cls = new Class().setCurrentVersion(previous);
+        assertThat(classRepository.save(cls)).isNotNull();
+
+        ClassVersion current =
+                new ClassVersion()
+                        .setVersion(classRepository.getNextVersion(cls))
+                        .setPreviousVersion(previous);
+        cls.setCurrentVersion(current);
+        assertThat(classRepository.save(cls)).isNotNull();
+
+        classRepository.setCurrent(cls, previous);
+
+        Optional<ClassVersion> classVersion = classVersionRepository.findCurrentByClassId(cls.getId());
+        assertThat(classVersion)
+                .isPresent()
+                .hasValueSatisfying(cv -> assertThat(cv.getVersion()).isEqualTo(1));
+
+        assertThat(classVersionRepository.getNext(classVersion.get()))
+                .isPresent()
+                .hasValueSatisfying(cv -> assertThat(cv.getVersion()).isEqualTo(2));
+    }
 }
