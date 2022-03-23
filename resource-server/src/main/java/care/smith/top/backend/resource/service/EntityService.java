@@ -165,8 +165,12 @@ public class EntityService {
           HttpStatus.NOT_ACCEPTABLE, "Current version of a class cannot be deleted.");
 
     classVersionRepository
-        .getPrevious(classVersion)
-        .ifPresent(cv -> classVersionRepository.setPreviousVersion(currentVersion, cv));
+        .getNext(classVersion)
+        .ifPresent(
+            next ->
+                classVersionRepository
+                    .getPrevious(classVersion)
+                    .ifPresent(cv -> classVersionRepository.setPreviousVersion(next, cv)));
 
     deleteAnnotations(classVersion);
     expressionRepository.deleteAll(classVersion.getExpressions());

@@ -17,11 +17,13 @@ public interface ClassRepository extends PagingAndSortingRepository<Class, Strin
       "MATCH (super:Class {id: $classId}) <-[:IS_SUBCLASS_OF { ownerId: $repositoryId }]- (sub:Class) "
           + "RETURN sub ORDER BY sub.index")
   Stream<Class> findSubclasses(
-          @Param("classId") String id, @Param("repositoryId") String repositoryId);
+      @Param("classId") String id, @Param("repositoryId") String repositoryId);
 
   @Query(
       "MATCH (c:Class { repositoryId: $repository.__id__ }) "
-          + "WHERE NOT (c) -[:IS_SUBCLASS_OF]-> () "
+          + "OPTIONAL MATCH (c) -[:IS_SUBCLASS_OF]-> (super) "
+          + "WITH c, collect(super) as super "
+          + "WHERE isEmpty(super) "
           + "RETURN c")
   Set<Class> findRootClassesByRepository(@Param("repository") Repository repository);
 

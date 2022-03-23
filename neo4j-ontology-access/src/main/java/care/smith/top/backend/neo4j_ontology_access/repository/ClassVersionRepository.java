@@ -128,11 +128,15 @@ public interface ClassVersionRepository extends PagingAndSortingRepository<Class
   @Query(
       "MATCH (current:ClassVersion) -[:IS_VERSION_OF]-> (c:Class)"
           + "WHERE id(current) = $classVersion.__id__ "
-          + "MATCH (previous:ClassVersion) -[:IS_VERSION_OF]-> (c:Class) "
-          + "WHERE id(current) <> id(previous) "
-          + "MATCH p = shortestPath((current) -[:PREVIOUS_VERSION*]-> (previous)) "
-          + "RETURN previous "
-          + "ORDER BY length(p) LIMIT 1")
+          + "MATCH (current) <-[:PREVIOUS_VERSION]- (next:ClassVersion) "
+          + "RETURN next ")
+  Optional<ClassVersion> getNext(@Param("classVersion") ClassVersion classVersion);
+
+  @Query(
+      "MATCH (current:ClassVersion) -[:IS_VERSION_OF]-> (c:Class)"
+          + "WHERE id(current) = $classVersion.__id__ "
+          + "MATCH (current) -[:PREVIOUS_VERSION]-> (previous:ClassVersion) "
+          + "RETURN previous ")
   Optional<ClassVersion> getPrevious(@Param("classVersion") ClassVersion classVersion);
 
   @Query(
