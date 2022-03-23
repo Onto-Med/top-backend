@@ -42,7 +42,7 @@ public class ExpressionOperatorApiDelegateImpl implements ExpressionOperatorApiD
             .representation(ExpressionOperator.RepresentationEnum.PREFIX),
         new ExpressionOperator()
             .id("complement")
-            .title("and")
+            .title("not")
             .type(ExpressionOperator.TypeEnum.UNARY)
             .representation(ExpressionOperator.RepresentationEnum.PREFIX),
         new ExpressionOperator()
