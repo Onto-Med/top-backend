@@ -38,46 +38,65 @@ public class EntityService {
   @Autowired private ExpressionRepository expressionRepository;
   @Autowired private RepositoryRepository repositoryRepository;
 
-  static Statement findEntitiesMatchingCondition(
-      String repositoryId, String name, String type, String dataType) {
-    Node c = Cypher.node(Class.class.getName()).named("c");
-    Node cv = Cypher.node(ClassVersion.class.getName()).named("cv");
-    Node a = Cypher.node(Annotation.class.getName()).named("a");
-    Relationship cRel = c.relationshipTo(cv, "CURRENT_VERSION");
-    Relationship aRel = cv.relationshipTo(a, "HAS_ANNOTATION");
+  private static Statement findEntitiesMatchingConditionStatement(
+      String repositoryId, String name, List<EntityType> type, DataType dataType) {
+    Class_ c = Class_.CLASS.named("c");
+    ClassVersion_ cv = ClassVersion_.CLASS_VERSION.named("cv");
+    Annotation_ a = Annotation_.ANNOTATION.named("a");
+    Annotation_ aTitle =
+        a.withProperties(Annotation_.ANNOTATION.PROPERTY, Cypher.anonParameter("title"))
+            .named("title");
+    Annotation_ aDataType =
+        a.withProperties(Annotation_.ANNOTATION.PROPERTY, Cypher.anonParameter("dataType"))
+            .named("dataType");
+    RelationshipChain cRel = cv.A_CLASS.relationshipTo(c).named("cRel");
+    NamedPath p1 = Cypher.path("p1").definedBy(cv.relationshipTo(a, "HAS_ANNOTATION").unbounded());
+    NamedPath p2 = Cypher.path("p2").definedBy(a.CLASS_VALUE);
 
-    AtomicReference<StatementBuilder.OngoingReadingWithWhere> statement =
-        new AtomicReference<>(
-            Cypher.match(cRel)
-                .where(c.property("repositoryId").isEqualTo(Cypher.anonParameter(repositoryId)))
-                .and(cv.property("hiddenAt").isNull()));
+    StatementBuilder.OrderableOngoingReadingAndWithWithWhere statement =
+        Cypher.match(c.CURRENT_VERSION.relationshipTo(cv))
+            .match(cRel)
+            .where(c.hasLabels(type.stream().map(EntityType::getValue).toArray(String[]::new)))
+            .and(
+                repositoryId != null
+                    ? c.REPOSITORY_ID.isEqualTo(Cypher.anonParameter(repositoryId))
+                    : Cypher.literalTrue().asCondition())
+            .optionalMatch(cv.relationshipTo(aTitle, "HAS_ANNOTATION"))
+            .optionalMatch(cv.relationshipTo(aDataType, "HAS_ANNOTATION"))
+            .with(
+                c.getRequiredSymbolicName(),
+                cRel.asCondition(),
+                cv.getRequiredSymbolicName(),
+                aTitle.getRequiredSymbolicName(),
+                aDataType.getRequiredSymbolicName())
+            .where(Cypher.literalTrue().asCondition());
 
-    // TODO: match name/title case-insensitive
+    if (name != null)
+      statement =
+          statement.and(
+              Functions.toLower(aTitle.STRING_VALUE)
+                  .contains(Cypher.anonParameter(name.toLowerCase())));
 
-    Map<String, String> annotations = new HashMap<>();
-    annotations.put("type", type);
-    annotations.put("dataType", dataType);
-
-    annotations.forEach(
-        (p, v) -> {
-          if (p != null) {
-            statement.set(
-                statement
-                    .get()
-                    .match(aRel)
-                    .where(a.property("property").isEqualTo(Cypher.anonParameter(p)))
-                    .and(a.property("stringValue").isEqualTo(Cypher.anonParameter(v))));
-          }
-        });
+    if (dataType != null)
+      statement =
+          statement.and(
+              aDataType.STRING_VALUE.isEqualTo(Cypher.anonParameter(dataType.getValue())));
 
     return statement
-        .get()
+        .with(
+            cv.getRequiredSymbolicName(),
+            Functions.collect(cRel.asCondition()),
+            Functions.collect(c))
+        .optionalMatch(p1)
+        .optionalMatch(p2)
         .returning(
             cv.getRequiredSymbolicName(),
-            Functions.collect(cRel),
-            Functions.collect(c),
-            Functions.collect(aRel),
-            Functions.collect(a))
+            cRel.asCondition(),
+            c.getRequiredSymbolicName(),
+            Functions.collect(Functions.nodes(p1)),
+            Functions.collect(Functions.relationships(p1)),
+            Functions.collect(Functions.nodes(p2)),
+            Functions.collect(Functions.relationships(p2)))
         .build();
   }
 
@@ -181,14 +200,8 @@ public class EntityService {
       List<String> include, String name, List<EntityType> type, DataType dataType, Integer page) {
     int requestedPage = page != null ? page - 1 : 0;
     return classVersionRepository
-        .findByRepositoryIdAndNameContainingIgnoreCaseAndTypeAndDataType(
-            null,
-            name,
-            type != null
-                ? type.stream().map(EntityType::getValue).collect(Collectors.toList())
-                : null,
-            null,
-            PageRequest.of(requestedPage, pageSize))
+        .findAll(
+            findEntitiesMatchingConditionStatement(null, name, type, dataType), ClassVersion.class)
         .stream()
         .map(cv -> classVersionToEntity(cv, cv.getaClass().getRepositoryId()))
         .collect(Collectors.toList());
@@ -205,14 +218,7 @@ public class EntityService {
     getRepository(organisationId, repositoryId);
     int requestedPage = page != null ? page - 1 : 0;
     return classVersionRepository
-        .findByRepositoryIdAndNameContainingIgnoreCaseAndTypeAndDataType(
-            repositoryId,
-            name,
-            type != null
-                ? type.stream().map(EntityType::getValue).collect(Collectors.toList())
-                : null,
-            dataType != null ? dataType.getValue() : null,
-            PageRequest.of(requestedPage, pageSize))
+        .findAll(findEntitiesMatchingConditionStatement(repositoryId, name, type, dataType))
         .stream()
         .map(cv -> classVersionToEntity(cv, repositoryId))
         .collect(Collectors.toList());
@@ -292,6 +298,28 @@ public class EntityService {
     return classVersionToEntity(classVersion, repositoryId);
   }
 
+  public Entity setCurrentEntityVersion(
+      String organisationId,
+      String repositoryId,
+      String id,
+      Integer version,
+      List<String> include) {
+    Repository repository = getRepository(organisationId, repositoryId);
+    Class cls =
+        classRepository
+            .findByIdAndRepositoryId(id, repository.getId())
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+    ClassVersion classVersion =
+        classVersionRepository
+            .findByClassIdAndVersion(id, version)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+    classRepository.setCurrent(cls, classVersion);
+
+    return classToEntity(cls, repositoryId);
+  }
+
   public Entity updateEntityById(
       String organisationId, String repositoryId, String id, Entity entity, List<String> include) {
     Repository repository = getRepository(organisationId, repositoryId);
@@ -341,69 +369,6 @@ public class EntityService {
     latestVersion.ifPresent((v) -> classVersionRepository.setPreviousVersion(newVersion, v));
 
     return result;
-  }
-
-  public Entity setCurrentEntityVersion(
-      String organisationId,
-      String repositoryId,
-      String id,
-      Integer version,
-      List<String> include) {
-    Repository repository = getRepository(organisationId, repositoryId);
-    Class cls =
-        classRepository
-            .findByIdAndRepositoryId(id, repository.getId())
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-
-    ClassVersion classVersion =
-        classVersionRepository
-            .findByClassIdAndVersion(id, version)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-
-    classRepository.setCurrent(cls, classVersion);
-
-    return classToEntity(cls, repositoryId);
-  }
-
-  private void deleteClass(Class cls) {
-    EntityType entityType =
-        EntityType.fromValue(
-            cls.getTypes().stream()
-                .findFirst()
-                .orElseThrow(
-                    () ->
-                        new ResponseStatusException(
-                            HttpStatus.INTERNAL_SERVER_ERROR, "Entity has no entityType!")));
-
-    if (isCategory(entityType)) {
-      classRepository.saveAll(
-          classRepository
-              .findSubclasses(cls.getId(), cls.getRepositoryId())
-              .map(c -> classRepository.findById(c.getId()).orElse(null))
-              .filter(Objects::nonNull)
-              .peek(
-                  c ->
-                      c.setSuperClassRelations(
-                              c.getSuperClassRelations().stream()
-                                  .filter(
-                                      r ->
-                                          !r.getOwnerId().equals(cls.getRepositoryId())
-                                              || !r.getSuperclass().getId().equals(cls.getId()))
-                                  .collect(Collectors.toSet()))
-                          .addSuperClassRelations(
-                              cls.getSuperClassRelations().stream()
-                                  .map(ClassRelation::clone)
-                                  .collect(Collectors.toSet())))
-              .collect(Collectors.toList()));
-    }
-
-    if (isAbstract(entityType))
-      classRepository.findSubclasses(cls.getId(), cls.getRepositoryId()).forEach(this::deleteClass);
-
-    classVersionRepository.findAllByClassId(cls.getId()).forEach(this::deleteVersion);
-    annotationRepository.deleteAll(
-        annotationRepository.findAllByClassValueAndProperty(cls, "expression"));
-    classRepository.delete(cls);
   }
 
   /**
@@ -656,6 +621,47 @@ public class EntityService {
   private void deleteAnnotations(Annotatable annotatable) {
     annotatable.getAnnotations().forEach(this::deleteAnnotations);
     annotationRepository.deleteAll(annotatable.getAnnotations());
+  }
+
+  private void deleteClass(Class cls) {
+    EntityType entityType =
+        EntityType.fromValue(
+            cls.getTypes().stream()
+                .findFirst()
+                .orElseThrow(
+                    () ->
+                        new ResponseStatusException(
+                            HttpStatus.INTERNAL_SERVER_ERROR, "Entity has no entityType!")));
+
+    if (isCategory(entityType)) {
+      classRepository.saveAll(
+          classRepository
+              .findSubclasses(cls.getId(), cls.getRepositoryId())
+              .map(c -> classRepository.findById(c.getId()).orElse(null))
+              .filter(Objects::nonNull)
+              .peek(
+                  c ->
+                      c.setSuperClassRelations(
+                              c.getSuperClassRelations().stream()
+                                  .filter(
+                                      r ->
+                                          !r.getOwnerId().equals(cls.getRepositoryId())
+                                              || !r.getSuperclass().getId().equals(cls.getId()))
+                                  .collect(Collectors.toSet()))
+                          .addSuperClassRelations(
+                              cls.getSuperClassRelations().stream()
+                                  .map(ClassRelation::clone)
+                                  .collect(Collectors.toSet())))
+              .collect(Collectors.toList()));
+    }
+
+    if (isAbstract(entityType))
+      classRepository.findSubclasses(cls.getId(), cls.getRepositoryId()).forEach(this::deleteClass);
+
+    classVersionRepository.findAllByClassId(cls.getId()).forEach(this::deleteVersion);
+    annotationRepository.deleteAll(
+        annotationRepository.findAllByClassValueAndProperty(cls, "expression"));
+    classRepository.delete(cls);
   }
 
   @Transactional

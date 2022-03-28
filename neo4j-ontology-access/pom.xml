@@ -26,7 +26,7 @@
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
-        <neo4j-cypher-dsl.version>2022.2.0</neo4j-cypher-dsl.version>
+        <neo4j-cypher-dsl.version>2021.4.2</neo4j-cypher-dsl.version>
     </properties>
 
     <dependencies>

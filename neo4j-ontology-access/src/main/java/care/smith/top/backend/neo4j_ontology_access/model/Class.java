@@ -23,7 +23,7 @@ public class Class extends Annotatable {
   @CreatedDate private Instant createdAt;
   @CreatedBy private User createdBy;
 
-  /** Determins, what this class is representing. */
+  /** Determines, what this class is representing. */
   @DynamicLabels private Set<String> types = new HashSet<>();
 
   @Relationship(type = "IS_FORK_OF")

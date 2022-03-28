@@ -10,8 +10,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -102,86 +100,6 @@ class ClassVersionRepositoryTest extends RepositoryTest {
 
               assertThat(cv.getAnnotations("prefix").stream().findFirst()).isNotPresent();
             });
-  }
-
-  @Test
-  void findByRepositoryIdAndNameContainingIgnoreCaseAndTypeAndDataType() {
-    Repository repository = new Repository();
-
-    Class cls1 =
-        new Class()
-            .setRepositoryId(repository.getId())
-            .setTypes(Collections.singleton("type"))
-            .setCurrentVersion(
-                (ClassVersion)
-                    new ClassVersion()
-                        .setVersion(1)
-                        .addAnnotation(new Annotation("title", "test name", "en")));
-
-    Class cls2 =
-        new Class()
-            .setRepositoryId(repository.getId())
-            .setCurrentVersion(new ClassVersion().setName("example").setVersion(1));
-
-    classRepository.saveAll(Arrays.asList(cls1, cls2));
-
-    cls1.setCurrentVersion(
-        (ClassVersion)
-            new ClassVersion()
-                .setName("example")
-                .setVersion(2)
-                .addAnnotation(new Annotation("title", "test name", "en"))
-                .addAnnotation(new Annotation("dataType", "decimal", null)));
-    classRepository.save(cls1);
-
-    Slice<ClassVersion> result =
-        classVersionRepository.findByRepositoryIdAndNameContainingIgnoreCaseAndTypeAndDataType(
-            repository.getId(), "est", null, null, PageRequest.ofSize(10));
-
-    assertThat(result).size().isEqualTo(1);
-
-    assertThat(result.stream().findFirst())
-        .hasValueSatisfying(
-            cv -> {
-              assertThat(cv.getName()).isEqualTo("example");
-              assertThat(cv.getAnnotations("title").stream().findFirst())
-                  .hasValueSatisfying(t -> assertThat(t.getStringValue()).isEqualTo("test name"));
-            });
-
-    assertThat(
-            classVersionRepository
-                .findByRepositoryIdAndNameContainingIgnoreCaseAndTypeAndDataType(
-                    repository.getId(), null, List.of("type"), null, PageRequest.ofSize(10))
-                .getNumberOfElements())
-        .isEqualTo(1);
-
-    assertThat(
-            classVersionRepository
-                .findByRepositoryIdAndNameContainingIgnoreCaseAndTypeAndDataType(
-                    repository.getId(), null, null, "decimal", PageRequest.ofSize(10))
-                .getNumberOfElements())
-        .isEqualTo(1);
-
-    assertThat(
-            classVersionRepository
-                .findByRepositoryIdAndNameContainingIgnoreCaseAndTypeAndDataType(
-                    repository.getId(), "test", List.of("type"), "decimal", PageRequest.ofSize(10))
-                .getNumberOfElements())
-        .isEqualTo(1);
-
-    assertThat(
-            classVersionRepository
-                .findByRepositoryIdAndNameContainingIgnoreCaseAndTypeAndDataType(
-                    repository.getId(), null, null, null, PageRequest.ofSize(10))
-                .getNumberOfElements())
-        .isEqualTo(2);
-
-    assertThat(
-            classVersionRepository
-                .findByRepositoryIdAndNameContainingIgnoreCaseAndTypeAndDataType(
-                    repository.getId(), "example", null, null, PageRequest.ofSize(10))
-                .getNumberOfElements())
-        .isEqualTo(2);
   }
 
   @Test
