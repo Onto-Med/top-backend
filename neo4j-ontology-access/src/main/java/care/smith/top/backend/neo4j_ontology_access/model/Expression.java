@@ -18,7 +18,7 @@ import java.util.Set;
 public class Expression {
   @Id @GeneratedValue private Long id;
 
-  private String expression;
+  private String content;
   private String type;
   private Integer index;
   private Set<Class> components;
@@ -35,12 +35,12 @@ public class Expression {
     return this;
   }
 
-  public String getExpression() {
-    return expression;
+  public String getContent() {
+    return content;
   }
 
-  public Expression setExpression(String expression) {
-    this.expression = expression;
+  public Expression setContent(String content) {
+    this.content = content;
     return this;
   }
 
