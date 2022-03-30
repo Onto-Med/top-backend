@@ -1,38 +1,59 @@
 package care.smith.top.backend.neo4j_ontology_access.repository;
 
 import care.smith.top.backend.neo4j_ontology_access.model.Directory;
-import org.springframework.data.neo4j.repository.query.Query;
+import org.neo4j.cypherdsl.core.Cypher;
+import org.neo4j.cypherdsl.core.Functions;
+import org.neo4j.cypherdsl.core.NamedPath;
+import org.neo4j.cypherdsl.core.Node;
 import org.springframework.data.neo4j.repository.support.CypherdslConditionExecutor;
 import org.springframework.data.neo4j.repository.support.CypherdslStatementExecutor;
 import org.springframework.data.repository.PagingAndSortingRepository;
-import org.springframework.data.repository.query.Param;
-import org.springframework.data.util.Streamable;
 import org.springframework.stereotype.Repository;
+
+import java.util.Collection;
 
 @Repository
 public interface DirectoryRepository
     extends PagingAndSortingRepository<Directory, String>,
         CypherdslConditionExecutor<Directory>,
         CypherdslStatementExecutor<Directory> {
-  @Query(
-      "MATCH (d:Directory) "
-          + "WHERE d.name =~ '(?i).*' + $name + '.*' "
-          + "OPTIONAL MATCH p = (d) -[:BELONGS_TO]-> (:Directory) "
-          + "RETURN d, relationships(p), nodes(p)")
-  Streamable<Directory> findByNameContainingIgnoreCase(@Param("name") String name);
 
-  @Query(
-      "MATCH (d:Directory) "
-          + "WHERE d.description =~ '(?i).*' + $description + '.*' "
-          + "OPTIONAL MATCH p = (d) -[:BELONGS_TO]-> (:Directory) "
-          + "RETURN d, relationships(p), nodes(p)")
-  Streamable<Directory> findByDescriptionContainingIgnoreCase(
-      @Param("description") String description);
+  default Collection<Directory> findAllByDescription(String description) {
+    return this.findAllByTypeAndNameAndDescription(null, null, description);
+  }
 
-  @Query(
-      "MATCH (d:Directory) "
-          + "WHERE $type IN labels(d) "
-          + "OPTIONAL MATCH p = (d) -[:BELONGS_TO]-> (:Directory) "
-          + "RETURN d, relationships(p), nodes(p)")
-  Streamable<Directory> findByType(@Param("type") String type);
+  default Collection<Directory> findAllByName(String name) {
+    return this.findAllByTypeAndNameAndDescription(null, name, null);
+  }
+
+  default Collection<Directory> findAllByType(String type) {
+    return this.findAllByTypeAndNameAndDescription(type, null, null);
+  }
+
+  default Collection<Directory> findAllByTypeAndNameAndDescription(
+      String type, String name, String description) {
+    Node d = Cypher.node("Directory").named("d");
+    NamedPath p =
+        Cypher.path("p").definedBy(d.relationshipTo(Cypher.node("Directory"), "BELONGS_TO"));
+
+    return this.findAll(
+        Cypher.match(d)
+            .where(type != null ? d.hasLabels(type) : Cypher.literalTrue().asCondition())
+            .and(
+                name != null
+                    ? Functions.toLower(d.property("name"))
+                        .contains(Cypher.anonParameter(name.toLowerCase()))
+                    : Cypher.literalTrue().asCondition())
+            .and(
+                description != null
+                    ? Functions.toLower(d.property("description"))
+                        .contains(Cypher.anonParameter(description.toLowerCase()))
+                    : Cypher.literalTrue().asCondition())
+            .optionalMatch(p)
+            .returning(
+                d.getRequiredSymbolicName(),
+                Functions.collect(Functions.nodes(p)),
+                Functions.collect(Functions.relationships(p)))
+            .build());
+  }
 }
