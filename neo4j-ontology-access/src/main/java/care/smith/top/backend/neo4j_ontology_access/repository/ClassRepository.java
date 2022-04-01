@@ -3,12 +3,16 @@ package care.smith.top.backend.neo4j_ontology_access.repository;
 import care.smith.top.backend.neo4j_ontology_access.model.Class;
 import care.smith.top.backend.neo4j_ontology_access.model.ClassVersion;
 import care.smith.top.backend.neo4j_ontology_access.model.Repository;
+import org.neo4j.cypherdsl.core.Cypher;
+import org.neo4j.cypherdsl.core.Node;
+import org.neo4j.cypherdsl.core.Relationship;
 import org.springframework.data.neo4j.repository.query.Query;
 import org.springframework.data.neo4j.repository.support.CypherdslConditionExecutor;
 import org.springframework.data.neo4j.repository.support.CypherdslStatementExecutor;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -33,6 +37,17 @@ public interface ClassRepository
   Set<Class> findRootClassesByRepository(@Param("repository") Repository repository);
 
   Optional<Class> findByIdAndRepositoryId(String id, String repositoryId);
+
+  default Collection<Class> getForks(Class cls) {
+    Node origin =
+        Cypher.node("Class")
+            .withProperties("id", Cypher.anonParameter(cls.getId()))
+            .named("origin");
+    Node fork = Cypher.node("Class").named("c");
+    Relationship forkRel = fork.relationshipTo(origin, "IS_FORK_OF").named("forkRel");
+
+    return this.findAll(Cypher.match(forkRel).returning(fork).build());
+  }
 
   /**
    * Get a new version number for the given {@link Class} object. The returned number is the highest
