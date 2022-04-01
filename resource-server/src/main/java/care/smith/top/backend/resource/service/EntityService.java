@@ -200,7 +200,8 @@ public class EntityService {
     int requestedPage = page != null ? page - 1 : 0;
     return classVersionRepository
         .findAll(
-            findEntitiesMatchingConditionStatement(null, name, type, dataType, requestedPage), ClassVersion.class)
+            findEntitiesMatchingConditionStatement(null, name, type, dataType, requestedPage),
+            ClassVersion.class)
         .stream()
         .map(cv -> classVersionToEntity(cv, cv.getaClass().getRepositoryId()))
         .collect(Collectors.toList());
@@ -217,9 +218,28 @@ public class EntityService {
     getRepository(organisationId, repositoryId);
     int requestedPage = page != null ? page - 1 : 0;
     return classVersionRepository
-        .findAll(findEntitiesMatchingConditionStatement(repositoryId, name, type, dataType, requestedPage))
+        .findAll(
+            findEntitiesMatchingConditionStatement(
+                repositoryId, name, type, dataType, requestedPage))
         .stream()
         .map(cv -> classVersionToEntity(cv, repositoryId))
+        .collect(Collectors.toList());
+  }
+
+  public List<Entity> getForks(
+      String organisationId,
+      String repositoryId,
+      String id,
+      Integer version,
+      List<String> include) {
+    Repository repository = getRepository(organisationId, repositoryId);
+    Class cls =
+        classRepository
+            .findByIdAndRepositoryId(id, repository.getId())
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+    return classRepository.getForks(cls).stream()
+        .map(f -> classToEntity(f, repository.getId()))
         .collect(Collectors.toList());
   }
 
