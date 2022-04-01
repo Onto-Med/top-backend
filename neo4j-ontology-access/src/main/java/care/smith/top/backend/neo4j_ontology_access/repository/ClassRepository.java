@@ -4,6 +4,8 @@ import care.smith.top.backend.neo4j_ontology_access.model.Class;
 import care.smith.top.backend.neo4j_ontology_access.model.ClassVersion;
 import care.smith.top.backend.neo4j_ontology_access.model.Repository;
 import org.springframework.data.neo4j.repository.query.Query;
+import org.springframework.data.neo4j.repository.support.CypherdslConditionExecutor;
+import org.springframework.data.neo4j.repository.support.CypherdslStatementExecutor;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.repository.query.Param;
 
@@ -12,7 +14,10 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 @org.springframework.stereotype.Repository
-public interface ClassRepository extends PagingAndSortingRepository<Class, String> {
+public interface ClassRepository
+    extends PagingAndSortingRepository<Class, String>,
+        CypherdslConditionExecutor<Class>,
+        CypherdslStatementExecutor<Class> {
   @Query(
       "MATCH (super:Class {id: $classId}) <-[:IS_SUBCLASS_OF { ownerId: $repositoryId }]- (sub:Class) "
           + "RETURN sub ORDER BY sub.index")

@@ -372,7 +372,73 @@ class EntityServiceTest extends Neo4jTest {
   }
 
   @Test
-  void getEntities() {}
+  void getEntities() {
+    Organisation organisation =
+        organisationService.createOrganisation(new Organisation().id("org"));
+    Repository repository1 =
+        repositoryService.createRepository(
+            organisation.getId(), new Repository().id("repo1"), null);
+    Repository repository2 =
+        repositoryService.createRepository(
+            organisation.getId(), new Repository().id("repo2"), null);
+    Phenotype entity1 =
+        (Phenotype)
+            new Phenotype()
+                .id(UUID.randomUUID().toString())
+                .entityType(EntityType.SINGLE_PHENOTYPE)
+                .titles(
+                    Collections.singletonList(
+                        new LocalisableText().lang("en").text("example test")));
+
+    Category entity2 =
+        (Category)
+            new Category()
+                .id(UUID.randomUUID().toString())
+                .entityType(EntityType.CATEGORY)
+                .titles(
+                    Collections.singletonList(new LocalisableText().lang("en").text("example")));
+
+    assertThat(entityService.createEntity(organisation.getId(), repository1.getId(), entity1))
+        .isNotNull()
+        .isInstanceOf(Phenotype.class)
+        .satisfies(p -> assertThat(p.getTitles()).isNotEmpty().size().isEqualTo(1));
+
+    assertThat(entityService.createEntity(organisation.getId(), repository2.getId(), entity2))
+        .isNotNull()
+        .isInstanceOf(Category.class)
+        .satisfies(p -> assertThat(p.getTitles()).isNotEmpty().size().isEqualTo(1));
+
+    assertThat(
+            entityService.getEntities(
+                null, null, Collections.singletonList(EntityType.SINGLE_PHENOTYPE), null, null))
+        .isNotEmpty()
+        .allSatisfy(e -> assertThat(e.getId()).isEqualTo(entity1.getId()))
+        .size()
+        .isEqualTo(1);
+
+    assertThat(entityService.getEntities(null, "xample", null, null, null))
+        .isNotEmpty()
+        .anySatisfy(e -> assertThat(e.getId()).isEqualTo(entity1.getId()))
+        .anySatisfy(e -> assertThat(e.getId()).isEqualTo(entity2.getId()))
+        .size()
+        .isEqualTo(2);
+
+    assertThat(entityService.getEntities(null, "test", null, null, null))
+        .isNotEmpty()
+        .allSatisfy(e -> assertThat(e.getId()).isEqualTo(entity1.getId()))
+        .size()
+        .isEqualTo(1);
+
+    assertThat(entityService.getEntities(null, null, null, DataType.BOOLEAN, null)).isNullOrEmpty();
+
+    assertThat(
+            entityService.getEntitiesByRepositoryId(
+                organisation.getId(), repository1.getId(), null, "xample", null, null, null))
+        .isNotEmpty()
+        .allSatisfy(e -> assertThat(e.getId()).isEqualTo(entity1.getId()))
+        .size()
+        .isEqualTo(1);
+  }
 
   @Test
   void getSubclasses() {

@@ -1,7 +1,7 @@
 server:
-  port: ${APP_PORT}
+  port: ${APP_PORT:8080}
   servlet:
-    context-path: ${APP_PATH}
+    context-path: ${APP_PATH:/}
 
 logging:
   level:
@@ -9,10 +9,10 @@ logging:
 
 spring:
   neo4j:
-    uri: bolt://${DB_HOST}:${DB_PORT}
+    uri: bolt://${DB_HOST:localhost}:${DB_PORT:7687}
     authentication:
-      username: ${DB_USER}
-      password: ${DB_PASS}
+      username: ${DB_USER:neo4j}
+      password: ${DB_PASS:test}
   security:
     cors:
       allowed-origins: "*"
