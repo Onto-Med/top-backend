@@ -8,9 +8,11 @@ import care.smith.top.backend.resource.service.EntityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Service
 public class ForkApiDelegateImpl implements ForkApiDelegate {
   @Autowired EntityService entityService;
 
@@ -22,8 +24,10 @@ public class ForkApiDelegateImpl implements ForkApiDelegate {
       ForkCreateInstruction forkCreateInstruction,
       Integer version,
       List<String> include) {
-    return ForkApiDelegate.super.createFork(
-        organisationId, repositoryId, id, forkCreateInstruction, version, include);
+    return new ResponseEntity<>(
+        entityService.createFork(
+            organisationId, repositoryId, id, forkCreateInstruction, version, include),
+        HttpStatus.CREATED);
   }
 
   @Override

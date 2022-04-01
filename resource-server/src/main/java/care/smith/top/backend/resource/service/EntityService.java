@@ -147,6 +147,97 @@ public class EntityService {
   }
 
   @Transactional
+  public List<Entity> createFork(
+      String organisationId,
+      String repositoryId,
+      String id,
+      ForkCreateInstruction forkCreateInstruction,
+      Integer version,
+      List<String> include) {
+    if (repositoryId.equals(forkCreateInstruction.getRepositoryId()))
+      throw new ResponseStatusException(
+          HttpStatus.NOT_ACCEPTABLE, "Cannot create fork in the same repository.");
+
+    Repository originRepo = getRepository(organisationId, repositoryId);
+    Repository destinationRepo =
+        getRepository(
+            forkCreateInstruction.getOrganisationId(), forkCreateInstruction.getRepositoryId());
+
+    Class originCls =
+        classRepository
+            .findByIdAndRepositoryId(id, repositoryId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+    if (classRepository.getForks(originCls).stream()
+        .anyMatch(f -> f.getRepositoryId().equals(forkCreateInstruction.getRepositoryId())))
+      throw new ResponseStatusException(HttpStatus.CONFLICT, "Fork already exists in repository.");
+
+    ClassVersion originVersion =
+        classVersionRepository
+            .findCurrentByClassId(originCls.getId())
+            .orElseThrow(
+                () ->
+                    new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Class does not have a current version."));
+
+    Entity fork = classVersionToEntity(originVersion, repositoryId);
+    fork.setVersion(1);
+    fork.setId(UUID.randomUUID().toString());
+
+    List<Entity> result = new ArrayList<>();
+
+    //    if (forkCreateInstruction.isCascade()) {
+    //      // TODO: handle referenced entities
+    //    } else {
+    //      // TODO: drop properties with references
+    //    }
+
+    //    if (forkCreateInstruction.isHistory()) {
+    //      // TODO: copy all versions
+    //    }
+
+    if (fork instanceof Phenotype) {
+      Phenotype phenotype = (Phenotype) fork;
+      phenotype.setSuperCategories(null);
+      if (phenotype.getSuperPhenotype() != null) {
+        String originId = phenotype.getSuperPhenotype().getId();
+        Phenotype superPhenotype =
+            (Phenotype)
+                loadEntity(
+                    organisationId, repositoryId, originId, null);
+        superPhenotype.setId(UUID.randomUUID().toString());
+        superPhenotype.setVersion(1);
+        superPhenotype.setSuperCategories(null);
+        phenotype.setSuperPhenotype(superPhenotype);
+        Entity superClass = createEntity(
+                forkCreateInstruction.getOrganisationId(),
+                forkCreateInstruction.getRepositoryId(),
+                superPhenotype);
+        result.add(superClass);
+        if (forkCreateInstruction.isPreserveOrigin()) {
+          classRepository.setFork(superClass.getId(), originId);
+          // TODO: set IS_EQUIVALENT_TO
+        }
+      }
+    } else {
+      ((Category) fork).setSuperCategories(null);
+    }
+
+    result.add(
+        createEntity(
+            forkCreateInstruction.getOrganisationId(),
+            forkCreateInstruction.getRepositoryId(),
+            fork));
+
+    if (forkCreateInstruction.isPreserveOrigin()) {
+      classRepository.setFork(fork.getId(), originCls.getId());
+      // TODO: set IS_EQUIVALENT_TO
+    }
+
+    return result;
+  }
+
+  @Transactional
   public void deleteEntity(String organisationId, String repositoryId, String id) {
     Repository repository = getRepository(organisationId, repositoryId);
     Class cls =

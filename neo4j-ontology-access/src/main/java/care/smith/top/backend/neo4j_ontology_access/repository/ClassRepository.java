@@ -67,9 +67,18 @@ public interface ClassRepository
   @Query(
       "MATCH (c:Class { id: $cls.__id__ }) "
           + "MATCH (cv:ClassVersion) "
-          + "WHERE cv.hiddenAt IS NULL AND id(cv) = $classVersion.__id__ "
+          + "WHERE id(cv) = $classVersion.__id__ "
           + "OPTIONAL MATCH (c) -[rel:CURRENT_VERSION]-> (:ClassVersion) "
           + "DELETE rel "
           + "CREATE (c) -[:CURRENT_VERSION]-> (cv) ")
   void setCurrent(@Param("cls") Class cls, @Param("classVersion") ClassVersion classVersion);
+
+  @Query(
+      "MATCH (fork:Class { id: $forkId }) "
+          + "MATCH (origin:Class { id: $originId }) "
+          + "WHERE fork.repositoryId <> origin.repositoryId "
+          + "OPTIONAL MATCH (fork) -[rel:IS_FORK_OF]-> (:Class) "
+          + "DELETE rel "
+          + "CREATE (fork) -[:IS_FORK_OF]-> (origin) ")
+  void setFork(@Param("forkId") String forkId, @Param("originId") String originId);
 }
