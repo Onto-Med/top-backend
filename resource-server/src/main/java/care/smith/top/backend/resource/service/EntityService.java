@@ -48,6 +48,7 @@ public class EntityService {
     Node cv = Cypher.node("ClassVersion").named("cv");
     Node a = Cypher.node("Annotation").named("a");
     Node aTitle = a.withProperties("property", Cypher.anonParameter("title")).named("title");
+    Node aSynonym = a.withProperties("property", Cypher.anonParameter("synonym")).named("synonym");
     Node aDataType =
         a.withProperties("property", Cypher.anonParameter("dataType")).named("dataType");
     Relationship cRel = cv.relationshipTo(c, "IS_VERSION_OF").named("cRel");
@@ -66,18 +67,20 @@ public class EntityService {
                 ? c.property("repositoryId").isEqualTo(Cypher.anonParameter(repositoryId))
                 : Cypher.literalTrue().asCondition())
         .optionalMatch(cv.relationshipTo(aTitle, "HAS_ANNOTATION"))
+        .optionalMatch(cv.relationshipTo(aSynonym, "HAS_ANNOTATION"))
         .optionalMatch(cv.relationshipTo(aDataType, "HAS_ANNOTATION"))
         .with(
             c.getRequiredSymbolicName(),
             cRel.getRequiredSymbolicName(),
             cv.getRequiredSymbolicName(),
             aTitle.getRequiredSymbolicName(),
+            aSynonym.getRequiredSymbolicName(),
             aDataType.getRequiredSymbolicName())
         .where(Cypher.literalTrue().asCondition())
         .and(
             name != null
                 ? Functions.toLower(aTitle.property("stringValue"))
-                    .contains(Cypher.anonParameter(name.toLowerCase()))
+                    .contains(Cypher.anonParameter(name.toLowerCase())).or(Functions.toLower(aSynonym.property("stringValue")).contains(Cypher.anonParameter(name.toLowerCase())))
                 : Cypher.literalTrue().asCondition())
         .and(
             dataType != null
