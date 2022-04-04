@@ -25,6 +25,7 @@ import java.time.ZoneOffset;
 import java.util.Set;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class EntityService {
@@ -335,7 +336,11 @@ public class EntityService {
             findEntitiesMatchingConditionStatement(
                 repositoryId, name, type, dataType, requestedPage))
         .stream()
-        .map(cv -> classVersionToEntity(cv, repositoryId))
+        .map(
+            cv -> {
+              System.err.println(cv.getaClass().getId());
+              return classVersionToEntity(cv, repositoryId);
+            })
         .collect(Collectors.toList());
   }
 
@@ -614,9 +619,9 @@ public class EntityService {
                             HttpStatus.INTERNAL_SERVER_ERROR,
                             "Class has no type and cannot be mapped to entity!")));
 
-    Set<ClassVersion> superClasses =
-        classVersionRepository.getCurrentSuperClassVersionsByOwnerId(
-            classVersion.getaClass(), ownerId);
+    Stream<Class> superClasses =
+        classVersion.getaClass().getSuperClassRelations().stream()
+            .map(ClassRelation::getSuperclass);
 
     if (entityType.equals(EntityType.CATEGORY)) {
       entity = new Category();
@@ -631,12 +636,12 @@ public class EntityService {
                 DataType.fromValue(classVersion.getAnnotation("dataType").get().getStringValue()));
 
       if (isRestricted(entityType)) {
-        superClasses.stream()
+        superClasses
             .findFirst()
             .ifPresent(
                 c -> {
                   String superType =
-                      c.getaClass().getTypes().stream()
+                      c.getTypes().stream()
                           .findFirst()
                           .orElseThrow(
                               () ->
@@ -647,7 +652,7 @@ public class EntityService {
                       .setSuperPhenotype(
                           (Phenotype)
                               new Phenotype()
-                                  .id(c.getaClass().getId())
+                                  .id(c.getId())
                                   .entityType(EntityType.fromValue(superType)));
                 });
         classVersion
@@ -667,14 +672,13 @@ public class EntityService {
           .ifPresent(a -> ((Phenotype) entity).setExpression(toExpression(a)));
     }
 
-    if (superClasses != null && !isRestricted(entityType))
+    if (!isRestricted(entityType))
       entity.setSuperCategories(
-          superClasses.stream()
+          superClasses
               .map(
                   c -> {
-                    if (Objects.equals(c.getaClass().getId(), entity.getId())) return null;
-                    return (Category)
-                        new Category().id(c.getaClass().getId()).entityType(EntityType.CATEGORY);
+                    if (Objects.equals(c.getId(), entity.getId())) return null;
+                    return (Category) new Category().id(c.getId()).entityType(EntityType.CATEGORY);
                   })
               .filter(Objects::nonNull)
               .collect(Collectors.toList()));
@@ -715,7 +719,7 @@ public class EntityService {
             p ->
                 accessor.setPropertyValue(
                     p + "s",
-                    annotationRepository.findByClassVersionAndProperty(classVersion, p).stream()
+                    classVersion.getAnnotations(p).stream()
                         .map(
                             a ->
                                 new LocalisableText()
@@ -724,7 +728,7 @@ public class EntityService {
                         .collect(Collectors.toList())));
 
     entity.setCodes(
-        annotationRepository.findByClassVersionAndProperty(classVersion, "code").stream()
+        classVersion.getAnnotations("code").stream()
             .map(
                 a ->
                     new Code()
