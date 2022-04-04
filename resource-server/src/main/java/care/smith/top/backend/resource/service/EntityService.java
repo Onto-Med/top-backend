@@ -205,8 +205,8 @@ public class EntityService {
                           String.format("Entity '%s' does not have a current version.", id)));
 
     Entity fork = classVersionToEntity(originVersion, originRepo.getId());
-    fork.setVersion(1);
     fork.setId(UUID.randomUUID().toString());
+    fork.setVersion(1);
 
     List<Entity> result = new ArrayList<>();
 
@@ -224,22 +224,24 @@ public class EntityService {
       Phenotype phenotype = (Phenotype) fork;
       phenotype.setSuperCategories(null);
       if (phenotype.getSuperPhenotype() != null) {
-        String           originId  = phenotype.getSuperPhenotype().getId();
-        Integer originVer = phenotype.getSuperPhenotype().getVersion();
-        Phenotype superPhenotype =
-            (Phenotype) loadEntity(organisationId, originRepo.getId(), originId, null);
-        superPhenotype.setId(UUID.randomUUID().toString());
-        superPhenotype.setVersion(1);
-        superPhenotype.setSuperCategories(null);
-        phenotype.setSuperPhenotype(superPhenotype);
-        Entity superClass =
-            createEntity(
-                forkCreateInstruction.getOrganisationId(), destinationRepo.getId(), superPhenotype);
-        result.add(superClass);
-        if (forkCreateInstruction.isPreserveOrigin()) {
-          classRepository.setFork(superClass.getId(), originId);
-          classVersionRepository.setEquivalentVersion(superClass.getId(), superClass.getVersion(), originId, originVer);
-        }
+        Entity superPhenotype =
+            createFork(
+                    organisationId,
+                    repositoryId,
+                    phenotype.getSuperPhenotype().getId(),
+                    new ForkCreateInstruction()
+                        .organisationId(forkCreateInstruction.getOrganisationId())
+                        .repositoryId(forkCreateInstruction.getRepositoryId())
+                        .cascade(false) // do not cascade for super phenotype
+                        .history(forkCreateInstruction.isHistory())
+                        .preserveOrigin(forkCreateInstruction.isPreserveOrigin()),
+                    null,
+                    null)
+                .stream()
+                .findFirst()
+                .orElseThrow();
+        result.add(superPhenotype);
+        phenotype.setSuperPhenotype((Phenotype) superPhenotype);
       }
     } else {
       ((Category) fork).setSuperCategories(null);
