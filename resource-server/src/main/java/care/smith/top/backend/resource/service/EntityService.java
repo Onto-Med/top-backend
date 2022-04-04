@@ -316,7 +316,7 @@ public class EntityService {
         .findAll(
             findEntitiesMatchingConditionStatement(null, name, type, dataType, requestedPage),
             ClassVersion.class)
-        .stream()
+        .parallelStream()
         .map(cv -> classVersionToEntity(cv, cv.getaClass().getRepositoryId()))
         .collect(Collectors.toList());
   }
@@ -335,9 +335,8 @@ public class EntityService {
         .findAll(
             findEntitiesMatchingConditionStatement(
                 repositoryId, name, type, dataType, requestedPage))
-        .stream()
-        .map(
-            cv -> classVersionToEntity(cv, repositoryId))
+        .parallelStream()
+        .map(cv -> classVersionToEntity(cv, repositoryId))
         .collect(Collectors.toList());
   }
 
@@ -408,8 +407,8 @@ public class EntityService {
     Repository repository = getRepository(organisationId, repositoryId);
     return classVersionRepository
         .findByClassId(id, PageRequest.of(0, 10, Sort.Direction.DESC, "cv.version"))
+        .stream().parallel()
         .map(cv -> classVersionToEntity(cv, repositoryId))
-        .stream()
         .collect(Collectors.toList());
   }
 
