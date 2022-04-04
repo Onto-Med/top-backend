@@ -178,7 +178,17 @@ public class EntityService {
         .anyMatch(f -> f.getRepositoryId().equals(destinationRepo.getId())))
       throw new ResponseStatusException(HttpStatus.CONFLICT, "Fork already exists in repository.");
 
-    ClassVersion originVersion =
+    ClassVersion originVersion;
+    if (version != null)
+      originVersion =
+        classVersionRepository
+            .findByClassIdAndVersion(originCls.getId(), version)
+            .orElseThrow(
+                () ->
+                    new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Version does not exist for class."));
+    else
+      originVersion =
         classVersionRepository
             .findCurrentByClassId(originCls.getId())
             .orElseThrow(
