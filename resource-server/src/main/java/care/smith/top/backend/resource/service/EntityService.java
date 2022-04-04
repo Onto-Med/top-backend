@@ -250,9 +250,12 @@ public class EntityService {
     result.add(
         createEntity(forkCreateInstruction.getOrganisationId(), destinationRepo.getId(), fork));
 
+    ClassVersion forkVersion =
+        classVersionRepository.findCurrentByClassId(fork.getId()).orElseThrow();
+
     if (forkCreateInstruction.isPreserveOrigin()) {
       classRepository.setFork(fork.getId(), originCls.getId());
-      classVersionRepository.setEquivalentVersion(fork.getId(), fork.getVersion(), originCls.getId(), originVersion.getVersion());
+      classVersionRepository.setEquivalentVersion(forkVersion, originVersion);
     }
 
     return result;
