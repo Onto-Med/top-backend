@@ -38,6 +38,14 @@ public interface ClassRepository
 
   Optional<Class> findByIdAndRepositoryId(String id, String repositoryId);
 
+  default boolean forkExists(Class originCls, String repositoryId) {
+    Node cls = Cypher.node("Class");
+    Node origin = cls.withProperties("id", Cypher.anonParameter(originCls.getId())).named("origin");
+    Relationship forkRel = origin.relationshipBetween(cls, "IS_FORK_OF").unbounded();
+
+    return exists(Cypher.match(forkRel).asCondition());
+  }
+
   default Collection<Class> getForks(Class cls) {
     Node origin =
         Cypher.node("Class")

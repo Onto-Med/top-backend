@@ -175,13 +175,11 @@ public class EntityService {
             .findByIdAndRepositoryId(id, originRepo.getId())
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-    if (classRepository.getForks(originCls).stream()
-        .anyMatch(f -> f.getRepositoryId().equals(destinationRepo.getId())))
+    if (classRepository.forkExists(originCls, destinationRepo.getId()))
       throw new ResponseStatusException(
           HttpStatus.CONFLICT,
           String.format(
               "Fork of entity '%s' already exists in repository '%s'.", id, repositoryId));
-    // TODO: also check IS_EQUIVALENT_TO relationship
 
     ClassVersion originVersion;
     if (version != null)
