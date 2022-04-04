@@ -216,7 +216,8 @@ public class EntityService {
       Phenotype phenotype = (Phenotype) fork;
       phenotype.setSuperCategories(null);
       if (phenotype.getSuperPhenotype() != null) {
-        String originId = phenotype.getSuperPhenotype().getId();
+        String           originId  = phenotype.getSuperPhenotype().getId();
+        Integer originVer = phenotype.getSuperPhenotype().getVersion();
         Phenotype superPhenotype =
             (Phenotype) loadEntity(organisationId, originRepo.getId(), originId, null);
         superPhenotype.setId(UUID.randomUUID().toString());
@@ -229,7 +230,7 @@ public class EntityService {
         result.add(superClass);
         if (forkCreateInstruction.isPreserveOrigin()) {
           classRepository.setFork(superClass.getId(), originId);
-          // TODO: set IS_EQUIVALENT_TO
+          classVersionRepository.setEquivalentVersion(superClass.getId(), superClass.getVersion(), originId, originVer);
         }
       }
     } else {
@@ -241,7 +242,7 @@ public class EntityService {
 
     if (forkCreateInstruction.isPreserveOrigin()) {
       classRepository.setFork(fork.getId(), originCls.getId());
-      // TODO: set IS_EQUIVALENT_TO
+      classVersionRepository.setEquivalentVersion(fork.getId(), fork.getVersion(), originCls.getId(), originVersion.getVersion());
     }
 
     return result;
