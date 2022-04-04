@@ -25,7 +25,6 @@ import java.time.ZoneOffset;
 import java.util.Set;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 public class EntityService {
@@ -615,9 +614,9 @@ public class EntityService {
                             HttpStatus.INTERNAL_SERVER_ERROR,
                             "Class has no type and cannot be mapped to entity!")));
 
-    Stream<Class> superClasses =
-        classVersion.getaClass().getSuperClassRelations().stream()
-            .map(ClassRelation::getSuperclass);
+    Set<ClassVersion> superClasses =
+        classVersionRepository.getCurrentSuperClassVersionsByOwnerId(
+            classVersion.getaClass(), ownerId);
 
     if (entityType.equals(EntityType.CATEGORY)) {
       entity = new Category();
@@ -632,12 +631,12 @@ public class EntityService {
                 DataType.fromValue(classVersion.getAnnotation("dataType").get().getStringValue()));
 
       if (isRestricted(entityType)) {
-        superClasses
+        superClasses.stream()
             .findFirst()
             .ifPresent(
                 c -> {
                   String superType =
-                      c.getTypes().stream()
+                      c.getaClass().getTypes().stream()
                           .findFirst()
                           .orElseThrow(
                               () ->
@@ -648,7 +647,7 @@ public class EntityService {
                       .setSuperPhenotype(
                           (Phenotype)
                               new Phenotype()
-                                  .id(c.getId())
+                                  .id(c.getaClass().getId())
                                   .entityType(EntityType.fromValue(superType)));
                 });
         classVersion
@@ -670,11 +669,12 @@ public class EntityService {
 
     if (!isRestricted(entityType))
       entity.setSuperCategories(
-          superClasses
+          superClasses.stream()
               .map(
                   c -> {
-                    if (Objects.equals(c.getId(), entity.getId())) return null;
-                    return (Category) new Category().id(c.getId()).entityType(EntityType.CATEGORY);
+                    if (Objects.equals(c.getaClass().getId(), entity.getId())) return null;
+                    return (Category)
+                        new Category().id(c.getaClass().getId()).entityType(EntityType.CATEGORY);
                   })
               .filter(Objects::nonNull)
               .collect(Collectors.toList()));
