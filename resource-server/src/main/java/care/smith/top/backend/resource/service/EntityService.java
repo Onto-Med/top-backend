@@ -80,7 +80,10 @@ public class EntityService {
         .and(
             name != null
                 ? Functions.toLower(aTitle.property("stringValue"))
-                    .contains(Cypher.anonParameter(name.toLowerCase())).or(Functions.toLower(aSynonym.property("stringValue")).contains(Cypher.anonParameter(name.toLowerCase())))
+                    .contains(Cypher.anonParameter(name.toLowerCase()))
+                    .or(
+                        Functions.toLower(aSynonym.property("stringValue"))
+                            .contains(Cypher.anonParameter(name.toLowerCase())))
                 : Cypher.literalTrue().asCondition())
         .and(
             dataType != null
@@ -168,11 +171,11 @@ public class EntityService {
 
     Class originCls =
         classRepository
-            .findByIdAndRepositoryId(id, repositoryId)
+            .findByIdAndRepositoryId(id, originRepo.getId())
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
     if (classRepository.getForks(originCls).stream()
-        .anyMatch(f -> f.getRepositoryId().equals(forkCreateInstruction.getRepositoryId())))
+        .anyMatch(f -> f.getRepositoryId().equals(destinationRepo.getId())))
       throw new ResponseStatusException(HttpStatus.CONFLICT, "Fork already exists in repository.");
 
     ClassVersion originVersion =
@@ -183,7 +186,7 @@ public class EntityService {
                     new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Class does not have a current version."));
 
-    Entity fork = classVersionToEntity(originVersion, repositoryId);
+    Entity fork = classVersionToEntity(originVersion, originRepo.getId());
     fork.setVersion(1);
     fork.setId(UUID.randomUUID().toString());
 
@@ -205,17 +208,14 @@ public class EntityService {
       if (phenotype.getSuperPhenotype() != null) {
         String originId = phenotype.getSuperPhenotype().getId();
         Phenotype superPhenotype =
-            (Phenotype)
-                loadEntity(
-                    organisationId, repositoryId, originId, null);
+            (Phenotype) loadEntity(organisationId, originRepo.getId(), originId, null);
         superPhenotype.setId(UUID.randomUUID().toString());
         superPhenotype.setVersion(1);
         superPhenotype.setSuperCategories(null);
         phenotype.setSuperPhenotype(superPhenotype);
-        Entity superClass = createEntity(
-                forkCreateInstruction.getOrganisationId(),
-                forkCreateInstruction.getRepositoryId(),
-                superPhenotype);
+        Entity superClass =
+            createEntity(
+                forkCreateInstruction.getOrganisationId(), destinationRepo.getId(), superPhenotype);
         result.add(superClass);
         if (forkCreateInstruction.isPreserveOrigin()) {
           classRepository.setFork(superClass.getId(), originId);
@@ -227,10 +227,7 @@ public class EntityService {
     }
 
     result.add(
-        createEntity(
-            forkCreateInstruction.getOrganisationId(),
-            forkCreateInstruction.getRepositoryId(),
-            fork));
+        createEntity(forkCreateInstruction.getOrganisationId(), destinationRepo.getId(), fork));
 
     if (forkCreateInstruction.isPreserveOrigin()) {
       classRepository.setFork(fork.getId(), originCls.getId());
