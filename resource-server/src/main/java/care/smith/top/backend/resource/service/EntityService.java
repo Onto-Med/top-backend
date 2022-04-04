@@ -337,10 +337,7 @@ public class EntityService {
                 repositoryId, name, type, dataType, requestedPage))
         .stream()
         .map(
-            cv -> {
-              System.err.println(cv.getaClass().getId());
-              return classVersionToEntity(cv, repositoryId);
-            })
+            cv -> classVersionToEntity(cv, repositoryId))
         .collect(Collectors.toList());
   }
 
