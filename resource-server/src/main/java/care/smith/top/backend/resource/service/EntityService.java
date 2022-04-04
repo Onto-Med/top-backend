@@ -162,7 +162,8 @@ public class EntityService {
       List<String> include) {
     if (repositoryId.equals(forkCreateInstruction.getRepositoryId()))
       throw new ResponseStatusException(
-          HttpStatus.NOT_ACCEPTABLE, "Cannot create fork in the same repository.");
+          HttpStatus.NOT_ACCEPTABLE,
+          String.format("Cannot create fork of entity '%s' in the same repository.", id));
 
     Repository originRepo = getRepository(organisationId, repositoryId);
     Repository destinationRepo =
@@ -176,25 +177,32 @@ public class EntityService {
 
     if (classRepository.getForks(originCls).stream()
         .anyMatch(f -> f.getRepositoryId().equals(destinationRepo.getId())))
-      throw new ResponseStatusException(HttpStatus.CONFLICT, "Fork already exists in repository.");
+      throw new ResponseStatusException(
+          HttpStatus.CONFLICT,
+          String.format(
+              "Fork of entity '%s' already exists in repository '%s'.", id, repositoryId));
+    // TODO: also check IS_EQUIVALENT_TO relationship
 
     ClassVersion originVersion;
     if (version != null)
       originVersion =
-        classVersionRepository
-            .findByClassIdAndVersion(originCls.getId(), version)
-            .orElseThrow(
-                () ->
-                    new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Version does not exist for class."));
+          classVersionRepository
+              .findByClassIdAndVersion(originCls.getId(), version)
+              .orElseThrow(
+                  () ->
+                      new ResponseStatusException(
+                          HttpStatus.NOT_FOUND,
+                          String.format(
+                              "Version %d does not exist for entity '%s'.", version, id)));
     else
       originVersion =
-        classVersionRepository
-            .findCurrentByClassId(originCls.getId())
-            .orElseThrow(
-                () ->
-                    new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Class does not have a current version."));
+          classVersionRepository
+              .findCurrentByClassId(originCls.getId())
+              .orElseThrow(
+                  () ->
+                      new ResponseStatusException(
+                          HttpStatus.NOT_FOUND,
+                          String.format("Entity '%s' does not have a current version.", id)));
 
     Entity fork = classVersionToEntity(originVersion, originRepo.getId());
     fork.setVersion(1);
