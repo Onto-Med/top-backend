@@ -111,13 +111,12 @@ public class EntityService implements ContentService {
   }
 
   public long count(EntityType... types) {
-    Node cls = Cypher.node("Class").named("cls");
-    StatementBuilder.OngoingReadingWithWhere statement =
-        Cypher.match(cls).where(Cypher.literalFalse().asCondition());
+    Node cls = Cypher.node("Class").named("class");
+    Condition condition = cls.isNull();
     for (EntityType t : types) {
-      statement = statement.or(cls.hasLabels(t.getValue()));
+      condition = condition.or(cls.hasLabels(t.getValue()));
     }
-    return classRepository.count(statement.asCondition());
+    return classRepository.count(condition);
   }
 
   @Transactional
