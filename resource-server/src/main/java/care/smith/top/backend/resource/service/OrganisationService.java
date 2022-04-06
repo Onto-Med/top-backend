@@ -3,6 +3,8 @@ package care.smith.top.backend.resource.service;
 import care.smith.top.backend.model.Organisation;
 import care.smith.top.backend.neo4j_ontology_access.model.Directory;
 import care.smith.top.backend.neo4j_ontology_access.repository.DirectoryRepository;
+import org.neo4j.cypherdsl.core.Conditions;
+import org.neo4j.cypherdsl.core.Cypher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -24,7 +26,8 @@ public class OrganisationService implements ContentService {
 
   @Override
   public long count() {
-    return directoryRepository.count();
+    return directoryRepository.count(
+        Cypher.node("Directory").named("directory").hasLabels("Organisation"));
   }
 
   public Organisation createOrganisation(Organisation organisation) {
@@ -72,7 +75,9 @@ public class OrganisationService implements ContentService {
   }
 
   public List<Organisation> getOrganisations(String name, Integer page, List<String> include) {
-    return directoryRepository.findAllByTypeAndNameAndDescription("Organisation", name, null).stream()
+    return directoryRepository
+        .findAllByTypeAndNameAndDescription("Organisation", name, null)
+        .stream()
         .map(this::directoryToOrganisation)
         .collect(Collectors.toList());
   }
