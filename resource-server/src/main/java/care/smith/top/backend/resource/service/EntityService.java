@@ -340,11 +340,7 @@ public class EntityService {
   }
 
   public List<Entity> getForks(
-      String organisationId,
-      String repositoryId,
-      String id,
-      Integer version,
-      List<String> include) {
+      String organisationId, String repositoryId, String id, List<String> include) {
     Repository repository = getRepository(organisationId, repositoryId);
     Class cls =
         classRepository
@@ -406,7 +402,8 @@ public class EntityService {
     Repository repository = getRepository(organisationId, repositoryId);
     return classVersionRepository
         .findByClassId(id, PageRequest.of(0, 10, Sort.Direction.DESC, "cv.version"))
-        .stream().parallel()
+        .stream()
+        .parallel()
         .map(cv -> classVersionToEntity(cv, repositoryId))
         .collect(Collectors.toList());
   }

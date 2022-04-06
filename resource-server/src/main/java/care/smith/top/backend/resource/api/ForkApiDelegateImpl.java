@@ -22,8 +22,8 @@ public class ForkApiDelegateImpl implements ForkApiDelegate {
       String repositoryId,
       String id,
       ForkCreateInstruction forkCreateInstruction,
-      Integer version,
-      List<String> include) {
+      List<String> include,
+      Integer version) {
     return new ResponseEntity<>(
         entityService.createFork(
             organisationId, repositoryId, id, forkCreateInstruction, version, include),
@@ -32,13 +32,9 @@ public class ForkApiDelegateImpl implements ForkApiDelegate {
 
   @Override
   public ResponseEntity<List<Entity>> getForks(
-      String organisationId,
-      String repositoryId,
-      String id,
-      Integer version,
-      List<String> include) {
+      String organisationId, String repositoryId, String id, List<String> include) {
     return new ResponseEntity<>(
-        entityService.getForks(organisationId, repositoryId, id, version, include), HttpStatus.OK);
+        entityService.getForks(organisationId, repositoryId, id, include), HttpStatus.OK);
   }
 
   @Override
@@ -47,9 +43,8 @@ public class ForkApiDelegateImpl implements ForkApiDelegate {
       String repositoryId,
       String id,
       ForkUpdateInstruction forkUpdateInstruction,
-      Integer version,
       List<String> include) {
     return ForkApiDelegate.super.updateFork(
-        organisationId, repositoryId, id, forkUpdateInstruction, version, include);
+        organisationId, repositoryId, id, forkUpdateInstruction, include);
   }
 }
