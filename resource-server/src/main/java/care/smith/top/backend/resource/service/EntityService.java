@@ -56,12 +56,16 @@ public class EntityService implements ContentService {
     NamedPath p2 =
         Cypher.path("p2").definedBy(a.relationshipTo(Cypher.node("Class"), "HAS_CLASS_VALUE"));
 
+    Condition typeCondition = Conditions.noCondition();
+    if (type != null) {
+      for (EntityType t : type) {
+        typeCondition = typeCondition.or(c.hasLabels(t.getValue()));
+      }
+    }
+
     return Cypher.match(c.relationshipTo(cv, "CURRENT_VERSION"))
         .match(cRel)
-        .where(
-            type != null
-                ? c.hasLabels(type.stream().map(EntityType::getValue).toArray(String[]::new))
-                : Cypher.literalTrue().asCondition())
+        .where(typeCondition)
         .and(
             repositoryId != null
                 ? c.property("repositoryId").isEqualTo(Cypher.anonParameter(repositoryId))
