@@ -3,6 +3,8 @@ package care.smith.top.backend.resource.service;
 import care.smith.top.backend.model.Organisation;
 import care.smith.top.backend.neo4j_ontology_access.model.Directory;
 import care.smith.top.backend.neo4j_ontology_access.repository.DirectoryRepository;
+import org.neo4j.cypherdsl.core.Conditions;
+import org.neo4j.cypherdsl.core.Cypher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -15,12 +17,18 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
-public class OrganisationService {
+public class OrganisationService implements ContentService {
   private final String directoryType = "Organisation";
   @Autowired DirectoryRepository directoryRepository;
 
   @Value("${spring.paging.page-size:10}")
   private int pageSize = 10;
+
+  @Override
+  public long count() {
+    return directoryRepository.count(
+        Cypher.node("Directory").named("directory").hasLabels("Organisation"));
+  }
 
   public Organisation createOrganisation(Organisation organisation) {
     // TODO: use below code to get current user
@@ -67,7 +75,9 @@ public class OrganisationService {
   }
 
   public List<Organisation> getOrganisations(String name, Integer page, List<String> include) {
-    return directoryRepository.findAllByTypeAndNameAndDescription("Organisation", name, null).stream()
+    return directoryRepository
+        .findAllByTypeAndNameAndDescription("Organisation", name, null)
+        .stream()
         .map(this::directoryToOrganisation)
         .collect(Collectors.toList());
   }

@@ -27,7 +27,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-public class EntityService {
+public class EntityService implements ContentService {
   @Value("${spring.paging.page-size:10}")
   private int pageSize;
 
@@ -48,6 +48,7 @@ public class EntityService {
     Node cv = Cypher.node("ClassVersion").named("cv");
     Node a = Cypher.node("Annotation").named("a");
     Node aTitle = a.withProperties("property", Cypher.anonParameter("title")).named("title");
+    Node aSynonym = a.withProperties("property", Cypher.anonParameter("synonym")).named("synonym");
     Node aDataType =
         a.withProperties("property", Cypher.anonParameter("dataType")).named("dataType");
     Relationship cRel = cv.relationshipTo(c, "IS_VERSION_OF").named("cRel");
@@ -55,29 +56,38 @@ public class EntityService {
     NamedPath p2 =
         Cypher.path("p2").definedBy(a.relationshipTo(Cypher.node("Class"), "HAS_CLASS_VALUE"));
 
+    Condition typeCondition = Conditions.noCondition();
+    if (type != null) {
+      for (EntityType t : type) {
+        typeCondition = typeCondition.or(c.hasLabels(t.getValue()));
+      }
+    }
+
     return Cypher.match(c.relationshipTo(cv, "CURRENT_VERSION"))
         .match(cRel)
-        .where(
-            type != null
-                ? c.hasLabels(type.stream().map(EntityType::getValue).toArray(String[]::new))
-                : Cypher.literalTrue().asCondition())
+        .where(typeCondition)
         .and(
             repositoryId != null
                 ? c.property("repositoryId").isEqualTo(Cypher.anonParameter(repositoryId))
                 : Cypher.literalTrue().asCondition())
         .optionalMatch(cv.relationshipTo(aTitle, "HAS_ANNOTATION"))
+        .optionalMatch(cv.relationshipTo(aSynonym, "HAS_ANNOTATION"))
         .optionalMatch(cv.relationshipTo(aDataType, "HAS_ANNOTATION"))
         .with(
             c.getRequiredSymbolicName(),
             cRel.getRequiredSymbolicName(),
             cv.getRequiredSymbolicName(),
             aTitle.getRequiredSymbolicName(),
+            aSynonym.getRequiredSymbolicName(),
             aDataType.getRequiredSymbolicName())
         .where(Cypher.literalTrue().asCondition())
         .and(
             name != null
                 ? Functions.toLower(aTitle.property("stringValue"))
                     .contains(Cypher.anonParameter(name.toLowerCase()))
+                    .or(
+                        Functions.toLower(aSynonym.property("stringValue"))
+                            .contains(Cypher.anonParameter(name.toLowerCase())))
                 : Cypher.literalTrue().asCondition())
         .and(
             dataType != null
@@ -97,6 +107,20 @@ public class EntityService {
             Functions.collect(Functions.nodes(p2)),
             Functions.collect(Functions.relationships(p2)))
         .build();
+  }
+
+  @Override
+  public long count() {
+    return classRepository.count();
+  }
+
+  public long count(EntityType... types) {
+    Node cls = Cypher.node("Class").named("class");
+    Condition condition = cls.isNull();
+    for (EntityType t : types) {
+      condition = condition.or(cls.hasLabels(t.getValue()));
+    }
+    return classRepository.count(condition);
   }
 
   @Transactional
@@ -144,6 +168,113 @@ public class EntityService {
     }
 
     return classToEntity(classRepository.save(cls), repositoryId);
+  }
+
+  @Transactional
+  public List<Entity> createFork(
+      String organisationId,
+      String repositoryId,
+      String id,
+      ForkCreateInstruction forkCreateInstruction,
+      Integer version,
+      List<String> include) {
+    if (repositoryId.equals(forkCreateInstruction.getRepositoryId()))
+      throw new ResponseStatusException(
+          HttpStatus.NOT_ACCEPTABLE,
+          String.format("Cannot create fork of entity '%s' in the same repository.", id));
+
+    Repository originRepo = getRepository(organisationId, repositoryId);
+    Repository destinationRepo =
+        getRepository(
+            forkCreateInstruction.getOrganisationId(), forkCreateInstruction.getRepositoryId());
+
+    Class originCls =
+        classRepository
+            .findByIdAndRepositoryId(id, originRepo.getId())
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+    if (classRepository.forkExists(originCls, destinationRepo.getId()))
+      throw new ResponseStatusException(
+          HttpStatus.CONFLICT,
+          String.format(
+              "Fork of entity '%s' already exists in repository '%s'.", id, repositoryId));
+
+    ClassVersion originVersion;
+    if (version != null)
+      originVersion =
+          classVersionRepository
+              .findByClassIdAndVersion(originCls.getId(), version)
+              .orElseThrow(
+                  () ->
+                      new ResponseStatusException(
+                          HttpStatus.NOT_FOUND,
+                          String.format(
+                              "Version %d does not exist for entity '%s'.", version, id)));
+    else
+      originVersion =
+          classVersionRepository
+              .findCurrentByClassId(originCls.getId())
+              .orElseThrow(
+                  () ->
+                      new ResponseStatusException(
+                          HttpStatus.NOT_FOUND,
+                          String.format("Entity '%s' does not have a current version.", id)));
+
+    Entity fork = classVersionToEntity(originVersion, originRepo.getId());
+    fork.setId(UUID.randomUUID().toString());
+    fork.setVersion(1);
+
+    List<Entity> result = new ArrayList<>();
+
+    //    if (forkCreateInstruction.isCascade()) {
+    //      // TODO: handle referenced entities
+    //    } else {
+    //      // TODO: drop properties with references
+    //    }
+
+    //    if (forkCreateInstruction.isHistory()) {
+    //      // TODO: copy all versions
+    //    }
+
+    if (fork instanceof Phenotype) {
+      Phenotype phenotype = (Phenotype) fork;
+      phenotype.setSuperCategories(null);
+      if (phenotype.getSuperPhenotype() != null) {
+        Entity superPhenotype =
+            createFork(
+                    organisationId,
+                    repositoryId,
+                    phenotype.getSuperPhenotype().getId(),
+                    new ForkCreateInstruction()
+                        .organisationId(forkCreateInstruction.getOrganisationId())
+                        .repositoryId(forkCreateInstruction.getRepositoryId())
+                        .cascade(false) // do not cascade for super phenotype
+                        .history(forkCreateInstruction.isHistory())
+                        .preserveOrigin(forkCreateInstruction.isPreserveOrigin()),
+                    null,
+                    null)
+                .stream()
+                .findFirst()
+                .orElseThrow();
+        result.add(superPhenotype);
+        phenotype.setSuperPhenotype((Phenotype) superPhenotype);
+      }
+    } else {
+      ((Category) fork).setSuperCategories(null);
+    }
+
+    result.add(
+        createEntity(forkCreateInstruction.getOrganisationId(), destinationRepo.getId(), fork));
+
+    ClassVersion forkVersion =
+        classVersionRepository.findCurrentByClassId(fork.getId()).orElseThrow();
+
+    if (forkCreateInstruction.isPreserveOrigin()) {
+      classRepository.setFork(fork.getId(), originCls.getId());
+      classVersionRepository.setEquivalentVersion(forkVersion, originVersion);
+    }
+
+    return result;
   }
 
   @Transactional
@@ -200,8 +331,9 @@ public class EntityService {
     int requestedPage = page != null ? page - 1 : 0;
     return classVersionRepository
         .findAll(
-            findEntitiesMatchingConditionStatement(null, name, type, dataType, requestedPage), ClassVersion.class)
-        .stream()
+            findEntitiesMatchingConditionStatement(null, name, type, dataType, requestedPage),
+            ClassVersion.class)
+        .parallelStream()
         .map(cv -> classVersionToEntity(cv, cv.getaClass().getRepositoryId()))
         .collect(Collectors.toList());
   }
@@ -217,9 +349,24 @@ public class EntityService {
     getRepository(organisationId, repositoryId);
     int requestedPage = page != null ? page - 1 : 0;
     return classVersionRepository
-        .findAll(findEntitiesMatchingConditionStatement(repositoryId, name, type, dataType, requestedPage))
-        .stream()
+        .findAll(
+            findEntitiesMatchingConditionStatement(
+                repositoryId, name, type, dataType, requestedPage))
+        .parallelStream()
         .map(cv -> classVersionToEntity(cv, repositoryId))
+        .collect(Collectors.toList());
+  }
+
+  public List<Entity> getForks(
+      String organisationId, String repositoryId, String id, List<String> include) {
+    Repository repository = getRepository(organisationId, repositoryId);
+    Class cls =
+        classRepository
+            .findByIdAndRepositoryId(id, repository.getId())
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+    return classRepository.getForks(cls).stream()
+        .map(f -> classToEntity(f, repository.getId()))
         .collect(Collectors.toList());
   }
 
@@ -273,8 +420,9 @@ public class EntityService {
     Repository repository = getRepository(organisationId, repositoryId);
     return classVersionRepository
         .findByClassId(id, PageRequest.of(0, 10, Sort.Direction.DESC, "cv.version"))
-        .map(cv -> classVersionToEntity(cv, repositoryId))
         .stream()
+        .parallel()
+        .map(cv -> classVersionToEntity(cv, repositoryId))
         .collect(Collectors.toList());
   }
 
@@ -534,7 +682,7 @@ public class EntityService {
           .ifPresent(a -> ((Phenotype) entity).setExpression(toExpression(a)));
     }
 
-    if (superClasses != null && !isRestricted(entityType))
+    if (!isRestricted(entityType))
       entity.setSuperCategories(
           superClasses.stream()
               .map(
@@ -582,7 +730,7 @@ public class EntityService {
             p ->
                 accessor.setPropertyValue(
                     p + "s",
-                    annotationRepository.findByClassVersionAndProperty(classVersion, p).stream()
+                    classVersion.getAnnotations(p).stream()
                         .map(
                             a ->
                                 new LocalisableText()
@@ -591,7 +739,7 @@ public class EntityService {
                         .collect(Collectors.toList())));
 
     entity.setCodes(
-        annotationRepository.findByClassVersionAndProperty(classVersion, "code").stream()
+        classVersion.getAnnotations("code").stream()
             .map(
                 a ->
                     new Code()

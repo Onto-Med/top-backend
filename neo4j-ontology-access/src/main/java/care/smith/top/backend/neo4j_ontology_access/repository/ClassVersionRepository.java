@@ -2,6 +2,7 @@ package care.smith.top.backend.neo4j_ontology_access.repository;
 
 import care.smith.top.backend.neo4j_ontology_access.model.Class;
 import care.smith.top.backend.neo4j_ontology_access.model.ClassVersion;
+import org.neo4j.cypherdsl.core.*;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.neo4j.repository.query.Query;
@@ -9,9 +10,10 @@ import org.springframework.data.neo4j.repository.support.CypherdslConditionExecu
 import org.springframework.data.neo4j.repository.support.CypherdslStatementExecutor;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.repository.query.Param;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -118,6 +120,40 @@ public interface ClassVersionRepository
           + "MATCH (current) -[:PREVIOUS_VERSION]-> (previous:ClassVersion) "
           + "RETURN previous ")
   Optional<ClassVersion> getPrevious(@Param("classVersion") ClassVersion classVersion);
+
+  /**
+   * Update the IS_EQUIVALENT_TO relationship of a {@link ClassVersion} node.
+   *
+   * @param fork The start node of the relationship.
+   * @param origin The end node of the relationship. If null, the relationship will be dropped.
+   * @return The {@code ClassVersion} node of the fork.
+   */
+  default Optional<ClassVersion> setEquivalentVersion(
+      @NonNull ClassVersion fork, @Nullable ClassVersion origin) {
+    Node forkNode = Cypher.node("ClassVersion").named("fork");
+    Relationship oldRel =
+        forkNode.relationshipTo(Cypher.node("ClassVersion"), "IS_EQUIVALENT_TO").named("oldRel");
+
+    StatementBuilder.OrderableOngoingReadingAndWithWithoutWhere query =
+        Cypher.match(forkNode)
+            .where(forkNode.internalId().isEqualTo(Cypher.anonParameter(fork.getId())))
+            .match(oldRel)
+            .delete(oldRel)
+            .with(forkNode);
+
+    if (origin != null) {
+      Node originNode = Cypher.node("ClassVersion").named("origin");
+      Relationship newRel = forkNode.relationshipTo(originNode, "IS_EQUIVALENT_TO").named("newRel");
+      query =
+          query
+              .match(originNode)
+              .where(originNode.internalId().isEqualTo(Cypher.anonParameter(origin.getId())))
+              .create(newRel)
+              .with(forkNode);
+    }
+
+    return findOne(query.returning(forkNode).build());
+  }
 
   @Query(
       "MATCH (prev:ClassVersion) "

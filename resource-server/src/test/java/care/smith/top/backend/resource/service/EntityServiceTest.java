@@ -2,8 +2,10 @@ package care.smith.top.backend.resource.service;
 
 import care.smith.top.backend.model.*;
 import care.smith.top.backend.neo4j_ontology_access.model.Class;
+import care.smith.top.backend.neo4j_ontology_access.model.ClassVersion;
 import care.smith.top.backend.neo4j_ontology_access.repository.ClassRepository;
 import care.smith.top.backend.neo4j_ontology_access.repository.ClassVersionRepository;
+import care.smith.top.backend.neo4j_ontology_access.repository.RepositoryRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -11,6 +13,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -23,6 +26,49 @@ class EntityServiceTest extends Neo4jTest {
   @Autowired EntityService entityService;
   @Autowired ClassRepository classRepository;
   @Autowired ClassVersionRepository classVersionRepository;
+  @Autowired RepositoryRepository repositoryRepository;
+
+  @Test
+  void getForks() {
+    Organisation organisation =
+        organisationService.createOrganisation(new Organisation().id("org"));
+    Repository repository1 =
+        repositoryService.createRepository(
+            organisation.getId(), new Repository().id("repo1"), null);
+    Repository repository2 =
+        repositoryService.createRepository(
+            organisation.getId(), new Repository().id("repo2"), null);
+    Repository repository3 =
+        repositoryService.createRepository(
+            organisation.getId(), new Repository().id("repo3"), null);
+
+    Class origin =
+        new Class()
+            .setRepositoryId(repository1.getId())
+            .setTypes(Collections.singleton(EntityType.SINGLE_PHENOTYPE.getValue()))
+            .setCurrentVersion(new ClassVersion().setVersion(1));
+    Class fork1 =
+        new Class()
+            .setForkedClass(origin)
+            .setRepositoryId(repository2.getId())
+            .setTypes(Collections.singleton(EntityType.SINGLE_PHENOTYPE.getValue()))
+            .setCurrentVersion(new ClassVersion().setVersion(1));
+    Class fork2 =
+        new Class()
+            .setForkedClass(origin)
+            .setRepositoryId(repository3.getId())
+            .setTypes(Collections.singleton(EntityType.SINGLE_PHENOTYPE.getValue()))
+            .setCurrentVersion(new ClassVersion().setVersion(1));
+    classRepository.saveAll(Arrays.asList(origin, fork1, fork2));
+
+    assertThat(
+            entityService.getForks(organisation.getId(), repository1.getId(), origin.getId(), null))
+        .isNotEmpty()
+        .anySatisfy(f -> assertThat(f.getId()).isEqualTo(fork1.getId()))
+        .anySatisfy(f -> assertThat(f.getId()).isEqualTo(fork2.getId()))
+        .size()
+        .isEqualTo(2);
+  }
 
   @Test
   void createEntity() {
@@ -415,6 +461,15 @@ class EntityServiceTest extends Neo4jTest {
         .allSatisfy(e -> assertThat(e.getId()).isEqualTo(entity1.getId()))
         .size()
         .isEqualTo(1);
+
+    // TODO: Test fails if annotated with @Transactional, because neo4j parallelstream() is called
+    // on neo4j result set. This seems to create new transactions where some rows cannot be read.
+    assertThat(entityService.getEntities(null, null, null, null, null))
+        .isNotEmpty()
+        .anySatisfy(e -> assertThat(e.getId()).isEqualTo(entity1.getId()))
+        .anySatisfy(e -> assertThat(e.getId()).isEqualTo(entity2.getId()))
+        .size()
+        .isEqualTo(2);
 
     assertThat(entityService.getEntities(null, "xample", null, null, null))
         .isNotEmpty()

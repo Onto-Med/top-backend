@@ -31,7 +31,7 @@
         <dependency>
             <groupId>care.smith.top</groupId>
             <artifactId>top-api</artifactId>
-            <version>0.3.2</version>
+            <version>0.3.5</version>
         </dependency>
         <dependency>
            <groupId>care.smith.top.simple_onto_api</groupId>
