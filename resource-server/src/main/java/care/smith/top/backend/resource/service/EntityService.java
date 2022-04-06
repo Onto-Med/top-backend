@@ -27,7 +27,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-public class EntityService {
+public class EntityService implements ContentService {
   @Value("${spring.paging.page-size:10}")
   private int pageSize;
 
@@ -103,6 +103,21 @@ public class EntityService {
             Functions.collect(Functions.nodes(p2)),
             Functions.collect(Functions.relationships(p2)))
         .build();
+  }
+
+  @Override
+  public long count() {
+    return classRepository.count();
+  }
+
+  public long count(EntityType... types) {
+    Node cls = Cypher.node("Class");
+    StatementBuilder.OngoingReadingWithWhere statement =
+        Cypher.match(cls).where(Cypher.literalFalse().asCondition());
+    for (EntityType t : types) {
+      statement = statement.or(cls.hasLabels(t.getValue()));
+    }
+    return classRepository.count(statement.asCondition());
   }
 
   @Transactional

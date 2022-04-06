@@ -18,14 +18,19 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-public class RepositoryService {
+public class RepositoryService implements ContentService {
   @Value("${spring.paging.page-size:10}")
   private int pageSize;
 
   @Autowired private RepositoryRepository repositoryRepository;
   @Autowired private DirectoryRepository directoryRepository;
 
-  @Transactional
+  @Override
+  public long count() {
+    return repositoryRepository.count();
+  }
+
+    @Transactional
   public care.smith.top.backend.model.Repository createRepository(
       String organisationId, care.smith.top.backend.model.Repository data, List<String> include) {
     Directory organisation = getOrganisation(organisationId);

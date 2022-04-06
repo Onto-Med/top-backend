@@ -15,12 +15,17 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
-public class OrganisationService {
+public class OrganisationService implements ContentService {
   private final String directoryType = "Organisation";
   @Autowired DirectoryRepository directoryRepository;
 
   @Value("${spring.paging.page-size:10}")
   private int pageSize = 10;
+
+  @Override
+  public long count() {
+    return directoryRepository.count();
+  }
 
   public Organisation createOrganisation(Organisation organisation) {
     // TODO: use below code to get current user
