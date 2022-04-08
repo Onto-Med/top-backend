@@ -823,6 +823,9 @@ public class EntityService implements ContentService {
 
   private Annotation fromExpression(Expression expression) {
     // TODO: only allow phenotypes from accessible repositories
+    if (expression == null)
+      return new Annotation("expression", (String) null, null);
+
     if (expression.getId() != null && classRepository.findById(expression.getId()).isPresent())
       return new Annotation("expression", classRepository.findById(expression.getId()).get(), null);
 
