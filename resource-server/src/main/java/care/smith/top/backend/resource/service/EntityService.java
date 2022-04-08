@@ -556,8 +556,7 @@ public class EntityService implements ContentService {
       if (phenotype.getRestriction() != null)
         classVersion.addAnnotation(fromRestriction(phenotype.getRestriction()));
       if (phenotype.getExpression() != null)
-        classVersion.addAnnotation(
-            fromExpression(phenotype.getExpression(), repositoryId));
+        classVersion.addAnnotation(fromExpression(phenotype.getExpression(), repositoryId));
     }
 
     if (entity.getCodes() != null) {
@@ -823,13 +822,13 @@ public class EntityService implements ContentService {
   }
 
   private Annotation fromExpression(Expression expression, String repositoryId) {
-    if (expression == null) return new Annotation("expression", (String) null, null);
+    if (expression == null) return new Annotation("expression", null);
 
     if (expression.getId() != null)
       return classRepository
           .findByIdAndRepositoryId(expression.getId(), repositoryId)
           .map(aClass -> new Annotation("expression", aClass, null))
-          .orElseGet(() -> new Annotation("expression", (String) null, null));
+          .orElseGet(() -> new Annotation("expression", "class"));
 
     if (expression.getConstant() != null)
       return new Annotation("expression", expression.getConstant().doubleValue(), null);
@@ -968,8 +967,10 @@ public class EntityService implements ContentService {
   }
 
   private Expression toExpression(Annotation annotation) {
-    if (annotation.getClassValue() != null)
-      return new Expression().operator("entity").id(annotation.getClassValue().getId());
+    if ("class".equals(annotation.getDatatype()))
+      return new Expression()
+          .operator("entity")
+          .id(annotation.getClassValue() != null ? annotation.getClassValue().getId() : null);
 
     if ("decimal".equals(annotation.getDatatype()))
       return new Expression()
