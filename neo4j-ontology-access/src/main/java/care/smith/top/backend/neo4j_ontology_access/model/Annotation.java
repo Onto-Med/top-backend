@@ -35,8 +35,8 @@ public class Annotation extends Annotatable {
 
   public Annotation(String property, String stringValue, String language, Integer index) {
     this(property, language, index);
-    this.datatype = "string";
-    this.stringValue = stringValue;
+    this.setDatatype("string");
+    this.setStringValue(stringValue);
   }
 
   public Annotation(String property, Instant dateValue, String language) {
@@ -45,8 +45,8 @@ public class Annotation extends Annotatable {
 
   public Annotation(String property, Instant dateValue, String language, Integer index) {
     this(property, language, index);
-    this.datatype = "string";
-    this.dateValue = dateValue;
+    this.setDatatype("string");
+    this.setDateValue(dateValue);
   }
 
   public Annotation(String property, Double doubleValue, String language) {
@@ -55,8 +55,8 @@ public class Annotation extends Annotatable {
 
   public Annotation(String property, Double decimalValue, String language, Integer index) {
     this(property, language, index);
-    this.datatype = "decimal";
-    this.decimalValue = decimalValue;
+    this.setDatatype("decimal");
+    this.setDecimalValue(decimalValue);
   }
 
   public Annotation(String property, Boolean booleanValue, String language) {
@@ -65,8 +65,8 @@ public class Annotation extends Annotatable {
 
   public Annotation(String property, Boolean booleanValue, String language, Integer index) {
     this(property, language, index);
-    this.datatype = "decimal";
-    this.booleanValue = booleanValue;
+    this.setDatatype("decimal");
+    this.setBooleanValue(booleanValue);
   }
 
   public Annotation(String property, Class classValue, String language) {
@@ -75,14 +75,19 @@ public class Annotation extends Annotatable {
 
   public Annotation(String property, Class classValue, String language, Integer index) {
     this(property, language, index);
-    this.datatype = "class";
-    this.classValue = classValue;
+    this.setDatatype("class");
+    this.setClassValue(classValue);
   }
 
   private Annotation(String property, String language, Integer index) {
     this.setProperty(property);
     this.language = language;
-    this.index = index;
+    this.setIndex(index);
+  }
+
+  public Annotation(String property, String datatype) {
+    this.setProperty(property);
+    this.setDatatype(datatype);
   }
 
   public Long getId() {
