@@ -134,7 +134,7 @@ public class EntityService implements ContentService {
 
     Class cls = new Class(entity.getId());
     cls.setRepositoryId(repositoryId);
-    cls.setCurrentVersion(buildClassVersion(entity).setVersion(1));
+    cls.setCurrentVersion(buildClassVersion(entity, repositoryId).setVersion(1));
     cls.addType(entity.getEntityType().getValue());
 
     List<String> superClasses = new ArrayList<>();
@@ -479,7 +479,7 @@ public class EntityService implements ContentService {
       throw new ResponseStatusException(HttpStatus.CONFLICT, "entityType does not match");
 
     ClassVersion newVersion =
-        buildClassVersion(entity).setVersion(classRepository.getNextVersion(cls));
+        buildClassVersion(entity, repositoryId).setVersion(classRepository.getNextVersion(cls));
     cls.setCurrentVersion(newVersion);
 
     List<String> superClasses = new ArrayList<>();
@@ -527,7 +527,7 @@ public class EntityService implements ContentService {
    * @param entity The entity that provides data for the {@link ClassVersion} object fields.
    * @return The resulting {@link ClassVersion} object.
    */
-  private ClassVersion buildClassVersion(Entity entity) {
+  private ClassVersion buildClassVersion(Entity entity, String repositoryId) {
     ClassVersion classVersion = new ClassVersion();
 
     if (entity.getEquivalentEntities() != null) {
@@ -556,7 +556,8 @@ public class EntityService implements ContentService {
       if (phenotype.getRestriction() != null)
         classVersion.addAnnotation(fromRestriction(phenotype.getRestriction()));
       if (phenotype.getExpression() != null)
-        classVersion.addAnnotation(fromExpression(phenotype.getExpression()));
+        classVersion.addAnnotation(
+            fromExpression(phenotype.getExpression(), repositoryId));
     }
 
     if (entity.getCodes() != null) {
@@ -821,13 +822,14 @@ public class EntityService implements ContentService {
     classVersionRepository.delete(classVersion);
   }
 
-  private Annotation fromExpression(Expression expression) {
-    // TODO: only allow phenotypes from accessible repositories
-    if (expression == null)
-      return new Annotation("expression", (String) null, null);
+  private Annotation fromExpression(Expression expression, String repositoryId) {
+    if (expression == null) return new Annotation("expression", (String) null, null);
 
-    if (expression.getId() != null && classRepository.findById(expression.getId()).isPresent())
-      return new Annotation("expression", classRepository.findById(expression.getId()).get(), null);
+    if (expression.getId() != null)
+      return classRepository
+          .findByIdAndRepositoryId(expression.getId(), repositoryId)
+          .map(aClass -> new Annotation("expression", aClass, null))
+          .orElseGet(() -> new Annotation("expression", (String) null, null));
 
     if (expression.getConstant() != null)
       return new Annotation("expression", expression.getConstant().doubleValue(), null);
@@ -836,7 +838,7 @@ public class EntityService implements ContentService {
     if (expression.getOperands() != null) {
       int i = 1;
       for (Expression operand : expression.getOperands()) {
-        annotation.addAnnotation(fromExpression(operand).setIndex(i++));
+        annotation.addAnnotation(fromExpression(operand, repositoryId).setIndex(i++));
       }
     }
     return annotation;
