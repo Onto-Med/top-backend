@@ -487,7 +487,10 @@ public class EntityService implements ContentService {
       Category category = (Category) entity;
       if (category.getSuperCategories() != null)
         superClasses.addAll(
-            category.getSuperCategories().stream().map(Entity::getId).collect(Collectors.toList()));
+            category.getSuperCategories().stream()
+                .filter(Objects::nonNull)
+                .map(Entity::getId)
+                .collect(Collectors.toList()));
     }
 
     if (entity instanceof Phenotype) {
