@@ -1,0 +1,42 @@
+name: Docker Image CI
+
+on:
+  workflow_dispatch:
+  release:
+    types: [created]
+
+jobs:
+
+  build-and-push-docker-image:
+    name: Build Docker image and push to GitHub Container Registry
+    runs-on: ubuntu-latest
+    env:
+      REGISTRY: ghcr.io
+      IMAGE_NAME: ${{ github.repository }}
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Log into registry ${{ env.REGISTRY }}
+        uses: docker/login-action@v1
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            GH_MAVEN_PKG_USER=${{ secrets.GH_MAVEN_PKG_USER }}
+            GH_MAVEN_PKG_AUTH_TOKEN=${{ secrets.GH_MAVEN_PKG_AUTH_TOKEN }}
