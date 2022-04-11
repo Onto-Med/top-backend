@@ -27,13 +27,6 @@
         <module>neo4j-ontology-access</module>
     </modules>
 
-    <repositories>
-        <repository>
-            <id>generic-ontology-db</id>
-            <url>https://maven.pkg.github.com/onto-med/generic-ontology-db</url>
-        </repository>
-    </repositories>
-
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
