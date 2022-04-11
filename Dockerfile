@@ -6,7 +6,7 @@ ENV GH_MAVEN_PKG_AUTH_TOKEN=$GH_MAVEN_PKG_AUTH_TOKEN
 WORKDIR /app
 COPY . .
 COPY .mvn-ci.xml /root/.m2/settings.xml
-RUN mvn install -B -DskipTests -f neo4j-ontology-access/pom.xml
+RUN mvn install -B -f neo4j-ontology-access/pom.xml
 RUN mvn package -B -DskipTests -f resource-server/pom.xml
 
 FROM openjdk:11-jdk-slim AS production-stage
