@@ -12,6 +12,7 @@
 
     <groupId>care.smith.top.backend</groupId>
     <artifactId>resource-server</artifactId>
+    <packaging>jar</packaging>
 
     <name>TOP Resource Server</name>
     <description>Spring Boot Resource Server of the TOP Framework</description>
@@ -68,6 +69,16 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <version>${spring.boot.version}</version>
+                <configuration>
+                    <mainClass>care.smith.top.backend.resource.TopBackendApplication</mainClass>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
