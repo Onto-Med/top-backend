@@ -17,9 +17,10 @@ spring:
     cors:
       allowed-origins: "*"
     oauth2:
+      enabled: ${OAUTH2_ENABLED:true}
       resourceserver:
         jwt:
-          issuer-url: http://localhost:8080/auth/realms/dev
-          jwk-set-uri: http://localhost:8080/auth/realms/dev/protocol/openid-connect/certs
+          issuer-url: ${OAUTH2_PROTOCOL:http}://${OAUTH2_HOST:127.0.0.1}:${OAUTH2_PORT:8081}/realms/${OAUTH2_REALM:top}
+          jwk-set-uri: ${OAUTH2_PROTOCOL:http}://${OAUTH2_HOST:127.0.0.1}:${OAUTH2_PORT:8081}/realms/${OAUTH2_REALM:top}/protocol/openid-connect/certs
   paging:
     page-size: 1000
