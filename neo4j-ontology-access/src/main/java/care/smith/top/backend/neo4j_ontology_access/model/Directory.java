@@ -5,7 +5,6 @@ import org.springframework.data.neo4j.core.schema.DynamicLabels;
 import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Relationship;
-import org.springframework.security.core.userdetails.User;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -27,9 +26,9 @@ public class Directory {
   @Version private Long nodeVersion;
 
   @CreatedDate private Instant createdAt;
-  @CreatedBy private User createdBy;
+  @CreatedBy private String createdBy;
   @LastModifiedDate private Instant updatedAt;
-  @LastModifiedBy private User updatedBy;
+  @LastModifiedBy private String updatedBy;
 
   /** Humand-readable name. */
   private String name;
@@ -90,7 +89,7 @@ public class Directory {
     return getCreatedAt().atOffset(ZoneOffset.UTC);
   }
 
-  public User getCreatedBy() {
+  public String getCreatedBy() {
     return createdBy;
   }
 
@@ -98,7 +97,7 @@ public class Directory {
     return updatedAt;
   }
 
-  public User getUpdatedBy() {
+  public String getUpdatedBy() {
     return updatedBy;
   }
 

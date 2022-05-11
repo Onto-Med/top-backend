@@ -715,6 +715,7 @@ public class EntityService implements ContentService {
     entity.setVersion(classVersion.getVersion());
     entity.setEntityType(entityType);
     entity.setCreatedAt(classVersion.getCreatedAtOffset());
+    entity.setAuthor(new UserAccount().username(classVersion.getUser()));
 
     if (classVersion.getEquivalentClasses() != null)
       classVersion
