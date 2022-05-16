@@ -28,9 +28,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     http.cors()
         .and()
         .authorizeRequests()
-        .antMatchers("/statistic")
-        .permitAll()
-        .antMatchers("/ping")
+        .antMatchers("/statistic", "/ping", "/entity")
         .permitAll();
 
     if (oauth2Enabled) http.authorizeRequests().anyRequest().fullyAuthenticated();
