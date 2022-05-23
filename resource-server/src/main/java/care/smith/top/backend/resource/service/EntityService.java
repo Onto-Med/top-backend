@@ -703,7 +703,10 @@ public class EntityService implements ContentService {
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
     care.smith.top.backend.model.Repository repository =
-        new care.smith.top.backend.model.Repository().id(repo.getId()).name(repo.getName());
+        new care.smith.top.backend.model.Repository()
+            .id(repo.getId())
+            .name(repo.getName())
+            .primary(repo.isPrimary());
 
     repo.getSuperDirectories().stream()
         .findFirst()
