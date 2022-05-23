@@ -38,13 +38,15 @@ public class RepositoryService implements ContentService {
     if (repositoryRepository.existsById(data.getId()))
       throw new ResponseStatusException(HttpStatus.CONFLICT);
 
-    // TODO: let users set 'primary' field of repositories
     Repository repository =
         (Repository)
             new Repository(data.getId())
                 .setName(data.getName())
                 .setDescription(data.getDescription())
                 .addSuperDirectory(organisation);
+
+    // TODO: if (user is admin) ...
+    if (data.isPrimary() != null) repository.setPrimary(data.isPrimary());
 
     return repositoryToApiPojo(repositoryRepository.save(repository));
   }
@@ -74,6 +76,9 @@ public class RepositoryService implements ContentService {
         repositoryRepository
             .findByIdAndSuperDirectoryId(repositoryId, organisationId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+    // TODO: if (user is admin) ...
+    // if (data.isPrimary() != null) repository.setPrimary(data.isPrimary());
 
     repository.setName(data.getName()).setDescription(data.getDescription());
     return repositoryToApiPojo(repositoryRepository.save(repository));
@@ -114,6 +119,7 @@ public class RepositoryService implements ContentService {
         new care.smith.top.backend.model.Repository()
             .createdAt(repository.getCreatedAtOffset())
             .id(repository.getId())
+            .primary(repository.isPrimary())
             .name(repository.getName())
             .description(repository.getDescription());
 
