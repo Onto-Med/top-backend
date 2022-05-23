@@ -7,7 +7,6 @@ import org.springframework.data.annotation.Version;
 import org.springframework.data.neo4j.core.schema.GeneratedValue;
 import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;
-import org.springframework.security.core.userdetails.User;
 
 import java.time.Instant;
 
@@ -15,7 +14,7 @@ import java.time.Instant;
 public class OntologyVersion {
   @Id @GeneratedValue private Long nodeId;
   @Version private Long nodeVersion;
-  @CreatedBy private User createdBy;
+  @CreatedBy private String createdBy;
   @CreatedDate private Instant createdAt;
 
   private int version;
@@ -36,7 +35,7 @@ public class OntologyVersion {
     return nodeVersion;
   }
 
-  public User getCreatedBy() {
+  public String getCreatedBy() {
     return createdBy;
   }
 

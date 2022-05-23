@@ -30,7 +30,7 @@ public class RepositoryService implements ContentService {
     return repositoryRepository.count();
   }
 
-    @Transactional
+  @Transactional
   public care.smith.top.backend.model.Repository createRepository(
       String organisationId, care.smith.top.backend.model.Repository data, List<String> include) {
     Directory organisation = getOrganisation(organisationId);
@@ -38,13 +38,15 @@ public class RepositoryService implements ContentService {
     if (repositoryRepository.existsById(data.getId()))
       throw new ResponseStatusException(HttpStatus.CONFLICT);
 
-    // TODO: let users set 'primary' field of repositories
     Repository repository =
         (Repository)
             new Repository(data.getId())
                 .setName(data.getName())
                 .setDescription(data.getDescription())
-                .addSuperDirectory(organisation); // TODO: super directory not stored in db!
+                .addSuperDirectory(organisation);
+
+    // TODO: if (user is admin) ...
+    if (data.isPrimary() != null) repository.setPrimary(data.isPrimary());
 
     return repositoryToApiPojo(repositoryRepository.save(repository));
   }
@@ -75,13 +77,17 @@ public class RepositoryService implements ContentService {
             .findByIdAndSuperDirectoryId(repositoryId, organisationId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
+    // TODO: if (user is admin) ...
+    // if (data.isPrimary() != null) repository.setPrimary(data.isPrimary());
+
     repository.setName(data.getName()).setDescription(data.getDescription());
     return repositoryToApiPojo(repositoryRepository.save(repository));
   }
 
   public List<care.smith.top.backend.model.Repository> getRepositories(
-      List<String> include, String name, Integer page) {
+      List<String> include, String name, Boolean primary, Integer page) {
     // TODO: check if user has read permission
+    // TODO: filter by `primary` property
     int requestedPage = page == null ? 0 : page - 1;
     return repositoryRepository
         .findByNameContainingIgnoreCase(
@@ -113,6 +119,7 @@ public class RepositoryService implements ContentService {
         new care.smith.top.backend.model.Repository()
             .createdAt(repository.getCreatedAtOffset())
             .id(repository.getId())
+            .primary(repository.isPrimary())
             .name(repository.getName())
             .description(repository.getDescription());
 

@@ -31,9 +31,9 @@ public class RepositoryApiDelegateImpl implements RepositoryApiDelegate {
 
   @Override
   public ResponseEntity<List<Repository>> getRepositories(
-      List<String> include, String name, Integer page) {
+      List<String> include, String name, Boolean primary, Integer page) {
     return new ResponseEntity<>(
-        repositoryService.getRepositories(include, name, page), HttpStatus.OK);
+        repositoryService.getRepositories(include, name, primary, page), HttpStatus.OK);
   }
 
   @Override

@@ -8,7 +8,6 @@ import org.springframework.data.neo4j.core.schema.GeneratedValue;
 import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Relationship;
-import org.springframework.security.core.userdetails.User;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -27,7 +26,7 @@ import java.util.Set;
 public class ClassVersion extends Annotatable {
   @Id @GeneratedValue private Long id;
   @Version private Long nodeVersion;
-  @CreatedBy private User user;
+  @CreatedBy private String user;
   @CreatedDate private Instant createdAt;
 
   private int version;
@@ -121,7 +120,7 @@ public class ClassVersion extends Annotatable {
     return getCreatedAt().atOffset(ZoneOffset.UTC);
   }
 
-  public User getUser() {
+  public String getUser() {
     return user;
   }
 

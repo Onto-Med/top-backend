@@ -8,7 +8,6 @@ import org.springframework.data.neo4j.core.schema.DynamicLabels;
 import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Relationship;
-import org.springframework.security.core.userdetails.User;
 
 import java.time.Instant;
 import java.util.HashSet;
@@ -21,7 +20,7 @@ public class Class extends Annotatable {
   @Id private final String id;
   @Version private Long nodeVersion;
   @CreatedDate private Instant createdAt;
-  @CreatedBy private User createdBy;
+  @CreatedBy private String createdBy;
 
   /** Determines, what this class is representing. */
   @DynamicLabels private Set<String> types = new HashSet<>();
