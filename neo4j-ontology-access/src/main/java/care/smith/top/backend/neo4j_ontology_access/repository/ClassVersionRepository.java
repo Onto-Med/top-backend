@@ -137,7 +137,7 @@ public interface ClassVersionRepository
     StatementBuilder.OrderableOngoingReadingAndWithWithoutWhere query =
         Cypher.match(forkNode)
             .where(forkNode.internalId().isEqualTo(Cypher.anonParameter(fork.getId())))
-            .match(oldRel)
+            .optionalMatch(oldRel)
             .delete(oldRel)
             .with(forkNode);
 
