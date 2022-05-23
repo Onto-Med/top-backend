@@ -197,12 +197,12 @@ class RepositoryServiceTest extends Neo4jTest {
         repositoryService.createRepository(
             organisation2.getId(), new Repository().id("repo_2").name("Another repository"), null);
 
-    assertThat(repositoryService.getRepositories(null, "another", 1))
+    assertThat(repositoryService.getRepositories(null, "another", null, 1))
         .isNotEmpty()
         .size()
         .isEqualTo(1);
-    assertThat(repositoryService.getRepositories(null, "repo", 1)).isNotEmpty().size().isEqualTo(2);
-    assertThat(repositoryService.getRepositories(null, "something else", 1)).isNullOrEmpty();
+    assertThat(repositoryService.getRepositories(null, "repo", null, 1)).isNotEmpty().size().isEqualTo(2);
+    assertThat(repositoryService.getRepositories(null, "something else", null, 1)).isNullOrEmpty();
   }
 
   @Test

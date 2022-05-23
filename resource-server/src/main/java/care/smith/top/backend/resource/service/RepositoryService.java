@@ -30,7 +30,7 @@ public class RepositoryService implements ContentService {
     return repositoryRepository.count();
   }
 
-    @Transactional
+  @Transactional
   public care.smith.top.backend.model.Repository createRepository(
       String organisationId, care.smith.top.backend.model.Repository data, List<String> include) {
     Directory organisation = getOrganisation(organisationId);
@@ -80,8 +80,9 @@ public class RepositoryService implements ContentService {
   }
 
   public List<care.smith.top.backend.model.Repository> getRepositories(
-      List<String> include, String name, Integer page) {
+      List<String> include, String name, Boolean primary, Integer page) {
     // TODO: check if user has read permission
+    // TODO: filter by `primary` property
     int requestedPage = page == null ? 0 : page - 1;
     return repositoryRepository
         .findByNameContainingIgnoreCase(
