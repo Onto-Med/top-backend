@@ -44,7 +44,7 @@ public class RepositoryService implements ContentService {
             new Repository(data.getId())
                 .setName(data.getName())
                 .setDescription(data.getDescription())
-                .addSuperDirectory(organisation); // TODO: super directory not stored in db!
+                .addSuperDirectory(organisation);
 
     return repositoryToApiPojo(repositoryRepository.save(repository));
   }
