@@ -763,8 +763,7 @@ public class EntityService implements ContentService {
                             new CodeSystem().uri(URI.create(a.getClassValue().getRepositoryId()))))
             .collect(Collectors.toList()));
 
-    // TODO: entity.setAuthor(classVersion.getUser()); Map User to UserAccount, or drop UserAccount
-    // from top-api model.
+    entity.setAuthor(new UserAccount().username(classVersion.getUser()));
     // TODO: entity.setRefer(); <- insert URI
 
     if (classVersion.getaClass().getSuperClassRelations() != null)
