@@ -184,6 +184,14 @@ public class EntityService implements ContentService {
           String.format("Cannot create fork of entity '%s' in the same repository.", id));
 
     Repository originRepo = getRepository(organisationId, repositoryId);
+
+    if (!originRepo.isPrimary())
+      throw new ResponseStatusException(
+          HttpStatus.NOT_ACCEPTABLE,
+          String.format(
+              "Cannot create fork of entity '%s' from non-primary repository '%s'.",
+              id, originRepo.getId()));
+
     Repository destinationRepo =
         getRepository(
             forkCreateInstruction.getOrganisationId(), forkCreateInstruction.getRepositoryId());
