@@ -20,7 +20,7 @@ spring:
       enabled: ${OAUTH2_ENABLED:true}
       resourceserver:
         jwt:
-          issuer-url: ${OAUTH2_PROTOCOL:http}://${OAUTH2_HOST:127.0.0.1}:${OAUTH2_PORT:8081}/realms/${OAUTH2_REALM:top}
-          jwk-set-uri: ${OAUTH2_PROTOCOL:http}://${OAUTH2_HOST:127.0.0.1}:${OAUTH2_PORT:8081}/realms/${OAUTH2_REALM:top}/protocol/openid-connect/certs
+          issuer-url: ${OAUTH2_PROTOCOL:http}://${OAUTH2_HOST:127.0.0.1}:${OAUTH2_PORT:8081}/realms/${OAUTH2_REALM:top-realm}
+          jwk-set-uri: ${OAUTH2_PROTOCOL:http}://${OAUTH2_HOST:127.0.0.1}:${OAUTH2_PORT:8081}/realms/${OAUTH2_REALM:top-realm}/protocol/openid-connect/certs
   paging:
     page-size: 1000
