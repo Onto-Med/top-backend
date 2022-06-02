@@ -15,15 +15,16 @@ import java.util.List;
 public class ExpressionOperatorApiDelegateImpl implements ExpressionOperatorApiDelegate {
   @Override
   public ResponseEntity<List<ExpressionOperator>> getExpressionOperators(String type) {
-    switch (type) {
-      case "math":
-        return new ResponseEntity<>(getMathOperators(), HttpStatus.OK);
-      case "boolean":
-        return new ResponseEntity<>(getBooleanOperators(), HttpStatus.OK);
-      default:
-        throw new ResponseStatusException(
-            HttpStatus.NOT_ACCEPTABLE, "Expression operator type is not supported.");
+    if (type != null) {
+      switch (type) {
+        case "math":
+          return new ResponseEntity<>(getMathOperators(), HttpStatus.OK);
+        case "boolean":
+          return new ResponseEntity<>(getBooleanOperators(), HttpStatus.OK);
+      }
     }
+    throw new ResponseStatusException(
+        HttpStatus.NOT_ACCEPTABLE, "Expression operator type is not supported.");
   }
 
   private List<ExpressionOperator> getBooleanOperators() {
