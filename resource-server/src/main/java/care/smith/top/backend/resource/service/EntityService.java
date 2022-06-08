@@ -21,6 +21,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.time.ZoneOffset;
 import java.util.Set;
 import java.util.*;
@@ -580,17 +581,12 @@ public class EntityService implements ContentService {
         classVersion.addAnnotation(fromExpression(phenotype.getExpression(), repositoryId));
     }
 
-    if (entity.getCodes() != null) {
-      entity
-          .getCodes()
-          .forEach(
-              c ->
-                  classRepository
-                      .findByIdAndRepositoryId(c.getCode(), c.getCodeSystem().getUri().toString())
-                      .ifPresent(
-                          codeClass ->
-                              classVersion.addAnnotation(new Annotation("code", codeClass, null))));
-    }
+    if (entity.getCodes() != null)
+      classVersion.addAnnotations(
+          entity.getCodes().stream()
+              .map(this::fromCode)
+              .filter(Objects::nonNull)
+              .collect(Collectors.toSet()));
 
     if (entity.getTitles() != null)
       classVersion.addAnnotations(
@@ -768,12 +764,8 @@ public class EntityService implements ContentService {
 
     entity.setCodes(
         classVersion.getAnnotations("code").stream()
-            .map(
-                a ->
-                    new Code()
-                        .code(a.getClassValue().getId())
-                        .codeSystem(
-                            new CodeSystem().uri(URI.create(a.getClassValue().getRepositoryId()))))
+            .map(this::toCode)
+            .filter(Objects::nonNull)
             .collect(Collectors.toList()));
 
     entity.setAuthor(new UserAccount().username(classVersion.getUser()));
@@ -843,6 +835,18 @@ public class EntityService implements ContentService {
     deleteAnnotations(classVersion);
     expressionRepository.deleteAll(classVersion.getExpressions());
     classVersionRepository.delete(classVersion);
+  }
+
+  private Annotation fromCode(Code code) {
+    if (code == null
+        || code.getCode() == null
+        || code.getCodeSystem() == null
+        || code.getCodeSystem().getUri() == null) return null;
+
+    return (Annotation)
+        new Annotation("code", code.getCode(), null)
+            .addAnnotation(
+                new Annotation("codeSystem", code.getCodeSystem().getUri().toString(), null));
   }
 
   private Annotation fromExpression(Expression expression, String repositoryId) {
@@ -988,6 +992,21 @@ public class EntityService implements ContentService {
             EntityType.COMBINED_RESTRICTION,
             EntityType.DERIVED_RESTRICTION)
         .contains(entityType);
+  }
+
+  private Code toCode(Annotation annotation) {
+    if (annotation == null || !"code".equals(annotation.getProperty())) return null;
+
+    Optional<Annotation> codeSystem = annotation.getAnnotation("codeSystem");
+    if (codeSystem.isEmpty()) return null;
+
+    try {
+      return new Code()
+          .code(annotation.getStringValue())
+          .codeSystem(new CodeSystem().uri(new URI(codeSystem.get().getStringValue())));
+    } catch (URISyntaxException e) {
+      return null;
+    }
   }
 
   private Expression toExpression(Annotation annotation) {
