@@ -7,8 +7,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+
+import static care.smith.top.backend.resource.configuration.RequestValidator.isValidId;
 
 @Service
 public class RepositoryApiDelegateImpl implements RepositoryApiDelegate {
@@ -17,6 +20,9 @@ public class RepositoryApiDelegateImpl implements RepositoryApiDelegate {
   @Override
   public ResponseEntity<Repository> createRepository(
       String organisationId, Repository repository, List<String> include) {
+    if (!isValidId(repository.getId()))
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST, "The provided repository ID was invalid.");
     return new ResponseEntity<>(
         repositoryService.createRepository(organisationId, repository, include),
         HttpStatus.CREATED);
