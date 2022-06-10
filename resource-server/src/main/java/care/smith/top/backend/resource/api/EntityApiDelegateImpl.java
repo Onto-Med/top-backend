@@ -9,8 +9,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+
+import static care.smith.top.backend.resource.configuration.RequestValidator.isValidId;
 
 @Service
 public class EntityApiDelegateImpl implements EntityApiDelegate {
@@ -19,6 +22,9 @@ public class EntityApiDelegateImpl implements EntityApiDelegate {
   @Override
   public ResponseEntity<Entity> createEntity(
       String organisationId, String repositoryId, Entity entity, List<String> include) {
+    if (!isValidId(entity.getId()))
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST, "The provided entity ID was invalid.");
     return new ResponseEntity<>(
         entityService.createEntity(organisationId, repositoryId, entity), HttpStatus.CREATED);
   }

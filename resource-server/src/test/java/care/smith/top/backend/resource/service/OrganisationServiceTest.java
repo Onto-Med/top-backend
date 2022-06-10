@@ -2,6 +2,7 @@ package care.smith.top.backend.resource.service;
 
 import care.smith.top.backend.model.Organisation;
 import care.smith.top.backend.neo4j_ontology_access.repository.DirectoryRepository;
+import care.smith.top.backend.resource.api.OrganisationApiDelegateImpl;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -12,6 +13,7 @@ import java.util.Arrays;
 import static org.assertj.core.api.Assertions.*;
 
 class OrganisationServiceTest extends Neo4jTest {
+  @Autowired OrganisationApiDelegateImpl organisationApiDelegate;
   @Autowired OrganisationService organisationService;
   @Autowired DirectoryRepository directoryRepository;
 
@@ -20,9 +22,15 @@ class OrganisationServiceTest extends Neo4jTest {
     /* Create super organisation */
     Organisation superOrganisation =
         new Organisation()
-            .id("super_org")
+            .id("super_org/")
             .name("Super organisation")
             .description("Example description");
+
+    assertThatThrownBy(() -> organisationApiDelegate.createOrganisation(superOrganisation, null))
+        .isInstanceOf(ResponseStatusException.class)
+        .hasFieldOrPropertyWithValue("status", HttpStatus.BAD_REQUEST);
+
+    superOrganisation.id("super_org");
 
     assertThat(organisationService.createOrganisation(superOrganisation))
         .isNotNull()

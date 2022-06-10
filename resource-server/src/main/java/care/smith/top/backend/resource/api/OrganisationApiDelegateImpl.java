@@ -7,8 +7,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+
+import static care.smith.top.backend.resource.configuration.RequestValidator.isValidId;
 
 @Service
 public class OrganisationApiDelegateImpl implements OrganisationApiDelegate {
@@ -17,6 +20,9 @@ public class OrganisationApiDelegateImpl implements OrganisationApiDelegate {
   @Override
   public ResponseEntity<Organisation> createOrganisation(
       Organisation organisation, List<String> include) {
+    if (!isValidId(organisation.getId()))
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST, "The provided organisation ID was invalid.");
     return new ResponseEntity<>(
         organisationService.createOrganisation(organisation), HttpStatus.CREATED);
   }
@@ -36,13 +42,14 @@ public class OrganisationApiDelegateImpl implements OrganisationApiDelegate {
   }
 
   @Override
-  public ResponseEntity<List<Organisation>> getOrganisations(List<String> include, String name, Integer page) {
-    return new ResponseEntity<>(organisationService.getOrganisations(name, page, include), HttpStatus.OK);
+  public ResponseEntity<List<Organisation>> getOrganisations(
+      List<String> include, String name, Integer page) {
+    return new ResponseEntity<>(
+        organisationService.getOrganisations(name, page, include), HttpStatus.OK);
   }
 
   @Override
-  public ResponseEntity<Void> deleteOrganisationById(
-      String organisationId, List<String> include) {
+  public ResponseEntity<Void> deleteOrganisationById(String organisationId, List<String> include) {
     organisationService.deleteOrganisationById(organisationId);
     return new ResponseEntity<>(HttpStatus.NO_CONTENT);
   }
