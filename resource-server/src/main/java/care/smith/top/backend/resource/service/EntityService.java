@@ -859,7 +859,7 @@ public class EntityService implements ContentService {
           .orElseGet(() -> new Annotation("expression", "class"));
 
     if (expression.getConstant() != null)
-      return new Annotation("expression", expression.getConstant().doubleValue(), null);
+      return new Annotation("constant", expression.getConstant(), null);
 
     Annotation annotation = new Annotation("expression", expression.getOperator(), null);
     if (expression.getOperands() != null) {
@@ -1015,10 +1015,10 @@ public class EntityService implements ContentService {
           .operator("entity")
           .id(annotation.getClassValue() != null ? annotation.getClassValue().getId() : null);
 
-    if ("decimal".equals(annotation.getDatatype()))
+    if ("constant".equals(annotation.getProperty()))
       return new Expression()
           .operator("constant")
-          .constant(BigDecimal.valueOf(annotation.getDecimalValue()));
+          .constant(annotation.getStringValue());
 
     Expression expression = new Expression().operator(annotation.getStringValue());
     if (annotation.getAnnotations() != null)
