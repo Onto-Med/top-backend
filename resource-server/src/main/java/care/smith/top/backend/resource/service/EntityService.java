@@ -861,10 +861,10 @@ public class EntityService implements ContentService {
     if (expression.getConstant() != null)
       return new Annotation("constant", expression.getConstant(), null);
 
-    Annotation annotation = new Annotation("expression", expression.getOperator(), null);
-    if (expression.getOperands() != null) {
+    Annotation annotation = new Annotation("expression", expression.getFunction(), null);
+    if (expression.getArguments() != null) {
       int i = 1;
-      for (Expression operand : expression.getOperands()) {
+      for (Expression operand : expression.getArguments()) {
         annotation.addAnnotation(fromExpression(operand, repositoryId).setIndex(i++));
       }
     }
@@ -1012,17 +1012,17 @@ public class EntityService implements ContentService {
   private Expression toExpression(Annotation annotation) {
     if ("class".equals(annotation.getDatatype()))
       return new Expression()
-          .operator("entity")
+          .function("entity")
           .id(annotation.getClassValue() != null ? annotation.getClassValue().getId() : null);
 
     if ("constant".equals(annotation.getProperty()))
       return new Expression()
-          .operator("constant")
+          .function("constant")
           .constant(annotation.getStringValue());
 
-    Expression expression = new Expression().operator(annotation.getStringValue());
+    Expression expression = new Expression().function(annotation.getStringValue());
     if (annotation.getAnnotations() != null)
-      expression.operands(
+      expression.arguments(
           annotation.getAnnotations().stream()
               .sorted(
                   (a, b) -> {
