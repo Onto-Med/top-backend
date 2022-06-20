@@ -22,6 +22,17 @@ public interface ClassRepository
     extends PagingAndSortingRepository<Class, String>,
         CypherdslConditionExecutor<Class>,
         CypherdslStatementExecutor<Class> {
+  default Optional<Class> findOrigin(Class fork) {
+    Node forkNode =
+        Cypher.node("Class").named("fork").withProperties("id", Cypher.anonParameter(fork.getId()));
+    Node originNode = Cypher.node("Class").named("origin");
+
+    return findOne(
+        Cypher.match(forkNode.relationshipTo(originNode, "IS_FORK_OF"))
+            .returning(originNode)
+            .build());
+  }
+
   @Query(
       "MATCH (super:Class {id: $classId}) <-[:IS_SUBCLASS_OF { ownerId: $repositoryId }]- (sub:Class) "
           + "RETURN sub ORDER BY sub.index")

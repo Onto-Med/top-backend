@@ -23,6 +23,24 @@ public interface ClassVersionRepository
         CypherdslConditionExecutor<ClassVersion>,
         CypherdslStatementExecutor<ClassVersion> {
 
+  default Iterable<ClassVersion> findAllEquivalentVersions(@Param("fork") ClassVersion fork) {
+    Node forkNode = Cypher.node("ClassVersion").named("fork");
+    Node originVersion = Cypher.node("ClassVersion").named("originVersion");
+    Node originClass = Cypher.node("Class").named("originClass");
+    Relationship equivalentRel =
+        forkNode.relationshipTo(originVersion, "IS_EQUIVALENT_TO").named("equivalentRel");
+    Relationship cRel = originVersion.relationshipTo(originClass, "IS_VERSION_OF").named("cRel");
+
+    StatementBuilder.OrderableOngoingReadingAndWithWithoutWhere query =
+        Cypher.match(forkNode)
+            .where(forkNode.internalId().isEqualTo(Cypher.anonParameter(fork.getId())))
+            .match(equivalentRel)
+            .match(cRel)
+            .with(originClass, cRel, originVersion);
+
+    return findAll(query.returning(originClass, cRel, originVersion).build());
+  }
+
   /**
    * Search for a {@link ClassVersion} by classId and version number and add all annotations to the
    * result.

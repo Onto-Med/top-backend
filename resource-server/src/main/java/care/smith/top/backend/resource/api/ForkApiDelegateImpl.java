@@ -4,6 +4,7 @@ import care.smith.top.backend.api.ForkApiDelegate;
 import care.smith.top.backend.model.Entity;
 import care.smith.top.backend.model.ForkCreateInstruction;
 import care.smith.top.backend.model.ForkUpdateInstruction;
+import care.smith.top.backend.model.ForkingStats;
 import care.smith.top.backend.resource.service.EntityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -31,10 +32,10 @@ public class ForkApiDelegateImpl implements ForkApiDelegate {
   }
 
   @Override
-  public ResponseEntity<List<Entity>> getForks(
+  public ResponseEntity<ForkingStats> getForks(
       String organisationId, String repositoryId, String id, List<String> include) {
     return new ResponseEntity<>(
-        entityService.getForks(organisationId, repositoryId, id, include), HttpStatus.OK);
+        entityService.getForkingStats(organisationId, repositoryId, id, include), HttpStatus.OK);
   }
 
   @Override

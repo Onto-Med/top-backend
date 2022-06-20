@@ -379,7 +379,7 @@ public class EntityService implements ContentService {
         .collect(Collectors.toList());
   }
 
-  public List<Entity> getForks(
+  public ForkingStats getForkingStats(
       String organisationId, String repositoryId, String id, List<String> include) {
     Repository repository = getRepository(organisationId, repositoryId);
     Class cls =
@@ -387,9 +387,18 @@ public class EntityService implements ContentService {
             .findByIdAndRepositoryId(id, repository.getId())
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-    return classRepository.getForks(cls).stream()
-        .map(f -> classToEntity(f, repository.getId()))
-        .collect(Collectors.toList());
+    ForkingStats forkingStats = new ForkingStats();
+
+    forkingStats.setForks(
+        classRepository.getForks(cls).stream()
+            .map(f -> classToEntity(f, repository.getId()))
+            .collect(Collectors.toList()));
+
+    classRepository
+        .findOrigin(cls)
+        .ifPresent(o -> forkingStats.origin(classToEntity(o, o.getRepositoryId())));
+
+    return forkingStats;
   }
 
   public List<Entity> getRestrictions(String ownerId, Phenotype abstractPhenotype) {
@@ -551,18 +560,6 @@ public class EntityService implements ContentService {
    */
   private ClassVersion buildClassVersion(Entity entity, String repositoryId) {
     ClassVersion classVersion = new ClassVersion();
-
-    if (entity.getEquivalentEntities() != null) {
-      Set<ClassVersion> equivalentEntities = new HashSet<>();
-      entity
-          .getEquivalentEntities()
-          .forEach(
-              e ->
-                  classVersionRepository
-                      .findByClassIdAndVersion(e.getId(), e.getVersion())
-                      .ifPresent(equivalentEntities::add));
-      classVersion.addEquivalentClasses(equivalentEntities);
-    }
 
     if (entity instanceof Phenotype) {
       Phenotype phenotype = (Phenotype) entity;
@@ -736,17 +733,6 @@ public class EntityService implements ContentService {
     entity.setEntityType(entityType);
     entity.setCreatedAt(classVersion.getCreatedAtOffset());
     entity.setAuthor(new UserAccount().username(classVersion.getUser()));
-
-    if (classVersion.getEquivalentClasses() != null)
-      classVersion
-          .getEquivalentClasses()
-          .forEach(
-              e -> {
-                Entity equivalentEntity = new Entity();
-                equivalentEntity.setVersion(e.getVersion());
-                equivalentEntity.setId(e.getaClass().getId());
-                entity.addEquivalentEntitiesItem(equivalentEntity);
-              });
 
     PropertyAccessor accessor = PropertyAccessorFactory.forBeanPropertyAccess(entity);
     Arrays.asList("title", "synonym", "description")
@@ -1016,9 +1002,7 @@ public class EntityService implements ContentService {
           .id(annotation.getClassValue() != null ? annotation.getClassValue().getId() : null);
 
     if ("constant".equals(annotation.getProperty()))
-      return new Expression()
-          .function("constant")
-          .constant(annotation.getStringValue());
+      return new Expression().function("constant").constant(annotation.getStringValue());
 
     Expression expression = new Expression().function(annotation.getStringValue());
     if (annotation.getAnnotations() != null)
