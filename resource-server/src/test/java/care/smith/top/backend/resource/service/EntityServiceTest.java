@@ -62,12 +62,17 @@ class EntityServiceTest extends Neo4jTest {
     classRepository.saveAll(Arrays.asList(origin, fork1, fork2));
 
     assertThat(
-            entityService.getForks(organisation.getId(), repository1.getId(), origin.getId(), null))
-        .isNotEmpty()
-        .anySatisfy(f -> assertThat(f.getId()).isEqualTo(fork1.getId()))
-        .anySatisfy(f -> assertThat(f.getId()).isEqualTo(fork2.getId()))
-        .size()
-        .isEqualTo(2);
+            entityService.getForkingStats(
+                organisation.getId(), repository1.getId(), origin.getId(), null))
+        .isNotNull()
+        .satisfies(
+            fs ->
+                assertThat(fs.getForks())
+                    .isNotEmpty()
+                    .anySatisfy(f -> assertThat(f.getId()).isEqualTo(fork1.getId()))
+                    .anySatisfy(f -> assertThat(f.getId()).isEqualTo(fork2.getId()))
+                    .size()
+                    .isEqualTo(2));
   }
 
   @Test
@@ -144,8 +149,8 @@ class EntityServiceTest extends Neo4jTest {
     abstractPhenotype
         .expression(
             new Expression()
-                .operator("complement")
-                .addOperandsItem(new Expression().operator("entity")))
+                .function("complement")
+                .addArgumentsItem(new Expression().function("entity")))
         .addSuperCategoriesItem(category)
         .index(5)
         .id(UUID.randomUUID().toString())
@@ -169,9 +174,9 @@ class EntityServiceTest extends Neo4jTest {
                   .isNotNull()
                   .satisfies(
                       e -> {
-                        assertThat(e.getOperator())
-                            .isEqualTo(abstractPhenotype.getExpression().getOperator());
-                        assertThat(e.getOperands()).size().isEqualTo(1);
+                        assertThat(e.getFunction())
+                            .isEqualTo(abstractPhenotype.getExpression().getFunction());
+                        assertThat(e.getArguments()).size().isEqualTo(1);
                       });
             });
 
