@@ -22,6 +22,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Set;
 import java.util.*;
@@ -571,7 +572,7 @@ public class EntityService implements ContentService {
             new Annotation("dataType", phenotype.getDataType().getValue(), null));
       if (phenotype.getUnits() != null)
         classVersion.addAnnotations(
-            phenotype.getUnits().stream().map(this::fromUnit).collect(Collectors.toSet()));
+            phenotype.getUnits().stream().map(this::fromUnit).collect(Collectors.toList()));
       if (phenotype.getRestriction() != null)
         classVersion.addAnnotation(fromRestriction(phenotype.getRestriction()));
       if (phenotype.getExpression() != null)
@@ -583,23 +584,23 @@ public class EntityService implements ContentService {
           entity.getCodes().stream()
               .map(this::fromCode)
               .filter(Objects::nonNull)
-              .collect(Collectors.toSet()));
+              .collect(Collectors.toList()));
 
     if (entity.getTitles() != null)
       classVersion.addAnnotations(
           entity.getTitles().stream()
               .map(t -> new Annotation("title", t.getText(), t.getLang()))
-              .collect(Collectors.toSet()));
+              .collect(Collectors.toList()));
     if (entity.getSynonyms() != null)
       classVersion.addAnnotations(
           entity.getSynonyms().stream()
               .map(s -> new Annotation("synonym", s.getText(), s.getLang()))
-              .collect(Collectors.toSet()));
+              .collect(Collectors.toList()));
     if (entity.getDescriptions() != null)
       classVersion.addAnnotations(
           entity.getDescriptions().stream()
               .map(d -> new Annotation("description", d.getText(), d.getLang()))
-              .collect(Collectors.toSet()));
+              .collect(Collectors.toList()));
 
     return classVersion;
   }
@@ -848,12 +849,11 @@ public class EntityService implements ContentService {
       return new Annotation("constant", expression.getConstant(), null);
 
     Annotation annotation = new Annotation("expression", expression.getFunction(), null);
-    if (expression.getArguments() != null) {
-      int i = 1;
-      for (Expression operand : expression.getArguments()) {
-        annotation.addAnnotation(fromExpression(operand, repositoryId).setIndex(i++));
-      }
-    }
+    if (expression.getArguments() != null)
+      annotation.addAnnotations(
+          expression.getArguments().stream()
+              .map(a -> fromExpression(a, repositoryId))
+              .collect(Collectors.toList()));
     return annotation;
   }
 
@@ -888,14 +888,14 @@ public class EntityService implements ContentService {
             ((NumberRestriction) restriction)
                 .getValues().stream()
                     .map(v -> new Annotation("value", v.doubleValue(), null))
-                    .collect(Collectors.toSet()));
+                    .collect(Collectors.toList()));
     } else if (restriction instanceof StringRestriction) {
       if (((StringRestriction) restriction).getValues() != null)
         annotation.addAnnotations(
             ((StringRestriction) restriction)
                 .getValues().stream()
                     .map(v -> new Annotation("value", v, null))
-                    .collect(Collectors.toSet()));
+                    .collect(Collectors.toList()));
     } else if (restriction instanceof DateTimeRestriction) {
       if (((DateTimeRestriction) restriction).getMinOperator() != null)
         annotation.addAnnotation(
@@ -914,14 +914,14 @@ public class EntityService implements ContentService {
             ((DateTimeRestriction) restriction)
                 .getValues().stream()
                     .map(v -> new Annotation("value", v.toInstant(), null))
-                    .collect(Collectors.toSet()));
+                    .collect(Collectors.toList()));
     } else if (restriction instanceof BooleanRestriction) {
       if (((BooleanRestriction) restriction).getValues() != null)
         annotation.addAnnotations(
             ((BooleanRestriction) restriction)
                 .getValues().stream()
                     .map(v -> new Annotation("value", v, null))
-                    .collect(Collectors.toSet()));
+                    .collect(Collectors.toList()));
     }
 
     return annotation;
@@ -1005,17 +1005,10 @@ public class EntityService implements ContentService {
       return new Expression().function("constant").constant(annotation.getStringValue());
 
     Expression expression = new Expression().function(annotation.getStringValue());
-    if (annotation.getAnnotations() != null)
-      expression.arguments(
-          annotation.getAnnotations().stream()
-              .sorted(
-                  (a, b) -> {
-                    if (a.getIndex() == null) return b.getIndex() == null ? 0 : -1;
-                    if (b.getIndex() == null) return 1;
-                    return a.getIndex().compareTo(b.getIndex());
-                  })
-              .map(this::toExpression)
-              .collect(Collectors.toList()));
+    expression.arguments(
+        annotation.getSortedAnnotations().stream()
+            .map(this::toExpression)
+            .collect(Collectors.toList()));
     return expression;
   }
 
@@ -1029,24 +1022,24 @@ public class EntityService implements ContentService {
     if (type == DataType.STRING) {
       restriction = new StringRestriction();
       annotation
-          .getAnnotations("value")
+          .getSortedAnnotations("value")
           .forEach(v -> ((StringRestriction) restriction).addValuesItem(v.getStringValue()));
     } else if (type == DataType.NUMBER) {
       restriction = new NumberRestriction();
       annotation
-          .getAnnotations("value")
+          .getSortedAnnotations("value")
           .forEach(
               v ->
                   ((NumberRestriction) restriction)
                       .addValuesItem(BigDecimal.valueOf(v.getDecimalValue())));
-      annotation.getAnnotations("minOperator").stream()
-          .findFirst()
+      annotation
+          .getAnnotation("minOperator")
           .ifPresent(
               o ->
                   ((NumberRestriction) restriction)
                       .setMinOperator(RestrictionOperator.fromValue(o.getStringValue())));
-      annotation.getAnnotations("maxOperator").stream()
-          .findFirst()
+      annotation
+          .getAnnotation("maxOperator")
           .ifPresent(
               o ->
                   ((NumberRestriction) restriction)
@@ -1054,19 +1047,19 @@ public class EntityService implements ContentService {
     } else if (type == DataType.DATE_TIME) {
       restriction = new DateTimeRestriction();
       annotation
-          .getAnnotations("value")
+          .getSortedAnnotations("value")
           .forEach(
               v ->
                   ((DateTimeRestriction) restriction)
                       .addValuesItem(v.getDateValue().atOffset(ZoneOffset.UTC)));
-      annotation.getAnnotations("minOperator").stream()
-          .findFirst()
+      annotation
+          .getAnnotation("minOperator")
           .ifPresent(
               o ->
                   ((DateTimeRestriction) restriction)
                       .setMinOperator(RestrictionOperator.fromValue(o.getStringValue())));
-      annotation.getAnnotations("maxOperator").stream()
-          .findFirst()
+      annotation
+          .getAnnotation("maxOperator")
           .ifPresent(
               o ->
                   ((DateTimeRestriction) restriction)
@@ -1074,7 +1067,7 @@ public class EntityService implements ContentService {
     } else if (type == DataType.BOOLEAN) {
       restriction = new BooleanRestriction();
       annotation
-          .getAnnotations("value")
+          .getSortedAnnotations("value")
           .forEach(v -> ((BooleanRestriction) restriction).addValuesItem(v.getBooleanValue()));
     } else return null;
 
