@@ -15,6 +15,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -38,21 +40,38 @@ public class ExpressionFunctionApiDelegateImpl implements ExpressionFunctionApiD
 
   private List<ExpressionFunction> getBooleanFunctions() {
     List<ExpressionFunction> list =
+        new java.util.ArrayList<>(
+            Collections.singletonList(
+                new ExpressionFunction()
+                    .id("entity")
+                    .title("entity")
+                    .notation(ExpressionFunction.NotationEnum.PREFIX)
+                    .minArgumentNumber(1)
+                    .maxArgumentNumber(1)));
+    list.addAll(
         Stream.of(And.get(), Or.get(), Not.get())
             .map(OntoModelMapper::map)
-            .collect(Collectors.toList());
-    list.add(
-        new ExpressionFunction()
-            .id("entity")
-            .title("entity")
-            .notation(ExpressionFunction.NotationEnum.PREFIX)
-            .minArgumentNumber(1)
-            .maxArgumentNumber(1));
+            .collect(Collectors.toList()));
     return list;
   }
 
   private List<ExpressionFunction> getMathFunctions() {
     List<ExpressionFunction> list =
+        new java.util.ArrayList<>(
+            Arrays.asList(
+                new ExpressionFunction()
+                    .id("entity")
+                    .title("entity")
+                    .notation(ExpressionFunction.NotationEnum.PREFIX)
+                    .minArgumentNumber(1)
+                    .maxArgumentNumber(1),
+                new ExpressionFunction()
+                    .id("constant")
+                    .title("constant")
+                    .notation(ExpressionFunction.NotationEnum.PREFIX)
+                    .minArgumentNumber(1)
+                    .maxArgumentNumber(1)));
+    list.addAll(
         Stream.of(
                 Add.get(),
                 Divide.get(),
@@ -80,21 +99,7 @@ public class ExpressionFunctionApiDelegateImpl implements ExpressionFunctionApiD
                 PlusYears.get())
             .map(OntoModelMapper::map)
             .sorted(Comparator.comparing(ExpressionFunction::getTitle))
-            .collect(Collectors.toList());
-    list.add(
-        new ExpressionFunction()
-            .id("entity")
-            .title("entity")
-            .notation(ExpressionFunction.NotationEnum.PREFIX)
-            .minArgumentNumber(1)
-            .maxArgumentNumber(1));
-    list.add(
-        new ExpressionFunction()
-            .id("constant")
-            .title("constant")
-            .notation(ExpressionFunction.NotationEnum.PREFIX)
-            .minArgumentNumber(1)
-            .maxArgumentNumber(1));
+            .collect(Collectors.toList()));
     return list;
   }
 }
