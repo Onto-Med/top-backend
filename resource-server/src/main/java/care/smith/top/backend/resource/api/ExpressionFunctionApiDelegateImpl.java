@@ -2,13 +2,23 @@ package care.smith.top.backend.resource.api;
 
 import care.smith.top.backend.api.ExpressionFunctionApiDelegate;
 import care.smith.top.backend.model.ExpressionFunction;
+import care.smith.top.backend.resource.util.OntoModelMapper;
+import care.smith.top.simple_onto_api.calculator.functions.aggregate.*;
+import care.smith.top.simple_onto_api.calculator.functions.arithmetic.*;
+import care.smith.top.simple_onto_api.calculator.functions.bool.And;
+import care.smith.top.simple_onto_api.calculator.functions.bool.Not;
+import care.smith.top.simple_onto_api.calculator.functions.bool.Or;
+import care.smith.top.simple_onto_api.calculator.functions.comparison.*;
+import care.smith.top.simple_onto_api.calculator.functions.date_time.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class ExpressionFunctionApiDelegateImpl implements ExpressionFunctionApiDelegate {
@@ -27,84 +37,64 @@ public class ExpressionFunctionApiDelegateImpl implements ExpressionFunctionApiD
   }
 
   private List<ExpressionFunction> getBooleanFunctions() {
-    return Arrays.asList(
-        new ExpressionFunction()
-            .id("intersection")
-            .title("and")
-            .notation(ExpressionFunction.NotationEnum.PREFIX)
-            .minArgumentNumber(2),
-        new ExpressionFunction()
-            .id("union")
-            .title("or")
-            .notation(ExpressionFunction.NotationEnum.PREFIX)
-            .minArgumentNumber(2),
-        new ExpressionFunction()
-            .id("complement")
-            .title("not")
-            .notation(ExpressionFunction.NotationEnum.PREFIX)
-            .minArgumentNumber(1)
-            .maxArgumentNumber(1),
+    List<ExpressionFunction> list =
+        Stream.of(And.get(), Or.get(), Not.get())
+            .map(OntoModelMapper::map)
+            .collect(Collectors.toList());
+    list.add(
         new ExpressionFunction()
             .id("entity")
             .title("entity")
             .notation(ExpressionFunction.NotationEnum.PREFIX)
             .minArgumentNumber(1)
             .maxArgumentNumber(1));
+    return list;
   }
 
   private List<ExpressionFunction> getMathFunctions() {
-    return Arrays.asList(
-        new ExpressionFunction()
-            .id("addition")
-            .title("+")
-            .notation(ExpressionFunction.NotationEnum.INFIX)
-            .minArgumentNumber(2)
-            .maxArgumentNumber(2),
-        new ExpressionFunction()
-            .id("subtraction")
-            .title("-")
-            .notation(ExpressionFunction.NotationEnum.INFIX)
-            .minArgumentNumber(2)
-            .maxArgumentNumber(2),
-        new ExpressionFunction()
-            .id("multiplication")
-            .title("*")
-            .notation(ExpressionFunction.NotationEnum.INFIX)
-            .minArgumentNumber(2)
-            .maxArgumentNumber(2),
-        new ExpressionFunction()
-            .id("division")
-            .title("/")
-            .notation(ExpressionFunction.NotationEnum.INFIX)
-            .minArgumentNumber(2)
-            .maxArgumentNumber(2),
-        new ExpressionFunction()
-            .id("exponentiation")
-            .title("^")
-            .notation(ExpressionFunction.NotationEnum.INFIX)
-            .minArgumentNumber(2)
-            .maxArgumentNumber(2),
-        new ExpressionFunction()
-            .id("minimum")
-            .title("min")
-            .notation(ExpressionFunction.NotationEnum.PREFIX)
-            .minArgumentNumber(2),
-        new ExpressionFunction()
-            .id("maximum")
-            .title("max")
-            .notation(ExpressionFunction.NotationEnum.PREFIX)
-            .minArgumentNumber(2),
+    List<ExpressionFunction> list =
+        Stream.of(
+                Add.get(),
+                Divide.get(),
+                Multiply.get(),
+                Power.get(),
+                Subtract.get(),
+                Avg.get(),
+                Count.get(),
+                First.get(),
+                Last.get(),
+                Max.get(),
+                Min.get(),
+                Eq.get(),
+                Ge.get(),
+                Gt.get(),
+                Le.get(),
+                Lt.get(),
+                Ne.get(),
+                Date.get(),
+                DiffDays.get(),
+                DiffMonths.get(),
+                DiffYears.get(),
+                PlusDays.get(),
+                PlusMonths.get(),
+                PlusYears.get())
+            .map(OntoModelMapper::map)
+            .sorted(Comparator.comparing(ExpressionFunction::getTitle))
+            .collect(Collectors.toList());
+    list.add(
         new ExpressionFunction()
             .id("entity")
             .title("entity")
             .notation(ExpressionFunction.NotationEnum.PREFIX)
             .minArgumentNumber(1)
-            .maxArgumentNumber(1),
+            .maxArgumentNumber(1));
+    list.add(
         new ExpressionFunction()
             .id("constant")
             .title("constant")
             .notation(ExpressionFunction.NotationEnum.PREFIX)
             .minArgumentNumber(1)
             .maxArgumentNumber(1));
+    return list;
   }
 }
