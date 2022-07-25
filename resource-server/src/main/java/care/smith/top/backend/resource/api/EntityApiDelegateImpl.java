@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.StringWriter;
 import java.util.List;
 
 import static care.smith.top.backend.resource.configuration.RequestValidator.isValidId;
@@ -38,6 +39,12 @@ public class EntityApiDelegateImpl implements EntityApiDelegate {
       List<String> include) {
     return new ResponseEntity<>(
         entityService.loadEntity(organisationId, repositoryId, id, version), HttpStatus.OK);
+  }
+
+  @Override
+  public ResponseEntity<String> exportEntity(String organisationId, String repositoryId, String id, String format, Integer version) {
+    StringWriter writer = entityService.exportEntity(organisationId, repositoryId, id, format, version);
+    return new ResponseEntity<>(writer.toString(), HttpStatus.OK);
   }
 
   @Override

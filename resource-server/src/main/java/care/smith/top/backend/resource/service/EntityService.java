@@ -6,6 +6,7 @@ import care.smith.top.backend.neo4j_ontology_access.model.Class;
 import care.smith.top.backend.neo4j_ontology_access.model.Repository;
 import care.smith.top.backend.neo4j_ontology_access.model.*;
 import care.smith.top.backend.neo4j_ontology_access.repository.*;
+import care.smith.top.phenotype2r.Phenotype2RConverter;
 import org.neo4j.cypherdsl.core.*;
 import org.springframework.beans.PropertyAccessor;
 import org.springframework.beans.PropertyAccessorFactory;
@@ -19,6 +20,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
+import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -347,6 +350,28 @@ public class EntityService implements ContentService {
     deleteAnnotations(classVersion);
     expressionRepository.deleteAll(classVersion.getExpressions());
     classVersionRepository.delete(classVersion);
+  }
+
+  public StringWriter exportEntity(
+      String organisationId, String repositoryId, String id, String format, Integer version) {
+    StringWriter writer = new StringWriter();
+    Collection<Entity> entities =
+        getEntitiesByRepositoryId(organisationId, repositoryId, null, null, null, null, null);
+    if ("vnd.r-project.r".equals(format)) {
+      Collection<Phenotype> phenotypes =
+          entities.stream()
+              .filter(e -> !EntityType.CATEGORY.equals(e.getEntityType()))
+              .map(e -> (Phenotype) e)
+              .collect(Collectors.toList());
+      try {
+        new Phenotype2RConverter(phenotypes).convert(id, writer);
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+    } else {
+      throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE);
+    }
+    return writer;
   }
 
   public List<Entity> getEntities(
