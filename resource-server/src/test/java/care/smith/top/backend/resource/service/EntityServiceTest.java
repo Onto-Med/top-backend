@@ -86,7 +86,6 @@ class EntityServiceTest extends Neo4jTest {
         repositoryService.createRepository(
             organisation.getId(), new Repository().id("http://loinc.org"), null);
 
-    // TODO: use codeRepository service, when available
     Class code = classRepository.save(new Class("1234").setRepositoryId(codeRepository.getId()));
 
     assertThat(code)
@@ -145,7 +144,7 @@ class EntityServiceTest extends Neo4jTest {
         .hasFieldOrPropertyWithValue("status", HttpStatus.CONFLICT);
 
     /* Create abstract phenotype */
-    Phenotype abstractPhenotype = new Phenotype().addUnitsItem(new Unit().unit("cm"));
+    Phenotype abstractPhenotype = new Phenotype().unit(new Unit().unit("cm"));
     abstractPhenotype
         .expression(
             new Expression()
@@ -169,7 +168,7 @@ class EntityServiceTest extends Neo4jTest {
               assertThat(((Phenotype) p).getSuperCategories())
                   .allMatch(c -> c.getId().equals(category.getId()));
               assertThat(p.getIndex()).isEqualTo(5);
-              assertThat(((Phenotype) p).getUnits()).allMatch(u -> u.getUnit().equals("cm"));
+              assertThat(((Phenotype) p).getUnit().getUnit()).isEqualTo("cm");
               assertThat(((Phenotype) p).getExpression())
                   .isNotNull()
                   .satisfies(

@@ -595,9 +595,7 @@ public class EntityService implements ContentService {
       if (phenotype.getDataType() != null)
         classVersion.addAnnotation(
             new Annotation("dataType", phenotype.getDataType().getValue(), null));
-      if (phenotype.getUnits() != null)
-        classVersion.addAnnotations(
-            phenotype.getUnits().stream().map(this::fromUnit).collect(Collectors.toList()));
+      if (phenotype.getUnit() != null) classVersion.addAnnotation(fromUnit(phenotype.getUnit()));
       if (phenotype.getRestriction() != null)
         classVersion.addAnnotation(fromRestriction(phenotype.getRestriction()));
       if (phenotype.getExpression() != null)
@@ -715,9 +713,7 @@ public class EntityService implements ContentService {
             .getAnnotation("restriction")
             .ifPresent(r -> ((Phenotype) entity).setRestriction(toRestriction(r)));
       } else {
-        classVersion
-            .getAnnotations("unit")
-            .forEach(a -> ((Phenotype) entity).addUnitsItem(toUnit(a)));
+        classVersion.getAnnotation("unit").ifPresent(a -> ((Phenotype) entity).unit(toUnit(a)));
       }
 
       classVersion
@@ -954,13 +950,7 @@ public class EntityService implements ContentService {
 
   private Annotation fromUnit(Unit unit) {
     if (unit == null || !StringUtils.hasText(unit.getUnit())) return null;
-
-    return (Annotation)
-        new Annotation()
-            .setProperty("unit")
-            .setStringValue(unit.getUnit())
-            .addAnnotation(
-                new Annotation().setProperty("preferred").setBooleanValue(unit.isPreferred()));
+    return new Annotation().setProperty("unit").setStringValue(unit.getUnit());
   }
 
   /**
@@ -1109,10 +1099,6 @@ public class EntityService implements ContentService {
     if (annotation == null
         || !"unit".equals(annotation.getProperty())
         || !StringUtils.hasText(annotation.getStringValue())) return null;
-
-    Unit unit = new Unit().unit(annotation.getStringValue());
-    annotation.getAnnotation("preferred").ifPresent(a -> unit.preferred(a.getBooleanValue()));
-
-    return unit;
+    return new Unit().unit(annotation.getStringValue());
   }
 }
