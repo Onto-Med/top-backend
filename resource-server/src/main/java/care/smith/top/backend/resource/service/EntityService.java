@@ -6,6 +6,7 @@ import care.smith.top.backend.neo4j_ontology_access.model.Class;
 import care.smith.top.backend.neo4j_ontology_access.model.Repository;
 import care.smith.top.backend.neo4j_ontology_access.model.*;
 import care.smith.top.backend.neo4j_ontology_access.repository.*;
+import care.smith.top.phenotype2r.Phenotype2RConverter;
 import org.neo4j.cypherdsl.core.*;
 import org.springframework.beans.PropertyAccessor;
 import org.springframework.beans.PropertyAccessorFactory;
@@ -19,6 +20,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
+import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -349,6 +352,40 @@ public class EntityService implements ContentService {
     classVersionRepository.delete(classVersion);
   }
 
+  public StringWriter exportEntity(
+      String organisationId, String repositoryId, String id, String format, Integer version) {
+    StringWriter writer = new StringWriter();
+    Collection<Entity> entities =
+        getEntitiesByRepositoryId(organisationId, repositoryId, null, null, null, null, null);
+    if ("vnd.r-project.r".equals(format)) {
+      Collection<Phenotype> phenotypes =
+          entities.stream()
+              .filter(e -> !EntityType.CATEGORY.equals(e.getEntityType()))
+              .map(e -> (Phenotype) e)
+              .collect(Collectors.toList());
+      try {
+        Phenotype2RConverter converter = new Phenotype2RConverter(phenotypes);
+        Entity entity = loadEntity(organisationId, repositoryId, id, version);
+        if (EntityType.CATEGORY.equals(entity.getEntityType())) {
+          for (Entity subClass :
+              getSubclasses(organisationId, repositoryId, id, null).stream()
+                  .filter(e -> !EntityType.CATEGORY.equals(e.getEntityType()))
+                  .collect(Collectors.toList())) {
+            converter.convert(subClass.getId(), writer);
+            writer.append(System.lineSeparator());
+          }
+        } else {
+          converter.convert(id, writer);
+        }
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+    } else {
+      throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE);
+    }
+    return writer;
+  }
+
   public List<Entity> getEntities(
       List<String> include, String name, List<EntityType> type, DataType dataType, Integer page) {
     int requestedPage = page != null ? page - 1 : 0;
@@ -570,9 +607,7 @@ public class EntityService implements ContentService {
       if (phenotype.getDataType() != null)
         classVersion.addAnnotation(
             new Annotation("dataType", phenotype.getDataType().getValue(), null));
-      if (phenotype.getUnits() != null)
-        classVersion.addAnnotations(
-            phenotype.getUnits().stream().map(this::fromUnit).collect(Collectors.toList()));
+      if (phenotype.getUnit() != null) classVersion.addAnnotation(fromUnit(phenotype.getUnit()));
       if (phenotype.getRestriction() != null)
         classVersion.addAnnotation(fromRestriction(phenotype.getRestriction()));
       if (phenotype.getExpression() != null)
@@ -690,9 +725,7 @@ public class EntityService implements ContentService {
             .getAnnotation("restriction")
             .ifPresent(r -> ((Phenotype) entity).setRestriction(toRestriction(r)));
       } else {
-        classVersion
-            .getAnnotations("unit")
-            .forEach(a -> ((Phenotype) entity).addUnitsItem(toUnit(a)));
+        classVersion.getAnnotation("unit").ifPresent(a -> ((Phenotype) entity).unit(toUnit(a)));
       }
 
       classVersion
@@ -929,13 +962,7 @@ public class EntityService implements ContentService {
 
   private Annotation fromUnit(Unit unit) {
     if (unit == null || !StringUtils.hasText(unit.getUnit())) return null;
-
-    return (Annotation)
-        new Annotation()
-            .setProperty("unit")
-            .setStringValue(unit.getUnit())
-            .addAnnotation(
-                new Annotation().setProperty("preferred").setBooleanValue(unit.isPreferred()));
+    return new Annotation().setProperty("unit").setStringValue(unit.getUnit());
   }
 
   /**
@@ -1084,10 +1111,6 @@ public class EntityService implements ContentService {
     if (annotation == null
         || !"unit".equals(annotation.getProperty())
         || !StringUtils.hasText(annotation.getStringValue())) return null;
-
-    Unit unit = new Unit().unit(annotation.getStringValue());
-    annotation.getAnnotation("preferred").ifPresent(a -> unit.preferred(a.getBooleanValue()));
-
-    return unit;
+    return new Unit().unit(annotation.getStringValue());
   }
 }
