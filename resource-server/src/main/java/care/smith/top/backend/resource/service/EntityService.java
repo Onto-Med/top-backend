@@ -364,7 +364,19 @@ public class EntityService implements ContentService {
               .map(e -> (Phenotype) e)
               .collect(Collectors.toList());
       try {
-        new Phenotype2RConverter(phenotypes).convert(id, writer);
+        Phenotype2RConverter converter = new Phenotype2RConverter(phenotypes);
+        Entity entity = loadEntity(organisationId, repositoryId, id, version);
+        if (EntityType.CATEGORY.equals(entity.getEntityType())) {
+          for (Entity subClass :
+              getSubclasses(organisationId, repositoryId, id, null).stream()
+                  .filter(e -> !EntityType.CATEGORY.equals(e.getEntityType()))
+                  .collect(Collectors.toList())) {
+            converter.convert(subClass.getId(), writer);
+            writer.append(System.lineSeparator());
+          }
+        } else {
+          converter.convert(id, writer);
+        }
       } catch (IOException e) {
         throw new RuntimeException(e);
       }
