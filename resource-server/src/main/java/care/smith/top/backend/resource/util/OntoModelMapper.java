@@ -20,6 +20,7 @@ public class OntoModelMapper {
 
   public static Constant map(
       care.smith.top.simple_onto_api.calculator.constants.Constant constant) {
+    if (constant == null) return null;
     return new Constant().id(constant.getId()).title(constant.getTitle());
   }
 }

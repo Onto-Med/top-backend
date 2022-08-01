@@ -6,6 +6,7 @@ import care.smith.top.backend.neo4j_ontology_access.model.Class;
 import care.smith.top.backend.neo4j_ontology_access.model.Repository;
 import care.smith.top.backend.neo4j_ontology_access.model.*;
 import care.smith.top.backend.neo4j_ontology_access.repository.*;
+import care.smith.top.backend.resource.util.ApiModelMapper;
 import care.smith.top.phenotype2r.Phenotype2RConverter;
 import org.neo4j.cypherdsl.core.*;
 import org.springframework.beans.PropertyAccessor;
@@ -25,7 +26,6 @@ import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Set;
 import java.util.*;
@@ -720,7 +720,7 @@ public class EntityService implements ContentService {
                 });
         classVersion
             .getAnnotation("score")
-            .ifPresent(s -> ((Phenotype) entity).setScore(BigDecimal.valueOf(s.getDecimalValue())));
+            .ifPresent(s -> ((Phenotype) entity).setScore(BigDecimal.valueOf(s.getNumberValue())));
         classVersion
             .getAnnotation("restriction")
             .ifPresent(r -> ((Phenotype) entity).setRestriction(toRestriction(r)));
@@ -730,7 +730,7 @@ public class EntityService implements ContentService {
 
       classVersion
           .getAnnotation("expression")
-          .ifPresent(a -> ((Phenotype) entity).setExpression(toExpression(a)));
+          .ifPresent(a -> ((Phenotype) entity).setExpression(ApiModelMapper.toExpression(a)));
     }
 
     if (!isRestricted(entityType))
@@ -872,14 +872,14 @@ public class EntityService implements ContentService {
   private Annotation fromExpression(Expression expression, String repositoryId) {
     if (expression == null) return new Annotation("expression", null);
 
-    if (expression.getId() != null)
+    if (expression.getEntityId() != null)
       return classRepository
-          .findByIdAndRepositoryId(expression.getId(), repositoryId)
+          .findByIdAndRepositoryId(expression.getEntityId(), repositoryId)
           .map(aClass -> new Annotation("expression", aClass, null))
           .orElseGet(() -> new Annotation("expression", "class"));
 
-    if (expression.getConstant() != null)
-      return new Annotation("constant", expression.getConstant(), null);
+    if (expression.getValue() != null)
+      return ApiModelMapper.toAnnotation(expression.getValue());
 
     Annotation annotation = new Annotation("expression", expression.getFunction(), null);
     if (expression.getArguments() != null)
@@ -1022,23 +1022,6 @@ public class EntityService implements ContentService {
     }
   }
 
-  private Expression toExpression(Annotation annotation) {
-    if ("class".equals(annotation.getDatatype()))
-      return new Expression()
-          .function("entity")
-          .id(annotation.getClassValue() != null ? annotation.getClassValue().getId() : null);
-
-    if ("constant".equals(annotation.getProperty()))
-      return new Expression().function("constant").constant(annotation.getStringValue());
-
-    Expression expression = new Expression().function(annotation.getStringValue());
-    expression.arguments(
-        annotation.getSortedAnnotations().stream()
-            .map(this::toExpression)
-            .collect(Collectors.toList()));
-    return expression;
-  }
-
   private Restriction toRestriction(Annotation annotation) {
     if (annotation == null) return null;
     if (annotation.getAnnotation("type").isEmpty()) return null;
@@ -1058,7 +1041,7 @@ public class EntityService implements ContentService {
           .forEach(
               v ->
                   ((NumberRestriction) restriction)
-                      .addValuesItem(BigDecimal.valueOf(v.getDecimalValue())));
+                      .addValuesItem(BigDecimal.valueOf(v.getNumberValue())));
       annotation
           .getAnnotation("minOperator")
           .ifPresent(
