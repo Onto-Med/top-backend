@@ -1,11 +1,9 @@
 package care.smith.top.backend.neo4j_ontology_access.model;
 
 import org.springframework.data.neo4j.core.schema.*;
-import org.springframework.util.StringUtils;
 
 import java.time.Instant;
 import java.util.Collections;
-import java.util.Date;
 import java.util.Set;
 
 /** Example: (:Annotation:String:Title { value: 'Weight', language: 'en', index: 1 }) */
@@ -18,7 +16,7 @@ public class Annotation extends Annotatable {
   private String property;
   private String  stringValue;
   private Instant dateValue;
-  private Double  decimalValue;
+  private Double numberValue;
   private Boolean booleanValue;
 
   @Relationship(type = "HAS_CLASS_VALUE")
@@ -53,10 +51,10 @@ public class Annotation extends Annotatable {
     this(property, doubleValue, language, null);
   }
 
-  public Annotation(String property, Double decimalValue, String language, Integer index) {
+  public Annotation(String property, Double numberValue, String language, Integer index) {
     this(property, language, index);
-    this.setDatatype("decimal");
-    this.setDecimalValue(decimalValue);
+    this.setDatatype("number");
+    this.setNumberValue(numberValue);
   }
 
   public Annotation(String property, Boolean booleanValue, String language) {
@@ -65,7 +63,7 @@ public class Annotation extends Annotatable {
 
   public Annotation(String property, Boolean booleanValue, String language, Integer index) {
     this(property, language, index);
-    this.setDatatype("decimal");
+    this.setDatatype("number");
     this.setBooleanValue(booleanValue);
   }
 
@@ -100,8 +98,8 @@ public class Annotation extends Annotatable {
         return stringValue;
       case "date":
         return dateValue;
-      case "decimal":
-        return decimalValue;
+      case "number":
+        return numberValue;
       case "boolean":
         return booleanValue;
       case "class":
@@ -120,12 +118,12 @@ public class Annotation extends Annotatable {
     return this;
   }
 
-  public Double getDecimalValue() {
-    return decimalValue;
+  public Double getNumberValue() {
+    return numberValue;
   }
 
-  public Annotation setDecimalValue(Double decimalValue) {
-    this.decimalValue = decimalValue;
+  public Annotation setNumberValue(Double numberValue) {
+    this.numberValue = numberValue;
     return this;
   }
 
