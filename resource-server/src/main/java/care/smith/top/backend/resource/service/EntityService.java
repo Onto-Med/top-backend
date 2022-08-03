@@ -919,8 +919,7 @@ public class EntityService implements ContentService {
         annotation.addAnnotations(
             ((NumberRestriction) restriction)
                 .getValues().stream()
-                    .filter(Objects::nonNull)
-                    .map(v -> new Annotation("value", v.doubleValue(), null))
+                    .map(v -> new Annotation("value", v != null ? v.doubleValue() : null, null))
                     .collect(Collectors.toList()));
     } else if (restriction instanceof StringRestriction) {
       if (((StringRestriction) restriction).getValues() != null)
@@ -1043,7 +1042,10 @@ public class EntityService implements ContentService {
           .forEach(
               v ->
                   ((NumberRestriction) restriction)
-                      .addValuesItem(BigDecimal.valueOf(v.getNumberValue())));
+                      .addValuesItem(
+                          v.getNumberValue() != null
+                              ? BigDecimal.valueOf(v.getNumberValue())
+                              : null));
       annotation
           .getAnnotation("minOperator")
           .ifPresent(
