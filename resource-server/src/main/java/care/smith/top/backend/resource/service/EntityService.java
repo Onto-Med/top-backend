@@ -878,8 +878,7 @@ public class EntityService implements ContentService {
           .map(aClass -> new Annotation("expression", aClass, null))
           .orElseGet(() -> new Annotation("expression", "class"));
 
-    if (expression.getValue() != null)
-      return ApiModelMapper.toAnnotation(expression.getValue());
+    if (expression.getValue() != null) return ApiModelMapper.toAnnotation(expression.getValue());
 
     Annotation annotation = new Annotation("expression", expression.getFunction(), null);
     if (expression.getArguments() != null)
@@ -920,6 +919,7 @@ public class EntityService implements ContentService {
         annotation.addAnnotations(
             ((NumberRestriction) restriction)
                 .getValues().stream()
+                    .filter(Objects::nonNull)
                     .map(v -> new Annotation("value", v.doubleValue(), null))
                     .collect(Collectors.toList()));
     } else if (restriction instanceof StringRestriction) {
@@ -927,6 +927,7 @@ public class EntityService implements ContentService {
         annotation.addAnnotations(
             ((StringRestriction) restriction)
                 .getValues().stream()
+                    .filter(Objects::nonNull)
                     .map(v -> new Annotation("value", v, null))
                     .collect(Collectors.toList()));
     } else if (restriction instanceof DateTimeRestriction) {
@@ -946,6 +947,7 @@ public class EntityService implements ContentService {
         annotation.addAnnotations(
             ((DateTimeRestriction) restriction)
                 .getValues().stream()
+                    .filter(Objects::nonNull)
                     .map(v -> new Annotation("value", v.toInstant(), null))
                     .collect(Collectors.toList()));
     } else if (restriction instanceof BooleanRestriction) {
