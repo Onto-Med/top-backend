@@ -716,6 +716,14 @@ public class EntityService implements ContentService {
                           (Phenotype)
                               new Phenotype()
                                   .id(c.getaClass().getId())
+                                  .titles(
+                                      c.getAnnotations("title").stream()
+                                          .map(
+                                              a ->
+                                                  new LocalisableText()
+                                                      .text(a.getStringValue())
+                                                      .lang(a.getLanguage()))
+                                          .collect(Collectors.toList()))
                                   .entityType(EntityType.fromValue(superType)));
                 });
         classVersion
