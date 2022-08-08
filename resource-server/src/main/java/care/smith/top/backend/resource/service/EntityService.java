@@ -30,7 +30,6 @@ import java.time.ZoneOffset;
 import java.util.Set;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 public class EntityService implements ContentService {
@@ -395,15 +394,7 @@ public class EntityService implements ContentService {
             findEntitiesMatchingConditionStatement(null, name, type, dataType, true, requestedPage),
             ClassVersion.class)
         .parallelStream()
-        .flatMap(
-            cv -> {
-              String repositoryId = cv.getaClass().getRepositoryId();
-              Entity entity = classVersionToEntity(cv, repositoryId);
-              Stream<Entity> result = Stream.of(entity);
-              if (type == null || type.contains(getRestrictedEntityType(entity.getEntityType())))
-                result = Stream.concat(result, getChildren(cv.getaClass().getId(), repositoryId));
-              return result;
-            })
+        .map(cv -> classVersionToEntity(cv, cv.getaClass().getRepositoryId()))
         .collect(Collectors.toList());
   }
 
@@ -422,14 +413,7 @@ public class EntityService implements ContentService {
             findEntitiesMatchingConditionStatement(
                 repositoryId, name, type, dataType, false, requestedPage))
         .parallelStream()
-        .flatMap(
-            cv -> {
-              Entity entity = classVersionToEntity(cv, repositoryId);
-              Stream<Entity> result = Stream.of(entity);
-              if (type == null || type.contains(getRestrictedEntityType(entity.getEntityType())))
-                result = Stream.concat(result, getChildren(cv.getaClass().getId(), repositoryId));
-              return result;
-            })
+        .map(cv -> classVersionToEntity(cv, repositoryId))
         .collect(Collectors.toList());
   }
 
@@ -990,10 +974,6 @@ public class EntityService implements ContentService {
     return new Annotation().setProperty("unit").setStringValue(unit.getUnit());
   }
 
-  private Stream<Entity> getChildren(String id, String ownerId) {
-    return classRepository.findSubclasses(id, ownerId).map(child -> classToEntity(child, ownerId));
-  }
-
   /**
    * Get {@link Repository} by repositoryId and directoryId. If the repository does not exist or is
    * not associated with the directory, this method will throw an exception.
@@ -1010,13 +990,6 @@ public class EntityService implements ContentService {
                 new ResponseStatusException(
                     HttpStatus.NOT_FOUND,
                     String.format("Repository '%s' does not exist!", repositoryId)));
-  }
-
-  private EntityType getRestrictedEntityType(EntityType entityType) {
-    if (EntityType.SINGLE_PHENOTYPE.equals(entityType)) return EntityType.SINGLE_RESTRICTION;
-    if (EntityType.DERIVED_PHENOTYPE.equals(entityType)) return EntityType.DERIVED_RESTRICTION;
-    if (EntityType.COMBINED_PHENOTYPE.equals(entityType)) return EntityType.COMBINED_RESTRICTION;
-    return null;
   }
 
   private boolean isAbstract(EntityType entityType) {
