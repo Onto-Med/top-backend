@@ -717,7 +717,7 @@ public class EntityService implements ContentService {
                               new Phenotype()
                                   .id(c.getaClass().getId())
                                   .titles(
-                                      c.getAnnotations("title").stream()
+                                      c.getSortedAnnotations("title").stream()
                                           .map(
                                               a ->
                                                   new LocalisableText()
@@ -782,7 +782,7 @@ public class EntityService implements ContentService {
             p ->
                 accessor.setPropertyValue(
                     p + "s",
-                    classVersion.getAnnotations(p).stream()
+                    classVersion.getSortedAnnotations(p).stream()
                         .map(
                             a ->
                                 new LocalisableText()
@@ -791,7 +791,7 @@ public class EntityService implements ContentService {
                         .collect(Collectors.toList())));
 
     entity.setCodes(
-        classVersion.getAnnotations("code").stream()
+        classVersion.getSortedAnnotations("code").stream()
             .map(this::toCode)
             .filter(Objects::nonNull)
             .collect(Collectors.toList()));
