@@ -51,7 +51,7 @@ public abstract class Annotatable {
   }
 
   public Optional<Annotation> getAnnotation(String property) {
-    return getAnnotations(property).stream().findFirst();
+    return getSortedAnnotations(property).stream().findFirst();
   }
 
   public Set<Annotation> getAnnotations() {
