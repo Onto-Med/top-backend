@@ -440,7 +440,7 @@ public class EntityService implements ContentService {
   }
 
   public List<Entity> getRestrictions(String ownerId, Phenotype abstractPhenotype) {
-    if (!isAbstract(abstractPhenotype.getEntityType())) return new ArrayList<>();
+    if (!ApiModelMapper.isAbstract(abstractPhenotype)) return new ArrayList<>();
     return classRepository
         .findSubclasses(abstractPhenotype.getId(), ownerId)
         .map(
@@ -607,7 +607,8 @@ public class EntityService implements ContentService {
       if (phenotype.getDataType() != null)
         classVersion.addAnnotation(
             new Annotation("dataType", phenotype.getDataType().getValue(), null));
-      if (phenotype.getUnit() != null) classVersion.addAnnotation(fromUnit(phenotype.getUnit()));
+      if (phenotype.getUnit() != null)
+        classVersion.addAnnotation(ApiModelMapper.toAnnotation(phenotype.getUnit()));
       if (phenotype.getRestriction() != null)
         classVersion.addAnnotation(fromRestriction(phenotype.getRestriction()));
       if (phenotype.getExpression() != null)
@@ -617,7 +618,7 @@ public class EntityService implements ContentService {
     if (entity.getCodes() != null)
       classVersion.addAnnotations(
           entity.getCodes().stream()
-              .map(this::fromCode)
+              .map(ApiModelMapper::toAnnotation)
               .filter(Objects::nonNull)
               .collect(Collectors.toList()));
 
@@ -698,7 +699,7 @@ public class EntityService implements ContentService {
             .setDataType(
                 DataType.fromValue(classVersion.getAnnotation("dataType").get().getStringValue()));
 
-      if (isRestricted(entityType)) {
+      if (ApiModelMapper.isRestricted(entityType)) {
         superClasses.stream()
             .findFirst()
             .ifPresent(
@@ -733,7 +734,9 @@ public class EntityService implements ContentService {
             .getAnnotation("restriction")
             .ifPresent(r -> ((Phenotype) entity).setRestriction(toRestriction(r)));
       } else {
-        classVersion.getAnnotation("unit").ifPresent(a -> ((Phenotype) entity).unit(toUnit(a)));
+        classVersion
+            .getAnnotation("unit")
+            .ifPresent(a -> ((Phenotype) entity).unit(ApiModelMapper.toUnit(a)));
       }
 
       classVersion
@@ -741,7 +744,7 @@ public class EntityService implements ContentService {
           .ifPresent(a -> ((Phenotype) entity).setExpression(ApiModelMapper.toExpression(a)));
     }
 
-    if (!isRestricted(entityType))
+    if (!ApiModelMapper.isRestricted(entityType))
       entity.setSuperCategories(
           superClasses.stream()
               .map(
@@ -792,7 +795,7 @@ public class EntityService implements ContentService {
 
     entity.setCodes(
         classVersion.getSortedAnnotations("code").stream()
-            .map(this::toCode)
+            .map(ApiModelMapper::toCode)
             .filter(Objects::nonNull)
             .collect(Collectors.toList()));
 
@@ -827,7 +830,7 @@ public class EntityService implements ContentService {
                         new ResponseStatusException(
                             HttpStatus.INTERNAL_SERVER_ERROR, "Entity has no entityType!")));
 
-    if (isCategory(entityType)) {
+    if (ApiModelMapper.isCategory(entityType)) {
       classRepository.saveAll(
           classRepository
               .findSubclasses(cls.getId(), cls.getRepositoryId())
@@ -849,7 +852,7 @@ public class EntityService implements ContentService {
               .collect(Collectors.toList()));
     }
 
-    if (isAbstract(entityType))
+    if (ApiModelMapper.isAbstract(entityType))
       classRepository.findSubclasses(cls.getId(), cls.getRepositoryId()).forEach(this::deleteClass);
 
     classVersionRepository.findAllByClassId(cls.getId()).forEach(this::deleteVersion);
@@ -863,18 +866,6 @@ public class EntityService implements ContentService {
     deleteAnnotations(classVersion);
     expressionRepository.deleteAll(classVersion.getExpressions());
     classVersionRepository.delete(classVersion);
-  }
-
-  private Annotation fromCode(Code code) {
-    if (code == null
-        || code.getCode() == null
-        || code.getCodeSystem() == null
-        || code.getCodeSystem().getUri() == null) return null;
-
-    return (Annotation)
-        new Annotation("code", code.getCode(), null)
-            .addAnnotation(
-                new Annotation("codeSystem", code.getCodeSystem().getUri().toString(), null));
   }
 
   private Annotation fromExpression(Expression expression, String repositoryId) {
@@ -969,11 +960,6 @@ public class EntityService implements ContentService {
     return annotation;
   }
 
-  private Annotation fromUnit(Unit unit) {
-    if (unit == null || !StringUtils.hasText(unit.getUnit())) return null;
-    return new Annotation().setProperty("unit").setStringValue(unit.getUnit());
-  }
-
   /**
    * Get {@link Repository} by repositoryId and directoryId. If the repository does not exist or is
    * not associated with the directory, this method will throw an exception.
@@ -990,45 +976,6 @@ public class EntityService implements ContentService {
                 new ResponseStatusException(
                     HttpStatus.NOT_FOUND,
                     String.format("Repository '%s' does not exist!", repositoryId)));
-  }
-
-  private boolean isAbstract(EntityType entityType) {
-    return Arrays.asList(
-            EntityType.SINGLE_PHENOTYPE,
-            EntityType.COMBINED_PHENOTYPE,
-            EntityType.DERIVED_PHENOTYPE)
-        .contains(entityType);
-  }
-
-  private boolean isCategory(EntityType entityType) {
-    return EntityType.CATEGORY.equals(entityType);
-  }
-
-  private boolean isPhenotype(EntityType entityType) {
-    return isAbstract(entityType) || isRestricted(entityType);
-  }
-
-  private boolean isRestricted(EntityType entityType) {
-    return Arrays.asList(
-            EntityType.SINGLE_RESTRICTION,
-            EntityType.COMBINED_RESTRICTION,
-            EntityType.DERIVED_RESTRICTION)
-        .contains(entityType);
-  }
-
-  private Code toCode(Annotation annotation) {
-    if (annotation == null || !"code".equals(annotation.getProperty())) return null;
-
-    Optional<Annotation> codeSystem = annotation.getAnnotation("codeSystem");
-    if (codeSystem.isEmpty()) return null;
-
-    try {
-      return new Code()
-          .code(annotation.getStringValue())
-          .codeSystem(new CodeSystem().uri(new URI(codeSystem.get().getStringValue())));
-    } catch (URISyntaxException e) {
-      return null;
-    }
   }
 
   private Restriction toRestriction(Annotation annotation) {
@@ -1100,12 +1047,5 @@ public class EntityService implements ContentService {
         .ifPresent(a -> restriction.setQuantor(Quantor.fromValue(a.getStringValue())));
 
     return restriction;
-  }
-
-  private Unit toUnit(Annotation annotation) {
-    if (annotation == null
-        || !"unit".equals(annotation.getProperty())
-        || !StringUtils.hasText(annotation.getStringValue())) return null;
-    return new Unit().unit(annotation.getStringValue());
   }
 }
