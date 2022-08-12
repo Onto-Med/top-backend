@@ -29,7 +29,7 @@ public class ClassRepositoryTest extends RepositoryTest {
     Class fork2 = new Class().setForkedClass(origin).setRepositoryId(repository3.getId());
     classRepository.saveAll(Arrays.asList(origin, fork1, fork2));
 
-    assertThat(classRepository.getForks(origin))
+    assertThat(classRepository.getForks(origin.getId()))
         .isNotEmpty()
         .anySatisfy(f -> assertThat(f.getId()).isEqualTo(fork1.getId()))
         .anySatisfy(f -> assertThat(f.getId()).isEqualTo(fork2.getId()))

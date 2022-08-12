@@ -214,93 +214,54 @@ public class EntityService implements ContentService {
         getRepository(
             forkCreateInstruction.getOrganisationId(), forkCreateInstruction.getRepositoryId());
 
-    Class originCls =
-        classRepository
-            .findByIdAndRepositoryId(id, originRepo.getId())
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    Entity entity = loadEntity(organisationId, repositoryId, id, null);
 
-    if (classRepository.forkExists(originCls, destinationRepo.getId()))
-      throw new ResponseStatusException(
-          HttpStatus.CONFLICT,
-          String.format(
-              "Fork of entity '%s' already exists in repository '%s'.", id, repositoryId));
-
-    ClassVersion originVersion;
-    if (version != null)
-      originVersion =
-          classVersionRepository
-              .findByClassIdAndVersion(originCls.getId(), version)
-              .orElseThrow(
-                  () ->
-                      new ResponseStatusException(
-                          HttpStatus.NOT_FOUND,
-                          String.format(
-                              "Version %d does not exist for entity '%s'.", version, id)));
-    else
-      originVersion =
-          classVersionRepository
-              .findCurrentByClassId(originCls.getId())
-              .orElseThrow(
-                  () ->
-                      new ResponseStatusException(
-                          HttpStatus.NOT_FOUND,
-                          String.format("Entity '%s' does not have a current version.", id)));
-
-    Entity fork = classVersionToEntity(originVersion, originRepo.getId());
-    fork.setId(UUID.randomUUID().toString());
-    fork.setVersion(1);
-
-    List<Entity> result = new ArrayList<>();
-
-    //    if (forkCreateInstruction.isCascade()) {
-    //      // TODO: handle referenced entities
-    //    } else {
-    //      // TODO: drop properties with references
-    //    }
-
-    //    if (forkCreateInstruction.isHistory()) {
-    //      // TODO: copy all versions
-    //    }
-
-    if (fork instanceof Phenotype) {
-      Phenotype phenotype = (Phenotype) fork;
-      phenotype.setSuperCategories(null);
-      if (phenotype.getSuperPhenotype() != null) {
-        Entity superPhenotype =
-            createFork(
-                    organisationId,
-                    repositoryId,
-                    phenotype.getSuperPhenotype().getId(),
-                    new ForkCreateInstruction()
-                        .organisationId(forkCreateInstruction.getOrganisationId())
-                        .repositoryId(forkCreateInstruction.getRepositoryId())
-                        .cascade(false) // do not cascade for super phenotype
-                        .history(forkCreateInstruction.isHistory())
-                        .preserveOrigin(forkCreateInstruction.isPreserveOrigin()),
-                    null,
-                    null)
-                .stream()
-                .findFirst()
-                .orElseThrow();
-        result.add(superPhenotype);
-        phenotype.setSuperPhenotype((Phenotype) superPhenotype);
-      }
+    List<Entity> origins = new ArrayList<>();
+    if (ApiModelMapper.isRestricted(entity)) {
+      Entity superPhenotype =
+          loadEntity(
+              organisationId, repositoryId, ((Phenotype) entity).getSuperPhenotype().getId(), null);
+      origins.add(superPhenotype);
+      origins.add(entity);
     } else {
-      ((Category) fork).setSuperCategories(null);
+      origins.add(entity);
+      origins.addAll(getSubclasses(organisationId, repositoryId, origins.get(0).getId(), null));
     }
 
-    result.add(
-        createEntity(forkCreateInstruction.getOrganisationId(), destinationRepo.getId(), fork));
+    List<Entity> results = new ArrayList<>();
+    for (Entity origin : origins) {
+      String oldId = origin.getId();
+      if (classRepository.forkExists(oldId, destinationRepo.getId())) continue;
 
-    ClassVersion forkVersion =
-        classVersionRepository.findCurrentByClassId(fork.getId()).orElseThrow();
+      origin.setId(UUID.randomUUID().toString());
+      origin.setVersion(1);
 
-    if (forkCreateInstruction.isPreserveOrigin()) {
-      classRepository.setFork(fork.getId(), originCls.getId());
-      classVersionRepository.setEquivalentVersion(forkVersion, originVersion);
+      if (origin instanceof Phenotype) {
+        Phenotype phenotype = (Phenotype) origin;
+        phenotype.setSuperCategories(null);
+        if (phenotype.getSuperPhenotype() != null) {
+          Optional<Class> superClass =
+              classRepository.getFork(
+                  phenotype.getSuperPhenotype().getId(), destinationRepo.getId());
+          if (superClass.isEmpty()) continue;
+          phenotype.setSuperPhenotype((Phenotype) new Phenotype().id(superClass.get().getId()));
+        }
+      } else {
+        ((Category) origin).setSuperCategories(null);
+      }
+
+      results.add(
+          createEntity(forkCreateInstruction.getOrganisationId(), destinationRepo.getId(), origin));
+
+      classRepository.setFork(origin.getId(), oldId);
+      ClassVersion forkVersion =
+          classVersionRepository.findCurrentByClassId(origin.getId()).orElseThrow();
+      classVersionRepository
+          .findCurrentByClassId(oldId)
+          .ifPresent(cv -> classVersionRepository.setEquivalentVersion(forkVersion, cv));
     }
 
-    return result;
+    return results;
   }
 
   @Transactional
@@ -428,7 +389,7 @@ public class EntityService implements ContentService {
     ForkingStats forkingStats = new ForkingStats();
 
     forkingStats.setForks(
-        classRepository.getForks(cls).stream()
+        classRepository.getForks(cls.getId()).stream()
             .map(f -> classToEntity(f, repository.getId()))
             .collect(Collectors.toList()));
 

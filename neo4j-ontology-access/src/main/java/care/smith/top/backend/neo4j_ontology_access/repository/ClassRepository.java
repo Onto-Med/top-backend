@@ -49,23 +49,34 @@ public interface ClassRepository
 
   Optional<Class> findByIdAndRepositoryId(String id, String repositoryId);
 
-  default boolean forkExists(Class originCls, String repositoryId) {
+  default boolean forkExists(String entityId, String repositoryId) {
     Node cls = Cypher.node("Class");
-    Node origin = cls.withProperties("id", Cypher.anonParameter(originCls.getId())).named("origin");
-    Relationship forkRel = origin.relationshipBetween(cls, "IS_FORK_OF").unbounded();
+    Node origin = cls.withProperties("id", Cypher.anonParameter(entityId)).named("origin");
+    Node fork = cls.withProperties("repositoryId", Cypher.anonParameter(repositoryId)).named("fork");
+    Relationship forkRel = fork.relationshipTo(origin, "IS_FORK_OF").unbounded();
 
     return exists(Cypher.match(forkRel).asCondition());
   }
 
-  default Collection<Class> getForks(Class cls) {
+  default Collection<Class> getForks(String classId) {
     Node origin =
-        Cypher.node("Class")
-            .withProperties("id", Cypher.anonParameter(cls.getId()))
-            .named("origin");
+        Cypher.node("Class").withProperties("id", Cypher.anonParameter(classId)).named("origin");
     Node fork = Cypher.node("Class").named("c");
     Relationship forkRel = fork.relationshipTo(origin, "IS_FORK_OF").named("forkRel");
 
     return this.findAll(Cypher.match(forkRel).returning(fork).build());
+  }
+
+  default Optional<Class> getFork(String classId, String repositoryId) {
+    Node origin =
+        Cypher.node("Class").withProperties("id", Cypher.anonParameter(classId)).named("origin");
+    Node fork =
+        Cypher.node("Class")
+            .withProperties("repositoryId", Cypher.anonParameter(repositoryId))
+            .named("c");
+    Relationship forkRel = fork.relationshipTo(origin, "IS_FORK_OF").named("forkRel");
+
+    return this.findOne(Cypher.match(forkRel).returning(fork).build());
   }
 
   /**
