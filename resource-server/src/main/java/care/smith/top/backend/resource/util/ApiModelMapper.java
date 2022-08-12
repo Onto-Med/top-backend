@@ -18,6 +18,13 @@ public abstract class ApiModelMapper {
   public static final String EXPRESSION_VALUE_PROPERTY = "value";
   private static final Calculator calculator = new Calculator();
 
+  public static EntityType toRestrictedEntityType(EntityType entityType) {
+    if (EntityType.SINGLE_PHENOTYPE.equals(entityType)) return EntityType.SINGLE_RESTRICTION;
+    if (EntityType.DERIVED_PHENOTYPE.equals(entityType)) return EntityType.DERIVED_RESTRICTION;
+    if (EntityType.COMBINED_PHENOTYPE.equals(entityType)) return EntityType.COMBINED_RESTRICTION;
+    return null;
+  }
+
   public static boolean isAbstract(EntityType entityType) {
     return Arrays.asList(
             EntityType.SINGLE_PHENOTYPE,
