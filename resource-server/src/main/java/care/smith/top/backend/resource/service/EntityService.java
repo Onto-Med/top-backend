@@ -18,18 +18,19 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.io.StringWriter;
 import java.math.BigDecimal;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.time.ZoneOffset;
 import java.util.Set;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class EntityService implements ContentService {
@@ -41,6 +42,11 @@ public class EntityService implements ContentService {
   @Autowired private AnnotationRepository annotationRepository;
   @Autowired private ExpressionRepository expressionRepository;
   @Autowired private RepositoryRepository repositoryRepository;
+
+  public static <T> Predicate<T> distinctByKey(Function<? super T, ?> keyExtractor) {
+    Set<Object> seen = ConcurrentHashMap.newKeySet();
+    return t -> seen.add(keyExtractor.apply(t));
+  }
 
   private static Statement findEntitiesMatchingConditionStatement(
       String repositoryId,
@@ -355,7 +361,17 @@ public class EntityService implements ContentService {
             findEntitiesMatchingConditionStatement(null, name, type, dataType, true, requestedPage),
             ClassVersion.class)
         .parallelStream()
-        .map(cv -> classVersionToEntity(cv, cv.getaClass().getRepositoryId()))
+        .flatMap(
+            cv -> {
+              String repositoryId = cv.getaClass().getRepositoryId();
+              Entity entity = classVersionToEntity(cv, repositoryId);
+              Stream<Entity> result = Stream.of(entity);
+              if (type == null
+                  || type.contains(ApiModelMapper.toRestrictedEntityType(entity.getEntityType())))
+                result = Stream.concat(result, getChildren(cv.getaClass().getId(), repositoryId));
+              return result;
+            })
+        .filter(distinctByKey(Entity::getId))
         .collect(Collectors.toList());
   }
 
@@ -374,7 +390,16 @@ public class EntityService implements ContentService {
             findEntitiesMatchingConditionStatement(
                 repositoryId, name, type, dataType, false, requestedPage))
         .parallelStream()
-        .map(cv -> classVersionToEntity(cv, repositoryId))
+        .flatMap(
+            cv -> {
+              Entity entity = classVersionToEntity(cv, repositoryId);
+              Stream<Entity> result = Stream.of(entity);
+              if (type == null
+                  || type.contains(ApiModelMapper.toRestrictedEntityType(entity.getEntityType())))
+                result = Stream.concat(result, getChildren(cv.getaClass().getId(), repositoryId));
+              return result;
+            })
+        .filter(distinctByKey(Entity::getId))
         .collect(Collectors.toList());
   }
 
@@ -919,6 +944,10 @@ public class EntityService implements ContentService {
     }
 
     return annotation;
+  }
+
+  private Stream<Entity> getChildren(String id, String ownerId) {
+    return classRepository.findSubclasses(id, ownerId).map(child -> classToEntity(child, ownerId));
   }
 
   /**
