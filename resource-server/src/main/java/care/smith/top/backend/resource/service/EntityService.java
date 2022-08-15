@@ -231,7 +231,8 @@ public class EntityService implements ContentService {
       origins.add(entity);
     } else {
       origins.add(entity);
-      origins.addAll(getSubclasses(organisationId, repositoryId, origins.get(0).getId(), null));
+      if (forkCreateInstruction.isCascade())
+        origins.addAll(getSubclasses(organisationId, repositoryId, origins.get(0).getId(), null));
     }
 
     List<Entity> results = new ArrayList<>();
