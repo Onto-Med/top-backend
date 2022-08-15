@@ -231,20 +231,47 @@ public class EntityService implements ContentService {
       origins.add(entity);
     } else {
       origins.add(entity);
-      origins.addAll(getSubclasses(organisationId, repositoryId, origins.get(0).getId(), null));
+      if (forkCreateInstruction.isCascade())
+        origins.addAll(getSubclasses(organisationId, repositoryId, origins.get(0).getId(), null));
     }
 
     List<Entity> results = new ArrayList<>();
     for (Entity origin : origins) {
       String oldId = origin.getId();
-      if (classRepository.forkExists(oldId, destinationRepo.getId())) continue;
+      Optional<Class> fork = classRepository.getFork(origin.getId(), destinationRepo.getId());
 
-      origin.setId(UUID.randomUUID().toString());
-      origin.setVersion(1);
+      if (!forkCreateInstruction.isUpdate() && fork.isPresent()) continue;
+
+      if (forkCreateInstruction.isUpdate() && fork.isPresent()) {
+        if (classRepository.equalCurrentVersions(fork.get().getId(), origin.getId())) continue;
+        origin.setId(fork.get().getId());
+        origin.setVersion((int) (fork.get().getNodeVersion() + 1));
+        if (origin instanceof Phenotype) {
+          ((Phenotype) origin)
+              .setSuperCategories(
+                  fork.get().getSuperClassRelations().stream()
+                      .map(f -> f.getSuperclass().getId())
+                      .map(f -> (Category) new Category().id(f))
+                      .collect(Collectors.toList()));
+        } else if (origin instanceof Category) {
+          ((Category) origin)
+              .setSuperCategories(
+                  fork.get().getSuperClassRelations().stream()
+                      .map(f -> f.getSuperclass().getId())
+                      .map(f -> (Category) new Category().id(f))
+                      .collect(Collectors.toList()));
+        }
+      }
+
+      if (!forkCreateInstruction.isUpdate() || fork.isEmpty()) {
+        origin.setId(UUID.randomUUID().toString());
+        origin.setVersion(1);
+        if (origin instanceof Phenotype) ((Phenotype) origin).setSuperCategories(null);
+        else if (origin instanceof Category) ((Category) origin).setSuperCategories(null);
+      }
 
       if (origin instanceof Phenotype) {
         Phenotype phenotype = (Phenotype) origin;
-        phenotype.setSuperCategories(null);
         if (phenotype.getSuperPhenotype() != null) {
           Optional<Class> superClass =
               classRepository.getFork(
@@ -252,14 +279,23 @@ public class EntityService implements ContentService {
           if (superClass.isEmpty()) continue;
           phenotype.setSuperPhenotype((Phenotype) new Phenotype().id(superClass.get().getId()));
         }
-      } else {
-        ((Category) origin).setSuperCategories(null);
       }
 
-      results.add(
-          createEntity(forkCreateInstruction.getOrganisationId(), destinationRepo.getId(), origin));
+      if (origin.getVersion() == 1) {
+        results.add(
+            createEntity(
+                forkCreateInstruction.getOrganisationId(), destinationRepo.getId(), origin));
+        classRepository.setFork(origin.getId(), oldId);
+      } else {
+        results.add(
+            updateEntityById(
+                forkCreateInstruction.getOrganisationId(),
+                destinationRepo.getId(),
+                origin.getId(),
+                origin,
+                null));
+      }
 
-      classRepository.setFork(origin.getId(), oldId);
       ClassVersion forkVersion =
           classVersionRepository.findCurrentByClassId(origin.getId()).orElseThrow();
       classVersionRepository

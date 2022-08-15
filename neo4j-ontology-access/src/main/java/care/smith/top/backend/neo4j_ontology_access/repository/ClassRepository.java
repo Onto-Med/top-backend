@@ -4,6 +4,7 @@ import care.smith.top.backend.neo4j_ontology_access.model.Class;
 import care.smith.top.backend.neo4j_ontology_access.model.ClassVersion;
 import care.smith.top.backend.neo4j_ontology_access.model.Repository;
 import org.neo4j.cypherdsl.core.Cypher;
+import org.neo4j.cypherdsl.core.Functions;
 import org.neo4j.cypherdsl.core.Node;
 import org.neo4j.cypherdsl.core.Relationship;
 import org.springframework.data.neo4j.repository.query.Query;
@@ -22,6 +23,26 @@ public interface ClassRepository
     extends PagingAndSortingRepository<Class, String>,
         CypherdslConditionExecutor<Class>,
         CypherdslStatementExecutor<Class> {
+
+  default boolean equalCurrentVersions(String classId1, String classId2) {
+    Node cls = Cypher.node("Class");
+    Node cls1 = cls.withProperties("id", Cypher.anonParameter(classId1)).named("cls1");
+    Node cls2 = cls.withProperties("id", Cypher.anonParameter(classId2)).named("cls2");
+
+    Node cv = Cypher.node("ClassVersion");
+    Node cv1 = cv.named("cv1");
+    Node cv2 = cv.named("cv2");
+
+    Relationship forkRel = cls1.relationshipBetween(cls2, "IS_FORK_OF").unbounded();
+    Relationship vRel1 = cls1.relationshipTo(cv1, "CURRENT_VERSION");
+    Relationship vRel2 = cls2.relationshipTo(cv2, "CURRENT_VERSION");
+    Relationship equalRel = cv1.relationshipBetween(cv2, "IS_EQUIVALENT_TO").unbounded();
+
+    return exists(Cypher.match(forkRel, vRel1, vRel2, equalRel).asCondition());
+  }
+
+  Optional<Class> findByIdAndRepositoryId(String id, String repositoryId);
+
   default Optional<Class> findOrigin(Class fork) {
     Node forkNode =
         Cypher.node("Class").named("fork").withProperties("id", Cypher.anonParameter(fork.getId()));
@@ -34,12 +55,6 @@ public interface ClassRepository
   }
 
   @Query(
-      "MATCH (super:Class {id: $classId}) <-[:IS_SUBCLASS_OF { ownerId: $repositoryId }]- (sub:Class) "
-          + "RETURN sub ORDER BY sub.index")
-  Stream<Class> findSubclasses(
-      @Param("classId") String id, @Param("repositoryId") String repositoryId);
-
-  @Query(
       "MATCH (c:Class { repositoryId: $repository.__id__ }) "
           + "OPTIONAL MATCH (c) -[:IS_SUBCLASS_OF]-> (super) "
           + "WITH c, collect(super) as super "
@@ -47,24 +62,20 @@ public interface ClassRepository
           + "RETURN c")
   Set<Class> findRootClassesByRepository(@Param("repository") Repository repository);
 
-  Optional<Class> findByIdAndRepositoryId(String id, String repositoryId);
+  @Query(
+      "MATCH (super:Class {id: $classId}) <-[:IS_SUBCLASS_OF { ownerId: $repositoryId }]- (sub:Class) "
+          + "RETURN sub ORDER BY sub.index")
+  Stream<Class> findSubclasses(
+      @Param("classId") String id, @Param("repositoryId") String repositoryId);
 
   default boolean forkExists(String entityId, String repositoryId) {
     Node cls = Cypher.node("Class");
     Node origin = cls.withProperties("id", Cypher.anonParameter(entityId)).named("origin");
-    Node fork = cls.withProperties("repositoryId", Cypher.anonParameter(repositoryId)).named("fork");
+    Node fork =
+        cls.withProperties("repositoryId", Cypher.anonParameter(repositoryId)).named("fork");
     Relationship forkRel = fork.relationshipTo(origin, "IS_FORK_OF").unbounded();
 
     return exists(Cypher.match(forkRel).asCondition());
-  }
-
-  default Collection<Class> getForks(String classId) {
-    Node origin =
-        Cypher.node("Class").withProperties("id", Cypher.anonParameter(classId)).named("origin");
-    Node fork = Cypher.node("Class").named("c");
-    Relationship forkRel = fork.relationshipTo(origin, "IS_FORK_OF").named("forkRel");
-
-    return this.findAll(Cypher.match(forkRel).returning(fork).build());
   }
 
   default Optional<Class> getFork(String classId, String repositoryId) {
@@ -74,9 +85,26 @@ public interface ClassRepository
         Cypher.node("Class")
             .withProperties("repositoryId", Cypher.anonParameter(repositoryId))
             .named("c");
+    Node superClass = Cypher.node("Class").named("superClass");
+
+    Relationship forkRel = fork.relationshipTo(origin, "IS_FORK_OF").named("forkRel");
+    Relationship classRel = fork.relationshipTo(superClass, "IS_SUBCLASS_OF").named("classRel");
+
+    return this.findOne(
+        Cypher.match(forkRel)
+            .match(classRel)
+            .returning(
+                fork.asExpression(), Functions.collect(classRel), Functions.collect(superClass))
+            .build());
+  }
+
+  default Collection<Class> getForks(String classId) {
+    Node origin =
+        Cypher.node("Class").withProperties("id", Cypher.anonParameter(classId)).named("origin");
+    Node fork = Cypher.node("Class").named("c");
     Relationship forkRel = fork.relationshipTo(origin, "IS_FORK_OF").named("forkRel");
 
-    return this.findOne(Cypher.match(forkRel).returning(fork).build());
+    return this.findAll(Cypher.match(forkRel).returning(fork).build());
   }
 
   /**
