@@ -629,6 +629,9 @@ public class EntityService implements ContentService {
       if (phenotype.getDataType() != null)
         classVersion.addAnnotation(
             new Annotation("dataType", phenotype.getDataType().getValue(), null));
+      if (phenotype.getItemType() != null)
+        classVersion.addAnnotation(
+            new Annotation("itemType", phenotype.getItemType().getValue(), null));
       if (phenotype.getUnit() != null)
         classVersion.addAnnotation(ApiModelMapper.toAnnotation(phenotype.getUnit()));
       if (phenotype.getRestriction() != null)
@@ -720,6 +723,10 @@ public class EntityService implements ContentService {
         ((Phenotype) entity)
             .setDataType(
                 DataType.fromValue(classVersion.getAnnotation("dataType").get().getStringValue()));
+      if (classVersion.getAnnotation("itemType").isPresent())
+        ((Phenotype) entity)
+            .setItemType(
+                ItemType.fromValue(classVersion.getAnnotation("itemType").get().getStringValue()));
 
       if (ApiModelMapper.isRestricted(entityType)) {
         superClasses.stream()
