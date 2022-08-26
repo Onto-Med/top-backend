@@ -918,7 +918,7 @@ public class EntityService implements ContentService {
   }
 
   private Annotation fromRestriction(Restriction restriction) {
-    if (restriction == null || restriction.getType() == null || restriction.getQuantor() == null)
+    if (restriction == null || restriction.getType() == null || restriction.getQuantifier() == null)
       return null;
 
     Annotation annotation =
@@ -928,7 +928,7 @@ public class EntityService implements ContentService {
                 .addAnnotation(new Annotation("type", restriction.getType().getValue(), null))
                 .addAnnotation(new Annotation("negated", restriction.isNegated(), null))
                 .addAnnotation(
-                    new Annotation("quantor", restriction.getQuantor().getValue(), null));
+                    new Annotation("quantor", restriction.getQuantifier().getValue(), null));
 
     if (restriction instanceof NumberRestriction) {
       if (((NumberRestriction) restriction).getMinOperator() != null)
@@ -1077,7 +1077,7 @@ public class EntityService implements ContentService {
     annotation.getAnnotation("negated").ifPresent(a -> restriction.setNegated(a.getBooleanValue()));
     annotation
         .getAnnotation("quantor")
-        .ifPresent(a -> restriction.setQuantor(Quantor.fromValue(a.getStringValue())));
+        .ifPresent(a -> restriction.setQuantifier(Quantifier.fromValue(a.getStringValue())));
 
     return restriction;
   }

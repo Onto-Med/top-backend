@@ -32,7 +32,7 @@
         <dependency>
             <groupId>care.smith.top</groupId>
             <artifactId>top-api</artifactId>
-            <version>0.4.1-SNAPSHOT</version>
+            <version>0.4.2-SNAPSHOT</version>
         </dependency>
         <dependency>
            <groupId>care.smith.top.simple_onto_api</groupId>
