@@ -928,7 +928,11 @@ public class EntityService implements ContentService {
                 .addAnnotation(new Annotation("type", restriction.getType().getValue(), null))
                 .addAnnotation(new Annotation("negated", restriction.isNegated(), null))
                 .addAnnotation(
-                    new Annotation("quantor", restriction.getQuantifier().getValue(), null));
+                    new Annotation("quantifier", restriction.getQuantifier().getValue(), null));
+
+    if (restriction.getCardinality() != null)
+      annotation.addAnnotation(
+          new Annotation("cardinality", Double.valueOf(restriction.getCardinality()), null));
 
     if (restriction instanceof NumberRestriction) {
       if (((NumberRestriction) restriction).getMinOperator() != null)
@@ -1076,8 +1080,11 @@ public class EntityService implements ContentService {
     restriction.setType(type);
     annotation.getAnnotation("negated").ifPresent(a -> restriction.setNegated(a.getBooleanValue()));
     annotation
-        .getAnnotation("quantor")
+        .getAnnotation("quantifier")
         .ifPresent(a -> restriction.setQuantifier(Quantifier.fromValue(a.getStringValue())));
+    annotation
+        .getAnnotation("cardinality")
+        .ifPresent(a -> restriction.setCardinality(a.getNumberValue().intValue()));
 
     return restriction;
   }
