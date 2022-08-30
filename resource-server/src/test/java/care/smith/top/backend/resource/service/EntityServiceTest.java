@@ -187,7 +187,8 @@ class EntityServiceTest extends Neo4jTest {
                 new NumberRestriction()
                     .addValuesItem(BigDecimal.valueOf(50))
                     .minOperator(RestrictionOperator.GREATER_THAN)
-                    .quantor(Quantor.SOME)
+                    .quantifier(Quantifier.MIN)
+                    .cardinality(1)
                     .type(DataType.NUMBER));
     restrictedPhenotype1
         .superPhenotype(abstractPhenotype)
@@ -220,7 +221,8 @@ class EntityServiceTest extends Neo4jTest {
                   .isInstanceOf(NumberRestriction.class)
                   .satisfies(
                       r -> {
-                        assertThat(r.getQuantor()).isEqualTo(Quantor.SOME);
+                        assertThat(r.getQuantifier()).isEqualTo(Quantifier.MIN);
+                        assertThat(r.getCardinality()).isEqualTo(1);
                         assertThat(((NumberRestriction) r).getMaxOperator()).isNull();
                         assertThat(((NumberRestriction) r).getMinOperator())
                             .isNotNull()
@@ -239,7 +241,7 @@ class EntityServiceTest extends Neo4jTest {
                 new NumberRestriction()
                     .addValuesItem(BigDecimal.valueOf(50))
                     .maxOperator(RestrictionOperator.LESS_THAN_OR_EQUAL_TO)
-                    .quantor(Quantor.ALL)
+                    .quantifier(Quantifier.ALL)
                     .type(DataType.NUMBER));
     restrictedPhenotype2
         .superPhenotype(abstractPhenotype)
@@ -267,7 +269,7 @@ class EntityServiceTest extends Neo4jTest {
                   .isInstanceOf(NumberRestriction.class)
                   .satisfies(
                       r -> {
-                        assertThat(r.getQuantor()).isEqualTo(Quantor.ALL);
+                        assertThat(r.getQuantifier()).isEqualTo(Quantifier.ALL);
                         assertThat(((NumberRestriction) r).getMinOperator()).isNull();
                         assertThat(((NumberRestriction) r).getMaxOperator())
                             .isNotNull()
