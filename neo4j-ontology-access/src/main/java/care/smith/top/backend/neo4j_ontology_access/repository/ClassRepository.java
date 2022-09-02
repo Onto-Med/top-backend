@@ -92,7 +92,7 @@ public interface ClassRepository
 
     return this.findOne(
         Cypher.match(forkRel)
-            .match(classRel)
+            .optionalMatch(classRel)
             .returning(
                 fork.asExpression(), Functions.collect(classRel), Functions.collect(superClass))
             .build());
