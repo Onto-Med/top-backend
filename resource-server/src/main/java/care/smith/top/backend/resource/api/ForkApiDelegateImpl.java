@@ -2,8 +2,7 @@ package care.smith.top.backend.resource.api;
 
 import care.smith.top.backend.api.ForkApiDelegate;
 import care.smith.top.backend.model.Entity;
-import care.smith.top.backend.model.ForkCreateInstruction;
-import care.smith.top.backend.model.ForkUpdateInstruction;
+import care.smith.top.backend.model.ForkingInstruction;
 import care.smith.top.backend.model.ForkingStats;
 import care.smith.top.backend.resource.service.EntityService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,12 +21,12 @@ public class ForkApiDelegateImpl implements ForkApiDelegate {
       String organisationId,
       String repositoryId,
       String id,
-      ForkCreateInstruction forkCreateInstruction,
+      ForkingInstruction forkingInstruction,
       List<String> include,
       Integer version) {
     return new ResponseEntity<>(
         entityService.createFork(
-            organisationId, repositoryId, id, forkCreateInstruction, version, include),
+            organisationId, repositoryId, id, forkingInstruction, version, include),
         HttpStatus.CREATED);
   }
 
@@ -36,16 +35,5 @@ public class ForkApiDelegateImpl implements ForkApiDelegate {
       String organisationId, String repositoryId, String id, List<String> include) {
     return new ResponseEntity<>(
         entityService.getForkingStats(organisationId, repositoryId, id, include), HttpStatus.OK);
-  }
-
-  @Override
-  public ResponseEntity<List<Entity>> updateFork(
-      String organisationId,
-      String repositoryId,
-      String id,
-      ForkUpdateInstruction forkUpdateInstruction,
-      List<String> include) {
-    return ForkApiDelegate.super.updateFork(
-        organisationId, repositoryId, id, forkUpdateInstruction, include);
   }
 }

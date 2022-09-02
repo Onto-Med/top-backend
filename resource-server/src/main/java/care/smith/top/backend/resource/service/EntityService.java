@@ -206,10 +206,10 @@ public class EntityService implements ContentService {
       String organisationId,
       String repositoryId,
       String id,
-      ForkCreateInstruction forkCreateInstruction,
+      ForkingInstruction forkingInstruction,
       Integer version,
       List<String> include) {
-    if (repositoryId.equals(forkCreateInstruction.getRepositoryId()))
+    if (repositoryId.equals(forkingInstruction.getRepositoryId()))
       throw new ResponseStatusException(
           HttpStatus.NOT_ACCEPTABLE,
           String.format("Cannot create fork of entity '%s' in the same repository.", id));
@@ -225,7 +225,7 @@ public class EntityService implements ContentService {
 
     Repository destinationRepo =
         getRepository(
-            forkCreateInstruction.getOrganisationId(), forkCreateInstruction.getRepositoryId());
+            forkingInstruction.getOrganisationId(), forkingInstruction.getRepositoryId());
 
     Entity entity = loadEntity(organisationId, repositoryId, id, null);
 
@@ -238,7 +238,7 @@ public class EntityService implements ContentService {
       origins.add(entity);
     } else {
       origins.add(entity);
-      if (forkCreateInstruction.isCascade())
+      if (forkingInstruction.isCascade())
         origins.addAll(getSubclasses(organisationId, repositoryId, origins.get(0).getId(), null));
     }
 
@@ -247,9 +247,9 @@ public class EntityService implements ContentService {
       String oldId = origin.getId();
       Optional<Class> fork = classRepository.getFork(origin.getId(), destinationRepo.getId());
 
-      if (!forkCreateInstruction.isUpdate() && fork.isPresent()) continue;
+      if (!forkingInstruction.isUpdate() && fork.isPresent()) continue;
 
-      if (forkCreateInstruction.isUpdate() && fork.isPresent()) {
+      if (forkingInstruction.isUpdate() && fork.isPresent()) {
         if (classRepository.equalCurrentVersions(fork.get().getId(), origin.getId())) continue;
         origin.setId(fork.get().getId());
         origin.setVersion((int) (fork.get().getNodeVersion() + 1));
@@ -270,7 +270,7 @@ public class EntityService implements ContentService {
         }
       }
 
-      if (!forkCreateInstruction.isUpdate() || fork.isEmpty()) {
+      if (!forkingInstruction.isUpdate() || fork.isEmpty()) {
         origin.setId(UUID.randomUUID().toString());
         origin.setVersion(1);
         if (origin instanceof Phenotype) ((Phenotype) origin).setSuperCategories(null);
@@ -291,12 +291,12 @@ public class EntityService implements ContentService {
       if (origin.getVersion() == 1) {
         results.add(
             createEntity(
-                forkCreateInstruction.getOrganisationId(), destinationRepo.getId(), origin));
+                forkingInstruction.getOrganisationId(), destinationRepo.getId(), origin));
         classRepository.setFork(origin.getId(), oldId);
       } else {
         results.add(
             updateEntityById(
-                forkCreateInstruction.getOrganisationId(),
+                forkingInstruction.getOrganisationId(),
                 destinationRepo.getId(),
                 origin.getId(),
                 origin,
@@ -818,7 +818,7 @@ public class EntityService implements ContentService {
     entity.setVersion(classVersion.getVersion());
     entity.setEntityType(entityType);
     entity.setCreatedAt(classVersion.getCreatedAtOffset());
-    entity.setAuthor(new UserAccount().username(classVersion.getUser()));
+    entity.setAuthor(classVersion.getUser());
 
     PropertyAccessor accessor = PropertyAccessorFactory.forBeanPropertyAccess(entity);
     Arrays.asList("title", "synonym", "description")
@@ -840,7 +840,7 @@ public class EntityService implements ContentService {
             .filter(Objects::nonNull)
             .collect(Collectors.toList()));
 
-    entity.setAuthor(new UserAccount().username(classVersion.getUser()));
+    entity.setAuthor(classVersion.getUser());
     // TODO: entity.setRefer(); <- insert URI
 
     if (classVersion.getaClass().getSuperClassRelations() != null)
