@@ -13,6 +13,9 @@ import org.springframework.beans.PropertyAccessor;
 import org.springframework.beans.PropertyAccessorFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -134,10 +137,12 @@ public class EntityService implements ContentService {
   }
 
   @Override
+  @Cacheable("entityCount")
   public long count() {
     return classRepository.count();
   }
 
+  @Cacheable("entityCount")
   public long count(EntityType... types) {
     Node cls = Cypher.node("Class").named("class");
     Condition condition = cls.isNull();
@@ -148,6 +153,7 @@ public class EntityService implements ContentService {
   }
 
   @Transactional
+  @Caching(evict = { @CacheEvict("entityCount"), @CacheEvict(value = "entities", key = "#repositoryId") })
   public Entity createEntity(String organisationId, String repositoryId, Entity entity) {
     if (classRepository.existsById(entity.getId()))
       throw new ResponseStatusException(HttpStatus.CONFLICT);
@@ -195,6 +201,7 @@ public class EntityService implements ContentService {
   }
 
   @Transactional
+  @Caching(evict = { @CacheEvict("entityCount"), @CacheEvict(value = "entities", key = "#repositoryId") })
   public List<Entity> createFork(
       String organisationId,
       String repositoryId,
@@ -307,6 +314,7 @@ public class EntityService implements ContentService {
   }
 
   @Transactional
+  @Caching(evict = { @CacheEvict("entityCount"), @CacheEvict(value = "entities", key = "#repositoryId") })
   public void deleteEntity(String organisationId, String repositoryId, String id) {
     Repository repository = getRepository(organisationId, repositoryId);
     Class cls =
@@ -389,6 +397,7 @@ public class EntityService implements ContentService {
     return writer;
   }
 
+  @Cacheable("entities")
   public List<Entity> getEntities(
       List<String> include, String name, List<EntityType> type, DataType dataType, Integer page) {
     int requestedPage = page != null ? page - 1 : 0;
@@ -411,6 +420,7 @@ public class EntityService implements ContentService {
         .collect(Collectors.toList());
   }
 
+  @Cacheable(value = "entities", key = "#repositoryId")
   public List<Entity> getEntitiesByRepositoryId(
       String organisationId,
       String repositoryId,
@@ -536,6 +546,7 @@ public class EntityService implements ContentService {
     return classVersionToEntity(classVersion, repositoryId);
   }
 
+  @CacheEvict(value = "entities", key = "#repositoryId")
   public Entity setCurrentEntityVersion(
       String organisationId,
       String repositoryId,
@@ -558,6 +569,7 @@ public class EntityService implements ContentService {
     return classToEntity(cls, repositoryId);
   }
 
+  @CacheEvict(value = "entities", key = "#repositoryId")
   public Entity updateEntityById(
       String organisationId, String repositoryId, String id, Entity entity, List<String> include) {
     Repository repository = getRepository(organisationId, repositoryId);
