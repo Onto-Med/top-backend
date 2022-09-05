@@ -153,7 +153,8 @@ public class EntityService implements ContentService {
   }
 
   @Transactional
-  @Caching(evict = { @CacheEvict("entityCount"), @CacheEvict(value = "entities", key = "#repositoryId") })
+  @Caching(
+      evict = {@CacheEvict("entityCount"), @CacheEvict(value = "entities", key = "#repositoryId")})
   public Entity createEntity(String organisationId, String repositoryId, Entity entity) {
     if (classRepository.existsById(entity.getId()))
       throw new ResponseStatusException(HttpStatus.CONFLICT);
@@ -201,7 +202,8 @@ public class EntityService implements ContentService {
   }
 
   @Transactional
-  @Caching(evict = { @CacheEvict("entityCount"), @CacheEvict(value = "entities", key = "#repositoryId") })
+  @Caching(
+      evict = {@CacheEvict("entityCount"), @CacheEvict(value = "entities", key = "#repositoryId")})
   public List<Entity> createFork(
       String organisationId,
       String repositoryId,
@@ -224,8 +226,7 @@ public class EntityService implements ContentService {
               id, originRepo.getId()));
 
     Repository destinationRepo =
-        getRepository(
-            forkingInstruction.getOrganisationId(), forkingInstruction.getRepositoryId());
+        getRepository(forkingInstruction.getOrganisationId(), forkingInstruction.getRepositoryId());
 
     Entity entity = loadEntity(organisationId, repositoryId, id, null);
 
@@ -290,8 +291,7 @@ public class EntityService implements ContentService {
 
       if (origin.getVersion() == 1) {
         results.add(
-            createEntity(
-                forkingInstruction.getOrganisationId(), destinationRepo.getId(), origin));
+            createEntity(forkingInstruction.getOrganisationId(), destinationRepo.getId(), origin));
         classRepository.setFork(origin.getId(), oldId);
       } else {
         results.add(
@@ -314,7 +314,8 @@ public class EntityService implements ContentService {
   }
 
   @Transactional
-  @Caching(evict = { @CacheEvict("entityCount"), @CacheEvict(value = "entities", key = "#repositoryId") })
+  @Caching(
+      evict = {@CacheEvict("entityCount"), @CacheEvict(value = "entities", key = "#repositoryId")})
   public void deleteEntity(String organisationId, String repositoryId, String id) {
     Repository repository = getRepository(organisationId, repositoryId);
     Class cls =
@@ -397,7 +398,6 @@ public class EntityService implements ContentService {
     return writer;
   }
 
-  @Cacheable("entities")
   public List<Entity> getEntities(
       List<String> include, String name, List<EntityType> type, DataType dataType, Integer page) {
     int requestedPage = page != null ? page - 1 : 0;
@@ -420,7 +420,7 @@ public class EntityService implements ContentService {
         .collect(Collectors.toList());
   }
 
-  @Cacheable(value = "entities", key = "#repositoryId")
+  @Cacheable(value = "entities", key = "#repositoryId", condition = "#name == null && #type == null && #dataType == null")
   public List<Entity> getEntitiesByRepositoryId(
       String organisationId,
       String repositoryId,
