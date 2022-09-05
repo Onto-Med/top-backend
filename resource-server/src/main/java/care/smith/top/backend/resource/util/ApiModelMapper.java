@@ -159,13 +159,17 @@ public abstract class ApiModelMapper {
     if (annotation == null || annotation.getDatatype() == null) return null;
 
     if (annotation.getDatatype().equals(DataType.STRING.getValue()))
-      return new StringValue().value(annotation.getStringValue());
+      return new StringValue().value(annotation.getStringValue()).dataType(DataType.STRING);
     if (annotation.getDatatype().equals(DataType.NUMBER.getValue()))
-      return new NumberValue().value(BigDecimal.valueOf(annotation.getNumberValue()));
+      return new NumberValue()
+          .value(BigDecimal.valueOf(annotation.getNumberValue()))
+          .dataType(DataType.NUMBER);
     if (annotation.getDatatype().equals(DataType.DATE_TIME.getValue()))
-      return new DateTimeValue().value(annotation.getDateValue().atOffset(ZoneOffset.UTC));
+      return new DateTimeValue()
+          .value(annotation.getDateValue().atOffset(ZoneOffset.UTC))
+          .dataType(DataType.DATE_TIME);
     if (annotation.getDatatype().equals(DataType.BOOLEAN.getValue()))
-      return new BooleanValue().value(annotation.getBooleanValue());
+      return new BooleanValue().value(annotation.getBooleanValue()).dataType(DataType.BOOLEAN);
 
     return null;
   }
