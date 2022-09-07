@@ -32,11 +32,9 @@ public class DefaultApiDelegateImpl implements DefaultApiDelegate {
             .phenotypes(
                 entityService.count(
                     EntityType.SINGLE_PHENOTYPE,
-                    EntityType.DERIVED_PHENOTYPE,
-                    EntityType.COMBINED_PHENOTYPE,
                     EntityType.SINGLE_RESTRICTION,
-                    EntityType.DERIVED_RESTRICTION,
-                    EntityType.COMBINED_RESTRICTION));
+                    EntityType.COMPOSITE_PHENOTYPE,
+                    EntityType.COMPOSITE_RESTRICTION));
     return new ResponseEntity<>(statistic, HttpStatus.OK);
   }
 }

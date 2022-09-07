@@ -635,9 +635,6 @@ public class EntityService implements ContentService {
 
     if (entity instanceof Phenotype) {
       Phenotype phenotype = (Phenotype) entity;
-      if (phenotype.getScore() != null)
-        classVersion.addAnnotation(
-            new Annotation("score", phenotype.getScore().doubleValue(), null));
       if (phenotype.getDataType() != null)
         classVersion.addAnnotation(
             new Annotation("dataType", phenotype.getDataType().getValue(), null));
@@ -768,9 +765,6 @@ public class EntityService implements ContentService {
                                           .collect(Collectors.toList()))
                                   .entityType(EntityType.fromValue(superType)));
                 });
-        classVersion
-            .getAnnotation("score")
-            .ifPresent(s -> ((Phenotype) entity).setScore(BigDecimal.valueOf(s.getNumberValue())));
         classVersion
             .getAnnotation("restriction")
             .ifPresent(r -> ((Phenotype) entity).setRestriction(toRestriction(r)));
