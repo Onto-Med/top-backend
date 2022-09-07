@@ -26,14 +26,7 @@ import java.util.stream.Stream;
 public class ExpressionFunctionApiDelegateImpl implements ExpressionFunctionApiDelegate {
   @Override
   public ResponseEntity<List<ExpressionFunction>> getExpressionFunctions(String type) {
-    if (type != null) {
-      switch (type) {
-        case "math":
-          return new ResponseEntity<>(getMathFunctions(), HttpStatus.OK);
-        case "boolean":
-          return new ResponseEntity<>(getBooleanFunctions(), HttpStatus.OK);
-      }
-    }
+    if ("math".equals(type)) return new ResponseEntity<>(getMathFunctions(), HttpStatus.OK);
     throw new ResponseStatusException(
         HttpStatus.NOT_ACCEPTABLE, "Expression operator type is not supported.");
   }
@@ -96,7 +89,10 @@ public class ExpressionFunctionApiDelegateImpl implements ExpressionFunctionApiD
                 DiffYears.get(),
                 PlusDays.get(),
                 PlusMonths.get(),
-                PlusYears.get())
+                PlusYears.get(),
+                And.get(),
+                Or.get(),
+                Not.get())
             .map(OntoModelMapper::map)
             .sorted(Comparator.comparing(ExpressionFunction::getTitle))
             .collect(Collectors.toList()));
