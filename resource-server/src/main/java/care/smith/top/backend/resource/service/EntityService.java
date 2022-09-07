@@ -932,7 +932,6 @@ public class EntityService implements ContentService {
             new Annotation()
                 .setProperty("restriction")
                 .addAnnotation(new Annotation("type", restriction.getType().getValue(), null))
-                .addAnnotation(new Annotation("negated", restriction.isNegated(), null))
                 .addAnnotation(
                     new Annotation("quantifier", restriction.getQuantifier().getValue(), null));
 
@@ -1084,7 +1083,6 @@ public class EntityService implements ContentService {
     } else return null;
 
     restriction.setType(type);
-    annotation.getAnnotation("negated").ifPresent(a -> restriction.setNegated(a.getBooleanValue()));
     annotation
         .getAnnotation("quantifier")
         .ifPresent(a -> restriction.setQuantifier(Quantifier.fromValue(a.getStringValue())));
