@@ -20,16 +20,12 @@ public abstract class ApiModelMapper {
 
   public static EntityType toRestrictedEntityType(EntityType entityType) {
     if (EntityType.SINGLE_PHENOTYPE.equals(entityType)) return EntityType.SINGLE_RESTRICTION;
-    if (EntityType.DERIVED_PHENOTYPE.equals(entityType)) return EntityType.DERIVED_RESTRICTION;
-    if (EntityType.COMBINED_PHENOTYPE.equals(entityType)) return EntityType.COMBINED_RESTRICTION;
+    if (EntityType.COMPOSITE_PHENOTYPE.equals(entityType)) return EntityType.COMPOSITE_RESTRICTION;
     return null;
   }
 
   public static boolean isAbstract(EntityType entityType) {
-    return Arrays.asList(
-            EntityType.SINGLE_PHENOTYPE,
-            EntityType.COMBINED_PHENOTYPE,
-            EntityType.DERIVED_PHENOTYPE)
+    return Arrays.asList(EntityType.SINGLE_PHENOTYPE, EntityType.COMPOSITE_PHENOTYPE)
         .contains(entityType);
   }
 
@@ -54,10 +50,7 @@ public abstract class ApiModelMapper {
   }
 
   public static boolean isRestricted(EntityType entityType) {
-    return Arrays.asList(
-            EntityType.SINGLE_RESTRICTION,
-            EntityType.COMBINED_RESTRICTION,
-            EntityType.DERIVED_RESTRICTION)
+    return Arrays.asList(EntityType.SINGLE_RESTRICTION, EntityType.COMPOSITE_RESTRICTION)
         .contains(entityType);
   }
 

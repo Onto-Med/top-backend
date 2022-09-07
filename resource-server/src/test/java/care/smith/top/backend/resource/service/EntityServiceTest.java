@@ -182,7 +182,6 @@ class EntityServiceTest extends Neo4jTest {
     /* Create restricted phenotype */
     Phenotype restrictedPhenotype1 =
         new Phenotype()
-            .score(BigDecimal.valueOf(10))
             .restriction(
                 new NumberRestriction()
                     .addValuesItem(BigDecimal.valueOf(50))
@@ -214,8 +213,6 @@ class EntityServiceTest extends Neo4jTest {
                   .isEqualTo(1);
               assertThat(rp.getRepository()).hasFieldOrPropertyWithValue("id", repository.getId());
               assertThat(((Phenotype) rp).getSuperCategories()).isNullOrEmpty();
-              assertThat(((Phenotype) rp).getScore().compareTo(BigDecimal.valueOf(10)))
-                  .isEqualTo(0);
               assertThat(((Phenotype) rp).getRestriction())
                   .isNotNull()
                   .isInstanceOf(NumberRestriction.class)
@@ -236,7 +233,6 @@ class EntityServiceTest extends Neo4jTest {
 
     Phenotype restrictedPhenotype2 =
         new Phenotype()
-            .score(BigDecimal.valueOf(-5))
             .restriction(
                 new NumberRestriction()
                     .addValuesItem(BigDecimal.valueOf(50))
@@ -262,8 +258,6 @@ class EntityServiceTest extends Neo4jTest {
                   .allMatch(t -> t.getText().equals("<= 50cm") && t.getLang().equals("en"))
                   .size()
                   .isEqualTo(1);
-              assertThat(((Phenotype) rp).getScore().compareTo(BigDecimal.valueOf(-5)))
-                  .isEqualTo(0);
               assertThat(((Phenotype) rp).getRestriction())
                   .isNotNull()
                   .isInstanceOf(NumberRestriction.class)
@@ -657,7 +651,7 @@ class EntityServiceTest extends Neo4jTest {
               assertThat(((Phenotype) p).getSuperCategories()).size().isEqualTo(1);
             });
 
-    phenotype.setEntityType(EntityType.COMBINED_PHENOTYPE);
+    phenotype.setEntityType(EntityType.COMPOSITE_PHENOTYPE);
 
     assertThatThrownBy(
             () ->

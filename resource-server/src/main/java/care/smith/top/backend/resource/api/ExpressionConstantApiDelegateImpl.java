@@ -17,7 +17,7 @@ public class ExpressionConstantApiDelegateImpl implements ExpressionConstantApiD
   private Calculator calculator = new Calculator();
 
   @Override
-  public ResponseEntity<List<Constant>> getConstants() {
+  public ResponseEntity<List<Constant>> getExpressionConstants() {
     return new ResponseEntity<>(
         calculator.getConstants().stream()
             .map(OntoModelMapper::map)

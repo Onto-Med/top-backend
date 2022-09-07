@@ -635,9 +635,6 @@ public class EntityService implements ContentService {
 
     if (entity instanceof Phenotype) {
       Phenotype phenotype = (Phenotype) entity;
-      if (phenotype.getScore() != null)
-        classVersion.addAnnotation(
-            new Annotation("score", phenotype.getScore().doubleValue(), null));
       if (phenotype.getDataType() != null)
         classVersion.addAnnotation(
             new Annotation("dataType", phenotype.getDataType().getValue(), null));
@@ -768,9 +765,6 @@ public class EntityService implements ContentService {
                                           .collect(Collectors.toList()))
                                   .entityType(EntityType.fromValue(superType)));
                 });
-        classVersion
-            .getAnnotation("score")
-            .ifPresent(s -> ((Phenotype) entity).setScore(BigDecimal.valueOf(s.getNumberValue())));
         classVersion
             .getAnnotation("restriction")
             .ifPresent(r -> ((Phenotype) entity).setRestriction(toRestriction(r)));
@@ -938,7 +932,6 @@ public class EntityService implements ContentService {
             new Annotation()
                 .setProperty("restriction")
                 .addAnnotation(new Annotation("type", restriction.getType().getValue(), null))
-                .addAnnotation(new Annotation("negated", restriction.isNegated(), null))
                 .addAnnotation(
                     new Annotation("quantifier", restriction.getQuantifier().getValue(), null));
 
@@ -1090,7 +1083,6 @@ public class EntityService implements ContentService {
     } else return null;
 
     restriction.setType(type);
-    annotation.getAnnotation("negated").ifPresent(a -> restriction.setNegated(a.getBooleanValue()));
     annotation
         .getAnnotation("quantifier")
         .ifPresent(a -> restriction.setQuantifier(Quantifier.fromValue(a.getStringValue())));
