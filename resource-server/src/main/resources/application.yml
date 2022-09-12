@@ -24,3 +24,7 @@ spring:
           jwk-set-uri: ${OAUTH2_URL:http://127.0.0.1:8081}/realms/${OAUTH2_REALM:top-realm}/protocol/openid-connect/certs
   paging:
     page-size: 1000
+
+top:
+  phenotyping:
+    data-source-config-dir: ${DATA_SOURCE_CONFIG_DIR:config/data_sources}
