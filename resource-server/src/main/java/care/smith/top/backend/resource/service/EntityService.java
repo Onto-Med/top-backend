@@ -35,6 +35,8 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static care.smith.top.backend.resource.util.ApiModelMapper.EXPRESSION_PROPERTY;
+
 @Service
 public class EntityService implements ContentService {
   @Value("${spring.paging.page-size:10}")
@@ -778,7 +780,7 @@ public class EntityService implements ContentService {
       }
 
       classVersion
-          .getAnnotation("expression")
+          .getAnnotation(EXPRESSION_PROPERTY)
           .ifPresent(a -> ((Phenotype) entity).setExpression(ApiModelMapper.toExpression(a)));
     }
 
@@ -895,7 +897,7 @@ public class EntityService implements ContentService {
 
     classVersionRepository.findAllByClassId(cls.getId()).forEach(this::deleteVersion);
     annotationRepository.deleteAll(
-        annotationRepository.findAllByClassValueAndProperty(cls, "expression"));
+        annotationRepository.findAllByClassValueAndProperty(cls, EXPRESSION_PROPERTY));
     classRepository.delete(cls);
   }
 
@@ -907,17 +909,17 @@ public class EntityService implements ContentService {
   }
 
   private Annotation fromExpression(Expression expression, String repositoryId) {
-    if (expression == null) return new Annotation("expression", null);
+    if (expression == null) return new Annotation(EXPRESSION_PROPERTY, null);
 
     if (expression.getEntityId() != null)
       return classRepository
           .findByIdAndRepositoryId(expression.getEntityId(), repositoryId)
-          .map(aClass -> new Annotation("expression", aClass, null))
-          .orElseGet(() -> new Annotation("expression", "class"));
+          .map(aClass -> new Annotation(EXPRESSION_PROPERTY, aClass, null))
+          .orElseGet(() -> new Annotation(EXPRESSION_PROPERTY, "class"));
 
     if (expression.getValue() != null) return ApiModelMapper.toAnnotation(expression.getValue());
 
-    Annotation annotation = new Annotation("expression", expression.getFunction(), null);
+    Annotation annotation = new Annotation(EXPRESSION_PROPERTY, expression.getFunction(), null);
     if (expression.getArguments() != null)
       annotation.addAnnotations(
           expression.getArguments().stream()

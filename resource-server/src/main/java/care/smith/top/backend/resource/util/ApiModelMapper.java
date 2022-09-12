@@ -14,8 +14,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 public abstract class ApiModelMapper {
-  public static final String EXPRESSION_CONSTANT_PROPERTY = "constant";
-  public static final String EXPRESSION_VALUE_PROPERTY = "value";
+  public static final String EXPRESSION_PROPERTY = "expression";
   private static final Calculator calculator = new Calculator();
 
   public static EntityType toRestrictedEntityType(EntityType entityType) {
@@ -62,20 +61,17 @@ public abstract class ApiModelMapper {
     if (expressionValue == null) return null;
 
     if (expressionValue.getConstant() != null)
-      return new Annotation(
-          EXPRESSION_CONSTANT_PROPERTY, expressionValue.getConstant().getId(), null);
+      return new Annotation(EXPRESSION_PROPERTY, expressionValue.getConstant().getId(), null);
 
     if (expressionValue.getValue() != null) {
       Value value = expressionValue.getValue();
-      if (value instanceof StringValue)
-        return new Annotation(EXPRESSION_VALUE_PROPERTY, ((StringValue) value).getValue(), null);
       if (value instanceof NumberValue)
         return new Annotation(
-            EXPRESSION_VALUE_PROPERTY, ((NumberValue) value).getValue().doubleValue(), null);
+            EXPRESSION_PROPERTY, ((NumberValue) value).getValue().doubleValue(), null);
       if (value instanceof DateTimeValue)
-        return new Annotation(EXPRESSION_VALUE_PROPERTY, ((DateTimeValue) value).getValue(), null);
+        return new Annotation(EXPRESSION_PROPERTY, ((DateTimeValue) value).getValue(), null);
       if (value instanceof BooleanValue)
-        return new Annotation(EXPRESSION_VALUE_PROPERTY, ((BooleanValue) value).isValue(), null);
+        return new Annotation(EXPRESSION_PROPERTY, ((BooleanValue) value).isValue(), null);
     }
 
     return null;
@@ -119,7 +115,7 @@ public abstract class ApiModelMapper {
           .function("entity")
           .entityId(annotation.getClassValue() != null ? annotation.getClassValue().getId() : null);
 
-    if (EXPRESSION_CONSTANT_PROPERTY.equals(annotation.getProperty()))
+    if (annotation.getStringValue() != null)
       return new Expression()
           .function("constant")
           .value(
@@ -127,7 +123,9 @@ public abstract class ApiModelMapper {
                   .constant(
                       OntoModelMapper.map(calculator.getConstant(annotation.getStringValue()))));
 
-    if (EXPRESSION_VALUE_PROPERTY.equals(annotation.getProperty()))
+    if (annotation.getBooleanValue() != null
+        || annotation.getNumberValue() != null
+        || annotation.getDateValue() != null)
       return new Expression()
           .function("value")
           .value(new ExpressionValue().value(toValue(annotation)));
@@ -150,8 +148,6 @@ public abstract class ApiModelMapper {
   public static Value toValue(Annotation annotation) {
     if (annotation == null || annotation.getDatatype() == null) return null;
 
-    if (annotation.getDatatype().equals(DataType.STRING.getValue()))
-      return new StringValue().value(annotation.getStringValue()).dataType(DataType.STRING);
     if (annotation.getDatatype().equals(DataType.NUMBER.getValue()))
       return new NumberValue()
           .value(BigDecimal.valueOf(annotation.getNumberValue()))
