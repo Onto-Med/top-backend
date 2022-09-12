@@ -1,10 +1,8 @@
 package care.smith.top.backend.resource.service;
 
 import care.smith.top.backend.model.Query;
-import care.smith.top.top_phenotypic_query.adapter.DataAdapter;
 import care.smith.top.top_phenotypic_query.adapter.config.DataAdapterConfig;
 import care.smith.top.top_phenotypic_query.result.ResultSet;
-import care.smith.top.top_phenotypic_query.search.QueryMan;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -31,9 +29,8 @@ public class PhenotypeQueryService {
     DataAdapterConfig config =
         getDataAdapterConfig(dataAdaptorConfigId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-    // TODO: init QueryMan with parameters: config, query
-    QueryMan queryMan = new QueryMan(null);
-    return queryMan.execute();
+    // TODO: return new QueryMan(config, query).execute();
+    return new ResultSet();
   }
 
   public Optional<DataAdapterConfig> getDataAdapterConfig(String id) {
