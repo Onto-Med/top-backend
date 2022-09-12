@@ -1,5 +1,6 @@
 package care.smith.top.backend.resource.service;
 
+import care.smith.top.backend.model.DataSource;
 import care.smith.top.backend.model.Query;
 import care.smith.top.top_phenotypic_query.adapter.config.DataAdapterConfig;
 import care.smith.top.top_phenotypic_query.result.ResultSet;
@@ -49,9 +50,16 @@ public class PhenotypeQueryService {
     return Collections.emptyList();
   }
 
+  public List<DataSource> getDataSources() {
+    return getDataAdapterConfigs().stream()
+        .map(a -> new DataSource().id(a.getId()).title(a.getId().replace('_', ' ')))
+        .collect(Collectors.toList());
+  }
+
   private DataAdapterConfig toDataAdapterConfig(Path path) {
     try {
-      return DataAdapterConfig.getInstance(path.toString());
+      DataAdapterConfig dataAdapterConfig = DataAdapterConfig.getInstance(path.toString());
+      return dataAdapterConfig.getId() == null ? null : dataAdapterConfig;
     } catch (Exception e) {
       LOGGER.warning(
           String.format(
