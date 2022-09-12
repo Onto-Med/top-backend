@@ -73,8 +73,7 @@ public abstract class ApiModelMapper {
         return new Annotation(
             EXPRESSION_VALUE_PROPERTY, ((NumberValue) value).getValue().doubleValue(), null);
       if (value instanceof DateTimeValue)
-        return new Annotation(
-            EXPRESSION_VALUE_PROPERTY, ((DateTimeValue) value).getValue().toInstant(), null);
+        return new Annotation(EXPRESSION_VALUE_PROPERTY, ((DateTimeValue) value).getValue(), null);
       if (value instanceof BooleanValue)
         return new Annotation(EXPRESSION_VALUE_PROPERTY, ((BooleanValue) value).isValue(), null);
     }
@@ -159,7 +158,7 @@ public abstract class ApiModelMapper {
           .dataType(DataType.NUMBER);
     if (annotation.getDatatype().equals(DataType.DATE_TIME.getValue()))
       return new DateTimeValue()
-          .value(annotation.getDateValue().atOffset(ZoneOffset.UTC))
+          .value(annotation.getDateValue().atOffset(ZoneOffset.UTC).toLocalDateTime())
           .dataType(DataType.DATE_TIME);
     if (annotation.getDatatype().equals(DataType.BOOLEAN.getValue()))
       return new BooleanValue().value(annotation.getBooleanValue()).dataType(DataType.BOOLEAN);

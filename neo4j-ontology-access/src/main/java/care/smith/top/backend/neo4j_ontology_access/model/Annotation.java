@@ -3,6 +3,8 @@ package care.smith.top.backend.neo4j_ontology_access.model;
 import org.springframework.data.neo4j.core.schema.*;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.Set;
 
@@ -37,14 +39,24 @@ public class Annotation extends Annotatable {
     this.setStringValue(stringValue);
   }
 
-  public Annotation(String property, Instant dateValue, String language) {
-    this(property, dateValue, language, null);
+  public Annotation(String property, Instant instant, String language) {
+    this(property, instant, language, null);
   }
 
-  public Annotation(String property, Instant dateValue, String language, Integer index) {
+  public Annotation(String property, Instant instant, String language, Integer index) {
     this(property, language, index);
-    this.setDatatype("string");
-    this.setDateValue(dateValue);
+    this.setDatatype("date_time");
+    this.setDateValue(instant);
+  }
+
+  public Annotation(String property, LocalDateTime localDateTime, String language) {
+    this(property, localDateTime, language, null);
+  }
+
+  public Annotation(String property, LocalDateTime localDateTime, String language, Integer index) {
+    this(property, language, index);
+    this.setDatatype("date_time");
+    this.setDateValue(localDateTime.toInstant(ZoneOffset.UTC));
   }
 
   public Annotation(String property, Double doubleValue, String language) {
@@ -96,7 +108,7 @@ public class Annotation extends Annotatable {
     switch (datatype) {
       case "string":
         return stringValue;
-      case "date":
+      case "date_time":
         return dateValue;
       case "number":
         return numberValue;
