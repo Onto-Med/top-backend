@@ -28,6 +28,7 @@ class PhenotypeQueryServiceTest {
   @Test
   void getDataAdapterConfig() {
     String id = dataSources.get(0).getId();
+    assertThat(queryService.getDataAdapterConfig("invalid")).isNotPresent();
     assertThat(queryService.getDataAdapterConfig(id))
         .satisfies(
             a -> {
