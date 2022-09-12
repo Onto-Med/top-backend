@@ -15,10 +15,18 @@ import java.util.stream.Stream;
 
 @Service
 public class PhenotypeQueryService {
+  private static final Logger LOGGER = Logger.getLogger(PhenotypeQueryService.class.getName());
+
   @Value("${top.phenotyping.data-source-config-dir:config/data_sources}")
   private String dataSourceConfigDir;
 
-  private static final Logger LOGGER = Logger.getLogger(PhenotypeQueryService.class.getName());
+  public DataAdapterConfig getDataAdapterConfig(String id) {
+    if (id == null) return null;
+    return getDataAdapterConfigs().stream()
+        .filter(a -> id.equals(a.getId()))
+        .findFirst()
+        .orElse(null);
+  }
 
   public List<DataAdapterConfig> getDataAdapterConfigs() {
     try (Stream<Path> paths = Files.list(Path.of(dataSourceConfigDir))) {
