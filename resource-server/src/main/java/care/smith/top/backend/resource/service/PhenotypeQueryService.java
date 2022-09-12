@@ -1,6 +1,6 @@
 package care.smith.top.backend.resource.service;
 
-import care.smith.top.top_phenotypic_query.config.DataAdapterConfig;
+import care.smith.top.top_phenotypic_query.adapter.config.DataAdapterConfig;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
