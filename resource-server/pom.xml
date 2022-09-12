@@ -23,8 +23,8 @@
             <url>https://maven.pkg.github.com/onto-med/top-api</url>
         </repository>
         <repository>
-            <id>simple-onto-api</id>
-            <url>https://maven.pkg.github.com/onto-med/simple-onto-api</url>
+            <id>top-phenotypic-query</id>
+            <url>https://maven.pkg.github.com/onto-med/top-phenotypic-query</url>
         </repository>
     </repositories>
 
@@ -35,9 +35,9 @@
             <version>0.4.2-SNAPSHOT</version>
         </dependency>
         <dependency>
-           <groupId>care.smith.top.simple_onto_api</groupId>
-           <artifactId>simple-onto-api</artifactId>
-           <version>0.0.7</version>
+           <groupId>care.smith.top</groupId>
+           <artifactId>top-phenotypic-query</artifactId>
+           <version>0.0.1-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>care.smith.top.backend</groupId>
