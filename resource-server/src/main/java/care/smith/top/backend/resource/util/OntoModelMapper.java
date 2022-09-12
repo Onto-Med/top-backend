@@ -1,6 +1,7 @@
 package care.smith.top.backend.resource.util;
 
 import care.smith.top.backend.model.Constant;
+import care.smith.top.backend.model.DataType;
 import care.smith.top.backend.model.ExpressionFunction;
 import care.smith.top.simple_onto_api.calculator.functions.Function;
 
@@ -21,6 +22,6 @@ public class OntoModelMapper {
   public static Constant map(
       care.smith.top.simple_onto_api.calculator.constants.Constant constant) {
     if (constant == null) return null;
-    return new Constant().id(constant.getId()).title(constant.getTitle());
+    return new Constant().id(constant.getId()).title(constant.getTitle()).dataType(DataType.STRING);
   }
 }
