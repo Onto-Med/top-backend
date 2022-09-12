@@ -1,14 +1,21 @@
 package care.smith.top.backend.resource.service;
 
+import care.smith.top.backend.model.Query;
+import care.smith.top.top_phenotypic_query.adapter.DataAdapter;
 import care.smith.top.top_phenotypic_query.adapter.config.DataAdapterConfig;
+import care.smith.top.top_phenotypic_query.result.ResultSet;
+import care.smith.top.top_phenotypic_query.search.QueryMan;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -20,12 +27,18 @@ public class PhenotypeQueryService {
   @Value("${top.phenotyping.data-source-config-dir:config/data_sources}")
   private String dataSourceConfigDir;
 
-  public DataAdapterConfig getDataAdapterConfig(String id) {
-    if (id == null) return null;
-    return getDataAdapterConfigs().stream()
-        .filter(a -> id.equals(a.getId()))
-        .findFirst()
-        .orElse(null);
+  public ResultSet executeQuery(String dataAdaptorConfigId, Query query) {
+    DataAdapterConfig config =
+        getDataAdapterConfig(dataAdaptorConfigId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    // TODO: init QueryMan with parameters: config, query
+    QueryMan queryMan = new QueryMan(null);
+    return queryMan.execute();
+  }
+
+  public Optional<DataAdapterConfig> getDataAdapterConfig(String id) {
+    if (id == null) return Optional.empty();
+    return getDataAdapterConfigs().stream().filter(a -> id.equals(a.getId())).findFirst();
   }
 
   public List<DataAdapterConfig> getDataAdapterConfigs() {
