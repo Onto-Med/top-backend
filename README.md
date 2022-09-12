@@ -13,7 +13,7 @@ Spring Boot based backend of the TOP framework
 * `DB_PASS`: password for connecting to the database
 
 OAuth2 related:
-* `OAUTH2_ENABLED`: enable or disable oauth2, defaults to `true`
+* `OAUTH2_ENABLED`: enable or disable oauth2, defaults to `false`
 * `OAUTH2_URL`: base URL of the OAuth2 server, defaults to `http://127.0.0.1:8081`
 * `OAUTH2_REALM`: name of the OAuth2 realm to be used for authentication
 
