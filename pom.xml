@@ -24,6 +24,7 @@
     <modules>
         <module>resource-server</module>
         <module>neo4j-ontology-access</module>
+        <module>neo4j-nlp</module>
     </modules>
 
     <dependencies>
