@@ -5,7 +5,6 @@ import care.smith.top.backend.neo4j_ontology_access.model.Class;
 import care.smith.top.backend.neo4j_ontology_access.model.ClassVersion;
 import care.smith.top.backend.neo4j_ontology_access.repository.ClassRepository;
 import care.smith.top.backend.neo4j_ontology_access.repository.ClassVersionRepository;
-import care.smith.top.backend.neo4j_ontology_access.repository.RepositoryRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -26,7 +25,6 @@ class EntityServiceTest extends Neo4jTest {
   @Autowired EntityService entityService;
   @Autowired ClassRepository classRepository;
   @Autowired ClassVersionRepository classVersionRepository;
-  @Autowired RepositoryRepository repositoryRepository;
 
   @Test
   void getForks() {
