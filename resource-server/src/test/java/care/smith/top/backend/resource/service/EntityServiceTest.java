@@ -422,10 +422,10 @@ class EntityServiceTest extends Neo4jTest {
         organisationService.createOrganisation(new Organisation().id("org"));
     Repository repository1 =
         repositoryService.createRepository(
-            organisation.getId(), new Repository().id("repo1"), null);
+            organisation.getId(), new Repository().id("repo1").primary(true), null);
     Repository repository2 =
         repositoryService.createRepository(
-            organisation.getId(), new Repository().id("repo2"), null);
+            organisation.getId(), new Repository().id("repo2").primary(true), null);
     Phenotype entity1 =
         (Phenotype)
             new Phenotype()
@@ -461,8 +461,6 @@ class EntityServiceTest extends Neo4jTest {
         .size()
         .isEqualTo(1);
 
-    // TODO: Test fails if annotated with @Transactional, because neo4j parallelstream() is called
-    // on neo4j result set. This seems to create new transactions where some rows cannot be read.
     assertThat(entityService.getEntities(null, null, null, null, null))
         .isNotEmpty()
         .anySatisfy(e -> assertThat(e.getId()).isEqualTo(entity1.getId()))
