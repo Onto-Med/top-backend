@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 
 public abstract class ApiModelMapper {
   public static final String EXPRESSION_PROPERTY = "expression";
+  public static final String EXPRESSION_VALUE_PROPERTY = "expression_value";
   private static final Calculator calculator = new Calculator();
 
   public static EntityType toRestrictedEntityType(EntityType entityType) {
@@ -61,17 +62,17 @@ public abstract class ApiModelMapper {
     if (expressionValue == null) return null;
 
     if (expressionValue.getConstant() != null)
-      return new Annotation(EXPRESSION_PROPERTY, expressionValue.getConstant().getId(), null);
+      return new Annotation(EXPRESSION_VALUE_PROPERTY, expressionValue.getConstant().getId(), null);
 
     if (expressionValue.getValue() != null) {
       Value value = expressionValue.getValue();
       if (value instanceof NumberValue)
         return new Annotation(
-            EXPRESSION_PROPERTY, ((NumberValue) value).getValue().doubleValue(), null);
+            EXPRESSION_VALUE_PROPERTY, ((NumberValue) value).getValue().doubleValue(), null);
       if (value instanceof DateTimeValue)
-        return new Annotation(EXPRESSION_PROPERTY, ((DateTimeValue) value).getValue(), null);
+        return new Annotation(EXPRESSION_VALUE_PROPERTY, ((DateTimeValue) value).getValue(), null);
       if (value instanceof BooleanValue)
-        return new Annotation(EXPRESSION_PROPERTY, ((BooleanValue) value).isValue(), null);
+        return new Annotation(EXPRESSION_VALUE_PROPERTY, ((BooleanValue) value).isValue(), null);
     }
 
     return null;
@@ -110,25 +111,27 @@ public abstract class ApiModelMapper {
   }
 
   public static Expression toExpression(Annotation annotation) {
+    if (EXPRESSION_VALUE_PROPERTY.equals(annotation.getProperty())) {
+      if (annotation.getStringValue() != null)
+        return new Expression()
+            .function("constant")
+            .value(
+                new ExpressionValue()
+                    .constant(
+                        OntoModelMapper.map(calculator.getConstant(annotation.getStringValue()))));
+
+      if (annotation.getBooleanValue() != null
+          || annotation.getNumberValue() != null
+          || annotation.getDateValue() != null)
+        return new Expression()
+            .function("value")
+            .value(new ExpressionValue().value(toValue(annotation)));
+    }
+
     if ("class".equals(annotation.getDatatype()))
       return new Expression()
           .function("entity")
           .entityId(annotation.getClassValue() != null ? annotation.getClassValue().getId() : null);
-
-    if (annotation.getStringValue() != null)
-      return new Expression()
-          .function("constant")
-          .value(
-              new ExpressionValue()
-                  .constant(
-                      OntoModelMapper.map(calculator.getConstant(annotation.getStringValue()))));
-
-    if (annotation.getBooleanValue() != null
-        || annotation.getNumberValue() != null
-        || annotation.getDateValue() != null)
-      return new Expression()
-          .function("value")
-          .value(new ExpressionValue().value(toValue(annotation)));
 
     Expression expression = new Expression().function(annotation.getStringValue());
     expression.arguments(

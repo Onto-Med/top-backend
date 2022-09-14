@@ -36,6 +36,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static care.smith.top.backend.resource.util.ApiModelMapper.EXPRESSION_PROPERTY;
+import static care.smith.top.backend.resource.util.ApiModelMapper.EXPRESSION_VALUE_PROPERTY;
 
 @Service
 public class EntityService implements ContentService {
@@ -780,7 +781,7 @@ public class EntityService implements ContentService {
       }
 
       classVersion
-          .getAnnotation(EXPRESSION_PROPERTY)
+          .getAnnotation(EXPRESSION_PROPERTY, EXPRESSION_VALUE_PROPERTY)
           .ifPresent(a -> ((Phenotype) entity).setExpression(ApiModelMapper.toExpression(a)));
     }
 
