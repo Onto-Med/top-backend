@@ -11,10 +11,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -44,6 +41,7 @@ public class PhenotypeQueryService {
       return paths
           .map(this::toDataAdapterConfig)
           .filter(Objects::nonNull)
+          .sorted(Comparator.comparing(DataAdapterConfig::getId))
           .collect(Collectors.toList());
     } catch (Exception ignored) {
     }
@@ -53,6 +51,7 @@ public class PhenotypeQueryService {
   public List<DataSource> getDataSources() {
     return getDataAdapterConfigs().stream()
         .map(a -> new DataSource().id(a.getId()).title(a.getId().replace('_', ' ')))
+        .sorted(Comparator.comparing(DataSource::getId))
         .collect(Collectors.toList());
   }
 
