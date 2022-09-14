@@ -13,8 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 @SpringBootTest
 @Transactional
 @DirtiesContext
-public class Neo4jTest {
-  private static Neo4j embeddedDatabaseServer;
+public abstract class Neo4jTest {
+  static Neo4j embeddedDatabaseServer;
 
   @BeforeAll
   static void initializeNeo4j() {
