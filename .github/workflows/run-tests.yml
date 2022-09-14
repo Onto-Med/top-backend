@@ -11,6 +11,9 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      GH_MAVEN_PKG_AUTH_TOKEN: ${{ secrets.GH_MAVEN_PKG_AUTH_TOKEN }}
+      GH_MAVEN_PKG_USER: ${{ secrets.GH_MAVEN_PKG_USER }}
 
     steps:
       - uses: actions/checkout@v2
@@ -28,4 +31,4 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
-      - run: mvn -B test --no-transfer-progress --file pom.xml
+      - run: mvn -B test --no-transfer-progress -s .mvn-ci.xml --file pom.xml
