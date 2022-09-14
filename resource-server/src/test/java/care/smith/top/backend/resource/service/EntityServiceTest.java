@@ -5,7 +5,7 @@ import care.smith.top.backend.neo4j_ontology_access.model.Class;
 import care.smith.top.backend.neo4j_ontology_access.model.ClassVersion;
 import care.smith.top.backend.neo4j_ontology_access.repository.ClassRepository;
 import care.smith.top.backend.neo4j_ontology_access.repository.ClassVersionRepository;
-import care.smith.top.backend.neo4j_ontology_access.repository.RepositoryRepository;
+import care.smith.top.simple_onto_api.calculator.functions.bool.Not;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -26,7 +26,6 @@ class EntityServiceTest extends Neo4jTest {
   @Autowired EntityService entityService;
   @Autowired ClassRepository classRepository;
   @Autowired ClassVersionRepository classVersionRepository;
-  @Autowired RepositoryRepository repositoryRepository;
 
   @Test
   void getForks() {
@@ -148,7 +147,7 @@ class EntityServiceTest extends Neo4jTest {
     abstractPhenotype
         .expression(
             new Expression()
-                .function("complement")
+                .function(Not.get().getId())
                 .addArgumentsItem(new Expression().function("entity")))
         .addSuperCategoriesItem(category)
         .index(5)
@@ -423,10 +422,10 @@ class EntityServiceTest extends Neo4jTest {
         organisationService.createOrganisation(new Organisation().id("org"));
     Repository repository1 =
         repositoryService.createRepository(
-            organisation.getId(), new Repository().id("repo1"), null);
+            organisation.getId(), new Repository().id("repo1").primary(true), null);
     Repository repository2 =
         repositoryService.createRepository(
-            organisation.getId(), new Repository().id("repo2"), null);
+            organisation.getId(), new Repository().id("repo2").primary(true), null);
     Phenotype entity1 =
         (Phenotype)
             new Phenotype()
@@ -462,8 +461,6 @@ class EntityServiceTest extends Neo4jTest {
         .size()
         .isEqualTo(1);
 
-    // TODO: Test fails if annotated with @Transactional, because neo4j parallelstream() is called
-    // on neo4j result set. This seems to create new transactions where some rows cannot be read.
     assertThat(entityService.getEntities(null, null, null, null, null))
         .isNotEmpty()
         .anySatisfy(e -> assertThat(e.getId()).isEqualTo(entity1.getId()))

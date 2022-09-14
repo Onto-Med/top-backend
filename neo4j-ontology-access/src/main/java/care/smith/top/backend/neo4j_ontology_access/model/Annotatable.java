@@ -5,6 +5,7 @@ import org.springframework.data.neo4j.core.schema.Relationship;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public abstract class Annotatable {
   @Relationship(type = "HAS_ANNOTATION")
@@ -31,14 +32,15 @@ public abstract class Annotatable {
             .collect(Collectors.toSet()));
   }
 
-  public Set<Annotation> getAnnotations(String property) {
+  public Set<Annotation> getAnnotations(String... property) {
     if (annotations == null) return new HashSet<>();
+    List<String> propertyList = Arrays.asList(property);
     return annotations.stream()
-        .filter(a -> property.equals(a.getProperty()))
+        .filter(a -> propertyList.contains(a.getProperty()))
         .collect(Collectors.toSet());
   }
 
-  public List<Annotation> getSortedAnnotations(String property) {
+  public List<Annotation> getSortedAnnotations(String... property) {
     if (annotations == null) return new ArrayList<>();
     return getAnnotations(property).stream()
         .sorted(
@@ -50,7 +52,7 @@ public abstract class Annotatable {
         .collect(Collectors.toList());
   }
 
-  public Optional<Annotation> getAnnotation(String property) {
+  public Optional<Annotation> getAnnotation(String... property) {
     return getSortedAnnotations(property).stream().findFirst();
   }
 

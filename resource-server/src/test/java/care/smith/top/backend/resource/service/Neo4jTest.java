@@ -2,23 +2,31 @@ package care.smith.top.backend.resource.service;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.neo4j.harness.Neo4j;
 import org.neo4j.harness.Neo4jBuilders;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
-@Transactional
 @DirtiesContext
-public class Neo4jTest {
-  private static Neo4j embeddedDatabaseServer;
+public abstract class Neo4jTest {
+  static Neo4j embeddedDatabaseServer;
 
   @BeforeAll
   static void initializeNeo4j() {
     embeddedDatabaseServer = Neo4jBuilders.newInProcessBuilder().withDisabledServer().build();
+  }
+
+  @BeforeEach
+  void cleanup() {
+    // workaround to allow non-transactional tests that do not interfere with parallel streams
+    embeddedDatabaseServer
+        .databaseManagementService()
+        .database("neo4j")
+        .executeTransactionally("MATCH (n) DETACH DELETE n");
   }
 
   @DynamicPropertySource
