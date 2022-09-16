@@ -3,6 +3,7 @@ package care.smith.top.backend.resource.service;
 import care.smith.top.backend.model.DataSource;
 import care.smith.top.backend.model.Query;
 import care.smith.top.backend.model.QueryConfiguration;
+import care.smith.top.backend.model.QueryState;
 import care.smith.top.top_phenotypic_query.result.ResultSet;
 import org.jobrunr.storage.StorageProvider;
 import org.junit.jupiter.api.BeforeAll;
@@ -20,10 +21,9 @@ import static org.awaitility.Awaitility.await;
 
 @SpringBootTest
 class PhenotypeQueryServiceTest {
+  static List<DataSource> dataSources;
   @Autowired PhenotypeQueryService queryService;
   @Autowired StorageProvider storageProvider;
-
-  static List<DataSource> dataSources;
 
   @BeforeAll
   static void setup() {
@@ -37,16 +37,27 @@ class PhenotypeQueryServiceTest {
   void executeQuery() {
     Query query =
         new Query()
+            .id(UUID.randomUUID())
             ._configuration(
                 new QueryConfiguration()
                     .addSourcesItem(new DataSource().id(dataSources.get(0).getId())));
 
-    UUID jobId = queryService.enqueueQuery(query);
-    assertThat(jobId).isNotNull();
+    UUID queryId = queryService.enqueueQuery(query);
+    assertThat(queryId).isEqualTo(query.getId());
     await()
-        .atMost(5, TimeUnit.SECONDS)
+        .atMost(10, TimeUnit.SECONDS)
         .until(() -> storageProvider.getJobStats().getSucceeded() == 1);
-    assertThat(queryService.getQueryResult(jobId)).isEqualTo(new ResultSet());
+
+    assertThat(queryService.getQueryResult(queryId))
+        .satisfies(
+            r -> {
+              assertThat(r.getId()).isEqualTo(queryId);
+              assertThat(r.getCreatedAt()).isNotNull();
+              assertThat(r.getFinishedAt()).isNotNull();
+              assertThat(r.getCreatedAt().compareTo(r.getFinishedAt())).isLessThanOrEqualTo(0);
+              assertThat(r.getCount()).isNotNull();
+              assertThat(r.getState()).isEqualTo(QueryState.FINISHED);
+            });
   }
 
   @Test

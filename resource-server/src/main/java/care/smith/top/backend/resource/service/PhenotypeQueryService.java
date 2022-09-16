@@ -2,11 +2,11 @@ package care.smith.top.backend.resource.service;
 
 import care.smith.top.backend.model.DataSource;
 import care.smith.top.backend.model.Query;
+import care.smith.top.backend.model.QueryResult;
+import care.smith.top.backend.model.QueryState;
 import care.smith.top.top_phenotypic_query.adapter.config.DataAdapterConfig;
-import care.smith.top.top_phenotypic_query.result.ResultSet;
 import org.jobrunr.jobs.Job;
 import org.jobrunr.jobs.states.StateName;
-import org.jobrunr.scheduling.BackgroundJob;
 import org.jobrunr.scheduling.JobScheduler;
 import org.jobrunr.storage.StorageProvider;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,6 +17,7 @@ import org.springframework.web.server.ResponseStatusException;
 import javax.inject.Inject;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.ZoneOffset;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -34,6 +35,7 @@ public class PhenotypeQueryService {
 
   public UUID enqueueQuery(Query query) {
     if (query == null
+        || query.getId() == null
         || query.getConfiguration() == null
         || query.getConfiguration().getSources() == null
         || query.getConfiguration().getSources().isEmpty())
@@ -48,23 +50,12 @@ public class PhenotypeQueryService {
 
     return jobScheduler
         .enqueue(
+            query.getId(),
             () -> {
               // TODO: call method from top-phenotypic-query package
               System.out.println("Enqueueing query job.");
             })
         .asUUID();
-  }
-
-  public ResultSet getQueryResult(UUID jobId) {
-    Job job = storageProvider.getJobById(jobId);
-    if (job == null || job.hasState(StateName.FAILED) || job.hasState(StateName.DELETED)) {
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-    } else if (job.hasState(StateName.SUCCEEDED)) {
-      // TODO: retriev job result
-      return new ResultSet();
-    }
-    // TODO: backoff for x seconds
-    return null;
   }
 
   public Optional<DataAdapterConfig> getDataAdapterConfig(String id) {
@@ -89,6 +80,34 @@ public class PhenotypeQueryService {
         .map(a -> new DataSource().id(a.getId()).title(a.getId().replace('_', ' ')))
         .sorted(Comparator.comparing(DataSource::getId))
         .collect(Collectors.toList());
+  }
+
+  public QueryResult getQueryResult(UUID queryId) {
+    Job job = storageProvider.getJobById(queryId);
+    if (job == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+
+    QueryResult queryResult =
+        new QueryResult()
+            .id(queryId)
+            .createdAt(job.getCreatedAt().atOffset(ZoneOffset.UTC))
+            .state(getState(job));
+
+    if (QueryState.FINISHED.equals(queryResult.getState())) {
+      // TODO: get total count of subjects in query result
+      queryResult.finishedAt(job.getUpdatedAt().atOffset(ZoneOffset.UTC)).count(0L);
+    }
+    return queryResult;
+  }
+
+  private QueryState getState(Job job) {
+    if (job.hasState(StateName.FAILED) || job.hasState(StateName.DELETED)) {
+      return QueryState.FAILED;
+    } else if (job.hasState(StateName.SUCCEEDED)) {
+      return QueryState.FINISHED;
+    } else if (job.hasState(StateName.PROCESSING)) {
+      return QueryState.RUNNING;
+    }
+    return QueryState.QUEUED;
   }
 
   private DataAdapterConfig toDataAdapterConfig(Path path) {
