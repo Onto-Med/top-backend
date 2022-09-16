@@ -50,16 +50,15 @@ class PhenotypeQueryServiceTest extends Neo4jTest {
         .isInstanceOf(ResponseStatusException.class)
         .hasFieldOrPropertyWithValue("status", HttpStatus.NOT_FOUND);
 
-    UUID queryId = queryService.enqueueQuery(orga.getId(), repo.getId(), query);
-    assertThat(queryId).isEqualTo(query.getId());
+    assertThat(queryService.enqueueQuery(orga.getId(), repo.getId(), query)).isNotNull();
     await()
         .atMost(100, TimeUnit.SECONDS)
         .until(() -> storageProvider.getJobStats().getSucceeded() == 1);
 
-    assertThat(queryService.getQueryResult(orga.getId(), repo.getId(), queryId))
+    assertThat(queryService.getQueryResult(orga.getId(), repo.getId(), query.getId()))
         .satisfies(
             r -> {
-              assertThat(r.getId()).isEqualTo(queryId);
+              assertThat(r.getId()).isEqualTo(query.getId());
               assertThat(r.getCreatedAt()).isNotNull();
               assertThat(r.getFinishedAt()).isNotNull();
               assertThat(r.getCreatedAt().compareTo(r.getFinishedAt())).isLessThanOrEqualTo(0);
@@ -67,7 +66,7 @@ class PhenotypeQueryServiceTest extends Neo4jTest {
               assertThat(r.getState()).isEqualTo(QueryState.FINISHED);
             });
 
-    queryService.deleteQuery(orga.getId(), repo.getId(), queryId);
+    queryService.deleteQuery(orga.getId(), repo.getId(), query.getId());
     assertThat(storageProvider.getJobStats().getSucceeded()).isEqualTo(0);
   }
 

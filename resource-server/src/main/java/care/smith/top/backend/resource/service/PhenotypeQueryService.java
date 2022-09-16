@@ -47,7 +47,7 @@ public class PhenotypeQueryService {
     // TODO: cleanup stored query results
   }
 
-  public UUID enqueueQuery(String organisationId, String repositoryId, Query query) {
+  public QueryResult enqueueQuery(String organisationId, String repositoryId, Query query) {
     if (!repositoryService.repositoryExists(organisationId, repositoryId))
       throw new ResponseStatusException(HttpStatus.NOT_FOUND);
 
@@ -65,7 +65,7 @@ public class PhenotypeQueryService {
             .collect(Collectors.toList());
     if (configs.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE);
 
-    return jobScheduler
+    jobScheduler
         .enqueue(
             query.getId(),
             () -> {
@@ -73,6 +73,8 @@ public class PhenotypeQueryService {
               System.out.println("Enqueueing query job.");
             })
         .asUUID();
+
+    return getQueryResult(organisationId, repositoryId, query.getId());
   }
 
   public Optional<DataAdapterConfig> getDataAdapterConfig(String id) {
@@ -115,6 +117,8 @@ public class PhenotypeQueryService {
     if (QueryState.FINISHED.equals(queryResult.getState())) {
       // TODO: get total count of subjects in query result
       queryResult.finishedAt(job.getUpdatedAt().atOffset(ZoneOffset.UTC)).count(0L);
+    } else if (QueryState.FAILED.equals(queryResult.getState())) {
+      queryResult.finishedAt(job.getUpdatedAt().atOffset(ZoneOffset.UTC));
     }
     return queryResult;
   }

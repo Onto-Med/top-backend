@@ -23,10 +23,11 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
   }
 
   @Override
-  public ResponseEntity<Query> enqueueQuery(
+  public ResponseEntity<QueryResult> enqueueQuery(
       String organisationId, String repositoryId, Query query) {
-    phenotypeQueryService.enqueueQuery(organisationId, repositoryId, query);
-    return new ResponseEntity<>(query, HttpStatus.CREATED);
+    return new ResponseEntity<>(
+        phenotypeQueryService.enqueueQuery(organisationId, repositoryId, query),
+        HttpStatus.CREATED);
   }
 
   @Override
