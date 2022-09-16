@@ -4,11 +4,17 @@ import care.smith.top.backend.model.DataSource;
 import care.smith.top.backend.model.Query;
 import care.smith.top.top_phenotypic_query.adapter.config.DataAdapterConfig;
 import care.smith.top.top_phenotypic_query.result.ResultSet;
+import org.jobrunr.jobs.Job;
+import org.jobrunr.jobs.states.StateName;
+import org.jobrunr.scheduling.BackgroundJob;
+import org.jobrunr.scheduling.JobScheduler;
+import org.jobrunr.storage.StorageProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import javax.inject.Inject;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -20,15 +26,45 @@ import java.util.stream.Stream;
 public class PhenotypeQueryService {
   private static final Logger LOGGER = Logger.getLogger(PhenotypeQueryService.class.getName());
 
+  @Inject private JobScheduler jobScheduler;
+  @Inject private StorageProvider storageProvider;
+
   @Value("${top.phenotyping.data-source-config-dir:config/data_sources}")
   private String dataSourceConfigDir;
 
-  public ResultSet executeQuery(String dataAdaptorConfigId, Query query) {
-    DataAdapterConfig config =
-        getDataAdapterConfig(dataAdaptorConfigId)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-    // TODO: return new QueryMan(config, query).execute();
-    return new ResultSet();
+  public UUID enqueueQuery(Query query) {
+    if (query == null
+        || query.getConfiguration() == null
+        || query.getConfiguration().getSources() == null
+        || query.getConfiguration().getSources().isEmpty())
+      throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE);
+
+    List<DataAdapterConfig> configs =
+        query.getConfiguration().getSources().stream()
+            .map(s -> getDataAdapterConfig(s.getId()).orElse(null))
+            .filter(Objects::nonNull)
+            .collect(Collectors.toList());
+    if (configs.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE);
+
+    return jobScheduler
+        .enqueue(
+            () -> {
+              // TODO: call method from top-phenotypic-query package
+              System.out.println("Enqueueing query job.");
+            })
+        .asUUID();
+  }
+
+  public ResultSet getQueryResult(UUID jobId) {
+    Job job = storageProvider.getJobById(jobId);
+    if (job == null || job.hasState(StateName.FAILED) || job.hasState(StateName.DELETED)) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+    } else if (job.hasState(StateName.SUCCEEDED)) {
+      // TODO: retriev job result
+      return new ResultSet();
+    }
+    // TODO: backoff for x seconds
+    return null;
   }
 
   public Optional<DataAdapterConfig> getDataAdapterConfig(String id) {

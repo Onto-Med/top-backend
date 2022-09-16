@@ -25,6 +25,11 @@ spring:
   paging:
     page-size: 1000
 
+org:
+  jobrunr:
+    background-job-server:
+      enabled: true
+
 top:
   phenotyping:
     data-source-config-dir: src/test/resources/config/data_sources
