@@ -2,15 +2,23 @@ package care.smith.top.backend.resource.service;
 
 import care.smith.top.backend.model.DataSource;
 import care.smith.top.backend.model.Query;
+import care.smith.top.backend.model.QueryResult;
+import care.smith.top.backend.model.QueryState;
 import care.smith.top.top_phenotypic_query.adapter.config.DataAdapterConfig;
-import care.smith.top.top_phenotypic_query.result.ResultSet;
+import org.jobrunr.jobs.Job;
+import org.jobrunr.jobs.states.StateName;
+import org.jobrunr.scheduling.JobScheduler;
+import org.jobrunr.storage.StorageProvider;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import javax.inject.Inject;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.ZoneOffset;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -20,15 +28,53 @@ import java.util.stream.Stream;
 public class PhenotypeQueryService {
   private static final Logger LOGGER = Logger.getLogger(PhenotypeQueryService.class.getName());
 
+  // TODO: Check if query belongs to repository.
+  @Inject private JobScheduler jobScheduler;
+
+  @Inject private StorageProvider storageProvider;
+
+  @Autowired private RepositoryService repositoryService;
+
   @Value("${top.phenotyping.data-source-config-dir:config/data_sources}")
   private String dataSourceConfigDir;
 
-  public ResultSet executeQuery(String dataAdaptorConfigId, Query query) {
-    DataAdapterConfig config =
-        getDataAdapterConfig(dataAdaptorConfigId)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-    // TODO: return new QueryMan(config, query).execute();
-    return new ResultSet();
+  public void deleteQuery(String organisationId, String repositoryId, UUID queryId) {
+    if (!repositoryService.repositoryExists(organisationId, repositoryId))
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+
+    Job job = storageProvider.getJobById(queryId);
+    storageProvider.deletePermanently(job.getId());
+    // TODO: cleanup stored query results
+  }
+
+  public QueryResult enqueueQuery(String organisationId, String repositoryId, Query query) {
+    if (!repositoryService.repositoryExists(organisationId, repositoryId))
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+
+    if (query == null
+        || query.getId() == null
+        || query.getConfiguration() == null
+        || query.getConfiguration().getSources() == null
+        || query.getConfiguration().getSources().isEmpty())
+      throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE);
+
+    List<DataAdapterConfig> configs =
+        query.getConfiguration().getSources().stream()
+            .map(s -> getDataAdapterConfig(s.getId()).orElse(null))
+            .filter(Objects::nonNull)
+            .collect(Collectors.toList());
+    if (configs.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE);
+
+    jobScheduler
+        .enqueue(
+            query.getId(),
+            () -> {
+              // TODO: call method from top-phenotypic-query package
+              System.out.println("Enqueueing query job.");
+            })
+        .asUUID();
+
+    return getQueryResult(organisationId, repositoryId, query.getId());
   }
 
   public Optional<DataAdapterConfig> getDataAdapterConfig(String id) {
@@ -53,6 +99,39 @@ public class PhenotypeQueryService {
         .map(a -> new DataSource().id(a.getId()).title(a.getId().replace('_', ' ')))
         .sorted(Comparator.comparing(DataSource::getId))
         .collect(Collectors.toList());
+  }
+
+  public QueryResult getQueryResult(String organisationId, String repositoryId, UUID queryId) {
+    if (!repositoryService.repositoryExists(organisationId, repositoryId))
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+
+    Job job = storageProvider.getJobById(queryId);
+    if (job == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+
+    QueryResult queryResult =
+        new QueryResult()
+            .id(queryId)
+            .createdAt(job.getCreatedAt().atOffset(ZoneOffset.UTC))
+            .state(getState(job));
+
+    if (QueryState.FINISHED.equals(queryResult.getState())) {
+      // TODO: get total count of subjects in query result
+      queryResult.finishedAt(job.getUpdatedAt().atOffset(ZoneOffset.UTC)).count(0L);
+    } else if (QueryState.FAILED.equals(queryResult.getState())) {
+      queryResult.finishedAt(job.getUpdatedAt().atOffset(ZoneOffset.UTC));
+    }
+    return queryResult;
+  }
+
+  private QueryState getState(Job job) {
+    if (job.hasState(StateName.FAILED) || job.hasState(StateName.DELETED)) {
+      return QueryState.FAILED;
+    } else if (job.hasState(StateName.SUCCEEDED)) {
+      return QueryState.FINISHED;
+    } else if (job.hasState(StateName.PROCESSING)) {
+      return QueryState.RUNNING;
+    }
+    return QueryState.QUEUED;
   }
 
   private DataAdapterConfig toDataAdapterConfig(Path path) {
