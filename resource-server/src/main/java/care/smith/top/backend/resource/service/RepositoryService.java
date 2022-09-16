@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -51,37 +52,11 @@ public class RepositoryService implements ContentService {
     return repositoryToApiPojo(repositoryRepository.save(repository));
   }
 
+  @Transactional
   public void deleteRepository(String repositoryId, String organisationId, List<String> include) {
     repositoryRepository.delete(
-        repositoryRepository
-            .findByIdAndSuperDirectoryId(repositoryId, organisationId)
+        getRepository(organisationId, repositoryId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND)));
-  }
-
-  public care.smith.top.backend.model.Repository getRepository(
-      String organisationId, String repositoryId, List<String> include) {
-    // TODO: include organisation if requested
-    return repositoryToApiPojo(
-        repositoryRepository
-            .findByIdAndSuperDirectoryId(repositoryId, organisationId)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND)));
-  }
-
-  public care.smith.top.backend.model.Repository updateRepository(
-      String organisationId,
-      String repositoryId,
-      care.smith.top.backend.model.Repository data,
-      List<String> include) {
-    Repository repository =
-        repositoryRepository
-            .findByIdAndSuperDirectoryId(repositoryId, organisationId)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-
-    // TODO: if (user is admin) ...
-    // if (data.isPrimary() != null) repository.setPrimary(data.isPrimary());
-
-    repository.setName(data.getName()).setDescription(data.getDescription());
-    return repositoryToApiPojo(repositoryRepository.save(repository));
   }
 
   public List<care.smith.top.backend.model.Repository> getRepositories(
@@ -108,6 +83,49 @@ public class RepositoryService implements ContentService {
         .collect(Collectors.toList());
   }
 
+  public care.smith.top.backend.model.Repository getRepository(
+      String organisationId, String repositoryId, List<String> include) {
+    // TODO: include organisation if requested
+    Repository repository =
+        getRepository(organisationId, repositoryId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    return repositoryToApiPojo(repository);
+  }
+
+  public Optional<Repository> getRepository(String organisationId, String repositoryId) {
+    return repositoryRepository.findByIdAndSuperDirectoryId(repositoryId, organisationId);
+  }
+
+  public boolean repositoryExists(String organisationId, String repositoryId) {
+    return getRepository(organisationId, repositoryId).isPresent();
+  }
+
+  public care.smith.top.backend.model.Repository updateRepository(
+      String organisationId,
+      String repositoryId,
+      care.smith.top.backend.model.Repository data,
+      List<String> include) {
+    Repository repository =
+        getRepository(organisationId, repositoryId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+    // TODO: if (user is admin) ...
+    // if (data.isPrimary() != null) repository.setPrimary(data.isPrimary());
+
+    repository.setName(data.getName()).setDescription(data.getDescription());
+    return repositoryToApiPojo(repositoryRepository.save(repository));
+  }
+
+  private Directory getOrganisation(String organisationId) {
+    return directoryRepository
+        .findById(organisationId)
+        .orElseThrow(
+            () ->
+                new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    String.format("Organisation '%s' does not exist!", organisationId)));
+  }
+
   /**
    * Convert {@link Repository} object to {@link care.smith.top.backend.model.Repository} object.
    *
@@ -128,15 +146,5 @@ public class RepositoryService implements ContentService {
         .ifPresent(o -> data.setOrganisation(new Organisation().name(o.getName()).id(o.getId())));
 
     return data;
-  }
-
-  private Directory getOrganisation(String organisationId) {
-    return directoryRepository
-        .findById(organisationId)
-        .orElseThrow(
-            () ->
-                new ResponseStatusException(
-                    HttpStatus.NOT_FOUND,
-                    String.format("Organisation '%s' does not exist!", organisationId)));
   }
 }

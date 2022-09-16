@@ -48,6 +48,7 @@ public class EntityService implements ContentService {
   @Autowired private AnnotationRepository annotationRepository;
   @Autowired private ExpressionRepository expressionRepository;
   @Autowired private RepositoryRepository repositoryRepository;
+  @Autowired private RepositoryService repositoryService;
 
   public static <T> Predicate<T> distinctByKey(Function<? super T, ?> keyExtractor) {
     Set<Object> seen = ConcurrentHashMap.newKeySet();
@@ -1017,8 +1018,8 @@ public class EntityService implements ContentService {
    * @return The matching repository, if it exists.
    */
   private Repository getRepository(String organisationId, String repositoryId) {
-    return repositoryRepository
-        .findByIdAndSuperDirectoryId(repositoryId, organisationId)
+    return repositoryService
+        .getRepository(organisationId, repositoryId)
         .orElseThrow(
             () ->
                 new ResponseStatusException(
