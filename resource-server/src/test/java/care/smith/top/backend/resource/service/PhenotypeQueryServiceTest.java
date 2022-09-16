@@ -53,7 +53,7 @@ class PhenotypeQueryServiceTest extends Neo4jTest {
     UUID queryId = queryService.enqueueQuery(orga.getId(), repo.getId(), query);
     assertThat(queryId).isEqualTo(query.getId());
     await()
-        .atMost(10, TimeUnit.SECONDS)
+        .atMost(100, TimeUnit.SECONDS)
         .until(() -> storageProvider.getJobStats().getSucceeded() == 1);
 
     assertThat(queryService.getQueryResult(orga.getId(), repo.getId(), queryId))
