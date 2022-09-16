@@ -27,11 +27,26 @@ import java.util.stream.Stream;
 public class PhenotypeQueryService {
   private static final Logger LOGGER = Logger.getLogger(PhenotypeQueryService.class.getName());
 
+  /**
+   * TODO: Implement access permission checks.
+   *
+   * <p>Requesting users should have access to organisation and repository. Query should be part of
+   * the repository.
+   */
   @Inject private JobScheduler jobScheduler;
+
   @Inject private StorageProvider storageProvider;
 
   @Value("${top.phenotyping.data-source-config-dir:config/data_sources}")
   private String dataSourceConfigDir;
+
+  public void deleteQuery(UUID queryId) {
+    Job job = storageProvider.getJobById(queryId);
+    if (job == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+
+    storageProvider.deletePermanently(queryId);
+    // TODO: cleanup stored query results
+  }
 
   public UUID enqueueQuery(Query query) {
     if (query == null
