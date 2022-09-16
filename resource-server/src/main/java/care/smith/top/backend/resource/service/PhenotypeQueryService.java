@@ -9,6 +9,7 @@ import org.jobrunr.jobs.Job;
 import org.jobrunr.jobs.states.StateName;
 import org.jobrunr.scheduling.JobScheduler;
 import org.jobrunr.storage.StorageProvider;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -27,28 +28,29 @@ import java.util.stream.Stream;
 public class PhenotypeQueryService {
   private static final Logger LOGGER = Logger.getLogger(PhenotypeQueryService.class.getName());
 
-  /**
-   * TODO: Implement access permission checks.
-   *
-   * <p>Requesting users should have access to organisation and repository. Query should be part of
-   * the repository.
-   */
+  // TODO: Check if query belongs to repository.
   @Inject private JobScheduler jobScheduler;
 
   @Inject private StorageProvider storageProvider;
+
+  @Autowired private RepositoryService repositoryService;
 
   @Value("${top.phenotyping.data-source-config-dir:config/data_sources}")
   private String dataSourceConfigDir;
 
   public void deleteQuery(String organisationId, String repositoryId, UUID queryId) {
-    Job job = storageProvider.getJobById(queryId);
-    if (job == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+    if (!repositoryService.repositoryExists(organisationId, repositoryId))
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND);
 
-    storageProvider.deletePermanently(queryId);
+    Job job = storageProvider.getJobById(queryId);
+    storageProvider.deletePermanently(job.getId());
     // TODO: cleanup stored query results
   }
 
   public UUID enqueueQuery(String organisationId, String repositoryId, Query query) {
+    if (!repositoryService.repositoryExists(organisationId, repositoryId))
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+
     if (query == null
         || query.getId() == null
         || query.getConfiguration() == null
@@ -98,6 +100,9 @@ public class PhenotypeQueryService {
   }
 
   public QueryResult getQueryResult(String organisationId, String repositoryId, UUID queryId) {
+    if (!repositoryService.repositoryExists(organisationId, repositoryId))
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+
     Job job = storageProvider.getJobById(queryId);
     if (job == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
 

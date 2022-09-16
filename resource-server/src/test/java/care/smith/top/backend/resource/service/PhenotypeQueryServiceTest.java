@@ -1,14 +1,13 @@
 package care.smith.top.backend.resource.service;
 
-import care.smith.top.backend.model.DataSource;
-import care.smith.top.backend.model.Query;
-import care.smith.top.backend.model.QueryConfiguration;
-import care.smith.top.backend.model.QueryState;
+import care.smith.top.backend.model.*;
 import org.jobrunr.storage.StorageProvider;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Arrays;
 import java.util.List;
@@ -16,13 +15,16 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Awaitility.await;
 
 @SpringBootTest
-class PhenotypeQueryServiceTest {
+class PhenotypeQueryServiceTest extends Neo4jTest {
   static List<DataSource> dataSources;
   @Autowired PhenotypeQueryService queryService;
   @Autowired StorageProvider storageProvider;
+  @Autowired OrganisationService organisationService;
+  @Autowired RepositoryService repositoryService;
 
   @BeforeAll
   static void setup() {
@@ -34,6 +36,9 @@ class PhenotypeQueryServiceTest {
 
   @Test
   void executeQuery() {
+    Organisation orga = organisationService.createOrganisation(new Organisation().id("orga_1"));
+    Repository repo =
+        repositoryService.createRepository(orga.getId(), new Repository().id("repo_1"), null);
     Query query =
         new Query()
             .id(UUID.randomUUID())
@@ -41,13 +46,17 @@ class PhenotypeQueryServiceTest {
                 new QueryConfiguration()
                     .addSourcesItem(new DataSource().id(dataSources.get(0).getId())));
 
-    UUID queryId = queryService.enqueueQuery(null, null, query);
+    assertThatThrownBy(() -> queryService.enqueueQuery(orga.getId(), "invalid", query))
+        .isInstanceOf(ResponseStatusException.class)
+        .hasFieldOrPropertyWithValue("status", HttpStatus.NOT_FOUND);
+
+    UUID queryId = queryService.enqueueQuery(orga.getId(), repo.getId(), query);
     assertThat(queryId).isEqualTo(query.getId());
     await()
         .atMost(10, TimeUnit.SECONDS)
         .until(() -> storageProvider.getJobStats().getSucceeded() == 1);
 
-    assertThat(queryService.getQueryResult(null, null, queryId))
+    assertThat(queryService.getQueryResult(orga.getId(), repo.getId(), queryId))
         .satisfies(
             r -> {
               assertThat(r.getId()).isEqualTo(queryId);
@@ -58,7 +67,7 @@ class PhenotypeQueryServiceTest {
               assertThat(r.getState()).isEqualTo(QueryState.FINISHED);
             });
 
-    queryService.deleteQuery(null, null, queryId);
+    queryService.deleteQuery(orga.getId(), repo.getId(), queryId);
     assertThat(storageProvider.getJobStats().getSucceeded()).isEqualTo(0);
   }
 
