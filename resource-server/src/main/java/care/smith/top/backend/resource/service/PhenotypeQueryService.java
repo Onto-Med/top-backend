@@ -40,7 +40,7 @@ public class PhenotypeQueryService {
   @Value("${top.phenotyping.data-source-config-dir:config/data_sources}")
   private String dataSourceConfigDir;
 
-  public void deleteQuery(UUID queryId) {
+  public void deleteQuery(String organisationId, String repositoryId, UUID queryId) {
     Job job = storageProvider.getJobById(queryId);
     if (job == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
 
@@ -48,7 +48,7 @@ public class PhenotypeQueryService {
     // TODO: cleanup stored query results
   }
 
-  public UUID enqueueQuery(Query query) {
+  public UUID enqueueQuery(String organisationId, String repositoryId, Query query) {
     if (query == null
         || query.getId() == null
         || query.getConfiguration() == null
@@ -97,7 +97,7 @@ public class PhenotypeQueryService {
         .collect(Collectors.toList());
   }
 
-  public QueryResult getQueryResult(UUID queryId) {
+  public QueryResult getQueryResult(String organisationId, String repositoryId, UUID queryId) {
     Job job = storageProvider.getJobById(queryId);
     if (job == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
 

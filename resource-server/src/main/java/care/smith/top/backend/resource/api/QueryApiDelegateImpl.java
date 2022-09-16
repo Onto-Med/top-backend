@@ -18,18 +18,21 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
   @Override
   public ResponseEntity<Void> deleteQuery(
       String organisationId, String repositoryId, UUID queryId) {
-    phenotypeQueryService.deleteQuery(queryId);
+    phenotypeQueryService.deleteQuery(organisationId, repositoryId, queryId);
     return new ResponseEntity<>(HttpStatus.NO_CONTENT);
   }
 
   @Override
-  public ResponseEntity<Query> enqueueQuery(String organisationId, String repositoryId) {
-    return QueryApiDelegate.super.enqueueQuery(organisationId, repositoryId);
+  public ResponseEntity<Query> enqueueQuery(
+      String organisationId, String repositoryId, Query query) {
+    phenotypeQueryService.enqueueQuery(organisationId, repositoryId, query);
+    return new ResponseEntity<>(query, HttpStatus.CREATED);
   }
 
   @Override
   public ResponseEntity<QueryResult> getQueryResult(
       String organisationId, String repositoryId, UUID queryId) {
-    return QueryApiDelegate.super.getQueryResult(organisationId, repositoryId, queryId);
+    return new ResponseEntity<>(
+        phenotypeQueryService.getQueryResult(organisationId, repositoryId, queryId), HttpStatus.OK);
   }
 }

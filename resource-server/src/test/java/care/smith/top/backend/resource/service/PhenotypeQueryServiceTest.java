@@ -4,7 +4,6 @@ import care.smith.top.backend.model.DataSource;
 import care.smith.top.backend.model.Query;
 import care.smith.top.backend.model.QueryConfiguration;
 import care.smith.top.backend.model.QueryState;
-import care.smith.top.top_phenotypic_query.result.ResultSet;
 import org.jobrunr.storage.StorageProvider;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -42,13 +41,13 @@ class PhenotypeQueryServiceTest {
                 new QueryConfiguration()
                     .addSourcesItem(new DataSource().id(dataSources.get(0).getId())));
 
-    UUID queryId = queryService.enqueueQuery(query);
+    UUID queryId = queryService.enqueueQuery(null, null, query);
     assertThat(queryId).isEqualTo(query.getId());
     await()
         .atMost(10, TimeUnit.SECONDS)
         .until(() -> storageProvider.getJobStats().getSucceeded() == 1);
 
-    assertThat(queryService.getQueryResult(queryId))
+    assertThat(queryService.getQueryResult(null, null, queryId))
         .satisfies(
             r -> {
               assertThat(r.getId()).isEqualTo(queryId);
@@ -58,6 +57,9 @@ class PhenotypeQueryServiceTest {
               assertThat(r.getCount()).isNotNull();
               assertThat(r.getState()).isEqualTo(QueryState.FINISHED);
             });
+
+    queryService.deleteQuery(null, null, queryId);
+    assertThat(storageProvider.getJobStats().getSucceeded()).isEqualTo(0);
   }
 
   @Test
