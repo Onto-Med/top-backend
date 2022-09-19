@@ -1,12 +1,15 @@
 package care.smith.top.backend.repository;
 
+import care.smith.top.backend.model.DataType;
 import care.smith.top.backend.model.Entity;
 import care.smith.top.backend.model.EntityType;
+import care.smith.top.backend.model.Repository;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.repository.query.Param;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -28,4 +31,32 @@ public interface EntityRepository extends PagingAndSortingRepository<Entity, Str
   Optional<Entity> findCurrentById(String id);
 
   Optional<Entity> getPrevious(Entity e);
+
+  Integer getNextVersion(Entity oldEntity);
+
+  Optional<Entity> getNext(Entity e);
+
+  void setCurrent(Entity entity);
+
+  Collection<Entity> getForks(String entityId);
+
+  Optional<Entity> findOrigin(Entity entity);
+
+  Collection<Entity> findAllByRepositoryIdAndNameAndEntityTypeAndDataTypeAndPrimary(
+      String repositoryId,
+      String name,
+      List<EntityType> type,
+      DataType dataType,
+      boolean primary,
+      PageRequest pageRequest);
+
+  void setPreviousVersion(Entity entity, Entity prev);
+
+  Optional<Entity> getFork(Entity origin, Repository repository);
+
+  boolean equalCurrentVersions(String entityId1, String entityId2);
+
+  void setFork(String forkId, String originId);
+
+  void setEquivalentVersion(Entity fork, Entity origin);
 }

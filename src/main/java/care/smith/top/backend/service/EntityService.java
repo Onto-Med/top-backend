@@ -204,28 +204,18 @@ public class EntityService implements ContentService {
     List<Entity> results = new ArrayList<>();
     for (Entity origin : origins) {
       String oldId = origin.getId();
-      Optional<Entity> fork = entityRepository.getFork(origin.getId(), destinationRepo.getId());
+      Optional<Entity> fork = entityRepository.getFork(origin, destinationRepo);
 
       if (!forkingInstruction.isUpdate() && fork.isPresent()) continue;
 
       if (forkingInstruction.isUpdate() && fork.isPresent()) {
         if (entityRepository.equalCurrentVersions(fork.get().getId(), origin.getId())) continue;
         origin.setId(fork.get().getId());
-        origin.setVersion((int) (fork.get().getNodeVersion() + 1));
+        origin.setVersion(fork.get().getVersion() + 1);
         if (origin instanceof Phenotype) {
-          ((Phenotype) origin)
-              .setSuperCategories(
-                  fork.get().getSuperClassRelations().stream()
-                      .map(f -> f.getSuperclass().getId())
-                      .map(f -> (Category) new Category().id(f))
-                      .collect(Collectors.toList()));
+          ((Phenotype) origin).setSuperCategories(((Phenotype) fork.get()).getSuperCategories());
         } else if (origin instanceof Category) {
-          ((Category) origin)
-              .setSuperCategories(
-                  fork.get().getSuperClassRelations().stream()
-                      .map(f -> f.getSuperclass().getId())
-                      .map(f -> (Category) new Category().id(f))
-                      .collect(Collectors.toList()));
+          ((Category) origin).setSuperCategories(((Category) fork.get()).getSuperCategories());
         }
       }
 
@@ -239,9 +229,8 @@ public class EntityService implements ContentService {
       if (origin instanceof Phenotype) {
         Phenotype phenotype = (Phenotype) origin;
         if (phenotype.getSuperPhenotype() != null) {
-          Optional<Class> superClass =
-              entityRepository.getFork(
-                  phenotype.getSuperPhenotype().getId(), destinationRepo.getId());
+          Optional<Entity> superClass =
+              entityRepository.getFork(phenotype.getSuperPhenotype(), destinationRepo);
           if (superClass.isEmpty()) continue;
           phenotype.setSuperPhenotype((Phenotype) new Phenotype().id(superClass.get().getId()));
         }
@@ -261,11 +250,10 @@ public class EntityService implements ContentService {
                 null));
       }
 
-      ClassVersion forkVersion =
-          classVersionRepository.findCurrentByClassId(origin.getId()).orElseThrow();
-      classVersionRepository
-          .findCurrentByClassId(oldId)
-          .ifPresent(cv -> classVersionRepository.setEquivalentVersion(forkVersion, cv));
+      Entity forkVersion = entityRepository.findCurrentById(origin.getId()).orElseThrow();
+      entityRepository
+          .findCurrentById(oldId)
+          .ifPresent(e -> entityRepository.setEquivalentVersion(forkVersion, e));
     }
 
     return results;
@@ -280,46 +268,39 @@ public class EntityService implements ContentService {
         entityRepository
             .findByIdAndRepositoryId(id, repository.getId())
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-    deleteClass(entity);
+    entityRepository.delete(entity);
   }
 
   @Transactional
   public void deleteVersion(
       String organisationId, String repositoryId, String id, Integer version) {
     Repository repository = getRepository(organisationId, repositoryId);
-    Class cls =
+    Entity entity =
         entityRepository
-            .findByIdAndRepositoryId(id, repository.getId())
+            .findByIdAndRepositoryIdAndVersion(id, repository.getId(), version)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-    ClassVersion classVersion =
-        classVersionRepository
-            .findByClassIdAndVersion(cls.getId(), version)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-
-    ClassVersion currentVersion =
-        classVersionRepository
-            .findCurrentByClassId(cls.getId())
+    Entity currentVersion =
+        entityRepository
+            .findCurrentById(id)
             .orElseThrow(
                 () ->
                     new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Class does not have a current version."));
 
-    if (classVersion.equals(currentVersion))
+    if (entity.equals(currentVersion))
       throw new ResponseStatusException(
           HttpStatus.NOT_ACCEPTABLE, "Current version of a class cannot be deleted.");
 
-    classVersionRepository
-        .getNext(classVersion)
+    entityRepository
+        .getNext(entity)
         .ifPresent(
             next ->
-                classVersionRepository
-                    .getPrevious(classVersion)
-                    .ifPresent(cv -> classVersionRepository.setPreviousVersion(next, cv)));
+                entityRepository
+                    .getPrevious(entity)
+                    .ifPresent(prev -> entityRepository.setPreviousVersion(next, prev)));
 
-    deleteAnnotations(classVersion);
-    expressionRepository.deleteAll(classVersion.getExpressions());
-    classVersionRepository.delete(classVersion);
+    entityRepository.delete(entity);
   }
 
   public StringWriter exportEntity(
@@ -359,21 +340,17 @@ public class EntityService implements ContentService {
   public List<Entity> getEntities(
       List<String> include, String name, List<EntityType> type, DataType dataType, Integer page) {
     int requestedPage = page != null ? page - 1 : 0;
-    return classVersionRepository
-        .findAll(
-            findEntitiesMatchingConditionStatement(null, name, type, dataType, true, requestedPage),
-            ClassVersion.class)
+    return entityRepository
+        .findAllByRepositoryIdAndNameAndEntityTypeAndDataTypeAndPrimary(
+            null, name, type, dataType, true, PageRequest.of(requestedPage, pageSize))
         .parallelStream()
         .flatMap(
-            cv -> {
-              String repositoryId = cv.getaClass().getRepositoryId();
-              Entity entity = classVersionToEntity(cv, repositoryId);
+            entity -> {
               Stream<Entity> result = Stream.of(entity);
               if (type == null
                   || type.contains(ApiModelMapper.toRestrictedEntityType(entity.getEntityType())))
                 result =
-                    Stream.concat(
-                        result, entityRepository.findBySuperPhenotypeId(cv.getaClass().getId()));
+                    Stream.concat(result, entityRepository.findBySuperPhenotypeId(entity.getId()));
               return result;
             })
         .filter(distinctByKey(Entity::getId))
@@ -395,19 +372,16 @@ public class EntityService implements ContentService {
     getRepository(organisationId, repositoryId);
     int requestedPage = page != null ? page - 1 : 0;
     return entityRepository
-        .findAll(
-            findEntitiesMatchingConditionStatement(
-                repositoryId, name, type, dataType, false, requestedPage))
+        .findAllByRepositoryIdAndNameAndEntityTypeAndDataTypeAndPrimary(
+            repositoryId, name, type, dataType, false, PageRequest.of(requestedPage, pageSize))
         .parallelStream()
         .flatMap(
-            cv -> {
-              Entity entity = classVersionToEntity(cv, repositoryId);
+            entity -> {
               Stream<Entity> result = Stream.of(entity);
               if (type == null
                   || type.contains(ApiModelMapper.toRestrictedEntityType(entity.getEntityType())))
                 result =
-                    Stream.concat(
-                        result, entityRepository.findBySuperPhenotypeId(cv.getaClass().getId()));
+                    Stream.concat(result, entityRepository.findBySuperPhenotypeId(entity.getId()));
               return result;
             })
         .filter(distinctByKey(Entity::getId))
@@ -417,21 +391,16 @@ public class EntityService implements ContentService {
   public ForkingStats getForkingStats(
       String organisationId, String repositoryId, String id, List<String> include) {
     Repository repository = getRepository(organisationId, repositoryId);
-    Class cls =
+    Entity entity =
         entityRepository
             .findByIdAndRepositoryId(id, repository.getId())
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
     ForkingStats forkingStats = new ForkingStats();
 
-    forkingStats.setForks(
-        entityRepository.getForks(cls.getId()).stream()
-            .map(f -> classToEntity(f, repository.getId()))
-            .collect(Collectors.toList()));
+    forkingStats.setForks(new ArrayList<>(entityRepository.getForks(entity.getId())));
 
-    entityRepository
-        .findOrigin(cls)
-        .ifPresent(o -> forkingStats.origin(classToEntity(o, o.getRepositoryId())));
+    entityRepository.findOrigin(entity).ifPresent(forkingStats::origin);
 
     return forkingStats;
   }
@@ -498,65 +467,17 @@ public class EntityService implements ContentService {
   public Entity updateEntityById(
       String organisationId, String repositoryId, String id, Entity entity, List<String> include) {
     Repository repository = getRepository(organisationId, repositoryId);
-    Entity oldEntity = entityRepository
+    Entity oldEntity =
+        entityRepository
             .findByIdAndRepositoryId(id, repository.getId())
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-    if (!Objects.equals(oldEntity.getId(), entity.getId()) || oldEntity.getEntityType() != entity.getEntityType())
+    if (!Objects.equals(oldEntity.getId(), entity.getId())
+        || oldEntity.getEntityType() != entity.getEntityType())
       throw new ResponseStatusException(HttpStatus.CONFLICT);
 
     entity.setVersion(entityRepository.getNextVersion(oldEntity));
     return entityRepository.save(entity);
-  }
-
-  private void deleteClass(Class cls) {
-    EntityType entityType =
-        EntityType.fromValue(
-            cls.getTypes().stream()
-                .findFirst()
-                .orElseThrow(
-                    () ->
-                        new ResponseStatusException(
-                            HttpStatus.INTERNAL_SERVER_ERROR, "Entity has no entityType!")));
-
-    if (ApiModelMapper.isCategory(entityType)) {
-      entityRepository.saveAll(
-          entityRepository
-              .findSubclasses(cls.getId(), cls.getRepositoryId())
-              .map(c -> entityRepository.findById(c.getId()).orElse(null))
-              .filter(Objects::nonNull)
-              .peek(
-                  c ->
-                      c.setSuperClassRelations(
-                              c.getSuperClassRelations().stream()
-                                  .filter(
-                                      r ->
-                                          !r.getOwnerId().equals(cls.getRepositoryId())
-                                              || !r.getSuperclass().getId().equals(cls.getId()))
-                                  .collect(Collectors.toSet()))
-                          .addSuperClassRelations(
-                              cls.getSuperClassRelations().stream()
-                                  .map(ClassRelation::clone)
-                                  .collect(Collectors.toSet())))
-              .collect(Collectors.toList()));
-    }
-
-    if (ApiModelMapper.isAbstract(entityType))
-      entityRepository
-          .findSubclasses(cls.getId(), cls.getRepositoryId())
-          .forEach(this::deleteClass);
-
-    classVersionRepository.findAllByClassId(cls.getId()).forEach(this::deleteVersion);
-    annotationRepository.deleteAll(
-        annotationRepository.findAllByClassValueAndProperty(cls, EXPRESSION_PROPERTY));
-    entityRepository.delete(cls);
-  }
-
-  @Transactional
-  private void deleteVersion(ClassVersion classVersion) {
-    deleteAnnotations(classVersion);
-    expressionRepository.deleteAll(classVersion.getExpressions());
-    classVersionRepository.delete(classVersion);
   }
 
   /**
