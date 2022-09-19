@@ -25,6 +25,7 @@ class PhenotypeQueryServiceTest extends Neo4jTest {
   @Autowired StorageProvider storageProvider;
   @Autowired OrganisationService organisationService;
   @Autowired RepositoryService repositoryService;
+  @Autowired EntityService entityService;
 
   @BeforeAll
   static void setup() {
@@ -37,25 +38,40 @@ class PhenotypeQueryServiceTest extends Neo4jTest {
   @Test
   void executeQuery() {
     Organisation orga = organisationService.createOrganisation(new Organisation().id("orga_1"));
-    Repository repo =
+    Repository repo1 =
         repositoryService.createRepository(orga.getId(), new Repository().id("repo_1"), null);
+    Repository repo2 =
+        repositoryService.createRepository(orga.getId(), new Repository().id("repo_2"), null);
+    Phenotype phenotype1 =
+        (Phenotype)
+            entityService.createEntity(
+                orga.getId(),
+                repo1.getId(),
+                new Entity().id("entity_1").entityType(EntityType.SINGLE_PHENOTYPE));
+
     Query query =
         new Query()
             .id(UUID.randomUUID())
             ._configuration(
                 new QueryConfiguration()
-                    .addSourcesItem(new DataSource().id(dataSources.get(0).getId())));
+                    .addSourcesItem(new DataSource().id(dataSources.get(0).getId())))
+            .addCriteriaItem(new QueryCriterion().subject(phenotype1));
 
     assertThatThrownBy(() -> queryService.enqueueQuery(orga.getId(), "invalid", query))
         .isInstanceOf(ResponseStatusException.class)
         .hasFieldOrPropertyWithValue("status", HttpStatus.NOT_FOUND);
 
-    assertThat(queryService.enqueueQuery(orga.getId(), repo.getId(), query)).isNotNull();
+    assertThat(queryService.enqueueQuery(orga.getId(), repo1.getId(), query)).isNotNull();
     await()
         .atMost(100, TimeUnit.SECONDS)
         .until(() -> storageProvider.getJobStats().getSucceeded() == 1);
 
-    assertThat(queryService.getQueryResult(orga.getId(), repo.getId(), query.getId()))
+    assertThatThrownBy(
+            () -> queryService.getQueryResult(orga.getId(), repo2.getId(), query.getId()))
+        .isInstanceOf(ResponseStatusException.class)
+        .hasFieldOrPropertyWithValue("status", HttpStatus.NOT_FOUND);
+
+    assertThat(queryService.getQueryResult(orga.getId(), repo1.getId(), query.getId()))
         .satisfies(
             r -> {
               assertThat(r.getId()).isEqualTo(query.getId());
@@ -66,7 +82,7 @@ class PhenotypeQueryServiceTest extends Neo4jTest {
               assertThat(r.getState()).isEqualTo(QueryState.FINISHED);
             });
 
-    queryService.deleteQuery(orga.getId(), repo.getId(), query.getId());
+    queryService.deleteQuery(orga.getId(), repo1.getId(), query.getId());
     assertThat(storageProvider.getJobStats().getSucceeded()).isEqualTo(0);
   }
 

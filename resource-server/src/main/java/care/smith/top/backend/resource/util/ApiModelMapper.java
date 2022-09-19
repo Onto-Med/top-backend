@@ -10,6 +10,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.ZoneOffset;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -52,6 +53,14 @@ public abstract class ApiModelMapper {
   public static boolean isRestricted(EntityType entityType) {
     return Arrays.asList(EntityType.SINGLE_RESTRICTION, EntityType.COMPOSITE_RESTRICTION)
         .contains(entityType);
+  }
+
+  public static List<EntityType> phenotypeTypes() {
+    return Arrays.asList(
+        EntityType.COMPOSITE_PHENOTYPE,
+        EntityType.COMPOSITE_RESTRICTION,
+        EntityType.SINGLE_PHENOTYPE,
+        EntityType.SINGLE_RESTRICTION);
   }
 
   public static boolean isRestricted(Entity entity) {

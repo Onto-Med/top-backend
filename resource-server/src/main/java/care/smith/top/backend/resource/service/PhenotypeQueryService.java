@@ -1,11 +1,10 @@
 package care.smith.top.backend.resource.service;
 
-import care.smith.top.backend.model.DataSource;
-import care.smith.top.backend.model.Query;
-import care.smith.top.backend.model.QueryResult;
-import care.smith.top.backend.model.QueryState;
+import care.smith.top.backend.model.*;
+import care.smith.top.backend.resource.util.ApiModelMapper;
 import care.smith.top.top_phenotypic_query.adapter.config.DataAdapterConfig;
 import org.jobrunr.jobs.Job;
+import org.jobrunr.jobs.context.JobContext;
 import org.jobrunr.jobs.states.StateName;
 import org.jobrunr.scheduling.JobScheduler;
 import org.jobrunr.storage.StorageProvider;
@@ -20,6 +19,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.ZoneOffset;
 import java.util.*;
+import java.util.function.Function;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -34,6 +34,7 @@ public class PhenotypeQueryService {
   @Inject private StorageProvider storageProvider;
 
   @Autowired private RepositoryService repositoryService;
+  @Autowired private EntityService entityService;
 
   @Value("${top.phenotyping.data-source-config-dir:config/data_sources}")
   private String dataSourceConfigDir;
@@ -43,6 +44,9 @@ public class PhenotypeQueryService {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND);
 
     Job job = storageProvider.getJobById(queryId);
+    if (!repositoryId.equals(job.getJobDetails().getJobParameters().get(1).getObject()))
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+
     storageProvider.deletePermanently(job.getId());
     // TODO: cleanup stored query results
   }
@@ -67,14 +71,34 @@ public class PhenotypeQueryService {
 
     jobScheduler
         .enqueue(
-            query.getId(),
-            () -> {
-              // TODO: call method from top-phenotypic-query package
-              System.out.println("Enqueueing query job.");
-            })
+            query.getId(), () -> this.executeQuery(organisationId, repositoryId, query.getId()))
         .asUUID();
 
     return getQueryResult(organisationId, repositoryId, query.getId());
+  }
+
+  @org.jobrunr.jobs.annotations.Job(name = "Phenotypic query", retries = 0)
+  public void executeQuery(String organisationId, String repositoryId, UUID queryId) {
+    LOGGER.info(
+        String.format(
+            "Running phenotypic query '%s' for repository '%s'...", queryId, repositoryId));
+
+    DependentSubjectsMap phenotypes = new DependentSubjectsMap();
+    phenotypes.putAll(
+        entityService
+            .getEntitiesByRepositoryId(
+                organisationId,
+                repositoryId,
+                null,
+                null,
+                ApiModelMapper.phenotypeTypes(),
+                null,
+                null)
+            .stream()
+            .map(p -> (Phenotype) p)
+            .collect(Collectors.toMap(Phenotype::getId, Function.identity())));
+    // query.dependentSubjects(phenotypes);
+    // TODO: call method from top-phenotypic-query package
   }
 
   public Optional<DataAdapterConfig> getDataAdapterConfig(String id) {
@@ -82,31 +106,13 @@ public class PhenotypeQueryService {
     return getDataAdapterConfigs().stream().filter(a -> id.equals(a.getId())).findFirst();
   }
 
-  public List<DataAdapterConfig> getDataAdapterConfigs() {
-    try (Stream<Path> paths = Files.list(Path.of(dataSourceConfigDir))) {
-      return paths
-          .map(this::toDataAdapterConfig)
-          .filter(Objects::nonNull)
-          .sorted(Comparator.comparing(DataAdapterConfig::getId))
-          .collect(Collectors.toList());
-    } catch (Exception ignored) {
-    }
-    return Collections.emptyList();
-  }
-
-  public List<DataSource> getDataSources() {
-    return getDataAdapterConfigs().stream()
-        .map(a -> new DataSource().id(a.getId()).title(a.getId().replace('_', ' ')))
-        .sorted(Comparator.comparing(DataSource::getId))
-        .collect(Collectors.toList());
-  }
-
   public QueryResult getQueryResult(String organisationId, String repositoryId, UUID queryId) {
     if (!repositoryService.repositoryExists(organisationId, repositoryId))
       throw new ResponseStatusException(HttpStatus.NOT_FOUND);
 
     Job job = storageProvider.getJobById(queryId);
-    if (job == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+    if (!repositoryId.equals(job.getJobDetails().getJobParameters().get(1).getObject()))
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND);
 
     QueryResult queryResult =
         new QueryResult()
@@ -121,6 +127,27 @@ public class PhenotypeQueryService {
       queryResult.finishedAt(job.getUpdatedAt().atOffset(ZoneOffset.UTC));
     }
     return queryResult;
+  }
+
+  public List<DataAdapterConfig> getDataAdapterConfigs() {
+    try (Stream<Path> paths = Files.list(Path.of(dataSourceConfigDir))) {
+      return paths
+          .map(this::toDataAdapterConfig)
+          .filter(Objects::nonNull)
+          .sorted(Comparator.comparing(DataAdapterConfig::getId))
+          .collect(Collectors.toList());
+    } catch (Exception e) {
+      LOGGER.warning(
+          String.format("Could not load data adapter configs from dir '%s'.", dataSourceConfigDir));
+    }
+    return Collections.emptyList();
+  }
+
+  public List<DataSource> getDataSources() {
+    return getDataAdapterConfigs().stream()
+        .map(a -> new DataSource().id(a.getId()).title(a.getId().replace('_', ' ')))
+        .sorted(Comparator.comparing(DataSource::getId))
+        .collect(Collectors.toList());
   }
 
   private QueryState getState(Job job) {
