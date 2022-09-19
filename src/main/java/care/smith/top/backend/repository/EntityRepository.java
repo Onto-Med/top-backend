@@ -6,13 +6,13 @@ import care.smith.top.backend.model.EntityType;
 import care.smith.top.backend.model.Repository;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.repository.PagingAndSortingRepository;
-import org.springframework.data.repository.query.Param;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+@org.springframework.stereotype.Repository
 public interface EntityRepository extends PagingAndSortingRepository<Entity, String> {
   long countByEntityType(EntityType[] entityTypes);
 
