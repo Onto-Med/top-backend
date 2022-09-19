@@ -70,18 +70,18 @@ public class PhenotypeQueryService {
     if (configs.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE);
 
     jobScheduler
-        .enqueue(query.getId(), () -> this.executeQuery(organisationId, repositoryId, query))
+        .enqueue(
+            query.getId(), () -> this.executeQuery(organisationId, repositoryId, query.getId()))
         .asUUID();
 
     return getQueryResult(organisationId, repositoryId, query.getId());
   }
 
   @org.jobrunr.jobs.annotations.Job(name = "Phenotypic query", retries = 0)
-  public void executeQuery(String organisationId, String repositoryId, Query query) {
+  public void executeQuery(String organisationId, String repositoryId, UUID queryId) {
     LOGGER.info(
         String.format(
-            "Running phenotypic query '%s' for repository '%s'...",
-            query.getName() != null ? query.getName() : query.getId(), repositoryId));
+            "Running phenotypic query '%s' for repository '%s'...", queryId, repositoryId));
 
     DependentSubjectsMap phenotypes = new DependentSubjectsMap();
     phenotypes.putAll(
@@ -97,7 +97,7 @@ public class PhenotypeQueryService {
             .stream()
             .map(p -> (Phenotype) p)
             .collect(Collectors.toMap(Phenotype::getId, Function.identity())));
-    query.dependentSubjects(phenotypes);
+    // query.dependentSubjects(phenotypes);
     // TODO: call method from top-phenotypic-query package
   }
 
@@ -137,7 +137,8 @@ public class PhenotypeQueryService {
           .sorted(Comparator.comparing(DataAdapterConfig::getId))
           .collect(Collectors.toList());
     } catch (Exception e) {
-      LOGGER.warning(String.format("Could not load data adapter configs from dir '%s'.", dataSourceConfigDir));
+      LOGGER.warning(
+          String.format("Could not load data adapter configs from dir '%s'.", dataSourceConfigDir));
     }
     return Collections.emptyList();
   }
