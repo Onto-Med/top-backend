@@ -136,7 +136,8 @@ public class PhenotypeQueryService {
           .filter(Objects::nonNull)
           .sorted(Comparator.comparing(DataAdapterConfig::getId))
           .collect(Collectors.toList());
-    } catch (Exception ignored) {
+    } catch (Exception e) {
+      LOGGER.warning(String.format("Could not load data adapter configs from dir '%s'.", dataSourceConfigDir));
     }
     return Collections.emptyList();
   }
