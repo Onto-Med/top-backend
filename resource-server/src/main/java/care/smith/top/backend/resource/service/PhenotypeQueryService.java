@@ -28,7 +28,6 @@ import java.util.stream.Stream;
 public class PhenotypeQueryService {
   private static final Logger LOGGER = Logger.getLogger(PhenotypeQueryService.class.getName());
 
-  // TODO: Check if query belongs to repository.
   @Inject private JobScheduler jobScheduler;
 
   @Inject private StorageProvider storageProvider;
