@@ -25,6 +25,7 @@ class PhenotypeQueryServiceTest extends Neo4jTest {
   @Autowired StorageProvider storageProvider;
   @Autowired OrganisationService organisationService;
   @Autowired RepositoryService repositoryService;
+  @Autowired EntityService entityService;
 
   @BeforeAll
   static void setup() {
@@ -41,13 +42,20 @@ class PhenotypeQueryServiceTest extends Neo4jTest {
         repositoryService.createRepository(orga.getId(), new Repository().id("repo_1"), null);
     Repository repo2 =
         repositoryService.createRepository(orga.getId(), new Repository().id("repo_2"), null);
+    Phenotype phenotype1 =
+        (Phenotype)
+            entityService.createEntity(
+                orga.getId(),
+                repo1.getId(),
+                new Entity().id("entity_1").entityType(EntityType.SINGLE_PHENOTYPE));
 
     Query query =
         new Query()
             .id(UUID.randomUUID())
             ._configuration(
                 new QueryConfiguration()
-                    .addSourcesItem(new DataSource().id(dataSources.get(0).getId())));
+                    .addSourcesItem(new DataSource().id(dataSources.get(0).getId())))
+            .addCriteriaItem(new QueryCriterion().subject(phenotype1));
 
     assertThatThrownBy(() -> queryService.enqueueQuery(orga.getId(), "invalid", query))
         .isInstanceOf(ResponseStatusException.class)
