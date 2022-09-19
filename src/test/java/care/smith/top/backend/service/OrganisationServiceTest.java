@@ -1,10 +1,7 @@
 package care.smith.top.backend.service;
 
 import care.smith.top.backend.model.Organisation;
-import care.smith.top.backend.neo4j_ontology_access.repository.DirectoryRepository;
-import care.smith.top.backend.resource.api.OrganisationApiDelegateImpl;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -12,10 +9,7 @@ import java.util.Arrays;
 
 import static org.assertj.core.api.Assertions.*;
 
-class OrganisationServiceTest extends Neo4jTest {
-  @Autowired OrganisationApiDelegateImpl organisationApiDelegate;
-  @Autowired OrganisationService organisationService;
-  @Autowired DirectoryRepository directoryRepository;
+class OrganisationServiceTest extends AbstractTest {
 
   @Test
   void createOrganisation() {
@@ -80,15 +74,12 @@ class OrganisationServiceTest extends Neo4jTest {
     Arrays.asList(subOrganisation1.getId(), subOrganisation2.getId())
         .forEach(
             id ->
-                assertThat(directoryRepository.findById(id))
+                assertThat(organisationRepository.findById(id))
                     .isPresent()
                     .hasValueSatisfying(
-                        d ->
-                            assertThat(d.getSuperDirectories())
-                                .isNotEmpty()
-                                .anyMatch(sd -> sd.getId().equals(superOrganisation.getId()))
-                                .size()
-                                .isEqualTo(1)));
+                        o ->
+                            assertThat(o.getSuperOrganisation().getId())
+                                .isEqualTo(superOrganisation.getId())));
   }
 
   @Test
@@ -141,14 +132,12 @@ class OrganisationServiceTest extends Neo4jTest {
                   .hasFieldOrPropertyWithValue("id", superOrganisation.getId());
             });
 
-    assertThat(directoryRepository.findById(subOrganisation2.getId()))
+    assertThat(organisationRepository.findById(subOrganisation2.getId()))
         .isPresent()
         .hasValueSatisfying(
-            d -> {
-              assertThat(d.getName()).isNull();
-              assertThat(d.getSuperDirectories())
-                  .isNotEmpty()
-                  .anyMatch(sd -> sd.getId().equals(superOrganisation.getId()));
+            o -> {
+              assertThat(o.getName()).isNull();
+              assertThat(o.getSuperOrganisation().getId()).isEqualTo(superOrganisation.getId());
             });
   }
 
@@ -164,10 +153,10 @@ class OrganisationServiceTest extends Neo4jTest {
     assertThatCode(() -> organisationService.deleteOrganisationById(superOrganisation.getId()))
         .doesNotThrowAnyException();
 
-    assertThat(directoryRepository.findById(superOrganisation.getId())).isEmpty();
-    assertThat(directoryRepository.findById(subOrganisation.getId()))
+    assertThat(organisationRepository.findById(superOrganisation.getId())).isEmpty();
+    assertThat(organisationRepository.findById(subOrganisation.getId()))
         .isPresent()
-        .hasValueSatisfying(d -> assertThat(d.getSuperDirectories()).size().isEqualTo(0));
+        .hasValueSatisfying(o -> assertThat(o.getSuperOrganisation()).isNull());
   }
 
   @Test

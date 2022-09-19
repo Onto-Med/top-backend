@@ -1,10 +1,7 @@
 package care.smith.top.backend.service;
 
 import care.smith.top.backend.model.*;
-import care.smith.top.backend.neo4j_ontology_access.model.Class;
-import care.smith.top.backend.neo4j_ontology_access.model.ClassVersion;
-import care.smith.top.backend.neo4j_ontology_access.repository.ClassRepository;
-import care.smith.top.backend.neo4j_ontology_access.repository.ClassVersionRepository;
+import care.smith.top.backend.repository.EntityRepository;
 import care.smith.top.simple_onto_api.calculator.functions.bool.Not;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,13 +17,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.*;
 
-class EntityServiceTest extends Neo4jTest {
-  @Autowired OrganisationService organisationService;
-  @Autowired RepositoryService repositoryService;
-  @Autowired EntityService entityService;
-  @Autowired ClassRepository classRepository;
-  @Autowired ClassVersionRepository classVersionRepository;
-
+class EntityServiceTest extends AbstractTest {
   @Test
   void getForks() {
     Organisation organisation =
@@ -41,24 +32,10 @@ class EntityServiceTest extends Neo4jTest {
         repositoryService.createRepository(
             organisation.getId(), new Repository().id("repo3"), null);
 
-    Class origin =
-        new Class()
-            .setRepositoryId(repository1.getId())
-            .setTypes(Collections.singleton(EntityType.SINGLE_PHENOTYPE.getValue()))
-            .setCurrentVersion(new ClassVersion().setVersion(1));
-    Class fork1 =
-        new Class()
-            .setForkedClass(origin)
-            .setRepositoryId(repository2.getId())
-            .setTypes(Collections.singleton(EntityType.SINGLE_PHENOTYPE.getValue()))
-            .setCurrentVersion(new ClassVersion().setVersion(1));
-    Class fork2 =
-        new Class()
-            .setForkedClass(origin)
-            .setRepositoryId(repository3.getId())
-            .setTypes(Collections.singleton(EntityType.SINGLE_PHENOTYPE.getValue()))
-            .setCurrentVersion(new ClassVersion().setVersion(1));
-    classRepository.saveAll(Arrays.asList(origin, fork1, fork2));
+    Entity origin = new Entity().repository(repository1).entityType(EntityType.SINGLE_PHENOTYPE);
+    Entity fork1 = new Entity().repository(repository2).entityType(EntityType.SINGLE_PHENOTYPE);
+    Entity fork2 = new Entity().repository(repository3).entityType(EntityType.SINGLE_PHENOTYPE);
+    entityRepository.saveAll(Arrays.asList(origin, fork1, fork2));
 
     assertThat(
             entityService.getForkingStats(
@@ -85,16 +62,6 @@ class EntityServiceTest extends Neo4jTest {
         repositoryService.createRepository(
             organisation.getId(), new Repository().id("http://loinc.org"), null);
 
-    Class code = classRepository.save(new Class("1234").setRepositoryId(codeRepository.getId()));
-
-    assertThat(code)
-        .isNotNull()
-        .satisfies(
-            c -> {
-              assertThat(c.getId()).isEqualTo("1234");
-              assertThat(c.getRepositoryId()).isEqualTo(codeRepository.getId());
-            });
-
     /* Create category */
     Category category = new Category();
     category
@@ -105,7 +72,7 @@ class EntityServiceTest extends Neo4jTest {
         .addSynonymsItem(new LocalisableText().text("Some synonym").lang("en"))
         .addCodesItem(
             new Code()
-                .code(code.getId())
+                .code("1234")
                 .codeSystem(new CodeSystem().uri(URI.create(codeRepository.getId()))));
 
     assertThatThrownBy(
@@ -275,9 +242,11 @@ class EntityServiceTest extends Neo4jTest {
             });
 
     assertThat(
-            classRepository.findByIdAndRepositoryId(abstractPhenotype.getId(), repository.getId()))
+            entityRepository.findByIdAndRepositoryId(abstractPhenotype.getId(), repository.getId()))
         .isPresent();
-    assertThat(classRepository.findSubclasses(abstractPhenotype.getId(), repository.getId()))
+    assertThat(
+            entityRepository.findAllByRepositoryIdAndSuperPhenotypeId(
+                repository.getId(), abstractPhenotype.getId()))
         .isNotEmpty()
         .size()
         .isEqualTo(2);
@@ -326,13 +295,9 @@ class EntityServiceTest extends Neo4jTest {
         .isInstanceOf(ResponseStatusException.class)
         .hasFieldOrPropertyWithValue("status", HttpStatus.NOT_FOUND);
 
-    assertThat(classVersionRepository.findCurrentByClassId(phenotype.getId()))
+    assertThat(entityRepository.findCurrentById(phenotype.getId()))
         .isPresent()
-        .hasValueSatisfying(
-            cv -> {
-              assertThat(cv.getaClass()).isNotNull();
-              assertThat(cv.getVersion()).isEqualTo(3);
-            });
+        .hasValueSatisfying(e -> assertThat(e.getVersion()).isEqualTo(3));
 
     // Delete
     assertThatCode(
@@ -341,13 +306,12 @@ class EntityServiceTest extends Neo4jTest {
                     organisation.getId(), repository.getId(), phenotype.getId(), 2))
         .doesNotThrowAnyException();
 
-    assertThat(classVersionRepository.findCurrentByClassId(phenotype.getId()))
+    assertThat(entityRepository.findCurrentById(phenotype.getId()))
         .isPresent()
         .hasValueSatisfying(
-            cv -> {
-              assertThat(cv.getaClass()).isNotNull();
-              assertThat(cv.getVersion()).isEqualTo(3);
-              assertThat(classVersionRepository.getPrevious(cv))
+            e -> {
+              assertThat(e.getVersion()).isEqualTo(3);
+              assertThat(entityRepository.getPrevious(e))
                   .isPresent()
                   .hasValueSatisfying(prev -> assertThat(prev.getVersion()).isEqualTo(1));
             });
@@ -657,8 +621,8 @@ class EntityServiceTest extends Neo4jTest {
         .isInstanceOf(ResponseStatusException.class)
         .hasFieldOrPropertyWithValue("status", HttpStatus.CONFLICT);
 
-    assertThat(classVersionRepository.findCurrentByClassId(phenotype.getId()))
+    assertThat(entityRepository.findCurrentById(phenotype.getId()))
         .isPresent()
-        .hasValueSatisfying(cv -> assertThat(cv.getVersion()).isEqualTo(3));
+        .hasValueSatisfying(e -> assertThat(e.getVersion()).isEqualTo(3));
   }
 }

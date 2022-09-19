@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Awaitility.await;
 
 @SpringBootTest
-class PhenotypeQueryServiceTest extends Neo4jTest {
+class PhenotypeQueryServiceTest extends AbstractTest {
   static List<DataSource> dataSources;
   @Autowired PhenotypeQueryService queryService;
   @Autowired StorageProvider storageProvider;

@@ -2,21 +2,13 @@ package care.smith.top.backend.service;
 
 import care.smith.top.backend.model.Organisation;
 import care.smith.top.backend.model.Repository;
-import care.smith.top.backend.neo4j_ontology_access.repository.DirectoryRepository;
-import care.smith.top.backend.neo4j_ontology_access.repository.RepositoryRepository;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import static org.assertj.core.api.Assertions.*;
 
-class RepositoryServiceTest extends Neo4jTest {
-  @Autowired RepositoryService repositoryService;
-  @Autowired OrganisationService organisationService;
-  @Autowired RepositoryRepository repositoryRepository;
-  @Autowired DirectoryRepository directoryRepository;
-
+class RepositoryServiceTest extends AbstractTest {
   @Test
   void createRepository() {
     Organisation organisation =
@@ -43,7 +35,7 @@ class RepositoryServiceTest extends Neo4jTest {
             });
 
     assertThat(
-            repositoryRepository.findByIdAndSuperDirectoryId(
+            repositoryRepository.findByIdAndOrganisationId(
                 repository.getId(), organisation.getId()))
         .isPresent();
 
@@ -64,10 +56,8 @@ class RepositoryServiceTest extends Neo4jTest {
             });
 
     assertThat(repositoryRepository.findAll())
-        .allMatch(
-            r ->
-                r.getSuperDirectories().stream()
-                    .allMatch(d -> d.getId().equals(organisation.getId())))
+        .map(Repository::getOrganisation)
+        .allMatch(o -> o.getId().equals(organisation.getId()))
         .size()
         .isEqualTo(2);
   }
@@ -93,21 +83,18 @@ class RepositoryServiceTest extends Neo4jTest {
         .doesNotThrowAnyException();
 
     assertThat(
-            repositoryRepository.findByIdAndSuperDirectoryId(
+            repositoryRepository.findByIdAndOrganisationId(
                 repository1.getId(), organisation.getId()))
         .isNotPresent();
 
-    assertThat(directoryRepository.findById(organisation.getId())).isPresent();
+    assertThat(organisationRepository.findById(organisation.getId())).isPresent();
 
     assertThat(
-            repositoryRepository.findByIdAndSuperDirectoryId(
+            repositoryRepository.findByIdAndOrganisationId(
                 repository2.getId(), organisation.getId()))
         .isPresent()
         .hasValueSatisfying(
-            r ->
-                assertThat(r.getSuperDirectories())
-                    .isNotEmpty()
-                    .allMatch(d -> d.getId().equals(organisation.getId())));
+            r -> assertThat(r.getOrganisation().getId()).isEqualTo(organisation.getId()));
   }
 
   @Test

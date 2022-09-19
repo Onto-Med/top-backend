@@ -24,4 +24,8 @@ public interface EntityRepository extends PagingAndSortingRepository<Entity, Str
 
   Optional<Entity> findByIdAndRepositoryIdAndVersion(
       String id, String repositoryId, Integer version);
+
+  Optional<Entity> findCurrentById(String id);
+
+  Optional<Entity> getPrevious(Entity e);
 }
