@@ -16,7 +16,7 @@ import java.util.stream.Stream;
 public interface EntityRepository extends PagingAndSortingRepository<Entity, String> {
   long countByEntityType(EntityType[] entityTypes);
 
-  Stream<Entity> findBySuperPhenotypeId(String superPhenotypeId);
+  Stream<Entity> findBySuperPhenotype(String superPhenotypeId);
 
   Collection<Entity> findAllByRepositoryIdAndSuperPhenotypeId(
       String repositoryId, String superPhenotypeId);
@@ -36,8 +36,6 @@ public interface EntityRepository extends PagingAndSortingRepository<Entity, Str
 
   void setCurrent(Entity entity);
 
-  Collection<Entity> getForks(String entityId);
-
   Optional<Entity> findOrigin(Entity entity);
 
   Collection<Entity> findAllByRepositoryIdAndNameAndEntityTypeAndDataTypeAndPrimary(
@@ -52,9 +50,5 @@ public interface EntityRepository extends PagingAndSortingRepository<Entity, Str
 
   Optional<Entity> getFork(Entity origin, Repository repository);
 
-  boolean equalCurrentVersions(String entityId1, String entityId2);
-
   void setFork(String forkId, String originId);
-
-  void setEquivalentVersion(Entity fork, Entity origin);
 }

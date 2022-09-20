@@ -1,13 +1,10 @@
 package care.smith.top.backend.service;
 
-import care.smith.top.backend.model.Expression;
 import care.smith.top.backend.model.*;
 import care.smith.top.backend.repository.EntityRepository;
 import care.smith.top.backend.repository.RepositoryRepository;
 import care.smith.top.backend.util.ApiModelMapper;
 import care.smith.top.phenotype2r.Phenotype2RConverter;
-import org.springframework.beans.PropertyAccessor;
-import org.springframework.beans.PropertyAccessorFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
@@ -22,8 +19,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.math.BigDecimal;
-import java.time.ZoneOffset;
 import java.util.Set;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -209,7 +204,8 @@ public class EntityService implements ContentService {
       if (!forkingInstruction.isUpdate() && fork.isPresent()) continue;
 
       if (forkingInstruction.isUpdate() && fork.isPresent()) {
-        if (entityRepository.equalCurrentVersions(fork.get().getId(), origin.getId())) continue;
+        if (fork.get().getEquivalentEntities().stream()
+            .anyMatch(e -> e.getId().equals(origin.getId()))) continue;
         origin.setId(fork.get().getId());
         origin.setVersion(fork.get().getVersion() + 1);
         if (origin instanceof Phenotype) {
@@ -253,7 +249,7 @@ public class EntityService implements ContentService {
       Entity forkVersion = entityRepository.findCurrentById(origin.getId()).orElseThrow();
       entityRepository
           .findCurrentById(oldId)
-          .ifPresent(e -> entityRepository.setEquivalentVersion(forkVersion, e));
+          .ifPresent(e -> e.addForksItem(forkVersion));
     }
 
     return results;
@@ -351,7 +347,7 @@ public class EntityService implements ContentService {
               if (type == null
                   || type.contains(ApiModelMapper.toRestrictedEntityType(entity.getEntityType())))
                 result =
-                    Stream.concat(result, entityRepository.findBySuperPhenotypeId(entity.getId()));
+                    Stream.concat(result, entityRepository.findBySuperPhenotype(entity.getId()));
               return result;
             })
         .filter(distinctByKey(Entity::getId))
@@ -382,7 +378,7 @@ public class EntityService implements ContentService {
               if (type == null
                   || type.contains(ApiModelMapper.toRestrictedEntityType(entity.getEntityType())))
                 result =
-                    Stream.concat(result, entityRepository.findBySuperPhenotypeId(entity.getId()));
+                    Stream.concat(result, entityRepository.findBySuperPhenotype(entity.getId()));
               return result;
             })
         .filter(distinctByKey(Entity::getId))
@@ -400,7 +396,7 @@ public class EntityService implements ContentService {
 
     ForkingStats forkingStats = new ForkingStats();
 
-    forkingStats.setForks(new ArrayList<>(entityRepository.getForks(entity.getId())));
+    forkingStats.setForks(entity.getForks());
 
     entityRepository.findOrigin(entity).ifPresent(forkingStats::origin);
 
@@ -410,7 +406,7 @@ public class EntityService implements ContentService {
   public List<Entity> getRestrictions(String ownerId, Phenotype abstractPhenotype) {
     if (!ApiModelMapper.isAbstract(abstractPhenotype)) return new ArrayList<>();
     return entityRepository
-        .findBySuperPhenotypeId(abstractPhenotype.getId())
+        .findBySuperPhenotype(abstractPhenotype.getId())
         .collect(Collectors.toList());
   }
 
@@ -430,7 +426,7 @@ public class EntityService implements ContentService {
   public List<Entity> getSubclasses(
       String organisationId, String repositoryId, String id, List<String> include) {
     getRepository(organisationId, repositoryId);
-    return entityRepository.findBySuperPhenotypeId(id).collect(Collectors.toList());
+    return entityRepository.findBySuperPhenotype(id).collect(Collectors.toList());
   }
 
   public List<Entity> getVersions(
