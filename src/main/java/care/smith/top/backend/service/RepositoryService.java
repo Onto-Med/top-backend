@@ -15,6 +15,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class RepositoryService implements ContentService {
@@ -63,9 +64,11 @@ public class RepositoryService implements ContentService {
       String organisationId, List<String> include, String name, Integer page) {
     int requestedPage = page == null ? 0 : page - 1;
     return repositoryRepository
-        .findByNameContainingAndOrganisationId(
-            name, organisationId, PageRequest.of(requestedPage, pageSize, Sort.by("r.name")))
-        .getContent();
+        .findByNameContainingIgnoreCase(
+            name, PageRequest.of(requestedPage, pageSize, Sort.by("r.name")))
+        .filter(r -> organisationId.equals(r.getOrganisation().getId()))
+        .stream()
+        .collect(Collectors.toList());
   }
 
   public care.smith.top.backend.model.Repository getRepository(
