@@ -31,7 +31,7 @@ public class InfrastructureConfig {
 
     LocalContainerEntityManagerFactoryBean factory = new LocalContainerEntityManagerFactoryBean();
     factory.setJpaVendorAdapter(vendorAdapter);
-    factory.setPackagesToScan(getClass().getPackage().getName());
+    factory.setPackagesToScan("care.smith.top.backend.model");
     factory.setDataSource(dataSource());
 
     return factory;
