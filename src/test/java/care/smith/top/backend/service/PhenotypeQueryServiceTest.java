@@ -52,9 +52,7 @@ class PhenotypeQueryServiceTest extends AbstractTest {
     Query query =
         new Query()
             .id(UUID.randomUUID())
-            ._configuration(
-                new QueryConfiguration()
-                    .addSourcesItem(new DataSource().id(dataSources.get(0).getId())))
+            .addDataSourcesItem(new DataSource().id(dataSources.get(0).getId()))
             .addCriteriaItem(new QueryCriterion().subject(phenotype1));
 
     assertThatThrownBy(() -> queryService.enqueueQuery(orga.getId(), "invalid", query))

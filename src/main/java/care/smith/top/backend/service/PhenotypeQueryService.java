@@ -57,13 +57,12 @@ public class PhenotypeQueryService {
 
     if (query == null
       || query.getId() == null
-      || query.getConfiguration() == null
-      || query.getConfiguration().getSources() == null
-      || query.getConfiguration().getSources().isEmpty())
+      || query.getDataSources() == null
+      || query.getDataSources().isEmpty())
       throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE);
 
     List<DataAdapterConfig> configs =
-      query.getConfiguration().getSources().stream()
+      query.getDataSources().stream()
         .map(s -> getDataAdapterConfig(s.getId()).orElse(null))
         .filter(Objects::nonNull)
         .collect(Collectors.toList());
