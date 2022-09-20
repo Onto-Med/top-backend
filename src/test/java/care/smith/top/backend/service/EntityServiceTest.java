@@ -241,9 +241,10 @@ class EntityServiceTest extends AbstractTest {
                       });
             });
 
-    assertThat(
-            entityRepository.findByIdAndRepositoryId(abstractPhenotype.getId(), repository.getId()))
-        .isPresent();
+    assertThat(entityRepository.findById(abstractPhenotype.getId()))
+        .isPresent()
+        .hasValueSatisfying(
+            e -> assertThat(e.getRepository().getId()).isEqualTo(repository.getId()));
     assertThat(
             entityRepository.findAllByRepositoryIdAndSuperPhenotypeId(
                 repository.getId(), abstractPhenotype.getId()))

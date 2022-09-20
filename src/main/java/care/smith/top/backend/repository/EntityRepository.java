@@ -16,8 +16,6 @@ import java.util.stream.Stream;
 public interface EntityRepository extends PagingAndSortingRepository<Entity, String> {
   long countByEntityType(EntityType[] entityTypes);
 
-  Optional<Entity> findByIdAndRepositoryId(String id, String repositoryId);
-
   Stream<Entity> findBySuperPhenotypeId(String superPhenotypeId);
 
   Collection<Entity> findAllByRepositoryIdAndSuperPhenotypeId(

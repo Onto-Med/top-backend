@@ -266,7 +266,8 @@ public class EntityService implements ContentService {
     Repository repository = getRepository(organisationId, repositoryId);
     Entity entity =
         entityRepository
-            .findByIdAndRepositoryId(id, repository.getId())
+            .findById(id)
+            .filter(e -> repository.getId().equals(e.getRepository().getId()))
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     entityRepository.delete(entity);
   }
@@ -393,7 +394,8 @@ public class EntityService implements ContentService {
     Repository repository = getRepository(organisationId, repositoryId);
     Entity entity =
         entityRepository
-            .findByIdAndRepositoryId(id, repository.getId())
+            .findById(id)
+            .filter(e -> repository.getId().equals(e.getRepository().getId()))
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
     ForkingStats forkingStats = new ForkingStats();
@@ -469,7 +471,8 @@ public class EntityService implements ContentService {
     Repository repository = getRepository(organisationId, repositoryId);
     Entity oldEntity =
         entityRepository
-            .findByIdAndRepositoryId(id, repository.getId())
+            .findById(id)
+            .filter(e -> repository.getId().equals(e.getRepository().getId()))
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
     if (!Objects.equals(oldEntity.getId(), entity.getId())
