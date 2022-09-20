@@ -8,5 +8,5 @@ import java.util.Collection;
 
 @Repository
 public interface OrganisationRepository extends PagingAndSortingRepository<Organisation, String> {
-  Collection<Organisation> findAllByNameOrDescription(String name, String description);
+  Collection<Organisation> findAllByNameOrDescriptionIsContainingIgnoreCase(String name, String description);
 }

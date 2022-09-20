@@ -66,6 +66,6 @@ public class OrganisationService implements ContentService {
   }
 
   public List<Organisation> getOrganisations(String name, Integer page, List<String> include) {
-    return new ArrayList<>(organisationRepository.findAllByNameOrDescription(name, null));
+    return new ArrayList<>(organisationRepository.findAllByNameOrDescriptionIsContainingIgnoreCase(name, null));
   }
 }
