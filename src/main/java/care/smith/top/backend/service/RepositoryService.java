@@ -76,7 +76,9 @@ public class RepositoryService implements ContentService {
   }
 
   public Optional<Repository> getRepository(String organisationId, String repositoryId) {
-    return repositoryRepository.findByIdAndOrganisationId(repositoryId, organisationId);
+    return repositoryRepository
+        .findById(repositoryId)
+        .filter(r -> organisationId.equals(r.getOrganisation().getId()));
   }
 
   public boolean repositoryExists(String organisationId, String repositoryId) {

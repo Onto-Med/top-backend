@@ -34,10 +34,10 @@ class RepositoryServiceTest extends AbstractTest {
                   .hasFieldOrPropertyWithValue("id", organisation.getId());
             });
 
-    assertThat(
-            repositoryRepository.findByIdAndOrganisationId(
-                repository.getId(), organisation.getId()))
-        .isPresent();
+    assertThat(repositoryRepository.findById(repository.getId()))
+        .isPresent()
+        .hasValueSatisfying(
+            r -> assertThat(r.getOrganisation().getId()).isEqualTo(organisation.getId()));
 
     assertThatThrownBy(
             () -> repositoryService.createRepository(organisation.getId(), repository, null))
@@ -82,16 +82,11 @@ class RepositoryServiceTest extends AbstractTest {
                 repositoryService.deleteRepository(repository1.getId(), organisation.getId(), null))
         .doesNotThrowAnyException();
 
-    assertThat(
-            repositoryRepository.findByIdAndOrganisationId(
-                repository1.getId(), organisation.getId()))
-        .isNotPresent();
+    assertThat(repositoryRepository.findById(repository1.getId())).isNotPresent();
 
     assertThat(organisationRepository.findById(organisation.getId())).isPresent();
 
-    assertThat(
-            repositoryRepository.findByIdAndOrganisationId(
-                repository2.getId(), organisation.getId()))
+    assertThat(repositoryRepository.findById(repository2.getId()))
         .isPresent()
         .hasValueSatisfying(
             r -> assertThat(r.getOrganisation().getId()).isEqualTo(organisation.getId()));

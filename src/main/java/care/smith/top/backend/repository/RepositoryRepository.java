@@ -5,12 +5,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
-import java.util.Optional;
-
 @org.springframework.stereotype.Repository
 public interface RepositoryRepository extends PagingAndSortingRepository<Repository, String> {
-  Optional<Repository> findByIdAndOrganisationId(String repositoryId, String organisationId);
-
   Slice<Repository> findByNameContainingIgnoreCase(String name, Pageable pageable);
 
   Slice<Repository> findByNameContainingAndOrganisationId(
