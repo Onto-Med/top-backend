@@ -247,9 +247,7 @@ public class EntityService implements ContentService {
       }
 
       Entity forkVersion = entityRepository.findCurrentById(origin.getId()).orElseThrow();
-      entityRepository
-          .findCurrentById(oldId)
-          .ifPresent(e -> e.addForksItem(forkVersion));
+      entityRepository.findCurrentById(oldId).ifPresent(e -> e.addForksItem(forkVersion));
     }
 
     return results;
@@ -274,8 +272,10 @@ public class EntityService implements ContentService {
     Repository repository = getRepository(organisationId, repositoryId);
     Entity entity =
         entityRepository
-            .findByIdAndRepositoryIdAndVersion(id, repository.getId(), version)
+            .findByIdAndVersion(id, version)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    if (!Objects.equals(entity.getRepository().getId(), repositoryId))
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND);
 
     Entity currentVersion =
         entityRepository
@@ -289,13 +289,11 @@ public class EntityService implements ContentService {
       throw new ResponseStatusException(
           HttpStatus.NOT_ACCEPTABLE, "Current version of a class cannot be deleted.");
 
-    entityRepository
-        .getNext(entity)
-        .ifPresent(
-            next ->
-                entityRepository
-                    .getPrevious(entity)
-                    .ifPresent(prev -> entityRepository.setPreviousVersion(next, prev)));
+    Entity previous = entity.getPreviousVersion();
+    Entity next = entity.getNextVersion();
+    if (previous != null && next != null) {
+      entityRepository.save(previous.nextVersion(next));
+    }
 
     entityRepository.delete(entity);
   }
@@ -337,21 +335,21 @@ public class EntityService implements ContentService {
   public List<Entity> getEntities(
       List<String> include, String name, List<EntityType> type, DataType dataType, Integer page) {
     int requestedPage = page != null ? page - 1 : 0;
-    return entityRepository
-        .findAllByRepositoryIdAndNameAndEntityTypeAndDataTypeAndPrimary(
-            null, name, type, dataType, true, PageRequest.of(requestedPage, pageSize))
-        .parallelStream()
-        .flatMap(
-            entity -> {
-              Stream<Entity> result = Stream.of(entity);
-              if (type == null
-                  || type.contains(ApiModelMapper.toRestrictedEntityType(entity.getEntityType())))
-                result =
-                    Stream.concat(result, entityRepository.findBySuperPhenotype(entity.getId()));
-              return result;
-            })
-        .filter(distinctByKey(Entity::getId))
-        .collect(Collectors.toList());
+    return new ArrayList<>();
+//    return entityRepository
+//        .findAllByRepositoryIdAndNameAndEntityTypeAndDataTypeAndPrimary(
+//            null, name, type, dataType, true, PageRequest.of(requestedPage, pageSize))
+//        .parallelStream()
+//        .flatMap(
+//            entity -> {
+//              Stream<Entity> result = Stream.of(entity);
+//              if (type == null
+//                  || type.contains(ApiModelMapper.toRestrictedEntityType(entity.getEntityType())))
+//                result = Stream.concat(result, entityRepository.findBySuperPhenotype(entity));
+//              return result;
+//            })
+//        .filter(distinctByKey(Entity::getId))
+//        .collect(Collectors.toList());
   }
 
   @Cacheable(
@@ -368,21 +366,24 @@ public class EntityService implements ContentService {
       Integer page) {
     getRepository(organisationId, repositoryId);
     int requestedPage = page != null ? page - 1 : 0;
-    return entityRepository
-        .findAllByRepositoryIdAndNameAndEntityTypeAndDataTypeAndPrimary(
-            repositoryId, name, type, dataType, false, PageRequest.of(requestedPage, pageSize))
-        .parallelStream()
-        .flatMap(
-            entity -> {
-              Stream<Entity> result = Stream.of(entity);
-              if (type == null
-                  || type.contains(ApiModelMapper.toRestrictedEntityType(entity.getEntityType())))
-                result =
-                    Stream.concat(result, entityRepository.findBySuperPhenotype(entity.getId()));
-              return result;
-            })
-        .filter(distinctByKey(Entity::getId))
-        .collect(Collectors.toList());
+    return new ArrayList<>();
+//    return entityRepository
+//        .findAllByRepositoryIdAndNameAndEntityTypeAndDataTypeAndPrimary(
+//            repositoryId, name, type, dataType, false, PageRequest.of(requestedPage, pageSize))
+//        .parallelStream()
+//        .flatMap(
+//            entity -> {
+//              Stream<Entity> result = Stream.of(entity);
+//              //              if (type == null
+//              //                  ||
+//              // type.contains(ApiModelMapper.toRestrictedEntityType(entity.getEntityType())))
+//              //                result =
+//              //                    Stream.concat(result,
+//              // entityRepository.findBySuperPhenotype(entity));
+//              return result;
+//            })
+//        .filter(distinctByKey(Entity::getId))
+//        .collect(Collectors.toList());
   }
 
   public ForkingStats getForkingStats(
@@ -394,20 +395,12 @@ public class EntityService implements ContentService {
             .filter(e -> repository.getId().equals(e.getRepository().getId()))
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-    ForkingStats forkingStats = new ForkingStats();
-
-    forkingStats.setForks(entity.getForks());
-
-    entityRepository.findOrigin(entity).ifPresent(forkingStats::origin);
-
-    return forkingStats;
+    return new ForkingStats().forks(entity.getForks()).origin(entity.getOrigin());
   }
 
-  public List<Entity> getRestrictions(String ownerId, Phenotype abstractPhenotype) {
+  public List<Phenotype> getRestrictions(String ownerId, Phenotype abstractPhenotype) {
     if (!ApiModelMapper.isAbstract(abstractPhenotype)) return new ArrayList<>();
-    return entityRepository
-        .findBySuperPhenotype(abstractPhenotype.getId())
-        .collect(Collectors.toList());
+    return abstractPhenotype.getPhenotypes();
   }
 
   public List<Entity> getRootEntitiesByRepositoryId(
@@ -418,15 +411,22 @@ public class EntityService implements ContentService {
       List<EntityType> type,
       DataType dataType,
       Integer page) {
-    getRepository(organisationId, repositoryId);
-    return new ArrayList<>(
-        entityRepository.findAllByRepositoryIdAndSuperPhenotypeId(repositoryId, null));
+    return getRepository(organisationId, repositoryId).getEntities().stream()
+        .filter(
+            e ->
+                e instanceof Category && ((Category) e).getSuperCategories().isEmpty()
+                    || e instanceof Phenotype && ((Phenotype) e).getSuperPhenotype() == null)
+        .collect(Collectors.toList());
   }
 
   public List<Entity> getSubclasses(
       String organisationId, String repositoryId, String id, List<String> include) {
     getRepository(organisationId, repositoryId);
-    return entityRepository.findBySuperPhenotype(id).collect(Collectors.toList());
+    Entity entity =
+        entityRepository
+            .findById(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    return entityRepository.findBySuperPhenotype(entity).collect(Collectors.toList());
   }
 
   public List<Entity> getVersions(
@@ -438,9 +438,12 @@ public class EntityService implements ContentService {
 
   public Entity loadEntity(String organisationId, String repositoryId, String id, Integer version) {
     Repository repository = getRepository(organisationId, repositoryId);
-    return entityRepository
-        .findByIdAndRepositoryIdAndVersion(id, repository.getId(), version)
+    Entity entity = entityRepository
+        .findByIdAndVersion(id, version)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    if (!Objects.equals(entity.getRepository().getId(), repositoryId))
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+    return entity;
   }
 
   @CacheEvict(value = "entities", key = "#repositoryId")
@@ -453,10 +456,12 @@ public class EntityService implements ContentService {
     Repository repository = getRepository(organisationId, repositoryId);
     Entity entity =
         entityRepository
-            .findByIdAndRepositoryIdAndVersion(id, repository.getId(), version)
+            .findByIdAndVersion(id, version)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    if (!Objects.equals(entity.getRepository().getId(), repositoryId))
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND);
 
-    entityRepository.setCurrent(entity);
+//    entityRepository.setCurrent(entity);
 
     return entity;
   }
@@ -475,7 +480,13 @@ public class EntityService implements ContentService {
         || oldEntity.getEntityType() != entity.getEntityType())
       throw new ResponseStatusException(HttpStatus.CONFLICT);
 
-    entity.setVersion(entityRepository.getNextVersion(oldEntity));
+    int version =
+        entityRepository.findById(oldEntity.getId()).stream()
+                .mapToInt(Entity::getVersion)
+                .max()
+                .orElse(1)
+            + 1;
+    entity.setVersion(version);
     return entityRepository.save(entity);
   }
 

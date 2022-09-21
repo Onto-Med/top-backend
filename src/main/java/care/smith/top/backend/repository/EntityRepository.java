@@ -1,12 +1,10 @@
 package care.smith.top.backend.repository;
 
-import care.smith.top.backend.model.DataType;
-import care.smith.top.backend.model.Entity;
-import care.smith.top.backend.model.EntityType;
-import care.smith.top.backend.model.Repository;
+import care.smith.top.backend.model.*;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -16,39 +14,40 @@ import java.util.stream.Stream;
 public interface EntityRepository extends PagingAndSortingRepository<Entity, String> {
   long countByEntityType(EntityType[] entityTypes);
 
-  Stream<Entity> findBySuperPhenotype(String superPhenotypeId);
-
-  Collection<Entity> findAllByRepositoryIdAndSuperPhenotypeId(
-      String repositoryId, String superPhenotypeId);
+  default Stream<Entity> findBySuperPhenotype(Entity superPhenotype) {
+    List<Entity> result = new ArrayList<>();
+    if (superPhenotype.getEntityType().equals(EntityType.CATEGORY)) {
+      result.addAll(((Category) superPhenotype).getSubCategories());
+      result.addAll(((Category) superPhenotype).getPhenotypes());
+    } else {
+      result.addAll(((Phenotype) superPhenotype).getPhenotypes());
+    }
+    return result.stream();
+  }
 
   Collection<Entity> findAllById(String id, PageRequest pageRequest);
 
-  Optional<Entity> findByIdAndRepositoryIdAndVersion(
-      String id, String repositoryId, Integer version);
+  Optional<Entity> findByIdAndVersion(String id, Integer version);
 
-  Optional<Entity> findCurrentById(String id);
+  default Optional<Entity> findCurrentById(String id) {
+    return Optional.empty();
+  }
 
-  Optional<Entity> getPrevious(Entity e);
+//  Collection<Entity> findAllByRepositoryIdAndNameAndEntityTypeAndDataTypeAndPrimary(
+//      String repositoryId,
+//      String name,
+//      List<EntityType> type,
+//      DataType dataType,
+//      boolean primary,
+//      PageRequest pageRequest);
 
-  Integer getNextVersion(Entity oldEntity);
+  default Optional<Entity> getFork(Entity origin, Repository repository) {
+    return origin.getForks().stream()
+        .filter(e -> e.getRepository().equals(repository) && e.getNextVersion() == null)
+        .findFirst();
+  }
 
-  Optional<Entity> getNext(Entity e);
+  default void setFork(String forkId, String originId) {
 
-  void setCurrent(Entity entity);
-
-  Optional<Entity> findOrigin(Entity entity);
-
-  Collection<Entity> findAllByRepositoryIdAndNameAndEntityTypeAndDataTypeAndPrimary(
-      String repositoryId,
-      String name,
-      List<EntityType> type,
-      DataType dataType,
-      boolean primary,
-      PageRequest pageRequest);
-
-  void setPreviousVersion(Entity entity, Entity prev);
-
-  Optional<Entity> getFork(Entity origin, Repository repository);
-
-  void setFork(String forkId, String originId);
+  }
 }

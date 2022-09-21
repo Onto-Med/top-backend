@@ -245,12 +245,10 @@ class EntityServiceTest extends AbstractTest {
         .isPresent()
         .hasValueSatisfying(
             e -> assertThat(e.getRepository().getId()).isEqualTo(repository.getId()));
-    assertThat(
-            entityRepository.findAllByRepositoryIdAndSuperPhenotypeId(
-                repository.getId(), abstractPhenotype.getId()))
-        .isNotEmpty()
-        .size()
-        .isEqualTo(2);
+    assertThat(entityRepository.findById(abstractPhenotype.getId()))
+        .isPresent()
+        .hasValueSatisfying(
+            e -> assertThat(((Phenotype) e).getPhenotypes()).isNotEmpty().size().isEqualTo(2));
 
     assertThat(entityService.getRestrictions(repository.getId(), abstractPhenotype))
         .isNotEmpty()
@@ -312,9 +310,9 @@ class EntityServiceTest extends AbstractTest {
         .hasValueSatisfying(
             e -> {
               assertThat(e.getVersion()).isEqualTo(3);
-              assertThat(entityRepository.getPrevious(e))
-                  .isPresent()
-                  .hasValueSatisfying(prev -> assertThat(prev.getVersion()).isEqualTo(1));
+              assertThat(e.getPreviousVersion())
+                  .isNotNull()
+                  .satisfies(prev -> assertThat(prev.getVersion()).isEqualTo(1));
             });
 
     assertThat(
