@@ -26,6 +26,8 @@ import org.springframework.web.server.ResponseStatusException;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.Set;
 import java.util.*;
@@ -984,7 +986,9 @@ public class EntityService implements ContentService {
             ((DateTimeRestriction) restriction)
                 .getValues().stream()
                     .filter(Objects::nonNull)
-                    .map(v -> new Annotation("value", v.toInstant(), null))
+                    .map(v -> new Annotation("value", v.toInstant(
+                            ZoneId.systemDefault().getRules().getOffset(Instant.now())
+                            ), null))
                     .collect(Collectors.toList()));
     } else if (restriction instanceof BooleanRestriction) {
       if (((BooleanRestriction) restriction).getValues() != null)
@@ -1062,7 +1066,7 @@ public class EntityService implements ContentService {
           .forEach(
               v ->
                   ((DateTimeRestriction) restriction)
-                      .addValuesItem(v.getDateValue().atOffset(ZoneOffset.UTC)));
+                      .addValuesItem(v.getDateValue().atOffset(ZoneOffset.UTC).toLocalDateTime()));
       annotation
           .getAnnotation("minOperator")
           .ifPresent(
