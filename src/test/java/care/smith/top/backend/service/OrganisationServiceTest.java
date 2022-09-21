@@ -71,6 +71,16 @@ class OrganisationServiceTest extends AbstractTest {
         .doesNotThrowAnyException();
 
     /* Check DB consistence */
+    assertThat(organisationService.getOrganisation(superOrganisation.getId(), null))
+        .isNotNull()
+        .satisfies(
+            o -> {
+              assertThat(o.getName()).isEqualTo(superOrganisation.getName());
+              assertThat(o.getDescription()).isEqualTo(superOrganisation.getDescription());
+              assertThat(o.getCreatedAt()).isNotNull();
+              assertThat(o.getUpdatedAt()).isNotNull();
+            });
+
     Arrays.asList(subOrganisation1.getId(), subOrganisation2.getId())
         .forEach(
             id ->
@@ -91,7 +101,7 @@ class OrganisationServiceTest extends AbstractTest {
     assertThat(actual.getName()).isNull();
     assertThat(actual.getDescription()).isNull();
     assertThat(actual.getCreatedAt()).isNotNull();
-    assertThat(actual.getUpdatedAt()).isNull();
+    assertThat(actual.getUpdatedAt()).isNotNull();
 
     assertThatThrownBy(
             () -> organisationService.updateOrganisationById("does not exist", superOrganisation))
@@ -106,20 +116,18 @@ class OrganisationServiceTest extends AbstractTest {
     organisationService.createOrganisation(subOrganisation2);
 
     superOrganisation.name("Super organisation").description("Some description");
-    assertThat(
-            organisationService.updateOrganisationById(
-                superOrganisation.getId(), superOrganisation))
+
+    assertThat(organisationService.updateOrganisationById(
+      superOrganisation.getId(), superOrganisation))
         .isNotNull()
         .satisfies(
             a -> {
               assertThat(a).isNotNull();
               assertThat(a.getId()).isEqualTo(superOrganisation.getId());
               assertThat(a.getName()).isNotNull().isEqualTo(superOrganisation.getName());
-              assertThat(a.getDescription())
-                  .isNotNull()
-                  .isEqualTo(superOrganisation.getDescription());
-              assertThat(a.getCreatedAt()).isEqualTo(actual.getCreatedAt());
-              assertThat(a.getUpdatedAt()).isNotNull();
+              assertThat(a.getDescription()).isEqualTo(superOrganisation.getDescription());
+              assertThat(a.getCreatedAt()).isNotNull();
+              assertThat(a.getUpdatedAt()).isAfter(actual.getUpdatedAt());
             });
 
     subOrganisation1.name("Sub organisation 1");
@@ -133,8 +141,8 @@ class OrganisationServiceTest extends AbstractTest {
               assertThat(a.getSuperOrganisation())
                   .isNotNull()
                   .hasFieldOrPropertyWithValue("id", superOrganisation.getId());
-              assertThat(a.getCreatedAt()).isEqualTo(actual.getCreatedAt());
-              assertThat(a.getUpdatedAt()).isNotNull();
+              assertThat(a.getCreatedAt()).isNotNull();
+              assertThat(a.getUpdatedAt()).isAfter(actual.getUpdatedAt());
             });
 
     assertThat(organisationRepository.findById(subOrganisation2.getId()))
@@ -144,12 +152,11 @@ class OrganisationServiceTest extends AbstractTest {
               assertThat(o.getName()).isNull();
               assertThat(o.getSuperOrganisation().getId()).isEqualTo(superOrganisation.getId());
               assertThat(o.getCreatedAt()).isNotNull();
-              assertThat(o.getUpdatedAt()).isNull();
             });
   }
 
   @Test
-  void deleteOrganisationByName() {
+  void deleteOrganisationById() {
     Organisation superOrganisation = new Organisation().id("super_org");
     organisationService.createOrganisation(superOrganisation);
 

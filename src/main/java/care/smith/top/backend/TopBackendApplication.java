@@ -25,9 +25,4 @@ public class TopBackendApplication {
   public static void main(String[] args) {
     SpringApplication.run(TopBackendApplication.class, args);
   }
-
-  @Bean(name = "auditingDateTimeProvider")
-  public DateTimeProvider dateTimeProvider() {
-    return () -> Optional.of(OffsetDateTime.now());
-  }
 }
