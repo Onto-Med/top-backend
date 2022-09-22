@@ -8,4 +8,9 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 @org.springframework.stereotype.Repository
 public interface RepositoryRepository extends PagingAndSortingRepository<Repository, String> {
   Slice<Repository> findByNameContainingIgnoreCase(String name, Pageable pageable);
+
+  Slice<Repository> findAllByPrimary(Boolean primary, Pageable pageable);
+
+  Slice<Repository> findByNameContainingIgnoreCaseAndPrimary(
+      String name, Boolean primary, Pageable pageable);
 }

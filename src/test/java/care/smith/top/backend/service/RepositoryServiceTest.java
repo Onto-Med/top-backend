@@ -176,7 +176,9 @@ class RepositoryServiceTest extends AbstractTest {
     Organisation organisation2 =
         organisationService.createOrganisation(new Organisation().id("org_2"));
     repositoryService.createRepository(
-        organisation1.getId(), new Repository().id("repo_1").name("Repository"), null);
+        organisation1.getId(),
+        new Repository().id("repo_1").name("Repository").primary(true),
+        null);
     repositoryService.createRepository(
         organisation2.getId(), new Repository().id("repo_2").name("Another repository"), null);
 
@@ -188,7 +190,19 @@ class RepositoryServiceTest extends AbstractTest {
         .isNotEmpty()
         .size()
         .isEqualTo(2);
-    assertThat(repositoryService.getRepositories(null, "something else", null, 1)).isNullOrEmpty();
+    assertThat(repositoryService.getRepositories(null, "something else", null, 1)).isEmpty();
+    assertThat(repositoryService.getRepositories(null, null, true, 1))
+        .isNotEmpty()
+        .size()
+        .isEqualTo(1);
+    assertThat(repositoryService.getRepositories(null, null, false, 1))
+        .isNotEmpty()
+        .size()
+        .isEqualTo(1);
+    assertThat(repositoryService.getRepositories(null, null, null, 1))
+        .isNotEmpty()
+        .size()
+        .isEqualTo(2);
   }
 
   @Test

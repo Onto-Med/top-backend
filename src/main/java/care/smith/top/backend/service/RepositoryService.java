@@ -53,12 +53,16 @@ public class RepositoryService implements ContentService {
   public List<care.smith.top.backend.model.Repository> getRepositories(
       List<String> include, String name, Boolean primary, Integer page) {
     // TODO: check if user has read permission
-    // TODO: filter by `primary` property
-    int requestedPage = page == null ? 0 : page - 1;
-    return repositoryRepository
-        .findByNameContainingIgnoreCase(
-            name, PageRequest.of(requestedPage, pageSize, Sort.by("r.name")))
-        .getContent();
+    PageRequest pageRequest =
+        PageRequest.of(page == null ? 0 : page - 1, pageSize, Sort.by("name"));
+    if (name == null) {
+      if (primary == null)
+        return repositoryRepository.findAll(pageRequest).getContent();
+      return repositoryRepository.findAllByPrimary(primary, pageRequest).getContent();
+    }
+    if (primary == null)
+      return repositoryRepository.findByNameContainingIgnoreCase(name, pageRequest).getContent();
+    return repositoryRepository.findByNameContainingIgnoreCaseAndPrimary(name, primary, pageRequest).getContent();
   }
 
   public List<care.smith.top.backend.model.Repository> getRepositoriesByOrganisationId(
