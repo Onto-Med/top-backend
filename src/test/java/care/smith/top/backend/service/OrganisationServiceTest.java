@@ -172,6 +172,10 @@ class OrganisationServiceTest extends AbstractTest {
     assertThat(organisationRepository.findById(subOrganisation.getId()))
         .isPresent()
         .hasValueSatisfying(o -> assertThat(o.getSuperOrganisation()).isNull());
+
+    assertThatCode(() -> organisationService.deleteOrganisationById(subOrganisation.getId()))
+        .doesNotThrowAnyException();
+    assertThat(organisationRepository.findById(subOrganisation.getId())).isEmpty();
   }
 
   @Test
