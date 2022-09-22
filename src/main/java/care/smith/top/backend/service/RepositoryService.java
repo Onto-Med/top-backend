@@ -89,12 +89,19 @@ public class RepositoryService implements ContentService {
     return getRepository(organisationId, repositoryId).isPresent();
   }
 
+  @Transactional
   public care.smith.top.backend.model.Repository updateRepository(
-      String organisationId, String repositoryId, Repository repository, List<String> include) {
-    if (!repositoryExists(organisationId, repositoryId))
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+      String organisationId, String repositoryId, Repository data, List<String> include) {
+    Repository repository =
+        repositoryRepository
+            .findById(repositoryId)
+            .filter(r -> organisationId.equals(r.getOrganisation().getId()))
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
+    repository.setDescription(data.getDescription());
+    repository.setName(data.getName());
     // TODO: if (user is admin) ...
+    repository.setPrimary(data.isPrimary());
     return repositoryRepository.save(repository);
   }
 
