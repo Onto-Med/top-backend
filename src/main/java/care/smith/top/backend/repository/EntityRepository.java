@@ -14,16 +14,7 @@ import java.util.stream.Stream;
 public interface EntityRepository extends PagingAndSortingRepository<Entity, String> {
   long countByEntityType(EntityType[] entityTypes);
 
-  default Stream<Entity> findBySuperPhenotype(Entity superPhenotype) {
-    List<Entity> result = new ArrayList<>();
-    if (superPhenotype.getEntityType().equals(EntityType.CATEGORY)) {
-      result.addAll(((Category) superPhenotype).getSubCategories());
-      result.addAll(((Category) superPhenotype).getPhenotypes());
-    } else {
-      result.addAll(((Phenotype) superPhenotype).getPhenotypes());
-    }
-    return result.stream();
-  }
+  List<Entity> findAllBySuperPhenotypeId(String superPhenotypeId);
 
   Collection<Entity> findAllById(String id, PageRequest pageRequest);
 

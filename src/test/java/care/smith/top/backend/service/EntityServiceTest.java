@@ -57,10 +57,7 @@ class EntityServiceTest extends AbstractTest {
         organisationService.createOrganisation(new Organisation().id("org"));
     Repository repository =
         repositoryService.createRepository(organisation.getId(), new Repository().id("repo"), null);
-
-    Repository codeRepository =
-        repositoryService.createRepository(
-            organisation.getId(), new Repository().id("http://loinc.org"), null);
+    CodeSystem codeSystem = new CodeSystem().uri(URI.create("http://loinc.org"));
 
     /* Create category */
     Category category = new Category();
@@ -70,10 +67,7 @@ class EntityServiceTest extends AbstractTest {
         .addTitlesItem(new LocalisableText().text("Category").lang("en"))
         .addDescriptionsItem(new LocalisableText().text("Some description").lang("en"))
         .addSynonymsItem(new LocalisableText().text("Some synonym").lang("en"))
-        .addCodesItem(
-            new Code()
-                .code("1234")
-                .codeSystem(new CodeSystem().uri(URI.create(codeRepository.getId()))));
+        .addCodesItem(new Code().code("1234").codeSystem(codeSystem));
 
     assertThatThrownBy(
             () -> entityService.createEntity("does not exist", repository.getId(), category))
@@ -92,12 +86,14 @@ class EntityServiceTest extends AbstractTest {
             c -> {
               assertThat(c.getId()).isEqualTo(category.getId());
               assertThat(c.getEntityType()).isEqualTo(category.getEntityType());
-              assertThat(c.getDescriptions()).isEqualTo(category.getDescriptions());
+              assertThat(c.getDescriptions()).size().isEqualTo(1);
               assertThat(c.getEquivalentEntities()).isNullOrEmpty();
-              assertThat(c.getCodes()).isNotEmpty();
+              assertThat(c.getCodes()).size().isEqualTo(1);
+              assertThat(c.getCodes().get(0)).isEqualTo(category.getCodes().get(0));
               assertThat(c.getCreatedAt()).isNotNull();
-              assertThat(c.getSynonyms()).isEqualTo(category.getSynonyms());
-              assertThat(c.getVersion()).isEqualTo(1);
+              assertThat(c.getSynonyms()).size().isEqualTo(1);
+              assertThat(c.getSynonyms().get(0)).isEqualTo(category.getSynonyms().get(0));
+              assertThat(c.getVersion()).isEqualTo(0);
               assertThat(c.getRepository())
                   .isNotNull()
                   .hasFieldOrPropertyWithValue("id", repository.getId());
@@ -128,7 +124,7 @@ class EntityServiceTest extends AbstractTest {
         .satisfies(
             p -> {
               assertThat(p.getId()).isEqualTo(abstractPhenotype.getId());
-              assertThat(p.getVersion()).isEqualTo(1);
+              assertThat(p.getVersion()).isEqualTo(0);
               assertThat(p.getEntityType()).isEqualTo(abstractPhenotype.getEntityType());
               assertThat(((Phenotype) p).getSuperPhenotype()).isNull();
               assertThat(((Phenotype) p).getSuperCategories())
@@ -169,7 +165,7 @@ class EntityServiceTest extends AbstractTest {
         .satisfies(
             rp -> {
               assertThat(rp.getId()).isEqualTo(restrictedPhenotype1.getId());
-              assertThat(rp.getVersion()).isEqualTo(1);
+              assertThat(rp.getVersion()).isEqualTo(0);
               assertThat(rp.getEntityType()).isEqualTo(EntityType.SINGLE_RESTRICTION);
               assertThat(((Phenotype) rp).getSuperPhenotype())
                   .hasFieldOrPropertyWithValue("id", abstractPhenotype.getId());
@@ -245,12 +241,10 @@ class EntityServiceTest extends AbstractTest {
         .isPresent()
         .hasValueSatisfying(
             e -> assertThat(e.getRepository().getId()).isEqualTo(repository.getId()));
-    assertThat(entityRepository.findById(abstractPhenotype.getId()))
-        .isPresent()
-        .hasValueSatisfying(
-            e -> assertThat(((Phenotype) e).getPhenotypes()).isNotEmpty().size().isEqualTo(2));
 
-    assertThat(entityService.getRestrictions(repository.getId(), abstractPhenotype))
+    assertThat(
+            entityService.getSubclasses(
+                organisation.getId(), repository.getId(), abstractPhenotype.getId(), null))
         .isNotEmpty()
         .size()
         .isEqualTo(2);
