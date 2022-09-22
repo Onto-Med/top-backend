@@ -56,24 +56,25 @@ public class RepositoryService implements ContentService {
     PageRequest pageRequest =
         PageRequest.of(page == null ? 0 : page - 1, pageSize, Sort.by("name"));
     if (name == null) {
-      if (primary == null)
-        return repositoryRepository.findAll(pageRequest).getContent();
+      if (primary == null) return repositoryRepository.findAll(pageRequest).getContent();
       return repositoryRepository.findAllByPrimary(primary, pageRequest).getContent();
     }
     if (primary == null)
       return repositoryRepository.findByNameContainingIgnoreCase(name, pageRequest).getContent();
-    return repositoryRepository.findByNameContainingIgnoreCaseAndPrimary(name, primary, pageRequest).getContent();
+    return repositoryRepository
+        .findByNameContainingIgnoreCaseAndPrimary(name, primary, pageRequest)
+        .getContent();
   }
 
   public List<care.smith.top.backend.model.Repository> getRepositoriesByOrganisationId(
       String organisationId, List<String> include, String name, Integer page) {
-    int requestedPage = page == null ? 0 : page - 1;
+    PageRequest pageRequest =
+        PageRequest.of(page == null ? 0 : page - 1, pageSize, Sort.by("name"));
+    if (name == null)
+      return repositoryRepository.findByOrganisationId(organisationId, pageRequest).getContent();
     return repositoryRepository
-        .findByNameContainingIgnoreCase(
-            name, PageRequest.of(requestedPage, pageSize, Sort.by("r.name")))
-        .filter(r -> organisationId.equals(r.getOrganisation().getId()))
-        .stream()
-        .collect(Collectors.toList());
+        .findByOrganisationIdAndNameContainingIgnoreCase(organisationId, name, pageRequest)
+        .getContent();
   }
 
   public care.smith.top.backend.model.Repository getRepository(
