@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
@@ -25,6 +26,7 @@ public class OrganisationService implements ContentService {
     return organisationRepository.count();
   }
 
+  @Transactional
   public Organisation createOrganisation(Organisation organisation) {
     // TODO: use below code to get current user
     // UserDetails userDetails =
@@ -41,14 +43,20 @@ public class OrganisationService implements ContentService {
     return organisationRepository.save(organisation);
   }
 
-  public Organisation updateOrganisationById(String id, Organisation organisation) {
-    organisationRepository
+  @Transactional
+  public Organisation updateOrganisationById(String id, Organisation data) {
+    Organisation organisation = organisationRepository
         .findById(id)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+    organisation.setSuperOrganisation(data.getSuperOrganisation());
+    organisation.setDescription(data.getDescription());
+    organisation.setName(data.getName());
 
     return organisationRepository.save(organisation);
   }
 
+  @Transactional
   public void deleteOrganisationById(String organisationId) {
     Organisation organisation =
         organisationRepository
@@ -66,6 +74,7 @@ public class OrganisationService implements ContentService {
   }
 
   public List<Organisation> getOrganisations(String name, Integer page, List<String> include) {
-    return new ArrayList<>(organisationRepository.findAllByNameOrDescriptionIsContainingIgnoreCase(name, null));
+    return new ArrayList<>(
+        organisationRepository.findAllByNameOrDescriptionIsContainingIgnoreCase(name, null));
   }
 }
