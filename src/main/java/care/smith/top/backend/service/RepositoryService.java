@@ -39,6 +39,7 @@ public class RepositoryService implements ContentService {
       throw new ResponseStatusException(HttpStatus.CONFLICT);
 
     // TODO: if (user is admin) ...
+    repository.setOrganisation(organisation);
     return repositoryRepository.save(repository);
   }
 

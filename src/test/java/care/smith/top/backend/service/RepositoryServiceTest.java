@@ -29,6 +29,7 @@ class RepositoryServiceTest extends AbstractTest {
               assertThat(r.getName()).isEqualTo(repository.getName());
               assertThat(r.getDescription()).isEqualTo(repository.getDescription());
               assertThat(r.getCreatedAt()).isNotNull();
+              assertThat(r.getUpdatedAt()).isNotNull();
               assertThat(r.getOrganisation())
                   .isNotNull()
                   .hasFieldOrPropertyWithValue("id", organisation.getId());
