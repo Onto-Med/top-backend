@@ -117,8 +117,9 @@ class OrganisationServiceTest extends AbstractTest {
 
     superOrganisation.name("Super organisation").description("Some description");
 
-    assertThat(organisationService.updateOrganisationById(
-      superOrganisation.getId(), superOrganisation))
+    assertThat(
+            organisationService.updateOrganisationById(
+                superOrganisation.getId(), superOrganisation))
         .isNotNull()
         .satisfies(
             a -> {

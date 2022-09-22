@@ -45,9 +45,10 @@ public class OrganisationService implements ContentService {
 
   @Transactional
   public Organisation updateOrganisationById(String id, Organisation data) {
-    Organisation organisation = organisationRepository
-        .findById(id)
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    Organisation organisation =
+        organisationRepository
+            .findById(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
     organisation.setSuperOrganisation(data.getSuperOrganisation());
     organisation.setDescription(data.getDescription());
@@ -63,7 +64,10 @@ public class OrganisationService implements ContentService {
             .findById(organisationId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-    // TODO: handle subdirectories and content
+    for (Organisation subOrganisation : organisation.getSubOrganisations()) {
+      subOrganisation.setSuperOrganisation(null);
+      organisationRepository.save(subOrganisation);
+    }
     organisationRepository.delete(organisation);
   }
 
