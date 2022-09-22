@@ -4,6 +4,8 @@ import care.smith.top.backend.model.Organisation;
 import care.smith.top.backend.repository.OrganisationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -78,7 +80,11 @@ public class OrganisationService implements ContentService {
   }
 
   public List<Organisation> getOrganisations(String name, Integer page, List<String> include) {
-    return new ArrayList<>(
-        organisationRepository.findAllByNameOrDescriptionIsContainingIgnoreCase(name, null));
+    PageRequest pageRequest = PageRequest.of(page == null ? 1 : page - 1, pageSize);
+    if (name == null) return organisationRepository.findAll(pageRequest).getContent();
+    return organisationRepository
+        .findAllByNameIsContainingIgnoreCaseOrDescriptionIsContainingIgnoreCase(
+            name, name, pageRequest)
+        .getContent();
   }
 }
