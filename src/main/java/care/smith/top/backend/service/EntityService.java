@@ -333,10 +333,17 @@ public class EntityService implements ContentService {
     return writer;
   }
 
+  @Transactional
   public List<Entity> getEntities(
       List<String> include, String name, List<EntityType> type, DataType dataType, Integer page) {
-    int requestedPage = page != null ? page - 1 : 0;
-    return new ArrayList<>();
+    PageRequest pageRequest = PageRequest.of(page != null ? page - 1 : 0, pageSize);
+    if (dataType != null)
+      return phenotypeRepository
+          .findAllByTitleAndEntityTypeAndDataType(name, type, dataType, pageRequest)
+          .map(p -> (Entity) p)
+          .getContent();
+    return entityRepository.findAllByTitleAndEntityTypes(name, type, pageRequest).getContent();
+
     //    return entityRepository
     //        .findAllByRepositoryIdAndNameAndEntityTypeAndDataTypeAndPrimary(
     //            null, name, type, dataType, true, PageRequest.of(requestedPage, pageSize))
@@ -367,8 +374,14 @@ public class EntityService implements ContentService {
       DataType dataType,
       Integer page) {
     getRepository(organisationId, repositoryId);
-    int requestedPage = page != null ? page - 1 : 0;
-    return new ArrayList<>();
+    PageRequest pageRequest = PageRequest.of(page != null ? page - 1 : 0, pageSize);
+    if (dataType != null)
+      return phenotypeRepository
+        .findAllByRepositoryIdAndTitleAndEntityTypeAndDataType(repositoryId, name, type, dataType, pageRequest)
+        .map(p -> (Entity) p)
+        .getContent();
+    return entityRepository.findAllByRepositoryIdAndTitleAndEntityTypes(repositoryId, name, type, pageRequest).getContent();
+
     //    return entityRepository
     //        .findAllByRepositoryIdAndNameAndEntityTypeAndDataTypeAndPrimary(
     //            repositoryId, name, type, dataType, false, PageRequest.of(requestedPage,
@@ -465,6 +478,7 @@ public class EntityService implements ContentService {
   }
 
   @CacheEvict(value = "entities", key = "#repositoryId")
+  @Transactional
   public Entity updateEntityById(
       String organisationId, String repositoryId, String id, Entity entity, List<String> include) {
     getRepository(organisationId, repositoryId);
@@ -477,13 +491,13 @@ public class EntityService implements ContentService {
         || oldEntity.getEntityType() != entity.getEntityType())
       throw new ResponseStatusException(HttpStatus.CONFLICT);
 
-    int version =
-        entityRepository.findById(oldEntity.getId()).stream()
-                .mapToInt(Entity::getVersion)
-                .max()
-                .orElse(1)
-            + 1;
-    entity.setVersion(version);
+    //    int version =
+    //        entityRepository.findById(oldEntity.getId()).stream()
+    //                .mapToInt(Entity::getVersion)
+    //                .max()
+    //                .orElse(1)
+    //            + 1;
+    //    entity.setVersion(version);
     return entityRepository.save(entity);
   }
 

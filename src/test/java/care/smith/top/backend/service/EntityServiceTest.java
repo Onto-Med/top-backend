@@ -258,9 +258,7 @@ class EntityServiceTest extends AbstractTest {
     Repository repository =
         repositoryService.createRepository(organisation.getId(), new Repository().id("repo"), null);
     Phenotype phenotype =
-      new Phenotype()
-          .id(UUID.randomUUID().toString())
-          .entityType(EntityType.SINGLE_PHENOTYPE);
+        new Phenotype().id(UUID.randomUUID().toString()).entityType(EntityType.SINGLE_PHENOTYPE);
 
     assertThat(entityService.createEntity(organisation.getId(), repository.getId(), phenotype))
         .isNotNull()
@@ -336,22 +334,19 @@ class EntityServiceTest extends AbstractTest {
     Repository repository =
         repositoryService.createRepository(organisation.getId(), new Repository().id("repo"), null);
     Phenotype phenotype =
-        (Phenotype)
-            new Phenotype()
-                .id(UUID.randomUUID().toString())
-                .entityType(EntityType.SINGLE_PHENOTYPE);
+        new Phenotype().id(UUID.randomUUID().toString()).entityType(EntityType.SINGLE_PHENOTYPE);
 
     assertThat(entityService.createEntity(organisation.getId(), repository.getId(), phenotype))
         .isNotNull()
         .isInstanceOf(Phenotype.class)
-        .satisfies(p -> assertThat(p.getVersion()).isEqualTo(1));
+        .satisfies(p -> assertThat(p.getVersion()).isEqualTo(0));
 
     assertThat(
             entityService.updateEntityById(
                 organisation.getId(), repository.getId(), phenotype.getId(), phenotype, null))
         .isNotNull()
         .isInstanceOf(Phenotype.class)
-        .satisfies(p -> assertThat(p.getVersion()).isEqualTo(2));
+        .satisfies(p -> assertThat(p.getVersion()).isEqualTo(1));
 
     assertThatThrownBy(
             () ->
@@ -384,21 +379,17 @@ class EntityServiceTest extends AbstractTest {
         repositoryService.createRepository(
             organisation.getId(), new Repository().id("repo2").primary(true), null);
     Phenotype entity1 =
-        (Phenotype)
-            new Phenotype()
-                .id(UUID.randomUUID().toString())
-                .entityType(EntityType.SINGLE_PHENOTYPE)
-                .titles(
-                    Collections.singletonList(
-                        new LocalisableText().lang("en").text("example test")));
+        new Phenotype()
+            .id(UUID.randomUUID().toString())
+            .entityType(EntityType.SINGLE_PHENOTYPE)
+            .titles(
+                Collections.singletonList(new LocalisableText().lang("en").text("example test")));
 
     Category entity2 =
-        (Category)
-            new Category()
-                .id(UUID.randomUUID().toString())
-                .entityType(EntityType.CATEGORY)
-                .titles(
-                    Collections.singletonList(new LocalisableText().lang("en").text("example")));
+        new Category()
+            .id(UUID.randomUUID().toString())
+            .entityType(EntityType.CATEGORY)
+            .titles(Collections.singletonList(new LocalisableText().lang("en").text("example")));
 
     assertThat(entityService.createEntity(organisation.getId(), repository1.getId(), entity1))
         .isNotNull()
