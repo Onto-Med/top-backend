@@ -39,7 +39,39 @@ public interface PhenotypeRepository extends EntityBaseRepository<Phenotype> {
   Page<Phenotype> findAllByTitles_TextContainingIgnoreCaseAndDataType(
       String title, DataType dataType, Pageable pageable);
 
-  Page<Phenotype> findAllByRepositoryIdAndTitleAndEntityTypeAndDataType(
+  default Page<Phenotype> findAllByRepositoryIdAndTitleAndEntityTypeAndDataType(
+      String repositoryId,
+      String title,
+      List<EntityType> entityTypes,
+      DataType dataType,
+      Pageable pageable) {
+    if (repositoryId == null)
+      return findAllByTitleAndEntityTypeAndDataType(title, entityTypes, dataType, pageable);
+    if (dataType == null)
+      return findAllByRepositoryIdAndTitleAndEntityTypes(
+          repositoryId, title, entityTypes, pageable);
+    if (title != null && entityTypes != null)
+      return findAllByRepositoryIdAndTitles_TextContainingIgnoreCaseAndEntityTypeInAndDataType(
+          repositoryId, title, entityTypes, dataType, pageable);
+    if (title != null)
+      return findAllByRepositoryIdAndTitles_TextContainingIgnoreCaseAndDataType(
+          repositoryId, title, dataType, pageable);
+    if (entityTypes != null)
+      return findAllByRepositoryIdAndEntityTypeInAndDataType(
+          repositoryId, entityTypes, dataType, pageable);
+    return findAllByRepositoryIdAndDataType(repositoryId, dataType, pageable);
+  }
+
+  Page<Phenotype> findAllByRepositoryIdAndDataType(
+      String repositoryId, DataType dataType, Pageable pageable);
+
+  Page<Phenotype> findAllByRepositoryIdAndEntityTypeInAndDataType(
+      String repositoryId, List<EntityType> entityTypes, DataType dataType, Pageable pageable);
+
+  Page<Phenotype> findAllByRepositoryIdAndTitles_TextContainingIgnoreCaseAndDataType(
+      String repositoryId, String title, DataType dataType, Pageable pageable);
+
+  Page<Phenotype> findAllByRepositoryIdAndTitles_TextContainingIgnoreCaseAndEntityTypeInAndDataType(
       String repositoryId,
       String title,
       List<EntityType> entityTypes,

@@ -63,6 +63,27 @@ public interface EntityBaseRepository<T extends Entity>
 
   Page<T> findAllByEntityTypeIn(List<EntityType> entityTypes, Pageable pageable);
 
-  Page<T> findAllByRepositoryIdAndTitleAndEntityTypes(
+  default Page<T> findAllByRepositoryIdAndTitleAndEntityTypes(
+      String repositoryId, String title, List<EntityType> entityTypes, Pageable pageable) {
+    if (repositoryId == null) return findAllByTitleAndEntityTypes(title, entityTypes, pageable);
+    if (title != null && entityTypes != null)
+      return findAllByRepositoryIdAndTitles_TextContainingIgnoreCaseAndEntityTypeIn(
+          repositoryId, title, entityTypes, pageable);
+    if (title != null)
+      return findAllByRepositoryIdAndTitles_TextContainingIgnoreCase(repositoryId, title, pageable);
+    if (entityTypes != null)
+      return findAllByRepositoryIdAndEntityTypeIn(repositoryId, entityTypes, pageable);
+    return findAllByRepositoryId(repositoryId, pageable);
+  }
+
+  Page<T> findAllByRepositoryId(String repositoryId, Pageable pageable);
+
+  Page<T> findAllByRepositoryIdAndEntityTypeIn(
+      String repositoryId, List<EntityType> entityTypes, Pageable pageable);
+
+  Page<T> findAllByRepositoryIdAndTitles_TextContainingIgnoreCase(
+      String repositoryId, String title, Pageable pageable);
+
+  Page<T> findAllByRepositoryIdAndTitles_TextContainingIgnoreCaseAndEntityTypeIn(
       String repositoryId, String title, List<EntityType> entityTypes, Pageable pageable);
 }
