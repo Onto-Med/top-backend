@@ -447,25 +447,22 @@ class EntityServiceTest extends AbstractTest {
     Repository repository =
         repositoryService.createRepository(organisation.getId(), new Repository().id("repo"), null);
 
-    Category superCat = (Category) new Category().entityType(EntityType.CATEGORY).id("super_cat");
+    Category superCat = new Category().entityType(EntityType.CATEGORY).id("super_cat");
     Category subCat1 =
-        (Category)
-            new Category()
-                .superCategories(Collections.singletonList(superCat))
-                .entityType(EntityType.CATEGORY)
-                .id("sub_cat_1");
+      new Category()
+          .superCategories(Collections.singletonList(superCat))
+          .entityType(EntityType.CATEGORY)
+          .id("sub_cat_1");
     Category subCat2 =
-        (Category)
-            new Category()
-                .superCategories(Collections.singletonList(superCat))
-                .entityType(EntityType.CATEGORY)
-                .id("sub_cat_2");
+      new Category()
+          .superCategories(Collections.singletonList(superCat))
+          .entityType(EntityType.CATEGORY)
+          .id("sub_cat_2");
     Category subCat3 =
-        (Category)
-            new Category()
-                .superCategories(Collections.singletonList(subCat1))
-                .entityType(EntityType.CATEGORY)
-                .id("sub_cat_3");
+      new Category()
+          .superCategories(Collections.singletonList(subCat1))
+          .entityType(EntityType.CATEGORY)
+          .id("sub_cat_3");
 
     assertThatCode(
             () -> entityService.createEntity(organisation.getId(), repository.getId(), superCat))

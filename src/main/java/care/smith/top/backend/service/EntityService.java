@@ -26,6 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class EntityService implements ContentService {
@@ -153,6 +154,7 @@ public class EntityService implements ContentService {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "entityType is missing");
 
     entity.setRepository(repository);
+    // TODO: save category relations
     return entityRepository.save(entity);
   }
 
@@ -377,10 +379,13 @@ public class EntityService implements ContentService {
     PageRequest pageRequest = PageRequest.of(page != null ? page - 1 : 0, pageSize);
     if (dataType != null)
       return phenotypeRepository
-        .findAllByRepositoryIdAndTitleAndEntityTypeAndDataType(repositoryId, name, type, dataType, pageRequest)
-        .map(p -> (Entity) p)
+          .findAllByRepositoryIdAndTitleAndEntityTypeAndDataType(
+              repositoryId, name, type, dataType, pageRequest)
+          .map(p -> (Entity) p)
+          .getContent();
+    return entityRepository
+        .findAllByRepositoryIdAndTitleAndEntityTypes(repositoryId, name, type, pageRequest)
         .getContent();
-    return entityRepository.findAllByRepositoryIdAndTitleAndEntityTypes(repositoryId, name, type, pageRequest).getContent();
 
     //    return entityRepository
     //        .findAllByRepositoryIdAndNameAndEntityTypeAndDataTypeAndPrimary(
@@ -434,8 +439,11 @@ public class EntityService implements ContentService {
   public List<Entity> getSubclasses(
       String organisationId, String repositoryId, String id, List<String> include) {
     getRepository(organisationId, repositoryId);
-    return phenotypeRepository.findAllByRepositoryIdAndSuperPhenotypeId(repositoryId, id).stream()
-        .map(p -> (Entity) p)
+    return Stream.concat(
+            categoryRepository
+                .findAllByRepositoryIdAndSuperCategories_Id(repositoryId, id)
+                .stream(),
+            phenotypeRepository.findAllByRepositoryIdAndSuperPhenotypeId(repositoryId, id).stream())
         .collect(Collectors.toList());
   }
 
