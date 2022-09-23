@@ -19,34 +19,34 @@ import java.util.Optional;
 @Configuration
 @EnableTransactionManagement
 public class InfrastructureConfig {
-  @Bean
-  public DataSource dataSource() {
-    EmbeddedDatabaseBuilder builder = new EmbeddedDatabaseBuilder();
-    return builder.setType(EmbeddedDatabaseType.HSQL).build();
-  }
+//  @Bean
+//  public DataSource dataSource() {
+//    EmbeddedDatabaseBuilder builder = new EmbeddedDatabaseBuilder();
+//    return builder.setType(EmbeddedDatabaseType.HSQL).build();
+//  }
 
-  @Bean
-  public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
+//  @Bean
+//  public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
+//
+//    HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
+//    vendorAdapter.setDatabase(Database.HSQL);
+//    vendorAdapter.setGenerateDdl(true);
+//
+//    LocalContainerEntityManagerFactoryBean factory = new LocalContainerEntityManagerFactoryBean();
+//    factory.setJpaVendorAdapter(vendorAdapter);
+//    factory.setPackagesToScan("care.smith.top.backend.model");
+//    factory.setDataSource(dataSource());
+//
+//    return factory;
+//  }
 
-    HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
-    vendorAdapter.setDatabase(Database.HSQL);
-    vendorAdapter.setGenerateDdl(true);
-
-    LocalContainerEntityManagerFactoryBean factory = new LocalContainerEntityManagerFactoryBean();
-    factory.setJpaVendorAdapter(vendorAdapter);
-    factory.setPackagesToScan("care.smith.top.backend.model");
-    factory.setDataSource(dataSource());
-
-    return factory;
-  }
-
-  @Bean
-  public PlatformTransactionManager transactionManager() {
-
-    JpaTransactionManager txManager = new JpaTransactionManager();
-    txManager.setEntityManagerFactory(entityManagerFactory().getObject());
-    return txManager;
-  }
+//  @Bean
+//  public PlatformTransactionManager transactionManager() {
+//
+//    JpaTransactionManager txManager = new JpaTransactionManager();
+//    txManager.setEntityManagerFactory(entityManagerFactory().getObject());
+//    return txManager;
+//  }
 
   @Bean(name = "auditingDateTimeProvider")
   public DateTimeProvider dateTimeProvider() {

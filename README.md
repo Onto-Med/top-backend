@@ -7,10 +7,11 @@ Spring Boot based backend of the TOP framework
 1. Set up environment variables:
 * `APP_PORT`: the port where the spring application will run on, e.g. 8080
 * `APP_PATH`: the context path, e.g. "/" for root
+* `DB_TYPE`: type of the DB to be used, defaults to postgresql
 * `DB_HOST`: host running the neo4j database server
 * `DB_PORT`: port of the database host
-* `DB_USER`: username for connecting to the database
-* `DB_PASS`: password for connecting to the database
+* `DB_USER`: username for connecting to the database, defaults to postgres
+* `DB_PASS`: password for connecting to the database, required
 * `DATA_SOURCE_CONFIG_DIR`: location of data source configuration files, defaults to `config/data_sources`
 
 OAuth2 related:
