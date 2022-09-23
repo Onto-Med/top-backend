@@ -1,8 +1,9 @@
 package care.smith.top.backend.service;
 
 import care.smith.top.backend.model.*;
+import care.smith.top.backend.repository.CategoryRepository;
 import care.smith.top.backend.repository.EntityRepository;
-import care.smith.top.backend.repository.RepositoryRepository;
+import care.smith.top.backend.repository.PhenotypeRepository;
 import care.smith.top.backend.util.ApiModelMapper;
 import care.smith.top.phenotype2r.Phenotype2RConverter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +26,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 public class EntityService implements ContentService {
@@ -33,7 +33,8 @@ public class EntityService implements ContentService {
   private int pageSize;
 
   @Autowired private EntityRepository entityRepository;
-  @Autowired private RepositoryRepository repositoryRepository;
+  @Autowired private CategoryRepository categoryRepository;
+  @Autowired private PhenotypeRepository phenotypeRepository;
   @Autowired private RepositoryService repositoryService;
 
   public static <T> Predicate<T> distinctByKey(Function<? super T, ?> keyExtractor) {
@@ -137,14 +138,14 @@ public class EntityService implements ContentService {
 
   @Cacheable("entityCount")
   public long count(EntityType... types) {
-    return entityRepository.countByEntityType(types);
+    return entityRepository.countByEntityTypeIn(types);
   }
 
   @Transactional
   @Caching(
       evict = {@CacheEvict("entityCount"), @CacheEvict(value = "entities", key = "#repositoryId")})
   public Entity createEntity(String organisationId, String repositoryId, Entity entity) {
-    if (entityRepository.existsById(entity.getId()))
+    if (categoryRepository.existsById(entity.getId()))
       throw new ResponseStatusException(HttpStatus.CONFLICT);
     Repository repository = getRepository(organisationId, repositoryId);
 
@@ -200,7 +201,7 @@ public class EntityService implements ContentService {
     List<Entity> results = new ArrayList<>();
     for (Entity origin : origins) {
       String oldId = origin.getId();
-      Optional<Entity> fork = entityRepository.getFork(origin, destinationRepo);
+      Optional<Entity> fork = categoryRepository.getFork(origin, destinationRepo);
 
       if (!forkingInstruction.isUpdate() && fork.isPresent()) continue;
 
@@ -227,7 +228,7 @@ public class EntityService implements ContentService {
         Phenotype phenotype = (Phenotype) origin;
         if (phenotype.getSuperPhenotype() != null) {
           Optional<Entity> superClass =
-              entityRepository.getFork(phenotype.getSuperPhenotype(), destinationRepo);
+              categoryRepository.getFork(phenotype.getSuperPhenotype(), destinationRepo);
           if (superClass.isEmpty()) continue;
           phenotype.setSuperPhenotype((Phenotype) new Phenotype().id(superClass.get().getId()));
         }
@@ -236,7 +237,7 @@ public class EntityService implements ContentService {
       if (origin.getVersion() == 1) {
         results.add(
             createEntity(forkingInstruction.getOrganisationId(), destinationRepo.getId(), origin));
-        entityRepository.setFork(origin.getId(), oldId);
+        categoryRepository.setFork(origin.getId(), oldId);
       } else {
         results.add(
             updateEntityById(
@@ -247,8 +248,8 @@ public class EntityService implements ContentService {
                 null));
       }
 
-      Entity forkVersion = entityRepository.findCurrentById(origin.getId()).orElseThrow();
-      entityRepository.findCurrentById(oldId).ifPresent(e -> e.addForksItem(forkVersion));
+      Entity forkVersion = categoryRepository.findCurrentById(origin.getId()).orElseThrow();
+      categoryRepository.findCurrentById(oldId).ifPresent(e -> e.addForksItem(forkVersion));
     }
 
     return results;
@@ -258,11 +259,10 @@ public class EntityService implements ContentService {
   @Caching(
       evict = {@CacheEvict("entityCount"), @CacheEvict(value = "entities", key = "#repositoryId")})
   public void deleteEntity(String organisationId, String repositoryId, String id) {
-    Repository repository = getRepository(organisationId, repositoryId);
+    getRepository(organisationId, repositoryId);
     Entity entity =
         entityRepository
-            .findById(id)
-            .filter(e -> repository.getId().equals(e.getRepository().getId()))
+            .findByIdAndRepositoryId(id, repositoryId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     entityRepository.delete(entity);
   }
@@ -272,14 +272,14 @@ public class EntityService implements ContentService {
       String organisationId, String repositoryId, String id, Integer version) {
     Repository repository = getRepository(organisationId, repositoryId);
     Entity entity =
-        entityRepository
+        categoryRepository
             .findByIdAndVersion(id, version)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     if (!Objects.equals(entity.getRepository().getId(), repositoryId))
       throw new ResponseStatusException(HttpStatus.NOT_FOUND);
 
     Entity currentVersion =
-        entityRepository
+        categoryRepository
             .findCurrentById(id)
             .orElseThrow(
                 () ->
@@ -393,7 +393,7 @@ public class EntityService implements ContentService {
       String organisationId, String repositoryId, String id, List<String> include) {
     Repository repository = getRepository(organisationId, repositoryId);
     Entity entity =
-        entityRepository
+        categoryRepository
             .findById(id)
             .filter(e -> repository.getId().equals(e.getRepository().getId()))
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -421,24 +421,22 @@ public class EntityService implements ContentService {
   public List<Entity> getSubclasses(
       String organisationId, String repositoryId, String id, List<String> include) {
     getRepository(organisationId, repositoryId);
-    Entity entity =
-        entityRepository
-            .findById(id)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-    return entityRepository.findAllBySuperPhenotypeId(entity.getId());
+    return phenotypeRepository.findAllByRepositoryIdAndSuperPhenotypeId(repositoryId, id).stream()
+        .map(p -> (Entity) p)
+        .collect(Collectors.toList());
   }
 
   public List<Entity> getVersions(
       String organisationId, String repositoryId, String id, List<String> include) {
     getRepository(organisationId, repositoryId);
     return new ArrayList<>(
-        entityRepository.findAllById(id, PageRequest.of(0, 10, Sort.Direction.DESC, "version")));
+        categoryRepository.findAllById(id, PageRequest.of(0, 10, Sort.Direction.DESC, "version")));
   }
 
   public Entity loadEntity(String organisationId, String repositoryId, String id, Integer version) {
     Repository repository = getRepository(organisationId, repositoryId);
     Entity entity =
-        entityRepository
+        categoryRepository
             .findByIdAndVersion(id, version)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     if (!Objects.equals(entity.getRepository().getId(), repositoryId))
@@ -455,7 +453,7 @@ public class EntityService implements ContentService {
       List<String> include) {
     Repository repository = getRepository(organisationId, repositoryId);
     Entity entity =
-        entityRepository
+        categoryRepository
             .findByIdAndVersion(id, version)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     if (!Objects.equals(entity.getRepository().getId(), repositoryId))
@@ -469,11 +467,10 @@ public class EntityService implements ContentService {
   @CacheEvict(value = "entities", key = "#repositoryId")
   public Entity updateEntityById(
       String organisationId, String repositoryId, String id, Entity entity, List<String> include) {
-    Repository repository = getRepository(organisationId, repositoryId);
+    getRepository(organisationId, repositoryId);
     Entity oldEntity =
         entityRepository
-            .findById(id)
-            .filter(e -> repository.getId().equals(e.getRepository().getId()))
+            .findByIdAndRepositoryId(id, repositoryId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
     if (!Objects.equals(oldEntity.getId(), entity.getId())

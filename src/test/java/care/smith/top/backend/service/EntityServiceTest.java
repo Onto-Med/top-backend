@@ -1,10 +1,8 @@
 package care.smith.top.backend.service;
 
 import care.smith.top.backend.model.*;
-import care.smith.top.backend.repository.EntityRepository;
 import care.smith.top.simple_onto_api.calculator.functions.bool.Not;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -237,7 +235,7 @@ class EntityServiceTest extends AbstractTest {
                       });
             });
 
-    assertThat(entityRepository.findById(abstractPhenotype.getId()))
+    assertThat(phenotypeRepository.findById(abstractPhenotype.getId()))
         .isPresent()
         .hasValueSatisfying(
             e -> assertThat(e.getRepository().getId()).isEqualTo(repository.getId()));
@@ -248,6 +246,9 @@ class EntityServiceTest extends AbstractTest {
         .isNotEmpty()
         .size()
         .isEqualTo(2);
+
+    assertThat(categoryRepository.count()).isEqualTo(1);
+    assertThat(entityRepository.count()).isEqualTo(4);
   }
 
   @Test
@@ -257,10 +258,9 @@ class EntityServiceTest extends AbstractTest {
     Repository repository =
         repositoryService.createRepository(organisation.getId(), new Repository().id("repo"), null);
     Phenotype phenotype =
-        (Phenotype)
-            new Phenotype()
-                .id(UUID.randomUUID().toString())
-                .entityType(EntityType.SINGLE_PHENOTYPE);
+      new Phenotype()
+          .id(UUID.randomUUID().toString())
+          .entityType(EntityType.SINGLE_PHENOTYPE);
 
     assertThat(entityService.createEntity(organisation.getId(), repository.getId(), phenotype))
         .isNotNull()

@@ -1,9 +1,7 @@
 package care.smith.top.backend.service;
 
 import care.smith.top.backend.api.OrganisationApiDelegateImpl;
-import care.smith.top.backend.repository.EntityRepository;
-import care.smith.top.backend.repository.OrganisationRepository;
-import care.smith.top.backend.repository.RepositoryRepository;
+import care.smith.top.backend.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
@@ -17,5 +15,7 @@ public abstract class AbstractTest {
   @Autowired RepositoryService repositoryService;
   @Autowired RepositoryRepository repositoryRepository;
   @Autowired EntityService entityService;
+  @Autowired CategoryRepository categoryRepository;
   @Autowired EntityRepository entityRepository;
+  @Autowired PhenotypeRepository phenotypeRepository;
 }
