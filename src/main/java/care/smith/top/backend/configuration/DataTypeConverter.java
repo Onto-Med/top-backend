@@ -1,6 +1,6 @@
 package care.smith.top.backend.configuration;
 
-import care.smith.top.backend.model.DataType;
+import care.smith.top.model.DataType;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
