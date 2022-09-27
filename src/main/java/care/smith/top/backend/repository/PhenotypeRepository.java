@@ -1,45 +1,49 @@
 package care.smith.top.backend.repository;
 
-import care.smith.top.backend.model.DataType;
-import care.smith.top.backend.model.EntityType;
-import care.smith.top.backend.model.Phenotype;
-import care.smith.top.backend.util.OntoModelMapper;
+import care.smith.top.backend.model.EntityDao;
+import care.smith.top.backend.util.ApiModelMapper;
+import care.smith.top.model.DataType;
+import care.smith.top.model.EntityType;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
 @org.springframework.stereotype.Repository
-public interface PhenotypeRepository extends EntityBaseRepository<Phenotype> {
-  List<Phenotype> findAllByRepositoryIdAndSuperPhenotypeId(
-      String repositoryId, String superPhenotypeId);
+public interface PhenotypeRepository extends EntityRepository {
+  default List<EntityDao> findAllByRepositoryIdAndSuperPhenotypeId(
+      String repositoryId, String superPhenotypeId) {
+    return findAllByRepositoryIdAndSuperEntities_IdAndEntityType(
+        repositoryId, superPhenotypeId, ApiModelMapper.phenotypeTypes());
+  }
 
-  Page<Phenotype> findAllByTitles_TextContainingIgnoreCaseAndEntityTypeInAndDataType(
-      String title, List<EntityType> types, DataType dataType, Pageable pageable);
+  Page<EntityDao>
+      findAllByCurrentVersion_Titles_TextContainingIgnoreCaseAndEntityTypeInAndCurrentVersion_DataType(
+          String title, List<EntityType> types, DataType dataType, Pageable pageable);
 
-  default Page<Phenotype> findAllByTitleAndEntityTypeAndDataType(
+  default Page<EntityDao> findAllByTitleAndEntityTypeAndDataType(
       String title, List<EntityType> entityTypes, DataType dataType, Pageable pageable) {
     if (dataType == null) return findAllByTitleAndEntityTypes(title, entityTypes, pageable);
     if (title != null && entityTypes != null)
-      return findAllByTitles_TextContainingIgnoreCaseAndEntityTypeInAndDataType(
+      return findAllByCurrentVersion_Titles_TextContainingIgnoreCaseAndEntityTypeInAndCurrentVersion_DataType(
           title, entityTypes, dataType, pageable);
     if (title != null)
-      return findAllByTitles_TextContainingIgnoreCaseAndDataType(title, dataType, pageable);
+      return findAllByCurrentVersion_Titles_TextContainingIgnoreCaseAndCurrentVersion_DataType(
+          title, dataType, pageable);
     if (entityTypes != null)
-      return findAllByEntityTypeInAndDataType(entityTypes, dataType, pageable);
-    return findAllByDataType(dataType, pageable);
+      return findAllByEntityTypeInAndCurrentVersion_DataType(entityTypes, dataType, pageable);
+    return findAllByCurrentVersion_DataType(dataType, pageable);
   }
 
-  Page<Phenotype> findAllByDataType(DataType dataType, Pageable pageable);
+  Page<EntityDao> findAllByCurrentVersion_DataType(DataType dataType, Pageable pageable);
 
-  Page<Phenotype> findAllByEntityTypeInAndDataType(
+  Page<EntityDao> findAllByEntityTypeInAndCurrentVersion_DataType(
       List<EntityType> entityTypes, DataType dataType, Pageable pageable);
 
-  Page<Phenotype> findAllByTitles_TextContainingIgnoreCaseAndDataType(
+  Page<EntityDao> findAllByCurrentVersion_Titles_TextContainingIgnoreCaseAndCurrentVersion_DataType(
       String title, DataType dataType, Pageable pageable);
 
-  default Page<Phenotype> findAllByRepositoryIdAndTitleAndEntityTypeAndDataType(
+  default Page<EntityDao> findAllByRepositoryIdAndTitleAndEntityTypeAndDataType(
       String repositoryId,
       String title,
       List<EntityType> entityTypes,
@@ -51,30 +55,32 @@ public interface PhenotypeRepository extends EntityBaseRepository<Phenotype> {
       return findAllByRepositoryIdAndTitleAndEntityTypes(
           repositoryId, title, entityTypes, pageable);
     if (title != null && entityTypes != null)
-      return findAllByRepositoryIdAndTitles_TextContainingIgnoreCaseAndEntityTypeInAndDataType(
+      return findAllByRepositoryIdAndCurrentVersion_Titles_TextContainingIgnoreCaseAndEntityTypeInAndCurrentVersion_DataType(
           repositoryId, title, entityTypes, dataType, pageable);
     if (title != null)
-      return findAllByRepositoryIdAndTitles_TextContainingIgnoreCaseAndDataType(
+      return findAllByRepositoryIdAndCurrentVersion_Titles_TextContainingIgnoreCaseAndCurrentVersion_DataType(
           repositoryId, title, dataType, pageable);
     if (entityTypes != null)
-      return findAllByRepositoryIdAndEntityTypeInAndDataType(
+      return findAllByRepositoryIdAndEntityTypeInAndCurrentVersion_DataType(
           repositoryId, entityTypes, dataType, pageable);
-    return findAllByRepositoryIdAndDataType(repositoryId, dataType, pageable);
+    return findAllByRepositoryIdAndCurrentVersion_DataType(repositoryId, dataType, pageable);
   }
 
-  Page<Phenotype> findAllByRepositoryIdAndDataType(
+  Page<EntityDao> findAllByRepositoryIdAndCurrentVersion_DataType(
       String repositoryId, DataType dataType, Pageable pageable);
 
-  Page<Phenotype> findAllByRepositoryIdAndEntityTypeInAndDataType(
+  Page<EntityDao> findAllByRepositoryIdAndEntityTypeInAndCurrentVersion_DataType(
       String repositoryId, List<EntityType> entityTypes, DataType dataType, Pageable pageable);
 
-  Page<Phenotype> findAllByRepositoryIdAndTitles_TextContainingIgnoreCaseAndDataType(
-      String repositoryId, String title, DataType dataType, Pageable pageable);
+  Page<EntityDao>
+      findAllByRepositoryIdAndCurrentVersion_Titles_TextContainingIgnoreCaseAndCurrentVersion_DataType(
+          String repositoryId, String title, DataType dataType, Pageable pageable);
 
-  Page<Phenotype> findAllByRepositoryIdAndTitles_TextContainingIgnoreCaseAndEntityTypeInAndDataType(
-      String repositoryId,
-      String title,
-      List<EntityType> entityTypes,
-      DataType dataType,
-      Pageable pageable);
+  Page<EntityDao>
+      findAllByRepositoryIdAndCurrentVersion_Titles_TextContainingIgnoreCaseAndEntityTypeInAndCurrentVersion_DataType(
+          String repositoryId,
+          String title,
+          List<EntityType> entityTypes,
+          DataType dataType,
+          Pageable pageable);
 }

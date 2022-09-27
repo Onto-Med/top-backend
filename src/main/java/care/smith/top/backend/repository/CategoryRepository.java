@@ -1,15 +1,11 @@
 package care.smith.top.backend.repository;
 
-import care.smith.top.backend.model.Category;
-import care.smith.top.backend.model.EntityType;
+import care.smith.top.model.EntityType;
+import org.springframework.stereotype.Repository;
 
-import java.util.List;
-
-@org.springframework.stereotype.Repository
-public interface CategoryRepository extends EntityBaseRepository<Category> {
+@Repository
+public interface CategoryRepository extends EntityRepository {
   default long count() {
     return countByEntityTypeIn(new EntityType[] {EntityType.CATEGORY});
   }
-
-  List<Category> findAllByRepositoryIdAndSuperCategories_Id(String repositoryId, String superCategoryId);
 }
