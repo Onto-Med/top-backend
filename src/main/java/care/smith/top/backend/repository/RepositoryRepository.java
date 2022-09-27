@@ -1,24 +1,22 @@
 package care.smith.top.backend.repository;
 
-import care.smith.top.backend.model.Repository;
-import org.springframework.data.domain.PageRequest;
+import care.smith.top.backend.model.RepositoryDao;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.repository.PagingAndSortingRepository;
+import org.springframework.stereotype.Repository;
 
-import java.net.ContentHandler;
+@Repository
+public interface RepositoryRepository extends PagingAndSortingRepository<RepositoryDao, String> {
+  Slice<RepositoryDao> findByNameContainingIgnoreCase(String name, Pageable pageable);
 
-@org.springframework.stereotype.Repository
-public interface RepositoryRepository extends PagingAndSortingRepository<Repository, String> {
-  Slice<Repository> findByNameContainingIgnoreCase(String name, Pageable pageable);
+  Slice<RepositoryDao> findAllByPrimary(Boolean primary, Pageable pageable);
 
-  Slice<Repository> findAllByPrimary(Boolean primary, Pageable pageable);
-
-  Slice<Repository> findByNameContainingIgnoreCaseAndPrimary(
+  Slice<RepositoryDao> findByNameContainingIgnoreCaseAndPrimary(
       String name, Boolean primary, Pageable pageable);
 
-  Slice<Repository> findByOrganisationId(String organisationId, Pageable pageable);
+  Slice<RepositoryDao> findByOrganisationId(String organisationId, Pageable pageable);
 
-  Slice<Repository> findByOrganisationIdAndNameContainingIgnoreCase(
+  Slice<RepositoryDao> findByOrganisationIdAndNameContainingIgnoreCase(
       String organisationId, String name, Pageable pageable);
 }
