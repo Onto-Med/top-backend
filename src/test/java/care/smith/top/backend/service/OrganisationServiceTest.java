@@ -1,6 +1,7 @@
 package care.smith.top.backend.service;
 
 import care.smith.top.model.Organisation;
+import care.smith.top.model.Repository;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
@@ -90,6 +91,8 @@ class OrganisationServiceTest extends AbstractTest {
                         o ->
                             assertThat(o.getSuperOrganisation().getId())
                                 .isEqualTo(superOrganisation.getId())));
+
+    assertThat(organisationService.count()).isEqualTo(3);
   }
 
   @Test
@@ -159,23 +162,40 @@ class OrganisationServiceTest extends AbstractTest {
   @Test
   void deleteOrganisationById() {
     Organisation superOrganisation = new Organisation().id("super_org");
-    organisationService.createOrganisation(superOrganisation);
+    Organisation subOrganisation1 =
+        new Organisation().id("sub_org_1").superOrganisation(superOrganisation);
+    Organisation subOrganisation2 =
+        new Organisation().id("sub_org_2").superOrganisation(subOrganisation1);
 
-    Organisation subOrganisation =
-        new Organisation().id("sub_org").superOrganisation(superOrganisation);
-    organisationService.createOrganisation(subOrganisation);
+    /* deleteing super organisation should preserve sub organisation */
+    organisationService.createOrganisation(superOrganisation);
+    organisationService.createOrganisation(subOrganisation1);
 
     assertThatCode(() -> organisationService.deleteOrganisationById(superOrganisation.getId()))
         .doesNotThrowAnyException();
 
     assertThat(organisationRepository.findById(superOrganisation.getId())).isEmpty();
-    assertThat(organisationRepository.findById(subOrganisation.getId()))
+    assertThat(organisationRepository.findById(subOrganisation1.getId()))
         .isPresent()
         .hasValueSatisfying(o -> assertThat(o.getSuperOrganisation()).isNull());
 
-    assertThatCode(() -> organisationService.deleteOrganisationById(subOrganisation.getId()))
+    assertThatCode(() -> organisationService.deleteOrganisationById(subOrganisation1.getId()))
         .doesNotThrowAnyException();
-    assertThat(organisationRepository.findById(subOrganisation.getId())).isEmpty();
+    assertThat(organisationRepository.findById(subOrganisation1.getId())).isEmpty();
+
+    /* deleteing intermediate organisation should link sub organisation to super organisation */
+    organisationService.createOrganisation(superOrganisation);
+    organisationService.createOrganisation(subOrganisation1);
+    organisationService.createOrganisation(subOrganisation2);
+
+    assertThatCode(() -> organisationService.deleteOrganisationById(subOrganisation1.getId()))
+        .doesNotThrowAnyException();
+
+    assertThat(organisationRepository.findById(superOrganisation.getId())).isPresent();
+    assertThat(organisationRepository.findById(subOrganisation2.getId()))
+        .isPresent()
+        .hasValueSatisfying(
+            o -> assertThat(o.getSuperOrganisation().getId()).isEqualTo(superOrganisation.getId()));
   }
 
   @Test
@@ -189,6 +209,10 @@ class OrganisationServiceTest extends AbstractTest {
             .name("Sub organisation")
             .superOrganisation(superOrganisation);
     organisationService.createOrganisation(subOrganisation);
+
+    assertThatThrownBy(() -> organisationService.getOrganisation("invalid", null))
+        .isInstanceOf(ResponseStatusException.class)
+        .hasFieldOrPropertyWithValue("status", HttpStatus.NOT_FOUND);
 
     assertThat(organisationService.getOrganisation(subOrganisation.getId(), null))
         .isNotNull()
@@ -230,5 +254,37 @@ class OrganisationServiceTest extends AbstractTest {
     assertThat(organisationService.getOrganisations("not matching string", 1, null)).isEmpty();
 
     assertThat(organisationService.getOrganisations(null, 1, null)).size().isEqualTo(2);
+  }
+
+  @Test
+  void organisationShouldNotBeItsOwnSuperOrganisation() {
+    assertThat(
+            organisationService.createOrganisation(
+                new Organisation().id("org").superOrganisation(new Organisation().id("org"))))
+        .isNotNull()
+        .satisfies(o -> assertThat(o.getSuperOrganisation()).isNull());
+
+    assertThat(
+            organisationService.updateOrganisationById(
+                "org", new Organisation().superOrganisation(new Organisation().id("org"))))
+        .isNotNull()
+        .satisfies(o -> assertThat(o.getSuperOrganisation()).isNull());
+
+    assertThat(organisationRepository.findById("org"))
+        .isPresent()
+        .hasValueSatisfying(o -> assertThat(o.getSuperOrganisation()).isNull());
+  }
+
+  @Test
+  void organisationContentShouldGetDeletedToo() {
+    Organisation organisation = new Organisation().id("org");
+    Repository repository = new Repository().id("repo").organisation(organisation);
+    organisationService.createOrganisation(organisation);
+    repositoryService.createRepository(organisation.getId(), repository, null);
+
+    assertThatCode(() -> organisationService.deleteOrganisationById(organisation.getId()))
+        .doesNotThrowAnyException();
+    assertThat(organisationRepository.count()).isEqualTo(0);
+    assertThat(repositoryRepository.count()).isEqualTo(0);
   }
 }

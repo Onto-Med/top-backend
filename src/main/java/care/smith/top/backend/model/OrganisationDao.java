@@ -28,7 +28,7 @@ public class OrganisationDao {
   @OneToMany(mappedBy = "superOrganisation")
   private List<OrganisationDao> subOrganisations = null;
 
-  @OneToMany(mappedBy = "organisation")
+  @OneToMany(mappedBy = "organisation", cascade = CascadeType.REMOVE)
   private List<RepositoryDao> repositories = null;
 
   public OrganisationDao() {}

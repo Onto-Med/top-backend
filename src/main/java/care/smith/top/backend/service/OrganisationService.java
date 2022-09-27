@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class OrganisationService implements ContentService {
@@ -54,7 +55,7 @@ public class OrganisationService implements ContentService {
             .findById(id)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-    if (data.getSuperOrganisation() != null)
+    if (data.getSuperOrganisation() != null && !id.equals(data.getSuperOrganisation().getId()))
       organisationRepository
           .findById(data.getSuperOrganisation().getId())
           .ifPresent(organisation::superOrganisation);
@@ -70,7 +71,7 @@ public class OrganisationService implements ContentService {
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
     for (OrganisationDao subOrganisation : organisation.getSubOrganisations()) {
-      subOrganisation.superOrganisation(null);
+      subOrganisation.superOrganisation(organisation.getSuperOrganisation());
       organisationRepository.save(subOrganisation);
     }
     organisationRepository.delete(organisation);
