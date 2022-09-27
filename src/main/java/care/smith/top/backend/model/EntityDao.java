@@ -1,7 +1,6 @@
 package care.smith.top.backend.model;
 
 import care.smith.top.model.EntityType;
-import care.smith.top.model.Repository;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.Entity;
@@ -18,7 +17,7 @@ public class EntityDao {
 
   private Integer index;
 
-  @ManyToOne private Repository repository;
+  @ManyToOne private RepositoryDao repository;
 
   @OneToMany(mappedBy = "entity")
   private List<EntityVersionDao> versions = null;
@@ -70,7 +69,7 @@ public class EntityDao {
     return this;
   }
 
-  public EntityDao repository(Repository repository) {
+  public EntityDao repository(RepositoryDao repository) {
     this.repository = repository;
     return this;
   }
@@ -106,7 +105,7 @@ public class EntityDao {
     return index;
   }
 
-  public Repository getRepository() {
+  public RepositoryDao getRepository() {
     return repository;
   }
 
