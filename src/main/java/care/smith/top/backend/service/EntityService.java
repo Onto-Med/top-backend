@@ -20,7 +20,11 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.io.StringWriter;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @Transactional
@@ -33,6 +37,11 @@ public class EntityService implements ContentService {
   @Autowired private CategoryRepository categoryRepository;
   @Autowired private PhenotypeRepository phenotypeRepository;
   @Autowired private RepositoryService repositoryService;
+
+  public static <T> Predicate<T> distinctByKey(Function<? super T, ?> keyExtractor) {
+    Set<Object> seen = ConcurrentHashMap.newKeySet();
+    return t -> seen.add(keyExtractor.apply(t));
+  }
 
   @Override
   @Cacheable("entityCount")
@@ -257,25 +266,24 @@ public class EntityService implements ContentService {
     PageRequest pageRequest = PageRequest.of(page != null ? page - 1 : 0, pageSize);
     return phenotypeRepository
         .findAllByTitleAndEntityTypeAndDataType(name, type, dataType, pageRequest)
+        .flatMap(
+            entity -> {
+              Stream<EntityDao> result = Stream.of(entity);
+              if (type == null
+                  || type.contains(ApiModelMapper.toRestrictedEntityType(entity.getEntityType()))) {
+                String repositoryId = entity.getRepository().getId();
+                result =
+                    Stream.concat(
+                        result,
+                        entityRepository
+                            .findAllByRepositoryIdAndSuperEntities_Id(repositoryId, entity.getId())
+                            .stream());
+              }
+              return result;
+            })
+        .filter(distinctByKey(EntityDao::getId))
         .map(EntityDao::toApiModel)
-        .getContent();
-
-    //    TODO: add restrictions to resultset
-    //    return entityRepository
-    //        .findAllByRepositoryIdAndNameAndEntityTypeAndDataTypeAndPrimary(
-    //            null, name, type, dataType, true, PageRequest.of(requestedPage, pageSize))
-    //        .parallelStream()
-    //        .flatMap(
-    //            entity -> {
-    //              Stream<Entity> result = Stream.of(entity);
-    //              if (type == null
-    //                  ||
-    // type.contains(ApiModelMapper.toRestrictedEntityType(entity.getEntityType())))
-    //                result = Stream.concat(result, entityRepository.findBySuperPhenotype(entity));
-    //              return result;
-    //            })
-    //        .filter(distinctByKey(Entity::getId))
-    //        .collect(Collectors.toList());
+        .toList();
   }
 
   @Cacheable(
@@ -296,28 +304,23 @@ public class EntityService implements ContentService {
     return phenotypeRepository
         .findAllByRepositoryIdAndTitleAndEntityTypeAndDataType(
             repositoryId, name, type, dataType, pageRequest)
+        .flatMap(
+            entity -> {
+              Stream<EntityDao> result = Stream.of(entity);
+              if (type == null
+                  || type.contains(ApiModelMapper.toRestrictedEntityType(entity.getEntityType()))) {
+                result =
+                    Stream.concat(
+                        result,
+                        entityRepository
+                            .findAllByRepositoryIdAndSuperEntities_Id(repositoryId, entity.getId())
+                            .stream());
+              }
+              return result;
+            })
+        .filter(distinctByKey(EntityDao::getId))
         .map(EntityDao::toApiModel)
-        .getContent();
-
-    //    TODO: add restrictions to resultset
-    //    return entityRepository
-    //        .findAllByRepositoryIdAndNameAndEntityTypeAndDataTypeAndPrimary(
-    //            repositoryId, name, type, dataType, false, PageRequest.of(requestedPage,
-    // pageSize))
-    //        .parallelStream()
-    //        .flatMap(
-    //            entity -> {
-    //              Stream<Entity> result = Stream.of(entity);
-    //              //              if (type == null
-    //              //                  ||
-    //              // type.contains(ApiModelMapper.toRestrictedEntityType(entity.getEntityType())))
-    //              //                result =
-    //              //                    Stream.concat(result,
-    //              // entityRepository.findBySuperPhenotype(entity));
-    //              return result;
-    //            })
-    //        .filter(distinctByKey(Entity::getId))
-    //        .collect(Collectors.toList());
+        .toList();
   }
 
   public ForkingStats getForkingStats(
