@@ -1,12 +1,10 @@
 package care.smith.top.backend.model;
 
 import care.smith.top.model.Organisation;
-import care.smith.top.model.Repository;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import javax.persistence.Entity;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.time.OffsetDateTime;
@@ -25,7 +23,7 @@ public class OrganisationDao {
   private OffsetDateTime createdAt;
 
   @LastModifiedDate private OffsetDateTime updatedAt;
-  @ManyToOne private Organisation superOrganisation;
+  @ManyToOne private OrganisationDao superOrganisation;
 
   @OneToMany(mappedBy = "superOrganisation")
   private List<OrganisationDao> subOrganisations = null;
@@ -104,14 +102,28 @@ public class OrganisationDao {
     return result;
   }
 
-  public OrganisationDao subOrganisations(List<Organisation> subOrganisations) {
+  public OrganisationDao subOrganisations(List<OrganisationDao> subOrganisations) {
     this.subOrganisations = subOrganisations;
     return this;
   }
 
-  public OrganisationDao repositories(List<Repository> repositories) {
+  public OrganisationDao repositories(List<RepositoryDao> repositories) {
     this.repositories = repositories;
     return this;
+  }
+
+  public Organisation toApiModel() {
+    Organisation organisation =
+        new Organisation()
+            .id(id)
+            .name(name)
+            .description(description)
+            .createdAt(createdAt)
+            .updatedAt(updatedAt);
+    if (superOrganisation != null)
+      organisation.setSuperOrganisation(
+          new Organisation().id(superOrganisation.getId()).name(superOrganisation.getName()));
+    return organisation;
   }
 
   @NotNull
@@ -135,15 +147,15 @@ public class OrganisationDao {
     return updatedAt;
   }
 
-  public Organisation getSuperOrganisation() {
+  public OrganisationDao getSuperOrganisation() {
     return superOrganisation;
   }
 
-  public List<Organisation> getSubOrganisations() {
+  public List<OrganisationDao> getSubOrganisations() {
     return subOrganisations;
   }
 
-  public List<Repository> getRepositories() {
+  public List<RepositoryDao> getRepositories() {
     return repositories;
   }
 }
