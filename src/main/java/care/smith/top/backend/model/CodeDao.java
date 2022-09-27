@@ -1,6 +1,7 @@
 package care.smith.top.backend.model;
 
 import care.smith.top.model.Code;
+import care.smith.top.model.CodeSystem;
 
 import javax.persistence.Embeddable;
 import java.net.URI;
@@ -33,6 +34,13 @@ public class CodeDao {
       codeSystemUri = code.getCodeSystem().getUri();
       codeSystemName = code.getCodeSystem().getName();
     }
+  }
+
+  public Code toApiModel() {
+    return new Code()
+        .code(code)
+        .name(name)
+        .codeSystem(new CodeSystem().uri(codeSystemUri).name(codeSystemName));
   }
 
   public String getCode() {

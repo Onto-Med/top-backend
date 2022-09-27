@@ -120,7 +120,10 @@ public class EntityDao {
 
     entity
         .author(entityVersionDao.getAuthor())
-        .codes(entityVersionDao.getCodes())
+        .codes(
+            entityVersionDao.getCodes().stream()
+                .map(CodeDao::toApiModel)
+                .collect(Collectors.toList()))
         .createdAt(entityVersionDao.getCreatedAt())
         .version(entityVersionDao.getVersion())
         .descriptions(
