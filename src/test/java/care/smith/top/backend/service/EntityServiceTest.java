@@ -8,7 +8,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.net.URI;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -90,6 +89,22 @@ class EntityServiceTest extends AbstractTest {
                     .anyMatch(f -> repository3.getId().equals(f.getRepository().getId()))
                     .size()
                     .isEqualTo(2));
+
+    assertThatCode(
+            () ->
+                entityService.deleteEntity(
+                    organisation.getId(), repository1.getId(), origin.getId()))
+        .doesNotThrowAnyException();
+    assertThat(entityRepository.existsById(origin.getId())).isEqualTo(false);
+    assertThat(entityRepository.findAll())
+        .isNotEmpty()
+        .allMatch(e -> e.getOrigin() == null)
+        .size()
+        .isEqualTo(2);
+    assertThat(entityVersionRepository.findAll())
+        .isNotEmpty()
+        .size()
+        .isEqualTo(2);
   }
 
   @Test

@@ -226,6 +226,15 @@ public class EntityService implements ContentService {
       }
     }
 
+    if (entity.getForks() != null)
+      for (EntityDao fork : entity.getForks()) entityRepository.save(fork.origin(null));
+
+    if (entity.getVersions() != null)
+      for (EntityVersionDao version : entity.getVersions())
+        if (version.getEquivalentEntityVersionOf() != null)
+          for (EntityVersionDao eqVersion : version.getEquivalentEntityVersionOf())
+            entityVersionRepository.save(eqVersion.removeEquivalentEntityVersionsItem(version));
+
     entityRepository.delete(entity);
   }
 

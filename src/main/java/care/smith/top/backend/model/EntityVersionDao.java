@@ -38,7 +38,11 @@ public class EntityVersionDao {
   @OneToOne(mappedBy = "previousVersion")
   private EntityVersionDao nextVersion;
 
-  @ManyToMany private Set<EntityVersionDao> equivalentEntityVersions = null;
+  @ManyToMany
+  private Set<EntityVersionDao> equivalentEntityVersions = null;
+
+  @ManyToMany(mappedBy = "equivalentEntityVersions")
+  private Set<EntityVersionDao> equivalentEntityVersionOf = null;
 
   @CreatedBy private String author;
 
@@ -122,9 +126,17 @@ public class EntityVersionDao {
     return this;
   }
 
-  public EntityVersionDao addEquivalentEntityVersionsItem(EntityVersionDao equivalentEntityVersionsItem) {
+  public EntityVersionDao addEquivalentEntityVersionsItem(
+      EntityVersionDao equivalentEntityVersionsItem) {
     if (equivalentEntityVersions == null) equivalentEntityVersions = new HashSet<>();
     equivalentEntityVersions.add(equivalentEntityVersionsItem);
+    return this;
+  }
+
+  public EntityVersionDao removeEquivalentEntityVersionsItem(
+      EntityVersionDao equivalentEntityVersionsItem) {
+    if (equivalentEntityVersions != null)
+      equivalentEntityVersions.remove(equivalentEntityVersionsItem);
     return this;
   }
 
@@ -154,60 +166,6 @@ public class EntityVersionDao {
   public EntityVersionDao unit(String unit) {
     this.unit = unit;
     return this;
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-
-    EntityVersionDao that = (EntityVersionDao) o;
-
-    if (!getEntity().equals(that.getEntity())) return false;
-    if (!getVersion().equals(that.getVersion())) return false;
-    if (getTitles() != null ? !getTitles().equals(that.getTitles()) : that.getTitles() != null)
-      return false;
-    if (getSynonyms() != null
-        ? !getSynonyms().equals(that.getSynonyms())
-        : that.getSynonyms() != null) return false;
-    if (getDescriptions() != null
-        ? !getDescriptions().equals(that.getDescriptions())
-        : that.getDescriptions() != null) return false;
-    if (getCodes() != null ? !getCodes().equals(that.getCodes()) : that.getCodes() != null)
-      return false;
-    if (getAuthor() != null ? !getAuthor().equals(that.getAuthor()) : that.getAuthor() != null)
-      return false;
-    if (getDataType() != that.getDataType()) return false;
-    if (getItemType() != that.getItemType()) return false;
-    if (getRestriction() != null
-        ? !getRestriction().equals(that.getRestriction())
-        : that.getRestriction() != null) return false;
-    if (getExpression() != null
-        ? !getExpression().equals(that.getExpression())
-        : that.getExpression() != null) return false;
-    if (getUnit() != null ? !getUnit().equals(that.getUnit()) : that.getUnit() != null)
-      return false;
-    return getCreatedAt() != null
-        ? getCreatedAt().equals(that.getCreatedAt())
-        : that.getCreatedAt() == null;
-  }
-
-  @Override
-  public int hashCode() {
-    int result = getEntity().hashCode();
-    result = 31 * result + getVersion().hashCode();
-    result = 31 * result + (getTitles() != null ? getTitles().hashCode() : 0);
-    result = 31 * result + (getSynonyms() != null ? getSynonyms().hashCode() : 0);
-    result = 31 * result + (getDescriptions() != null ? getDescriptions().hashCode() : 0);
-    result = 31 * result + (getCodes() != null ? getCodes().hashCode() : 0);
-    result = 31 * result + (getAuthor() != null ? getAuthor().hashCode() : 0);
-    result = 31 * result + (getDataType() != null ? getDataType().hashCode() : 0);
-    result = 31 * result + (getItemType() != null ? getItemType().hashCode() : 0);
-    result = 31 * result + (getRestriction() != null ? getRestriction().hashCode() : 0);
-    result = 31 * result + (getExpression() != null ? getExpression().hashCode() : 0);
-    result = 31 * result + (getUnit() != null ? getUnit().hashCode() : 0);
-    result = 31 * result + (getCreatedAt() != null ? getCreatedAt().hashCode() : 0);
-    return result;
   }
 
   public EntityVersionDao entity(EntityDao entity) {
@@ -247,6 +205,11 @@ public class EntityVersionDao {
 
   public EntityVersionDao nextVersion(EntityVersionDao nextVersion) {
     this.nextVersion = nextVersion;
+    return this;
+  }
+
+  public EntityVersionDao equivalentEntityVersionOf(Set<EntityVersionDao> equivalentEntityVersionOf) {
+    this.equivalentEntityVersionOf = equivalentEntityVersionOf;
     return this;
   }
 
@@ -317,6 +280,10 @@ public class EntityVersionDao {
     return nextVersion;
   }
 
+  public Set<EntityVersionDao> getEquivalentEntityVersionOf() {
+    return equivalentEntityVersionOf;
+  }
+
   public Set<EntityVersionDao> getEquivalentEntityVersions() {
     return equivalentEntityVersions;
   }
@@ -327,5 +294,59 @@ public class EntityVersionDao {
 
   public OffsetDateTime getCreatedAt() {
     return createdAt;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+
+    EntityVersionDao that = (EntityVersionDao) o;
+
+    if (!getEntity().equals(that.getEntity())) return false;
+    if (!getVersion().equals(that.getVersion())) return false;
+    if (getTitles() != null ? !getTitles().equals(that.getTitles()) : that.getTitles() != null)
+      return false;
+    if (getSynonyms() != null
+      ? !getSynonyms().equals(that.getSynonyms())
+      : that.getSynonyms() != null) return false;
+    if (getDescriptions() != null
+      ? !getDescriptions().equals(that.getDescriptions())
+      : that.getDescriptions() != null) return false;
+    if (getCodes() != null ? !getCodes().equals(that.getCodes()) : that.getCodes() != null)
+      return false;
+    if (getAuthor() != null ? !getAuthor().equals(that.getAuthor()) : that.getAuthor() != null)
+      return false;
+    if (getDataType() != that.getDataType()) return false;
+    if (getItemType() != that.getItemType()) return false;
+    if (getRestriction() != null
+      ? !getRestriction().equals(that.getRestriction())
+      : that.getRestriction() != null) return false;
+    if (getExpression() != null
+      ? !getExpression().equals(that.getExpression())
+      : that.getExpression() != null) return false;
+    if (getUnit() != null ? !getUnit().equals(that.getUnit()) : that.getUnit() != null)
+      return false;
+    return getCreatedAt() != null
+      ? getCreatedAt().equals(that.getCreatedAt())
+      : that.getCreatedAt() == null;
+  }
+
+  @Override
+  public int hashCode() {
+    int result = getEntity().hashCode();
+    result = 31 * result + getVersion().hashCode();
+    result = 31 * result + (getTitles() != null ? getTitles().hashCode() : 0);
+    result = 31 * result + (getSynonyms() != null ? getSynonyms().hashCode() : 0);
+    result = 31 * result + (getDescriptions() != null ? getDescriptions().hashCode() : 0);
+    result = 31 * result + (getCodes() != null ? getCodes().hashCode() : 0);
+    result = 31 * result + (getAuthor() != null ? getAuthor().hashCode() : 0);
+    result = 31 * result + (getDataType() != null ? getDataType().hashCode() : 0);
+    result = 31 * result + (getItemType() != null ? getItemType().hashCode() : 0);
+    result = 31 * result + (getRestriction() != null ? getRestriction().hashCode() : 0);
+    result = 31 * result + (getExpression() != null ? getExpression().hashCode() : 0);
+    result = 31 * result + (getUnit() != null ? getUnit().hashCode() : 0);
+    result = 31 * result + (getCreatedAt() != null ? getCreatedAt().hashCode() : 0);
+    return result;
   }
 }

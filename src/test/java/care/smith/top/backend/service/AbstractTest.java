@@ -18,4 +18,5 @@ public abstract class AbstractTest {
   @Autowired CategoryRepository categoryRepository;
   @Autowired EntityRepository entityRepository;
   @Autowired PhenotypeRepository phenotypeRepository;
+  @Autowired EntityVersionRepository entityVersionRepository;
 }

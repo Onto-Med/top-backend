@@ -9,8 +9,6 @@ import java.util.Optional;
 
 @Repository
 public interface EntityVersionRepository extends JpaRepository<EntityVersionDao, String> {
-  Optional<EntityVersionDao> findByEntityIdAndVersion(String id, Integer version);
-
   List<EntityVersionDao> findAllByEntity_RepositoryIdAndEntityId(
       String repositoryId, String entityId);
 
