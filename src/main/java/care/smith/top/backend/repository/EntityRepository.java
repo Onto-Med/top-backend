@@ -1,11 +1,13 @@
 package care.smith.top.backend.repository;
 
 import care.smith.top.backend.model.EntityDao;
+import care.smith.top.backend.model.EntityVersionDao;
 import care.smith.top.backend.model.RepositoryDao;
 import care.smith.top.model.EntityType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.stereotype.Repository;
 
@@ -82,4 +84,9 @@ public interface EntityRepository extends PagingAndSortingRepository<EntityDao, 
   Page<EntityDao>
       findAllByRepositoryIdAndCurrentVersion_Titles_TextContainingIgnoreCaseAndEntityTypeIn(
           String repositoryId, String title, List<EntityType> entityTypes, Pageable pageable);
+
+  Optional<EntityVersionDao> findCurrentVersionByEntityId(String id);
+
+  Slice<EntityDao> findAllByRepositoryIdAndSuperEntitiesEmpty(
+      String repositoryId, Pageable pageable);
 }
