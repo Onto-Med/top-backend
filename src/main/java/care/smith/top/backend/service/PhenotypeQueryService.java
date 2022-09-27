@@ -1,6 +1,6 @@
 package care.smith.top.backend.service;
 
-import care.smith.top.backend.model.*;
+import care.smith.top.model.*;
 import care.smith.top.backend.util.ApiModelMapper;
 import care.smith.top.top_phenotypic_query.adapter.config.DataAdapterConfig;
 import org.jobrunr.jobs.Job;

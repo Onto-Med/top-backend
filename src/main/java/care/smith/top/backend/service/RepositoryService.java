@@ -1,7 +1,8 @@
 package care.smith.top.backend.service;
 
-import care.smith.top.backend.model.Organisation;
-import care.smith.top.backend.model.Repository;
+import care.smith.top.backend.model.OrganisationDao;
+import care.smith.top.backend.model.RepositoryDao;
+import care.smith.top.model.Repository;
 import care.smith.top.backend.repository.OrganisationRepository;
 import care.smith.top.backend.repository.RepositoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +16,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class RepositoryService implements ContentService {
@@ -31,16 +31,22 @@ public class RepositoryService implements ContentService {
   }
 
   @Transactional
-  public Repository createRepository(
-      String organisationId, Repository repository, List<String> include) {
-    Organisation organisation = getOrganisation(organisationId);
-
-    if (repositoryRepository.existsById(repository.getId()))
+  public Repository createRepository(String organisationId, Repository data, List<String> include) {
+    if (repositoryRepository.existsById(data.getId()))
       throw new ResponseStatusException(HttpStatus.CONFLICT);
 
+    OrganisationDao organisation =
+        organisationRepository
+            .findById(organisationId)
+            .orElseThrow(
+                () ->
+                    new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        String.format("Organisation '%s' does not exist!", organisationId)));
+
     // TODO: if (user is admin) ...
-    repository.setOrganisation(organisation);
-    return repositoryRepository.save(repository);
+    RepositoryDao repository = new RepositoryDao(data).organisation(organisation);
+    return repositoryRepository.save(repository).toApiModel();
   }
 
   @Transactional
@@ -50,41 +56,36 @@ public class RepositoryService implements ContentService {
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND)));
   }
 
-  public List<care.smith.top.backend.model.Repository> getRepositories(
+  public List<Repository> getRepositories(
       List<String> include, String name, Boolean primary, Integer page) {
     // TODO: check if user has read permission
     PageRequest pageRequest =
         PageRequest.of(page == null ? 0 : page - 1, pageSize, Sort.by("name"));
-    if (name == null) {
-      if (primary == null) return repositoryRepository.findAll(pageRequest).getContent();
-      return repositoryRepository.findAllByPrimary(primary, pageRequest).getContent();
-    }
-    if (primary == null)
-      return repositoryRepository.findByNameContainingIgnoreCase(name, pageRequest).getContent();
     return repositoryRepository
-        .findByNameContainingIgnoreCaseAndPrimary(name, primary, pageRequest)
+        .findByNameAndPrimary(name, primary, pageRequest)
+        .map(RepositoryDao::toApiModel)
         .getContent();
   }
 
-  public List<care.smith.top.backend.model.Repository> getRepositoriesByOrganisationId(
+  public List<Repository> getRepositoriesByOrganisationId(
       String organisationId, List<String> include, String name, Integer page) {
     PageRequest pageRequest =
         PageRequest.of(page == null ? 0 : page - 1, pageSize, Sort.by("name"));
-    if (name == null)
-      return repositoryRepository.findByOrganisationId(organisationId, pageRequest).getContent();
     return repositoryRepository
-        .findByOrganisationIdAndNameContainingIgnoreCase(organisationId, name, pageRequest)
+        .findByOrganisationIdAndName(organisationId, name, pageRequest)
+        .map(RepositoryDao::toApiModel)
         .getContent();
   }
 
-  public care.smith.top.backend.model.Repository getRepository(
+  public Repository getRepository(
       String organisationId, String repositoryId, List<String> include) {
     // TODO: include organisation if requested
     return getRepository(organisationId, repositoryId)
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND))
+        .toApiModel();
   }
 
-  public Optional<Repository> getRepository(String organisationId, String repositoryId) {
+  public Optional<RepositoryDao> getRepository(String organisationId, String repositoryId) {
     return repositoryRepository
         .findById(repositoryId)
         .filter(r -> organisationId.equals(r.getOrganisation().getId()));
@@ -95,28 +96,12 @@ public class RepositoryService implements ContentService {
   }
 
   @Transactional
-  public care.smith.top.backend.model.Repository updateRepository(
+  public Repository updateRepository(
       String organisationId, String repositoryId, Repository data, List<String> include) {
-    Repository repository =
+    RepositoryDao repository =
         repositoryRepository
-            .findById(repositoryId)
-            .filter(r -> organisationId.equals(r.getOrganisation().getId()))
+            .findByIdAndOrganisationId(repositoryId, organisationId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-
-    repository.setDescription(data.getDescription());
-    repository.setName(data.getName());
-    // TODO: if (user is admin) ...
-    repository.setPrimary(data.isPrimary());
-    return repositoryRepository.save(repository);
-  }
-
-  private Organisation getOrganisation(String organisationId) {
-    return organisationRepository
-        .findById(organisationId)
-        .orElseThrow(
-            () ->
-                new ResponseStatusException(
-                    HttpStatus.NOT_FOUND,
-                    String.format("Organisation '%s' does not exist!", organisationId)));
+    return repositoryRepository.save(repository.update(data)).toApiModel();
   }
 }

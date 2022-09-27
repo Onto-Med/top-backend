@@ -35,7 +35,7 @@ public class OrganisationService implements ContentService {
     // throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
     // userDetails.getUsername());
 
-    if (organisationRepository.findById(data.getId()).isPresent())
+    if (organisationRepository.existsById(data.getId()))
       throw new ResponseStatusException(HttpStatus.CONFLICT);
 
     OrganisationDao organisation = new OrganisationDao(data);
@@ -85,13 +85,6 @@ public class OrganisationService implements ContentService {
 
   public List<Organisation> getOrganisations(String name, Integer page, List<String> include) {
     PageRequest pageRequest = PageRequest.of(page == null ? 1 : page - 1, pageSize);
-    Slice<OrganisationDao> result;
-    if (name == null) result = organisationRepository.findAll(pageRequest);
-    else
-      result =
-          organisationRepository
-              .findAllByNameIsContainingIgnoreCaseOrDescriptionIsContainingIgnoreCase(
-                  name, name, pageRequest);
-    return result.map(OrganisationDao::toApiModel).getContent();
+    return organisationRepository.findAllByNameOrDescription(name, pageRequest).map(OrganisationDao::toApiModel).getContent();
   }
 }
