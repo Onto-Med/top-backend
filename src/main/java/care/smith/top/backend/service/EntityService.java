@@ -23,6 +23,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 public class EntityService implements ContentService {
   @Value("${spring.paging.page-size:10}")
   private int pageSize;
@@ -44,7 +45,6 @@ public class EntityService implements ContentService {
     return entityRepository.countByEntityTypeIn(types);
   }
 
-  @Transactional
   @Caching(
       evict = {@CacheEvict("entityCount"), @CacheEvict(value = "entities", key = "#repositoryId")})
   public Entity createEntity(String organisationId, String repositoryId, Entity data) {
@@ -76,7 +76,6 @@ public class EntityService implements ContentService {
     return entityRepository.save(entity).toApiModel();
   }
 
-  @Transactional
   @Caching(
       evict = {@CacheEvict("entityCount"), @CacheEvict(value = "entities", key = "#repositoryId")})
   public List<Entity> createFork(
@@ -179,7 +178,6 @@ public class EntityService implements ContentService {
     return results;
   }
 
-  @Transactional
   @Caching(
       evict = {@CacheEvict("entityCount"), @CacheEvict(value = "entities", key = "#repositoryId")})
   public void deleteEntity(String organisationId, String repositoryId, String id) {
@@ -191,18 +189,19 @@ public class EntityService implements ContentService {
     entityRepository.delete(entity);
   }
 
-  @Transactional
   public void deleteVersion(
       String organisationId, String repositoryId, String id, Integer version) {
     getRepository(organisationId, repositoryId);
+    EntityDao entity =
+        entityRepository
+            .findByIdAndRepositoryId(id, repositoryId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     EntityVersionDao entityVersion =
         entityVersionRepository
-            .findByEntityIdAndVersion(id, version)
+            .findByEntity_RepositoryIdAndEntityIdAndVersion(repositoryId, id, version)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-    if (!Objects.equals(entityVersion.getEntity().getRepository().getId(), repositoryId))
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND);
 
-    EntityVersionDao currentVersion = entityVersion.getEntity().getCurrentVersion();
+    EntityVersionDao currentVersion = entity.getCurrentVersion();
     if (currentVersion == null)
       throw new ResponseStatusException(
           HttpStatus.NOT_FOUND, "Class does not have a current version.");
@@ -213,7 +212,8 @@ public class EntityService implements ContentService {
 
     EntityVersionDao previous = entityVersion.getPreviousVersion();
     EntityVersionDao next = entityVersion.getNextVersion();
-    if (previous != null && next != null) entityVersionRepository.save(previous.nextVersion(next));
+    if (previous != null && next != null)
+      entityVersionRepository.save(next.previousVersion(previous));
 
     entityVersionRepository.delete(entityVersion);
   }
@@ -252,7 +252,6 @@ public class EntityService implements ContentService {
     return writer;
   }
 
-  @Transactional
   public List<Entity> getEntities(
       List<String> include, String name, List<EntityType> type, DataType dataType, Integer page) {
     PageRequest pageRequest = PageRequest.of(page != null ? page - 1 : 0, pageSize);
@@ -368,7 +367,6 @@ public class EntityService implements ContentService {
         .getContent();
   }
 
-  @Transactional
   public List<Entity> getSubclasses(
       String organisationId, String repositoryId, String id, List<String> include) {
     getRepository(organisationId, repositoryId);
@@ -402,7 +400,6 @@ public class EntityService implements ContentService {
   }
 
   @CacheEvict(value = "entities", key = "#repositoryId")
-  @Transactional
   public Entity setCurrentEntityVersion(
       String organisationId,
       String repositoryId,
@@ -424,7 +421,6 @@ public class EntityService implements ContentService {
   }
 
   @CacheEvict(value = "entities", key = "#repositoryId")
-  @Transactional
   public Entity updateEntityById(
       String organisationId, String repositoryId, String id, Entity data, List<String> include) {
     getRepository(organisationId, repositoryId);

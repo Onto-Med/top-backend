@@ -24,7 +24,7 @@ public class EntityDao {
 
   @ManyToOne private RepositoryDao repository;
 
-  @OneToMany(mappedBy = "entity")
+  @OneToMany(mappedBy = "entity", cascade = CascadeType.REMOVE)
   private List<EntityVersionDao> versions = null;
 
   @OneToOne private EntityVersionDao currentVersion;
@@ -174,6 +174,11 @@ public class EntityDao {
     }
 
     return entity;
+  }
+
+  public EntityDao removeEntityVersionsItem(EntityVersionDao entityVersionsItem) {
+    if (versions != null) versions.remove(entityVersionsItem);
+    return this;
   }
 
   public EntityVersionDao getCurrentVersion() {

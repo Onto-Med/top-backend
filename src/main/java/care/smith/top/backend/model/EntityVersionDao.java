@@ -9,6 +9,7 @@ import javax.persistence.Entity;
 import javax.persistence.*;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Entity(name = "entity_version")
@@ -16,7 +17,7 @@ import java.util.stream.Collectors;
 public class EntityVersionDao {
   @Id @GeneratedValue private Long id;
 
-  @ManyToOne(cascade = CascadeType.ALL)
+  @ManyToOne(optional = false)
   @JoinColumn(nullable = false)
   private EntityDao entity;
 
@@ -33,9 +34,10 @@ public class EntityVersionDao {
 
   @OneToOne private EntityVersionDao previousVersion;
 
-  @OneToOne private EntityVersionDao nextVersion;
+  @OneToOne(mappedBy = "previousVersion")
+  private EntityVersionDao nextVersion;
 
-  @ManyToMany private List<EntityVersionDao> equivalentEntities = null;
+  @ManyToMany private Set<EntityVersionDao> equivalentEntityVersions = null;
 
   @CreatedBy private String author;
 
@@ -241,8 +243,8 @@ public class EntityVersionDao {
     return this;
   }
 
-  public EntityVersionDao equivalentEntities(List<EntityVersionDao> equivalentEntities) {
-    this.equivalentEntities = equivalentEntities;
+  public EntityVersionDao equivalentEntities(Set<EntityVersionDao> equivalentEntities) {
+    this.equivalentEntityVersions = equivalentEntities;
     return this;
   }
 
@@ -308,8 +310,8 @@ public class EntityVersionDao {
     return nextVersion;
   }
 
-  public List<EntityVersionDao> getEquivalentEntities() {
-    return equivalentEntities;
+  public Set<EntityVersionDao> getEquivalentEntityVersions() {
+    return equivalentEntityVersions;
   }
 
   public String getAuthor() {
