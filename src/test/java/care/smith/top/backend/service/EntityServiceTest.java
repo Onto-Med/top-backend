@@ -1,8 +1,11 @@
 package care.smith.top.backend.service;
 
+import care.smith.top.backend.model.EntityDao;
 import care.smith.top.model.*;
 import care.smith.top.simple_onto_api.calculator.functions.bool.Not;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -10,6 +13,7 @@ import java.math.BigDecimal;
 import java.net.URI;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.*;
@@ -90,6 +94,23 @@ class EntityServiceTest extends AbstractTest {
                     .size()
                     .isEqualTo(2));
 
+    Optional<EntityDao> fork1 =
+        entityRepository.findAllByRepositoryId(repository2.getId(), Pageable.unpaged()).stream()
+            .findFirst();
+    assertThat(fork1).isPresent();
+
+    assertThatCode(
+            () ->
+                entityService.deleteEntity(
+                    organisation.getId(), repository2.getId(), fork1.get().getId()))
+        .doesNotThrowAnyException();
+
+    assertThat(
+            entityService.getForkingStats(
+                organisation.getId(), repository1.getId(), origin.getId(), null))
+        .isNotNull()
+        .satisfies(s -> assertThat(s.getForks()).size().isEqualTo(1));
+
     assertThatCode(
             () ->
                 entityService.deleteEntity(
@@ -100,11 +121,8 @@ class EntityServiceTest extends AbstractTest {
         .isNotEmpty()
         .allMatch(e -> e.getOrigin() == null)
         .size()
-        .isEqualTo(2);
-    assertThat(entityVersionRepository.findAll())
-        .isNotEmpty()
-        .size()
-        .isEqualTo(2);
+        .isEqualTo(1);
+    assertThat(entityVersionRepository.findAll()).isNotEmpty().size().isEqualTo(1);
   }
 
   @Test
