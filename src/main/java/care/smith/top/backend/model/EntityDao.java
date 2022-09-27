@@ -164,12 +164,12 @@ public class EntityDao {
             .setSuperPhenotype(
                 entityDao.getSuperEntities().stream()
                     .findFirst()
-                    .map(p -> new Phenotype().id(p.getId()))
+                    .map(p -> ((Phenotype) new Phenotype().id(p.getId())))
                     .orElse(null));
       else
         entity.setSuperCategories(
             entityDao.getSuperEntities().stream()
-                .map(c -> new Category().id(c.getId()))
+                .map(c -> ((Category) new Category().id(c.getId())))
                 .collect(Collectors.toList()));
     }
 

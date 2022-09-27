@@ -143,13 +143,13 @@ public class EntityService implements ContentService {
           ((Phenotype) origin)
               .setSuperCategories(
                   fork.get().getSuperEntities().stream()
-                      .map(e -> new Category().id(e.getId()))
+                      .map(e -> ((Category) new Category().id(e.getId())))
                       .collect(Collectors.toList()));
         } else if (origin instanceof Category) {
           ((Category) origin)
               .setSuperCategories(
                   fork.get().getSuperEntities().stream()
-                      .map(e -> new Category().id(e.getId()))
+                      .map(e -> ((Category) new Category().id(e.getId())))
                       .collect(Collectors.toList()));
         }
       }
@@ -168,7 +168,7 @@ public class EntityService implements ContentService {
               entityRepository.findByRepositoryIdAndOriginId(
                   destinationRepo.getId(), phenotype.getSuperPhenotype().getId());
           if (superClass.isEmpty()) continue;
-          phenotype.setSuperPhenotype(new Phenotype().id(superClass.get().getId()));
+          phenotype.setSuperPhenotype((Phenotype) new Phenotype().id(superClass.get().getId()));
         }
       }
 
