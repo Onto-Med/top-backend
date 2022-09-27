@@ -1,23 +1,21 @@
 package care.smith.top.backend.service;
 
-import care.smith.top.backend.model.Organisation;
+import care.smith.top.backend.model.OrganisationDao;
 import care.smith.top.backend.repository.OrganisationRepository;
+import care.smith.top.model.Organisation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 @Service
 public class OrganisationService implements ContentService {
-  private final String directoryType = "Organisation";
   @Autowired OrganisationRepository organisationRepository;
 
   @Value("${spring.paging.page-size:10}")
@@ -29,7 +27,7 @@ public class OrganisationService implements ContentService {
   }
 
   @Transactional
-  public Organisation createOrganisation(Organisation organisation) {
+  public Organisation createOrganisation(Organisation data) {
     // TODO: use below code to get current user
     // UserDetails userDetails =
     //   (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -37,37 +35,42 @@ public class OrganisationService implements ContentService {
     // throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
     // userDetails.getUsername());
 
-    if (organisation.getId() == null) organisation.id(UUID.randomUUID().toString());
-
-    if (organisationRepository.findById(organisation.getId()).isPresent())
+    if (organisationRepository.findById(data.getId()).isPresent())
       throw new ResponseStatusException(HttpStatus.CONFLICT);
 
-    return organisationRepository.save(organisation);
+    OrganisationDao organisation = new OrganisationDao(data);
+    if (data.getSuperOrganisation() != null)
+      organisationRepository
+          .findById(data.getSuperOrganisation().getId())
+          .ifPresent(organisation::superOrganisation);
+
+    return organisationRepository.save(organisation).toApiModel();
   }
 
   @Transactional
   public Organisation updateOrganisationById(String id, Organisation data) {
-    Organisation organisation =
+    OrganisationDao organisation =
         organisationRepository
             .findById(id)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-    organisation.setSuperOrganisation(data.getSuperOrganisation());
-    organisation.setDescription(data.getDescription());
-    organisation.setName(data.getName());
+    if (data.getSuperOrganisation() != null)
+      organisationRepository
+          .findById(data.getSuperOrganisation().getId())
+          .ifPresent(organisation::superOrganisation);
 
-    return organisationRepository.save(organisation);
+    return organisationRepository.save(organisation.update(data)).toApiModel();
   }
 
   @Transactional
   public void deleteOrganisationById(String organisationId) {
-    Organisation organisation =
+    OrganisationDao organisation =
         organisationRepository
             .findById(organisationId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-    for (Organisation subOrganisation : organisation.getSubOrganisations()) {
-      subOrganisation.setSuperOrganisation(null);
+    for (OrganisationDao subOrganisation : organisation.getSubOrganisations()) {
+      subOrganisation.superOrganisation(null);
       organisationRepository.save(subOrganisation);
     }
     organisationRepository.delete(organisation);
@@ -76,15 +79,19 @@ public class OrganisationService implements ContentService {
   public Organisation getOrganisation(String organisationId, List<String> include) {
     return organisationRepository
         .findById(organisationId)
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND))
+        .toApiModel();
   }
 
   public List<Organisation> getOrganisations(String name, Integer page, List<String> include) {
     PageRequest pageRequest = PageRequest.of(page == null ? 1 : page - 1, pageSize);
-    if (name == null) return organisationRepository.findAll(pageRequest).getContent();
-    return organisationRepository
-        .findAllByNameIsContainingIgnoreCaseOrDescriptionIsContainingIgnoreCase(
-            name, name, pageRequest)
-        .getContent();
+    Slice<OrganisationDao> result;
+    if (name == null) result = organisationRepository.findAll(pageRequest);
+    else
+      result =
+          organisationRepository
+              .findAllByNameIsContainingIgnoreCaseOrDescriptionIsContainingIgnoreCase(
+                  name, name, pageRequest);
+    return result.map(OrganisationDao::toApiModel).getContent();
   }
 }
