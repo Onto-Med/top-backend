@@ -1,12 +1,10 @@
 package care.smith.top.backend.model;
 
-import care.smith.top.model.Organisation;
 import care.smith.top.model.Repository;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import javax.persistence.Entity;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.time.OffsetDateTime;
@@ -27,7 +25,7 @@ public class RepositoryDao {
   private OffsetDateTime createdAt;
 
   @LastModifiedDate private OffsetDateTime updatedAt;
-  @ManyToOne private Organisation organisation;
+  @ManyToOne private OrganisationDao organisation;
 
   @OneToMany(mappedBy = "repository")
   private List<EntityDao> entities = null;
@@ -78,7 +76,7 @@ public class RepositoryDao {
     return this;
   }
 
-  public RepositoryDao organisation(Organisation organisation) {
+  public RepositoryDao organisation(OrganisationDao organisation) {
     this.organisation = organisation;
     return this;
   }
@@ -143,7 +141,7 @@ public class RepositoryDao {
     return updatedAt;
   }
 
-  public Organisation getOrganisation() {
+  public OrganisationDao getOrganisation() {
     return organisation;
   }
 

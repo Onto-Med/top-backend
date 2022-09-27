@@ -11,6 +11,7 @@ import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Entity(name = "organisation")
 @EntityListeners(AuditingEntityListener.class)
@@ -27,10 +28,10 @@ public class OrganisationDao {
   @ManyToOne private Organisation superOrganisation;
 
   @OneToMany(mappedBy = "superOrganisation")
-  private List<Organisation> subOrganisations = null;
+  private List<OrganisationDao> subOrganisations = null;
 
   @OneToMany(mappedBy = "organisation")
-  private List<Repository> repositories = null;
+  private List<RepositoryDao> repositories = null;
 
   public OrganisationDao() {}
 
@@ -41,7 +42,7 @@ public class OrganisationDao {
   }
 
   public OrganisationDao(Organisation organisation) {
-    id = organisation.getId();
+    id = organisation.getId() == null ? UUID.randomUUID().toString() : organisation.getId();
     name = organisation.getName();
     description = organisation.getDescription();
   }
@@ -71,7 +72,7 @@ public class OrganisationDao {
     return this;
   }
 
-  public OrganisationDao superOrganisation(Organisation superOrganisation) {
+  public OrganisationDao superOrganisation(OrganisationDao superOrganisation) {
     this.superOrganisation = superOrganisation;
     return this;
   }
