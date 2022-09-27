@@ -1,15 +1,14 @@
 package care.smith.top.backend.repository;
 
 import care.smith.top.backend.model.EntityVersionDao;
-import org.springframework.data.repository.PagingAndSortingRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface EntityVersionRepository
-    extends PagingAndSortingRepository<EntityVersionDao, String> {
+public interface EntityVersionRepository extends JpaRepository<EntityVersionDao, String> {
   Optional<EntityVersionDao> findByEntityIdAndVersion(String id, Integer version);
 
   List<EntityVersionDao> findAllByEntity_RepositoryIdAndEntityId(

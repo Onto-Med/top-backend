@@ -102,6 +102,6 @@ public class RepositoryService implements ContentService {
         repositoryRepository
             .findByIdAndOrganisationId(repositoryId, organisationId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-    return repositoryRepository.save(repository.update(data)).toApiModel();
+    return repositoryRepository.saveAndFlush(repository.update(data)).toApiModel();
   }
 }

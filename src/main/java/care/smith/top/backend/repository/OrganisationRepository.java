@@ -4,12 +4,10 @@ import care.smith.top.backend.model.OrganisationDao;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface OrganisationRepository
-    extends PagingAndSortingRepository<OrganisationDao, String>, JpaRepository<OrganisationDao, String> {
+public interface OrganisationRepository extends JpaRepository<OrganisationDao, String> {
   Slice<OrganisationDao> findAllByNameIsContainingIgnoreCaseOrDescriptionIsContainingIgnoreCase(
       String name, String description, Pageable pageable);
 
