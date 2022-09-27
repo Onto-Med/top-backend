@@ -8,6 +8,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import javax.persistence.Entity;
 import javax.persistence.*;
 import java.time.OffsetDateTime;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -118,6 +119,12 @@ public class EntityVersionDao {
 
   public EntityVersionDao expression(ExpressionDao expression) {
     this.expression = expression;
+    return this;
+  }
+
+  public EntityVersionDao addEquivalentEntityVersionsItem(EntityVersionDao equivalentEntityVersionsItem) {
+    if (equivalentEntityVersions == null) equivalentEntityVersions = new HashSet<>();
+    equivalentEntityVersions.add(equivalentEntityVersionsItem);
     return this;
   }
 

@@ -8,6 +8,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -15,6 +16,82 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.*;
 
 class EntityServiceTest extends AbstractTest {
+  @Test
+  void createFork() {
+    Organisation organisation =
+        organisationService.createOrganisation(new Organisation().id("org"));
+    Repository repository1 =
+        repositoryService.createRepository(
+            organisation.getId(), new Repository().id("repo1").primary(true), null);
+    Repository repository2 =
+        repositoryService.createRepository(
+            organisation.getId(), new Repository().id("repo2"), null);
+    Repository repository3 =
+        repositoryService.createRepository(
+            organisation.getId(), new Repository().id("repo3"), null);
+
+    Entity origin =
+        entityService.createEntity(
+            organisation.getId(),
+            repository1.getId(),
+            new Entity()
+                .id(UUID.randomUUID().toString())
+                .entityType(EntityType.CATEGORY)
+                .addTitlesItem(new LocalisableText().lang("en").text("title")));
+
+    ForkingInstruction forkingInstruction =
+        new ForkingInstruction()
+            .organisationId(organisation.getId())
+            .repositoryId(repository1.getId());
+
+    assertThatThrownBy(
+            () ->
+                entityService.createFork(
+                    organisation.getId(),
+                    repository1.getId(),
+                    origin.getId(),
+                    forkingInstruction,
+                    null,
+                    null))
+        .isInstanceOf(ResponseStatusException.class)
+        .hasFieldOrPropertyWithValue("status", HttpStatus.NOT_ACCEPTABLE);
+
+    assertThatCode(
+            () ->
+                entityService.createFork(
+                    organisation.getId(),
+                    repository1.getId(),
+                    origin.getId(),
+                    forkingInstruction.repositoryId(repository2.getId()),
+                    null,
+                    null))
+        .doesNotThrowAnyException();
+
+    assertThatCode(
+            () ->
+                entityService.createFork(
+                    organisation.getId(),
+                    repository1.getId(),
+                    origin.getId(),
+                    forkingInstruction.repositoryId(repository3.getId()),
+                    null,
+                    null))
+        .doesNotThrowAnyException();
+
+    assertThat(
+            entityService.getForkingStats(
+                organisation.getId(), repository1.getId(), origin.getId(), null))
+        .isNotNull()
+        .satisfies(
+            s ->
+                assertThat(s.getForks())
+                    .isNotEmpty()
+                    .anyMatch(f -> repository2.getId().equals(f.getRepository().getId()))
+                    .anyMatch(f -> repository3.getId().equals(f.getRepository().getId()))
+                    .size()
+                    .isEqualTo(2));
+  }
+
   @Test
   void getForks() {
     //    Organisation organisation =
@@ -29,8 +106,11 @@ class EntityServiceTest extends AbstractTest {
     //        repositoryService.createRepository(
     //            organisation.getId(), new Repository().id("repo3"), null);
     //
-    //    Entity origin = new
-    // Entity().repository(repository1).entityType(EntityType.SINGLE_PHENOTYPE);
+    //    Entity origin =
+    //        entityService.createEntity(
+    //            organisation.getId(),
+    //            repository1.getId(),
+    //            new Entity().entityType(EntityType.SINGLE_PHENOTYPE));
     //    Entity fork1 = new
     // Entity().repository(repository2).entityType(EntityType.SINGLE_PHENOTYPE);
     //    Entity fork2 = new
@@ -509,10 +589,10 @@ class EntityServiceTest extends AbstractTest {
     Repository repository =
         repositoryService.createRepository(organisation.getId(), new Repository().id("repo"), null);
     Category category =
-      new Category()
-          .id(UUID.randomUUID().toString())
-          .entityType(EntityType.CATEGORY)
-          .addTitlesItem(new LocalisableText().text("category").lang("en"));
+        new Category()
+            .id(UUID.randomUUID().toString())
+            .entityType(EntityType.CATEGORY)
+            .addTitlesItem(new LocalisableText().text("category").lang("en"));
 
     assertThat(entityService.createEntity(organisation.getId(), repository.getId(), category))
         .isNotNull();

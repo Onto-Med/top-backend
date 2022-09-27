@@ -127,62 +127,78 @@ public class EntityService implements ContentService {
     }
 
     List<Entity> results = new ArrayList<>();
-    //    for (Entity origin : origins) {
-    //      String oldId = origin.getId();
-    //      Optional<Entity> fork = categoryRepository.getFork(origin, destinationRepo);
-    //
-    //      if (!forkingInstruction.isUpdate() && fork.isPresent()) continue;
-    //
-    //      if (forkingInstruction.isUpdate() && fork.isPresent()) {
-    //        if (fork.get().getEquivalentEntities().stream()
-    //            .anyMatch(e -> e.getId().equals(origin.getId()))) continue;
-    //        origin.setId(fork.get().getId());
-    //        origin.setVersion(fork.get().getVersion() + 1);
-    //        if (origin instanceof Phenotype) {
-    //          ((Phenotype) origin).setSuperCategories(((Phenotype)
-    // fork.get()).getSuperCategories());
-    //        } else if (origin instanceof Category) {
-    //          ((Category) origin).setSuperCategories(((Category)
-    // fork.get()).getSuperCategories());
-    //        }
-    //      }
-    //
-    //      if (!forkingInstruction.isUpdate() || fork.isEmpty()) {
-    //        origin.setId(UUID.randomUUID().toString());
-    //        origin.setVersion(1);
-    //        if (origin instanceof Phenotype) ((Phenotype) origin).setSuperCategories(null);
-    //        else if (origin instanceof Category) ((Category) origin).setSuperCategories(null);
-    //      }
-    //
-    //      if (origin instanceof Phenotype) {
-    //        Phenotype phenotype = (Phenotype) origin;
-    //        if (phenotype.getSuperPhenotype() != null) {
-    //          Optional<Entity> superClass =
-    //              categoryRepository.getFork(phenotype.getSuperPhenotype(), destinationRepo);
-    //          if (superClass.isEmpty()) continue;
-    //          phenotype.setSuperPhenotype((Phenotype) new
-    // Phenotype().id(superClass.get().getId()));
-    //        }
-    //      }
-    //
-    //      if (origin.getVersion() == 1) {
-    //        results.add(
-    //            createEntity(forkingInstruction.getOrganisationId(), destinationRepo.getId(),
-    // origin));
-    //        categoryRepository.setFork(origin.getId(), oldId);
-    //      } else {
-    //        results.add(
-    //            updateEntityById(
-    //                forkingInstruction.getOrganisationId(),
-    //                destinationRepo.getId(),
-    //                origin.getId(),
-    //                origin,
-    //                null));
-    //      }
-    //
-    //      Entity forkVersion = categoryRepository.findCurrentById(origin.getId()).orElseThrow();
-    //      categoryRepository.findCurrentById(oldId).ifPresent(e -> e.addForksItem(forkVersion));
-    //    }
+    for (Entity origin : origins) {
+      String oldId = origin.getId();
+      Optional<EntityDao> fork =
+          entityRepository.findByRepositoryIdAndOriginId(destinationRepo.getId(), origin.getId());
+
+      if (!forkingInstruction.isUpdate() && fork.isPresent()) continue;
+
+      if (forkingInstruction.isUpdate() && fork.isPresent()) {
+        if (fork.get().getCurrentVersion().getEquivalentEntityVersions().stream()
+            .anyMatch(e -> e.getEntity().getId().equals(origin.getId()))) continue;
+        origin.setId(fork.get().getId());
+        origin.setVersion(fork.get().getCurrentVersion().getVersion() + 1);
+        if (origin instanceof Phenotype) {
+          ((Phenotype) origin)
+              .setSuperCategories(
+                  fork.get().getSuperEntities().stream()
+                      .map(e -> new Category().id(e.getId()))
+                      .collect(Collectors.toList()));
+        } else if (origin instanceof Category) {
+          ((Category) origin)
+              .setSuperCategories(
+                  fork.get().getSuperEntities().stream()
+                      .map(e -> new Category().id(e.getId()))
+                      .collect(Collectors.toList()));
+        }
+      }
+
+      if (!forkingInstruction.isUpdate() || fork.isEmpty()) {
+        origin.setId(UUID.randomUUID().toString());
+        origin.setVersion(1);
+        if (origin instanceof Phenotype) ((Phenotype) origin).setSuperCategories(null);
+        else if (origin instanceof Category) ((Category) origin).setSuperCategories(null);
+      }
+
+      if (origin instanceof Phenotype) {
+        Phenotype phenotype = (Phenotype) origin;
+        if (phenotype.getSuperPhenotype() != null) {
+          Optional<EntityDao> superClass =
+              entityRepository.findByRepositoryIdAndOriginId(
+                  destinationRepo.getId(), phenotype.getSuperPhenotype().getId());
+          if (superClass.isEmpty()) continue;
+          phenotype.setSuperPhenotype(new Phenotype().id(superClass.get().getId()));
+        }
+      }
+
+      if (origin.getVersion() == 1) {
+        results.add(
+            createEntity(forkingInstruction.getOrganisationId(), destinationRepo.getId(), origin));
+        entityRepository.setFork(origin.getId(), oldId);
+      } else {
+        results.add(
+            updateEntityById(
+                forkingInstruction.getOrganisationId(),
+                destinationRepo.getId(),
+                origin.getId(),
+                origin,
+                null));
+      }
+
+      EntityDao createdFork =
+          entityRepository
+              .findByIdAndRepositoryId(origin.getId(), destinationRepo.getId())
+              .orElseThrow();
+
+      EntityDao originDao =
+          entityRepository.findByIdAndRepositoryId(oldId, repositoryId).orElseThrow();
+      entityRepository.save(createdFork.origin(originDao));
+      entityVersionRepository.save(
+          createdFork
+              .getCurrentVersion()
+              .addEquivalentEntityVersionsItem(originDao.getCurrentVersion()));
+    }
 
     return results;
   }

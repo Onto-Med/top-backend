@@ -2,6 +2,7 @@ package care.smith.top.backend.repository;
 
 import care.smith.top.backend.model.EntityDao;
 import care.smith.top.backend.model.RepositoryDao;
+import care.smith.top.model.Entity;
 import care.smith.top.model.EntityType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -86,4 +87,6 @@ public interface EntityRepository extends JpaRepository<EntityDao, String> {
 
   Slice<EntityDao> findAllByRepositoryIdAndSuperEntitiesEmpty(
       String repositoryId, Pageable pageable);
+
+  Optional<EntityDao> findByRepositoryIdAndOriginId(String repositoryId, String originId);
 }
