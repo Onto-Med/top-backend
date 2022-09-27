@@ -8,6 +8,7 @@ import javax.persistence.*;
 import javax.persistence.Entity;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Entity(name = "entity_version")
 @IdClass(EntityVersionId.class)
@@ -16,11 +17,11 @@ public class EntityVersionDao {
   @Id @ManyToOne private EntityDao entity;
   @Id private Integer version;
 
-  @ElementCollection @OrderColumn private List<LocalisableText> titles = null;
+  @ElementCollection @OrderColumn private List<LocalisableTextDao> titles = null;
 
-  @ElementCollection @OrderColumn private List<LocalisableText> synonyms = null;
+  @ElementCollection @OrderColumn private List<LocalisableTextDao> synonyms = null;
 
-  @ElementCollection @OrderColumn private List<LocalisableText> descriptions = null;
+  @ElementCollection @OrderColumn private List<LocalisableTextDao> descriptions = null;
 
   @ElementCollection @OrderColumn private List<Code> codes = null;
 
@@ -37,7 +38,7 @@ public class EntityVersionDao {
   private ItemType itemType;
 
   @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
-  private Restriction restriction;
+  private RestrictionDao restriction;
 
   @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
   private ExpressionDao expression;
@@ -53,14 +54,14 @@ public class EntityVersionDao {
   public EntityVersionDao(
       EntityDao entity,
       Integer version,
-      List<LocalisableText> titles,
-      List<LocalisableText> synonyms,
-      List<LocalisableText> descriptions,
+      List<LocalisableTextDao> titles,
+      List<LocalisableTextDao> synonyms,
+      List<LocalisableTextDao> descriptions,
       List<Code> codes,
       String author,
       DataType dataType,
       ItemType itemType,
-      Restriction restriction,
+      RestrictionDao restriction,
       ExpressionDao expression,
       Unit unit) {
     this.entity = entity;
@@ -78,14 +79,23 @@ public class EntityVersionDao {
   }
 
   public EntityVersionDao(care.smith.top.model.Entity entity) {
-    titles = entity.getTitles();
-    synonyms = entity.getSynonyms();
-    descriptions = entity.getDescriptions();
+    if (entity.getTitles() != null)
+      titles =
+          entity.getTitles().stream().map(LocalisableTextDao::new).collect(Collectors.toList());
+    if (entity.getSynonyms() != null)
+      synonyms =
+          entity.getSynonyms().stream().map(LocalisableTextDao::new).collect(Collectors.toList());
+    if (entity.getDescriptions() != null)
+      descriptions =
+          entity.getDescriptions().stream()
+              .map(LocalisableTextDao::new)
+              .collect(Collectors.toList());
     codes = entity.getCodes();
     if (entity instanceof Phenotype) {
       dataType = ((Phenotype) entity).getDataType();
       itemType = ((Phenotype) entity).getItemType();
-      restriction = ((Phenotype) entity).getRestriction();
+      if (restriction != null)
+        restriction = new RestrictionDao(((Phenotype) entity).getRestriction());
       expression = new ExpressionDao(((Phenotype) entity).getExpression());
       unit = ((Phenotype) entity).getUnit();
     }
@@ -106,7 +116,7 @@ public class EntityVersionDao {
     return this;
   }
 
-  public EntityVersionDao restriction(Restriction restriction) {
+  public EntityVersionDao restriction(RestrictionDao restriction) {
     this.restriction = restriction;
     return this;
   }
@@ -184,17 +194,17 @@ public class EntityVersionDao {
     return this;
   }
 
-  public EntityVersionDao titles(List<LocalisableText> titles) {
+  public EntityVersionDao titles(List<LocalisableTextDao> titles) {
     this.titles = titles;
     return this;
   }
 
-  public EntityVersionDao synonyms(List<LocalisableText> synonyms) {
+  public EntityVersionDao synonyms(List<LocalisableTextDao> synonyms) {
     this.synonyms = synonyms;
     return this;
   }
 
-  public EntityVersionDao descriptions(List<LocalisableText> descriptions) {
+  public EntityVersionDao descriptions(List<LocalisableTextDao> descriptions) {
     this.descriptions = descriptions;
     return this;
   }
@@ -237,7 +247,7 @@ public class EntityVersionDao {
     return itemType;
   }
 
-  public Restriction getRestriction() {
+  public RestrictionDao getRestriction() {
     return restriction;
   }
 
@@ -257,15 +267,15 @@ public class EntityVersionDao {
     return version;
   }
 
-  public List<LocalisableText> getTitles() {
+  public List<LocalisableTextDao> getTitles() {
     return titles;
   }
 
-  public List<LocalisableText> getSynonyms() {
+  public List<LocalisableTextDao> getSynonyms() {
     return synonyms;
   }
 
-  public List<LocalisableText> getDescriptions() {
+  public List<LocalisableTextDao> getDescriptions() {
     return descriptions;
   }
 

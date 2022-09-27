@@ -123,17 +123,27 @@ public class EntityDao {
         .codes(entityVersionDao.getCodes())
         .createdAt(entityVersionDao.getCreatedAt())
         .version(entityVersionDao.getVersion())
-        .descriptions(entityVersionDao.getDescriptions())
-        .synonyms(entityVersionDao.getSynonyms())
-        .titles(entityVersionDao.getTitles());
+        .descriptions(
+            entityVersionDao.getDescriptions().stream()
+                .map(LocalisableTextDao::toApiModel)
+                .collect(Collectors.toList()))
+        .synonyms(
+            entityVersionDao.getSynonyms().stream()
+                .map(LocalisableTextDao::toApiModel)
+                .collect(Collectors.toList()))
+        .titles(
+            entityVersionDao.getTitles().stream()
+                .map(LocalisableTextDao::toApiModel)
+                .collect(Collectors.toList()));
     if (ApiModelMapper.isAbstract(entityDao.getEntityType()))
       ((Phenotype) entity)
           .dataType(entityVersionDao.getDataType())
           .expression(entityVersionDao.getExpression().toApiModel())
           .itemType(entityVersionDao.getItemType())
           .unit(entityVersionDao.getUnit());
-    if (ApiModelMapper.isRestricted(entityDao.getEntityType()))
-      ((Phenotype) entity).restriction(entityVersionDao.getRestriction());
+    if (ApiModelMapper.isRestricted(entityDao.getEntityType())
+        && ((Phenotype) entity).getRestriction() != null)
+      ((Phenotype) entity).restriction(entityVersionDao.getRestriction().toApiModel());
 
     if (entityDao.getSubEntities() != null) {
       if (ApiModelMapper.isRestricted(entityDao.getEntityType())) {

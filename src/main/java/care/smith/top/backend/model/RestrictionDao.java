@@ -217,6 +217,28 @@ public class RestrictionDao {
     return result;
   }
 
+  public Restriction toApiModel() {
+    Restriction restriction;
+    if (DataType.BOOLEAN.equals(dataType))
+      restriction = new BooleanRestriction().values(booleanValues);
+    else if (DataType.DATE_TIME.equals(dataType))
+      restriction =
+          new DateTimeRestriction()
+              .values(dateTimeValues)
+              .minOperator(minOperator)
+              .maxOperator(maxOperator);
+    else if (DataType.NUMBER.equals(dataType))
+      restriction =
+          new NumberRestriction()
+              .values(numberValues)
+              .minOperator(minOperator)
+              .maxOperator(maxOperator);
+    else if (DataType.STRING.equals(dataType))
+      restriction = new StringRestriction().values(stringValues);
+    else restriction = new Restriction();
+    return restriction.quantifier(quantifier).cardinality(cardinality).type(dataType);
+  }
+
   public Long getId() {
     return id;
   }

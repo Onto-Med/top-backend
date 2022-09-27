@@ -2,6 +2,7 @@ package care.smith.top.backend.service;
 
 import care.smith.top.backend.model.EntityDao;
 import care.smith.top.backend.model.EntityVersionDao;
+import care.smith.top.backend.model.LocalisableTextDao;
 import care.smith.top.backend.model.RepositoryDao;
 import care.smith.top.backend.repository.*;
 import care.smith.top.model.*;
@@ -328,7 +329,12 @@ public class EntityService implements ContentService {
     EntityDao origin = entity.getOrigin();
     if (origin != null && origin.getCurrentVersion() != null)
       forkingStats.origin(
-          new Entity().id(origin.getId()).titles(origin.getCurrentVersion().getTitles()));
+          new Entity()
+              .id(origin.getId())
+              .titles(
+                  origin.getCurrentVersion().getTitles().stream()
+                      .map(LocalisableTextDao::toApiModel)
+                      .collect(Collectors.toList())));
     if (entity.getForks() != null)
       entity.getForks().stream()
           .map(

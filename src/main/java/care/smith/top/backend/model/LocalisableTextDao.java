@@ -50,6 +50,10 @@ public class LocalisableTextDao {
     return result;
   }
 
+  public LocalisableText toApiModel() {
+    return new LocalisableText().lang(lang).text(text);
+  }
+
   public String getLang() {
     return lang;
   }
