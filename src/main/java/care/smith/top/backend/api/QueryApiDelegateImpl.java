@@ -1,7 +1,7 @@
 package care.smith.top.backend.api;
 
-import care.smith.top.backend.model.Query;
-import care.smith.top.backend.model.QueryResult;
+import care.smith.top.model.Query;
+import care.smith.top.model.QueryResult;
 import care.smith.top.backend.service.PhenotypeQueryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

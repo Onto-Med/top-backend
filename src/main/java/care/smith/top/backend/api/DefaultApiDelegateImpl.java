@@ -1,7 +1,7 @@
 package care.smith.top.backend.api;
 
-import care.smith.top.backend.model.EntityType;
-import care.smith.top.backend.model.Statistic;
+import care.smith.top.model.EntityType;
+import care.smith.top.model.Statistic;
 import care.smith.top.backend.service.EntityService;
 import care.smith.top.backend.service.OrganisationService;
 import care.smith.top.backend.service.RepositoryService;

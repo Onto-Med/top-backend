@@ -1,8 +1,8 @@
 package care.smith.top.backend.api;
 
-import care.smith.top.backend.model.Entity;
-import care.smith.top.backend.model.ForkingInstruction;
-import care.smith.top.backend.model.ForkingStats;
+import care.smith.top.model.Entity;
+import care.smith.top.model.ForkingInstruction;
+import care.smith.top.model.ForkingStats;
 import care.smith.top.backend.service.EntityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

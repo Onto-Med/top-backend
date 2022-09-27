@@ -1,6 +1,6 @@
 package care.smith.top.backend.api;
 
-import care.smith.top.backend.model.Organisation;
+import care.smith.top.model.Organisation;
 import care.smith.top.backend.service.OrganisationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

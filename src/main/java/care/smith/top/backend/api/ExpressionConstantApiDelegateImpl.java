@@ -1,6 +1,6 @@
 package care.smith.top.backend.api;
 
-import care.smith.top.backend.model.Constant;
+import care.smith.top.model.Constant;
 import care.smith.top.backend.util.OntoModelMapper;
 import care.smith.top.simple_onto_api.calculator.Calculator;
 import org.springframework.http.HttpStatus;
