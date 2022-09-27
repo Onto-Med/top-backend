@@ -28,7 +28,7 @@ public class RepositoryDao {
   @LastModifiedDate private OffsetDateTime updatedAt;
   @ManyToOne private OrganisationDao organisation;
 
-  @OneToMany(mappedBy = "repository")
+  @OneToMany(mappedBy = "repository", cascade = CascadeType.REMOVE)
   private List<EntityDao> entities = null;
 
   public RepositoryDao() {}

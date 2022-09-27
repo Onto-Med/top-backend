@@ -1,6 +1,8 @@
 package care.smith.top.backend.service;
 
 import care.smith.top.backend.model.RepositoryDao;
+import care.smith.top.model.Entity;
+import care.smith.top.model.EntityType;
 import care.smith.top.model.Organisation;
 import care.smith.top.model.Repository;
 import org.junit.jupiter.api.Test;
@@ -92,6 +94,21 @@ class RepositoryServiceTest extends AbstractTest {
         .isPresent()
         .hasValueSatisfying(
             r -> assertThat(r.getOrganisation().getId()).isEqualTo(organisation.getId()));
+
+    assertThatCode(
+            () ->
+                entityService.createEntity(
+                    organisation.getId(),
+                    repository2.getId(),
+                    new Entity().id("cat").entityType(EntityType.CATEGORY)))
+        .doesNotThrowAnyException();
+    assertThatCode(
+            () ->
+                repositoryService.deleteRepository(repository2.getId(), organisation.getId(), null))
+        .doesNotThrowAnyException();
+
+    assertThat(repositoryRepository.count()).isEqualTo(0);
+    assertThat(entityRepository.count()).isEqualTo(0);
   }
 
   @Test
