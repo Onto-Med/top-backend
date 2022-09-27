@@ -1,8 +1,8 @@
 package care.smith.top.backend.util;
 
-import care.smith.top.backend.model.Constant;
-import care.smith.top.backend.model.DataType;
-import care.smith.top.backend.model.ExpressionFunction;
+import care.smith.top.model.Constant;
+import care.smith.top.model.DataType;
+import care.smith.top.model.ExpressionFunction;
 import care.smith.top.simple_onto_api.calculator.functions.Function;
 
 public class OntoModelMapper {

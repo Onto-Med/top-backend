@@ -1,7 +1,7 @@
 package care.smith.top.backend.util;
 
-import care.smith.top.backend.model.Entity;
-import care.smith.top.backend.model.EntityType;
+import care.smith.top.model.Entity;
+import care.smith.top.model.EntityType;
 
 import java.util.Arrays;
 import java.util.List;
