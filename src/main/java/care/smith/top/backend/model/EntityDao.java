@@ -153,12 +153,16 @@ public class EntityDao {
         EntityDao superPhenotype = entityDao.getSuperEntities().stream().findFirst().orElse(null);
         if (superPhenotype != null)
           ((Phenotype) entity)
-              .superPhenotype(((Phenotype) new Phenotype().id(superPhenotype.getId())))
+              .superPhenotype(
+                  ((Phenotype)
+                      new Phenotype()
+                          .id(superPhenotype.getId())
+                          .entityType(superPhenotype.getEntityType())))
               .dataType(superPhenotype.currentVersion.getDataType());
       } else {
         entity.setSuperCategories(
             entityDao.getSuperEntities().stream()
-                .map(c -> ((Category) new Category().id(c.getId())))
+                .map(c -> ((Category) new Category().id(c.getId()).entityType(c.getEntityType())))
                 .collect(Collectors.toList()));
       }
     }
