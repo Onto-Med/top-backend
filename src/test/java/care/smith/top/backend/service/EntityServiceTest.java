@@ -263,6 +263,7 @@ class EntityServiceTest extends AbstractTest {
                   .allMatch(t -> t.getText().equals("<= 50cm") && t.getLang().equals("en"))
                   .size()
                   .isEqualTo(1);
+              assertThat(((Phenotype) rp).getDataType()).isEqualTo(abstractPhenotype.getDataType());
               assertThat(((Phenotype) rp).getRestriction())
                   .isNotNull()
                   .isInstanceOf(NumberRestriction.class)

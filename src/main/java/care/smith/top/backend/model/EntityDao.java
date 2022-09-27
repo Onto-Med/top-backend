@@ -158,26 +158,25 @@ public class EntityDao {
       ((Phenotype) entity).restriction(entityVersionDao.getRestriction().toApiModel());
 
     if (entityDao.getSuperEntities() != null) {
-      if (ApiModelMapper.isRestricted(entityDao.getEntityType()))
-        ((Phenotype) entity)
-            .setSuperPhenotype(
-                entityDao.getSuperEntities().stream()
-                    .findFirst()
-                    .map(p -> ((Phenotype) new Phenotype().id(p.getId())))
-                    .orElse(null));
-      else
+      if (ApiModelMapper.isRestricted(entityDao.getEntityType())) {
+        EntityDao superPhenotype = entityDao.getSuperEntities().stream().findFirst().orElse(null);
+        if (superPhenotype != null)
+          ((Phenotype) entity)
+              .superPhenotype(((Phenotype) new Phenotype().id(superPhenotype.getId())))
+              .dataType(superPhenotype.currentVersion.getDataType());
+      } else {
         entity.setSuperCategories(
             entityDao.getSuperEntities().stream()
                 .map(c -> ((Category) new Category().id(c.getId())))
                 .collect(Collectors.toList()));
+      }
     }
 
     return entity;
   }
 
   public EntityDao removeSuperEntitiesItem(EntityDao superEntiriesItem) {
-    if (superEntities != null)
-      superEntities.remove(superEntiriesItem);
+    if (superEntities != null) superEntities.remove(superEntiriesItem);
     return this;
   }
 
