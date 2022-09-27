@@ -207,10 +207,25 @@ public class EntityService implements ContentService {
       evict = {@CacheEvict("entityCount"), @CacheEvict(value = "entities", key = "#repositoryId")})
   public void deleteEntity(String organisationId, String repositoryId, String id) {
     getRepository(organisationId, repositoryId);
+
     EntityDao entity =
         entityRepository
             .findByIdAndRepositoryId(id, repositoryId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+    if (entity.getSubEntities() != null) {
+      if (ApiModelMapper.isAbstract(entity.getEntityType())) {
+        entityRepository.deleteAll(entity.getSubEntities());
+      } else if (ApiModelMapper.isCategory(entity.getEntityType())) {
+        for (EntityDao subEntity : entity.getSubEntities()) {
+          subEntity
+              .removeSuperEntitiesItem(entity)
+              .addAllSuperEntitiesItems(entity.getSuperEntities());
+          entityRepository.save(subEntity);
+        }
+      }
+    }
+
     entityRepository.delete(entity);
   }
 

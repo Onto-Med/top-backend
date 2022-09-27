@@ -5,7 +5,6 @@ import care.smith.top.model.Category;
 import care.smith.top.model.EntityType;
 import care.smith.top.model.Phenotype;
 import care.smith.top.model.Repository;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.Entity;
 import javax.persistence.*;
@@ -176,8 +175,15 @@ public class EntityDao {
     return entity;
   }
 
-  public EntityDao removeEntityVersionsItem(EntityVersionDao entityVersionsItem) {
-    if (versions != null) versions.remove(entityVersionsItem);
+  public EntityDao removeSuperEntitiesItem(EntityDao superEntiriesItem) {
+    if (superEntities != null)
+      superEntities.remove(superEntiriesItem);
+    return this;
+  }
+
+  public EntityDao addAllSuperEntitiesItems(List<EntityDao> superEntitiesItems) {
+    if (superEntities == null) superEntities = new ArrayList<>();
+    superEntities.addAll(superEntitiesItems);
     return this;
   }
 
