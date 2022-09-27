@@ -4,18 +4,22 @@ import care.smith.top.model.*;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 
-import javax.persistence.*;
 import javax.persistence.Entity;
+import javax.persistence.*;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Entity(name = "entity_version")
-@IdClass(EntityVersionId.class)
 public class EntityVersionDao {
+  @Id @GeneratedValue private long id;
 
-  @Id @ManyToOne private EntityDao entity;
-  @Id private Integer version;
+  @ManyToOne(cascade = CascadeType.ALL)
+  @JoinColumn(nullable = false)
+  private EntityDao entity;
+
+  @Column(nullable = false)
+  private Integer version;
 
   @ElementCollection @OrderColumn private List<LocalisableTextDao> titles = null;
 
@@ -23,7 +27,7 @@ public class EntityVersionDao {
 
   @ElementCollection @OrderColumn private List<LocalisableTextDao> descriptions = null;
 
-  @ElementCollection @OrderColumn private List<Code> codes = null;
+  @ElementCollection @OrderColumn private List<CodeDao> codes = null;
 
   @OneToOne private EntityVersionDao previousVersion;
 
@@ -57,7 +61,7 @@ public class EntityVersionDao {
       List<LocalisableTextDao> titles,
       List<LocalisableTextDao> synonyms,
       List<LocalisableTextDao> descriptions,
-      List<Code> codes,
+      List<CodeDao> codes,
       String author,
       DataType dataType,
       ItemType itemType,
@@ -90,7 +94,8 @@ public class EntityVersionDao {
           entity.getDescriptions().stream()
               .map(LocalisableTextDao::new)
               .collect(Collectors.toList());
-    codes = entity.getCodes();
+    if (entity.getCodes() != null)
+      codes = entity.getCodes().stream().map(CodeDao::new).collect(Collectors.toList());
     if (entity instanceof Phenotype) {
       dataType = ((Phenotype) entity).getDataType();
       itemType = ((Phenotype) entity).getItemType();
@@ -209,7 +214,7 @@ public class EntityVersionDao {
     return this;
   }
 
-  public EntityVersionDao codes(List<Code> codes) {
+  public EntityVersionDao codes(List<CodeDao> codes) {
     this.codes = codes;
     return this;
   }
@@ -279,7 +284,7 @@ public class EntityVersionDao {
     return descriptions;
   }
 
-  public List<Code> getCodes() {
+  public List<CodeDao> getCodes() {
     return codes;
   }
 
