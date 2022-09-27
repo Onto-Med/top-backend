@@ -1,6 +1,6 @@
 package care.smith.top.backend.service;
 
-import care.smith.top.backend.model.Organisation;
+import care.smith.top.model.Organisation;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;

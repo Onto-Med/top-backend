@@ -1,7 +1,8 @@
 package care.smith.top.backend.service;
 
-import care.smith.top.backend.model.Organisation;
-import care.smith.top.backend.model.Repository;
+import care.smith.top.backend.model.RepositoryDao;
+import care.smith.top.model.Organisation;
+import care.smith.top.model.Repository;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
@@ -57,7 +58,7 @@ class RepositoryServiceTest extends AbstractTest {
             });
 
     assertThat(repositoryRepository.findAll())
-        .map(Repository::getOrganisation)
+        .map(RepositoryDao::getOrganisation)
         .allMatch(o -> o.getId().equals(organisation.getId()))
         .size()
         .isEqualTo(2);

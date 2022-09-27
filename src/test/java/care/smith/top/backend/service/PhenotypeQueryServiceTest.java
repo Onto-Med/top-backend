@@ -1,6 +1,6 @@
 package care.smith.top.backend.service;
 
-import care.smith.top.backend.model.*;
+import care.smith.top.model.*;
 import org.jobrunr.storage.StorageProvider;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
