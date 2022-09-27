@@ -23,6 +23,9 @@ public class EntityDao {
   @OneToMany(mappedBy = "entity")
   private List<EntityVersionDao> versions = null;
 
+  @OneToOne
+  private EntityVersionDao currentVersion;
+
   @OneToMany(mappedBy = "origin")
   private List<EntityDao> forks = null;
 
@@ -47,30 +50,9 @@ public class EntityDao {
     entityType = entity.getEntityType();
   }
 
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-
-    EntityDao entityDao = (EntityDao) o;
-
-    if (getEntityType() != entityDao.getEntityType()) return false;
-    if (!getId().equals(entityDao.getId())) return false;
-    if (getIndex() != null
-        ? !getIndex().equals(entityDao.getIndex())
-        : entityDao.getIndex() != null) return false;
-    return getRepository() != null
-        ? getRepository().equals(entityDao.getRepository())
-        : entityDao.getRepository() == null;
-  }
-
-  @Override
-  public int hashCode() {
-    int result = getEntityType().hashCode();
-    result = 31 * result + getId().hashCode();
-    result = 31 * result + (getIndex() != null ? getIndex().hashCode() : 0);
-    result = 31 * result + (getRepository() != null ? getRepository().hashCode() : 0);
-    return result;
+  public EntityDao currentVersion(EntityVersionDao currentVersion) {
+    this.currentVersion = currentVersion;
+    return this;
   }
 
   public EntityDao entityType(EntityType entityType) {
@@ -108,6 +90,10 @@ public class EntityDao {
     return this;
   }
 
+  public EntityVersionDao getCurrentVersion() {
+    return currentVersion;
+  }
+
   public EntityType getEntityType() {
     return entityType;
   }
@@ -134,5 +120,31 @@ public class EntityDao {
 
   public EntityDao getOrigin() {
     return origin;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+
+    EntityDao entityDao = (EntityDao) o;
+
+    if (getEntityType() != entityDao.getEntityType()) return false;
+    if (!getId().equals(entityDao.getId())) return false;
+    if (getIndex() != null
+      ? !getIndex().equals(entityDao.getIndex())
+      : entityDao.getIndex() != null) return false;
+    return getRepository() != null
+      ? getRepository().equals(entityDao.getRepository())
+      : entityDao.getRepository() == null;
+  }
+
+  @Override
+  public int hashCode() {
+    int result = getEntityType().hashCode();
+    result = 31 * result + getId().hashCode();
+    result = 31 * result + (getIndex() != null ? getIndex().hashCode() : 0);
+    result = 31 * result + (getRepository() != null ? getRepository().hashCode() : 0);
+    return result;
   }
 }
