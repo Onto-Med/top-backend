@@ -59,7 +59,7 @@ public class OrganisationService implements ContentService {
           .findById(data.getSuperOrganisation().getId())
           .ifPresent(organisation::superOrganisation);
 
-    return organisationRepository.save(organisation.update(data)).toApiModel();
+    return organisationRepository.saveAndFlush(organisation.update(data)).toApiModel();
   }
 
   @Transactional
@@ -85,6 +85,9 @@ public class OrganisationService implements ContentService {
 
   public List<Organisation> getOrganisations(String name, Integer page, List<String> include) {
     PageRequest pageRequest = PageRequest.of(page == null ? 1 : page - 1, pageSize);
-    return organisationRepository.findAllByNameOrDescription(name, pageRequest).map(OrganisationDao::toApiModel).getContent();
+    return organisationRepository
+        .findAllByNameOrDescription(name, pageRequest)
+        .map(OrganisationDao::toApiModel)
+        .getContent();
   }
 }

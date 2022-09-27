@@ -193,20 +193,17 @@ class OrganisationServiceTest extends AbstractTest {
     assertThat(organisationService.getOrganisation(subOrganisation.getId(), null))
         .isNotNull()
         .satisfies(
-            a -> {
-              assertThat(a.getId()).isEqualTo(subOrganisation.getId());
-              assertThat(a.getName()).isEqualTo(subOrganisation.getName());
-              assertThat(a.getDescription()).isNull();
-              assertThat(a.getCreatedAt()).isNotNull();
-              assertThat(a.getSuperOrganisation())
+            o -> {
+              assertThat(o.getId()).isEqualTo(subOrganisation.getId());
+              assertThat(o.getName()).isEqualTo(subOrganisation.getName());
+              assertThat(o.getDescription()).isNull();
+              assertThat(o.getCreatedAt()).isNotNull();
+              assertThat(o.getSuperOrganisation())
                   .isNotNull()
                   .satisfies(
-                      o -> {
-                        assertThat(o.getId()).isEqualTo(superOrganisation.getId());
-                        assertThat(o.getName()).isEqualTo(superOrganisation.getName());
-                        assertThat(o.getDescription()).isNull();
-                        assertThat(o.getCreatedAt()).isNotNull();
-                        assertThat(o.getSuperOrganisation()).isNull();
+                      so -> {
+                        assertThat(so.getId()).isEqualTo(superOrganisation.getId());
+                        assertThat(so.getName()).isEqualTo(superOrganisation.getName());
                       });
             });
   }
