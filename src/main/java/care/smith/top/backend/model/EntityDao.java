@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Entity(name = "entity")
-@EntityListeners(AuditingEntityListener.class)
 public class EntityDao {
   @Column(name = "top_entity_type")
   private EntityType entityType;
@@ -108,61 +107,70 @@ public class EntityDao {
     if (entityVersionDao == null) return new care.smith.top.model.Entity();
     EntityDao entityDao = entityVersionDao.getEntity();
 
-    care.smith.top.model.Entity entity =
-        new care.smith.top.model.Entity()
-            .id(entityDao.getId())
-            .entityType(entityDao.getEntityType())
-            .index(entityDao.getIndex())
-            .repository(
-                new Repository()
-                    .id(entityDao.getRepository().getId())
-                    .name(entityDao.getRepository().getName()));
+    Category entity;
+
+    if (ApiModelMapper.isCategory(entityType)) entity = new Category();
+    else entity = new Phenotype();
+
+    entity
+        .id(entityDao.getId())
+        .entityType(entityDao.getEntityType())
+        .index(entityDao.getIndex())
+        .repository(
+            new Repository()
+                .id(entityDao.getRepository().getId())
+                .name(entityDao.getRepository().getName()));
 
     entity
         .author(entityVersionDao.getAuthor())
-        .codes(
-            entityVersionDao.getCodes().stream()
-                .map(CodeDao::toApiModel)
-                .collect(Collectors.toList()))
         .createdAt(entityVersionDao.getCreatedAt())
-        .version(entityVersionDao.getVersion())
-        .descriptions(
-            entityVersionDao.getDescriptions().stream()
-                .map(LocalisableTextDao::toApiModel)
-                .collect(Collectors.toList()))
-        .synonyms(
-            entityVersionDao.getSynonyms().stream()
-                .map(LocalisableTextDao::toApiModel)
-                .collect(Collectors.toList()))
-        .titles(
-            entityVersionDao.getTitles().stream()
-                .map(LocalisableTextDao::toApiModel)
-                .collect(Collectors.toList()));
-    if (ApiModelMapper.isAbstract(entityDao.getEntityType()))
+        .version(entityVersionDao.getVersion());
+
+    if (entityVersionDao.getCodes() != null)
+      entity.codes(
+          entityVersionDao.getCodes().stream()
+              .map(CodeDao::toApiModel)
+              .collect(Collectors.toList()));
+    if (entityVersionDao.getDescriptions() != null)
+      entity.descriptions(
+          entityVersionDao.getDescriptions().stream()
+              .map(LocalisableTextDao::toApiModel)
+              .collect(Collectors.toList()));
+    if (entityVersionDao.getSynonyms() != null)
+      entity.synonyms(
+          entityVersionDao.getSynonyms().stream()
+              .map(LocalisableTextDao::toApiModel)
+              .collect(Collectors.toList()));
+    if (entityVersionDao.getTitles() != null)
+      entity.titles(
+          entityVersionDao.getTitles().stream()
+              .map(LocalisableTextDao::toApiModel)
+              .collect(Collectors.toList()));
+
+    if (ApiModelMapper.isAbstract(entityDao.getEntityType())) {
       ((Phenotype) entity)
           .dataType(entityVersionDao.getDataType())
-          .expression(entityVersionDao.getExpression().toApiModel())
           .itemType(entityVersionDao.getItemType())
           .unit(entityVersionDao.getUnit());
-    if (ApiModelMapper.isRestricted(entityDao.getEntityType())
-        && ((Phenotype) entity).getRestriction() != null)
+      if (entityVersionDao.getExpression() != null)
+        ((Phenotype) entity).expression(entityVersionDao.getExpression().toApiModel());
+    } else if (ApiModelMapper.isRestricted(entityDao.getEntityType())
+        && entityVersionDao.getRestriction() != null)
       ((Phenotype) entity).restriction(entityVersionDao.getRestriction().toApiModel());
 
-    if (entityDao.getSubEntities() != null) {
-      if (ApiModelMapper.isRestricted(entityDao.getEntityType())) {
+    if (entityDao.getSuperEntities() != null) {
+      if (ApiModelMapper.isRestricted(entityDao.getEntityType()))
         ((Phenotype) entity)
             .setSuperPhenotype(
                 entityDao.getSuperEntities().stream()
                     .findFirst()
                     .map(p -> new Phenotype().id(p.getId()))
                     .orElse(null));
-      } else {
-        ((Category) entity)
-            .setSuperCategories(
-                entityDao.getSuperEntities().stream()
-                    .map(c -> new Category().id(c.getId()))
-                    .collect(Collectors.toList()));
-      }
+      else
+        entity.setSuperCategories(
+            entityDao.getSuperEntities().stream()
+                .map(c -> new Category().id(c.getId()))
+                .collect(Collectors.toList()));
     }
 
     return entity;

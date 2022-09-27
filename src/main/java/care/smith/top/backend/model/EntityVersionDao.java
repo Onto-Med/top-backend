@@ -3,6 +3,7 @@ package care.smith.top.backend.model;
 import care.smith.top.model.*;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.Entity;
 import javax.persistence.*;
@@ -11,8 +12,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Entity(name = "entity_version")
+@EntityListeners(AuditingEntityListener.class)
 public class EntityVersionDao {
-  @Id @GeneratedValue private long id;
+  @Id @GeneratedValue private Long id;
 
   @ManyToOne(cascade = CascadeType.ALL)
   @JoinColumn(nullable = false)
@@ -47,7 +49,7 @@ public class EntityVersionDao {
   @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
   private ExpressionDao expression;
 
-  private Unit unit;
+  private String unit;
 
   @CreatedDate
   @Column(updatable = false)
@@ -67,7 +69,7 @@ public class EntityVersionDao {
       ItemType itemType,
       RestrictionDao restriction,
       ExpressionDao expression,
-      Unit unit) {
+      String unit) {
     this.entity = entity;
     this.version = version;
     this.titles = titles;
@@ -99,9 +101,10 @@ public class EntityVersionDao {
     if (entity instanceof Phenotype) {
       dataType = ((Phenotype) entity).getDataType();
       itemType = ((Phenotype) entity).getItemType();
-      if (restriction != null)
+      if (((Phenotype) entity).getRestriction() != null)
         restriction = new RestrictionDao(((Phenotype) entity).getRestriction());
-      expression = new ExpressionDao(((Phenotype) entity).getExpression());
+      if (((Phenotype) entity).getExpression() != null)
+        expression = new ExpressionDao(((Phenotype) entity).getExpression());
       unit = ((Phenotype) entity).getUnit();
     }
   }
@@ -113,6 +116,15 @@ public class EntityVersionDao {
 
   public EntityVersionDao expression(ExpressionDao expression) {
     this.expression = expression;
+    return this;
+  }
+
+  public Long getId() {
+    return id;
+  }
+
+  public EntityVersionDao id(Long id) {
+    this.id = id;
     return this;
   }
 
@@ -130,7 +142,7 @@ public class EntityVersionDao {
     return entity.toApiModel(this);
   }
 
-  public EntityVersionDao unit(Unit unit) {
+  public EntityVersionDao unit(String unit) {
     this.unit = unit;
     return this;
   }
@@ -260,7 +272,7 @@ public class EntityVersionDao {
     return expression;
   }
 
-  public Unit getUnit() {
+  public String getUnit() {
     return unit;
   }
 

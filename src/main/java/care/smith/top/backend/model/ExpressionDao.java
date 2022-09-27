@@ -4,6 +4,7 @@ import care.smith.top.model.Expression;
 import care.smith.top.model.ExpressionValue;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -21,12 +22,13 @@ public class ExpressionDao {
 
   public ExpressionDao() {}
 
-  public ExpressionDao(Expression expression) {
+  public ExpressionDao(@NotNull Expression expression) {
     function = expression.getFunction();
     entityId = expression.getEntityId();
     value = expression.getValue();
-    arguments =
-        expression.getArguments().stream().map(ExpressionDao::new).collect(Collectors.toList());
+    if (expression.getArguments() != null)
+      arguments =
+          expression.getArguments().stream().map(ExpressionDao::new).collect(Collectors.toList());
   }
 
   public ExpressionDao(

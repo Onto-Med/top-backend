@@ -4,7 +4,9 @@ import care.smith.top.model.*;
 
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -12,7 +14,7 @@ import java.util.List;
 
 @Entity(name = "restriction")
 public class RestrictionDao {
-  @Id private Long id;
+  @Id @GeneratedValue private Long id;
   private DataType dataType;
   private Quantifier quantifier;
   private Integer cardinality;
@@ -25,7 +27,7 @@ public class RestrictionDao {
 
   public RestrictionDao() {}
 
-  public RestrictionDao(Restriction restriction) {
+  public RestrictionDao(@NotNull Restriction restriction) {
     dataType = restriction.getType();
     quantifier = restriction.getQuantifier();
     cardinality = restriction.getCardinality();

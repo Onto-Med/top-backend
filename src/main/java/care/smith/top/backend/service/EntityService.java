@@ -56,7 +56,6 @@ public class EntityService implements ContentService {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "entityType is missing");
 
     EntityDao entity = new EntityDao(data).repository(repository);
-    entity.currentVersion(new EntityVersionDao(data).version(1).entity(entity));
 
     if (data instanceof Category && ((Category) data).getSuperCategories() != null)
       for (Category category : ((Category) data).getSuperCategories())
@@ -68,6 +67,11 @@ public class EntityService implements ContentService {
       phenotypeRepository
           .findByIdAndRepositoryId(((Phenotype) data).getSuperPhenotype().getId(), repositoryId)
           .ifPresent(entity::addSuperEntitiesItem);
+
+    entity = entityRepository.save(entity);
+    EntityVersionDao entityVersion =
+        entityVersionRepository.save(new EntityVersionDao(data).version(1).entity(entity));
+    entity.currentVersion(entityVersion);
 
     return entityRepository.save(entity).toApiModel();
   }
@@ -364,6 +368,7 @@ public class EntityService implements ContentService {
         .getContent();
   }
 
+  @Transactional
   public List<Entity> getSubclasses(
       String organisationId, String repositoryId, String id, List<String> include) {
     getRepository(organisationId, repositoryId);
@@ -375,7 +380,9 @@ public class EntityService implements ContentService {
   public List<Entity> getVersions(
       String organisationId, String repositoryId, String id, List<String> include) {
     getRepository(organisationId, repositoryId);
-    return entityVersionRepository.findAllByEntity_RepositoryIdAndEntityId(repositoryId, id).stream()
+    return entityVersionRepository
+        .findAllByEntity_RepositoryIdAndEntityId(repositoryId, id)
+        .stream()
         .map(EntityVersionDao::toApiModel)
         .collect(Collectors.toList());
   }

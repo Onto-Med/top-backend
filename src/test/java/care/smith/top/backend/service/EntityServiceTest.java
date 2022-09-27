@@ -93,7 +93,7 @@ class EntityServiceTest extends AbstractTest {
               assertThat(c.getCreatedAt()).isNotNull();
               assertThat(c.getSynonyms()).size().isEqualTo(1);
               assertThat(c.getSynonyms().get(0)).isEqualTo(category.getSynonyms().get(0));
-              assertThat(c.getVersion()).isEqualTo(0);
+              assertThat(c.getVersion()).isEqualTo(1);
               assertThat(c.getRepository())
                   .isNotNull()
                   .hasFieldOrPropertyWithValue("id", repository.getId());
@@ -106,16 +106,17 @@ class EntityServiceTest extends AbstractTest {
         .hasFieldOrPropertyWithValue("status", HttpStatus.CONFLICT);
 
     /* Create abstract phenotype */
-    Phenotype abstractPhenotype = new Phenotype().unit(new Unit().unit("cm"));
-    abstractPhenotype
-        .expression(
-            new Expression()
-                .function(Not.get().getId())
-                .addArgumentsItem(new Expression().function("entity")))
-        .addSuperCategoriesItem(category)
-        .index(5)
-        .id(UUID.randomUUID().toString())
-        .entityType(EntityType.SINGLE_PHENOTYPE);
+    Phenotype abstractPhenotype =
+        new Phenotype()
+            .unit("cm")
+            .expression(
+                new Expression()
+                    .function(Not.get().getId())
+                    .addArgumentsItem(new Expression().function("entity")))
+            .addSuperCategoriesItem(category)
+            .index(5)
+            .id(UUID.randomUUID().toString())
+            .entityType(EntityType.SINGLE_PHENOTYPE);
 
     assertThat(
             entityService.createEntity(organisation.getId(), repository.getId(), abstractPhenotype))
@@ -124,13 +125,13 @@ class EntityServiceTest extends AbstractTest {
         .satisfies(
             p -> {
               assertThat(p.getId()).isEqualTo(abstractPhenotype.getId());
-              assertThat(p.getVersion()).isEqualTo(0);
+              assertThat(p.getVersion()).isEqualTo(1);
               assertThat(p.getEntityType()).isEqualTo(abstractPhenotype.getEntityType());
               assertThat(((Phenotype) p).getSuperPhenotype()).isNull();
               assertThat(((Phenotype) p).getSuperCategories())
                   .allMatch(c -> c.getId().equals(category.getId()));
               assertThat(p.getIndex()).isEqualTo(5);
-              assertThat(((Phenotype) p).getUnit().getUnit()).isEqualTo("cm");
+              assertThat(((Phenotype) p).getUnit()).isEqualTo("cm");
               assertThat(((Phenotype) p).getExpression())
                   .isNotNull()
                   .satisfies(
@@ -150,12 +151,11 @@ class EntityServiceTest extends AbstractTest {
                     .minOperator(RestrictionOperator.GREATER_THAN)
                     .quantifier(Quantifier.MIN)
                     .cardinality(1)
-                    .type(DataType.NUMBER));
-    restrictedPhenotype1
-        .superPhenotype(abstractPhenotype)
-        .id(UUID.randomUUID().toString())
-        .entityType(EntityType.SINGLE_RESTRICTION)
-        .addTitlesItem(new LocalisableText().text("> 50cm").lang("en"));
+                    .type(DataType.NUMBER))
+            .superPhenotype(abstractPhenotype)
+            .id(UUID.randomUUID().toString())
+            .entityType(EntityType.SINGLE_RESTRICTION)
+            .addTitlesItem(new LocalisableText().text("> 50cm").lang("en"));
 
     assertThat(
             entityService.createEntity(
@@ -165,7 +165,7 @@ class EntityServiceTest extends AbstractTest {
         .satisfies(
             rp -> {
               assertThat(rp.getId()).isEqualTo(restrictedPhenotype1.getId());
-              assertThat(rp.getVersion()).isEqualTo(0);
+              assertThat(rp.getVersion()).isEqualTo(1);
               assertThat(rp.getEntityType()).isEqualTo(EntityType.SINGLE_RESTRICTION);
               assertThat(((Phenotype) rp).getSuperPhenotype())
                   .hasFieldOrPropertyWithValue("id", abstractPhenotype.getId());

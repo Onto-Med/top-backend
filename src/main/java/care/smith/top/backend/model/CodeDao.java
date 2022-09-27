@@ -4,6 +4,7 @@ import care.smith.top.model.Code;
 import care.smith.top.model.CodeSystem;
 
 import javax.persistence.Embeddable;
+import javax.validation.constraints.NotNull;
 import java.net.URI;
 
 @Embeddable
@@ -27,7 +28,7 @@ public class CodeDao {
     this.codeSystemName = codeSystemName;
   }
 
-  public CodeDao(Code code) {
+  public CodeDao(@NotNull Code code) {
     this.code = code.getCode();
     name = code.getName();
     if (code.getCodeSystem() != null) {

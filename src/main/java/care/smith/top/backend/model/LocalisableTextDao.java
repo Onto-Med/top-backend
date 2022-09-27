@@ -3,6 +3,7 @@ package care.smith.top.backend.model;
 import care.smith.top.model.LocalisableText;
 
 import javax.persistence.Embeddable;
+import javax.validation.constraints.NotNull;
 
 @Embeddable
 public class LocalisableTextDao {
@@ -26,7 +27,7 @@ public class LocalisableTextDao {
     return this;
   }
 
-  public LocalisableTextDao(LocalisableText localisableText) {
+  public LocalisableTextDao(@NotNull LocalisableText localisableText) {
     lang = localisableText.getLang();
     text = localisableText.getText();
   }
