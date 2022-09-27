@@ -375,7 +375,7 @@ public class EntityService implements ContentService {
   public List<Entity> getVersions(
       String organisationId, String repositoryId, String id, List<String> include) {
     getRepository(organisationId, repositoryId);
-    return entityVersionRepository.findAllByEntityRepositoryIdAndEntityId(repositoryId, id).stream()
+    return entityVersionRepository.findAllByEntity_RepositoryIdAndEntityId(repositoryId, id).stream()
         .map(EntityVersionDao::toApiModel)
         .collect(Collectors.toList());
   }
@@ -389,7 +389,7 @@ public class EntityService implements ContentService {
           .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
     return entityVersionRepository
-        .findByRepositoryIdAndEntityIdAndVersion(repositoryId, id, version)
+        .findByEntity_RepositoryIdAndEntityIdAndVersion(repositoryId, id, version)
         .map(EntityVersionDao::toApiModel)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
   }
@@ -410,7 +410,7 @@ public class EntityService implements ContentService {
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     EntityVersionDao entityVersion =
         entityVersionRepository
-            .findByRepositoryIdAndEntityIdAndVersion(repositoryId, id, version)
+            .findByEntity_RepositoryIdAndEntityIdAndVersion(repositoryId, id, version)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
     return entityRepository.save(entity.currentVersion(entityVersion)).toApiModel();
@@ -426,7 +426,7 @@ public class EntityService implements ContentService {
             .findByIdAndRepositoryId(id, repositoryId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-    EntityVersionDao latestVersion = entityVersionRepository.findByEntityIdAndNextVersionIsNull(id);
+    EntityVersionDao latestVersion = entityVersionRepository.findByEntityIdAndNextVersionNull(id);
     EntityVersionDao newVersion = new EntityVersionDao(data).entity(entity);
 
     if (latestVersion != null)

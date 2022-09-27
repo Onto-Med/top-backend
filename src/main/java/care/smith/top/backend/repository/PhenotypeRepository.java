@@ -13,7 +13,7 @@ import java.util.List;
 public interface PhenotypeRepository extends EntityRepository {
   default List<EntityDao> findAllByRepositoryIdAndSuperPhenotypeId(
       String repositoryId, String superPhenotypeId) {
-    return findAllByRepositoryIdAndSuperEntities_IdAndEntityType(
+    return findAllByRepositoryIdAndSuperEntities_IdAndEntityTypeIn(
         repositoryId, superPhenotypeId, ApiModelMapper.phenotypeTypes());
   }
 

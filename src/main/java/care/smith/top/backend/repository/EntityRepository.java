@@ -1,7 +1,6 @@
 package care.smith.top.backend.repository;
 
 import care.smith.top.backend.model.EntityDao;
-import care.smith.top.backend.model.EntityVersionDao;
 import care.smith.top.backend.model.RepositoryDao;
 import care.smith.top.model.EntityType;
 import org.springframework.data.domain.Page;
@@ -24,7 +23,7 @@ public interface EntityRepository extends PagingAndSortingRepository<EntityDao, 
 
   Optional<EntityDao> findByIdAndCurrentVersion_Version(String id, Integer version);
 
-  List<EntityDao> findAllByRepositoryIdAndSuperEntities_IdAndEntityType(
+  List<EntityDao> findAllByRepositoryIdAndSuperEntities_IdAndEntityTypeIn(
       String repositoryId, String superPhenotypeId, List<EntityType> entityTypes);
 
   List<EntityDao> findAllByRepositoryIdAndSuperEntities_Id(
@@ -84,8 +83,6 @@ public interface EntityRepository extends PagingAndSortingRepository<EntityDao, 
   Page<EntityDao>
       findAllByRepositoryIdAndCurrentVersion_Titles_TextContainingIgnoreCaseAndEntityTypeIn(
           String repositoryId, String title, List<EntityType> entityTypes, Pageable pageable);
-
-  Optional<EntityVersionDao> findCurrentVersionByEntityId(String id);
 
   Slice<EntityDao> findAllByRepositoryIdAndSuperEntitiesEmpty(
       String repositoryId, Pageable pageable);
