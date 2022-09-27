@@ -1,6 +1,8 @@
 package care.smith.top.backend.model;
 
-public class EntityVersionId {
+import java.io.Serializable;
+
+public class EntityVersionId implements Serializable {
   private EntityDao entity;
   private Integer version;
 
