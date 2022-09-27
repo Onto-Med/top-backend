@@ -70,11 +70,11 @@
             <artifactId>top-phenotypic-query</artifactId>
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
-        <dependency>
-            <groupId>care.smith.top</groupId>
-            <artifactId>phenotype2r</artifactId>
-            <version>0.2.2-SNAPSHOT</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>care.smith.top</groupId>-->
+<!--            <artifactId>phenotype2r</artifactId>-->
+<!--            <version>0.2.2-SNAPSHOT</version>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
