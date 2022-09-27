@@ -1,5 +1,6 @@
 package care.smith.top.backend.model;
 
+import care.smith.top.model.Organisation;
 import care.smith.top.model.Repository;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -114,6 +115,26 @@ public class RepositoryDao {
     result = 31 * result + (getPrimary() != null ? getPrimary().hashCode() : 0);
     result = 31 * result + (getOrganisation() != null ? getOrganisation().hashCode() : 0);
     return result;
+  }
+
+  public Repository toApiModel() {
+    Repository repository =
+        new Repository()
+            .id(id)
+            .name(name)
+            .description(description)
+            .createdAt(createdAt)
+            .updatedAt(updatedAt)
+            .primary(primary);
+    if (organisation != null)
+      repository.organisation(
+          new Organisation().id(organisation.getId()).name(organisation.getName()));
+    return repository;
+  }
+
+  public RepositoryDao update(Repository data) {
+    // TODO: if (user is admin) update primary
+    return name(data.getName()).description(data.getDescription()).primary(data.isPrimary());
   }
 
   @NotNull

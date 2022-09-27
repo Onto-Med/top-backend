@@ -37,6 +37,14 @@ public class ExpressionDao {
     this.arguments = arguments;
   }
 
+  public Expression toApiModel() {
+    Expression expression = new Expression().function(function).entityId(entityId).value(value);
+    if (arguments != null)
+      expression.setArguments(
+          arguments.stream().map(ExpressionDao::toApiModel).collect(Collectors.toList()));
+    return expression;
+  }
+
   public Long getId() {
     return id;
   }

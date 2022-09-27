@@ -126,6 +126,10 @@ public class OrganisationDao {
     return organisation;
   }
 
+  public OrganisationDao update(Organisation data) {
+    return name(data.getName()).description(data.getDescription());
+  }
+
   @NotNull
   public String getId() {
     return id;

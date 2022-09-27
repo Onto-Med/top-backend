@@ -24,9 +24,9 @@ public class EntityVersionDao {
 
   @ElementCollection @OrderColumn private List<Code> codes = null;
 
-  @ManyToOne private EntityVersionDao previousVersion;
+  @OneToOne private EntityVersionDao previousVersion;
 
-  @ManyToOne private EntityVersionDao nextVersion;
+  @OneToOne private EntityVersionDao nextVersion;
 
   @ManyToMany private List<EntityVersionDao> equivalentEntities = null;
 
@@ -96,6 +96,11 @@ public class EntityVersionDao {
     return this;
   }
 
+  public EntityVersionDao expression(ExpressionDao expression) {
+    this.expression = expression;
+    return this;
+  }
+
   public EntityVersionDao itemType(ItemType itemType) {
     this.itemType = itemType;
     return this;
@@ -106,9 +111,8 @@ public class EntityVersionDao {
     return this;
   }
 
-  public EntityVersionDao expression(ExpressionDao expression) {
-    this.expression = expression;
-    return this;
+  public care.smith.top.model.Entity toApiModel() {
+    return entity.toApiModel(this);
   }
 
   public EntityVersionDao unit(Unit unit) {
