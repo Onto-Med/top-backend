@@ -2,10 +2,8 @@ package care.smith.top.backend.model;
 
 import care.smith.top.model.*;
 
-import javax.persistence.ElementCollection;
+import javax.persistence.*;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -15,9 +13,15 @@ import java.util.List;
 @Entity(name = "restriction")
 public class RestrictionDao {
   @Id @GeneratedValue private Long id;
+
+  @Column(nullable = false)
   private DataType dataType;
+
+  @Column(nullable = false)
   private Quantifier quantifier;
+
   private Integer cardinality;
+
   @ElementCollection private List<String> stringValues;
   @ElementCollection private List<BigDecimal> numberValues;
   @ElementCollection private List<LocalDateTime> dateTimeValues;

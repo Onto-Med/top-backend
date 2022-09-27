@@ -171,7 +171,6 @@ class EntityServiceTest extends AbstractTest {
                         .function(Not.get().getId())
                         .addArgumentsItem(new Expression().function("entity")))
                 .addSuperCategoriesItem(category)
-                .index(5)
                 .id(UUID.randomUUID().toString())
                 .entityType(EntityType.SINGLE_PHENOTYPE);
 
@@ -187,7 +186,6 @@ class EntityServiceTest extends AbstractTest {
               assertThat(((Phenotype) p).getSuperPhenotype()).isNull();
               assertThat(((Phenotype) p).getSuperCategories())
                   .allMatch(c -> c.getId().equals(category.getId()));
-              assertThat(p.getIndex()).isEqualTo(5);
               assertThat(((Phenotype) p).getUnit()).isEqualTo("cm");
               assertThat(((Phenotype) p).getExpression())
                   .isNotNull()

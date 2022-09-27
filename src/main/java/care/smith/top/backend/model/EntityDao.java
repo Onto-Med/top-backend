@@ -14,12 +14,11 @@ import java.util.stream.Collectors;
 
 @Entity(name = "entity")
 public class EntityDao {
-  @Column(name = "top_entity_type")
+  @Enumerated
+  @Column(name = "top_entity_type", nullable = false)
   private EntityType entityType;
 
   @Id private String id;
-
-  private Integer index;
 
   @ManyToOne private RepositoryDao repository;
 
@@ -40,15 +39,13 @@ public class EntityDao {
 
   public EntityDao() {}
 
-  public EntityDao(EntityType entityType, String id, Integer index) {
+  public EntityDao(EntityType entityType, String id) {
     this.entityType = entityType;
     this.id = id;
-    this.index = index;
   }
 
   public EntityDao(care.smith.top.model.Entity entity) {
     id = entity.getId();
-    index = entity.getIndex();
     entityType = entity.getEntityType();
   }
 
@@ -64,11 +61,6 @@ public class EntityDao {
 
   public EntityDao id(String id) {
     this.id = id;
-    return this;
-  }
-
-  public EntityDao index(Integer index) {
-    this.index = index;
     return this;
   }
 
@@ -114,7 +106,6 @@ public class EntityDao {
     entity
         .id(entityDao.getId())
         .entityType(entityDao.getEntityType())
-        .index(entityDao.getIndex())
         .repository(
             new Repository()
                 .id(entityDao.getRepository().getId())
@@ -198,10 +189,6 @@ public class EntityDao {
     return id;
   }
 
-  public Integer getIndex() {
-    return index;
-  }
-
   public RepositoryDao getRepository() {
     return repository;
   }
@@ -245,9 +232,6 @@ public class EntityDao {
 
     if (getEntityType() != entityDao.getEntityType()) return false;
     if (!getId().equals(entityDao.getId())) return false;
-    if (getIndex() != null
-        ? !getIndex().equals(entityDao.getIndex())
-        : entityDao.getIndex() != null) return false;
     return getRepository() != null
         ? getRepository().equals(entityDao.getRepository())
         : entityDao.getRepository() == null;
@@ -257,7 +241,6 @@ public class EntityDao {
   public int hashCode() {
     int result = getEntityType().hashCode();
     result = 31 * result + getId().hashCode();
-    result = 31 * result + (getIndex() != null ? getIndex().hashCode() : 0);
     result = 31 * result + (getRepository() != null ? getRepository().hashCode() : 0);
     return result;
   }

@@ -3,15 +3,21 @@ package care.smith.top.backend.model;
 import care.smith.top.model.Code;
 import care.smith.top.model.CodeSystem;
 
+import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.validation.constraints.NotNull;
 import java.net.URI;
 
 @Embeddable
 public class CodeDao {
+  @Column(nullable = false)
   private String code;
+
   private String name;
+
+  @Column(nullable = false)
   private URI codeSystemUri;
+
   private String codeSystemName;
 
   public CodeDao() {}
