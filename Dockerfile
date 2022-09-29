@@ -7,7 +7,7 @@ WORKDIR /app
 COPY . .
 COPY .mvn-ci.xml /root/.m2/settings.xml
 RUN mvn install -B -f neo4j-ontology-access/pom.xml
-RUN mvn package -B -DskipTests -f resource-server/pom.xml
+RUN mvn package -B -f resource-server/pom.xml
 
 FROM openjdk:11-jdk-slim AS production-stage
 COPY --from=build-stage /app/resource-server/target/*.jar /usr/src/top-backend/top-backend.jar

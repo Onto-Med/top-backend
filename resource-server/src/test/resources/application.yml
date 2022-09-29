@@ -29,9 +29,7 @@ org:
   jobrunr:
     background-job-server:
       enabled: true
-    dashboard:
-      enabled: true
 
 top:
   phenotyping:
-    data-source-config-dir: ${DATA_SOURCE_CONFIG_DIR:config/data_sources}
+    data-source-config-dir: src/test/resources/config/data_sources

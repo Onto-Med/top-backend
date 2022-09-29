@@ -26,8 +26,6 @@ import org.springframework.web.server.ResponseStatusException;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.math.BigDecimal;
-import java.time.Instant;
-import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.Set;
 import java.util.*;
@@ -36,6 +34,9 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static care.smith.top.backend.resource.util.ApiModelMapper.EXPRESSION_PROPERTY;
+import static care.smith.top.backend.resource.util.ApiModelMapper.EXPRESSION_VALUE_PROPERTY;
 
 @Service
 public class EntityService implements ContentService {
@@ -47,6 +48,7 @@ public class EntityService implements ContentService {
   @Autowired private AnnotationRepository annotationRepository;
   @Autowired private ExpressionRepository expressionRepository;
   @Autowired private RepositoryRepository repositoryRepository;
+  @Autowired private RepositoryService repositoryService;
 
   public static <T> Predicate<T> distinctByKey(Function<? super T, ?> keyExtractor) {
     Set<Object> seen = ConcurrentHashMap.newKeySet();
@@ -422,7 +424,10 @@ public class EntityService implements ContentService {
         .collect(Collectors.toList());
   }
 
-  @Cacheable(value = "entities", key = "#repositoryId", condition = "#name == null && #type == null && #dataType == null")
+  @Cacheable(
+      value = "entities",
+      key = "#repositoryId",
+      condition = "#name == null && #type == null && #dataType == null")
   public List<Entity> getEntitiesByRepositoryId(
       String organisationId,
       String repositoryId,
@@ -777,7 +782,7 @@ public class EntityService implements ContentService {
       }
 
       classVersion
-          .getAnnotation("expression")
+          .getAnnotation(EXPRESSION_PROPERTY, EXPRESSION_VALUE_PROPERTY)
           .ifPresent(a -> ((Phenotype) entity).setExpression(ApiModelMapper.toExpression(a)));
     }
 
@@ -894,7 +899,7 @@ public class EntityService implements ContentService {
 
     classVersionRepository.findAllByClassId(cls.getId()).forEach(this::deleteVersion);
     annotationRepository.deleteAll(
-        annotationRepository.findAllByClassValueAndProperty(cls, "expression"));
+        annotationRepository.findAllByClassValueAndProperty(cls, EXPRESSION_PROPERTY));
     classRepository.delete(cls);
   }
 
@@ -906,17 +911,17 @@ public class EntityService implements ContentService {
   }
 
   private Annotation fromExpression(Expression expression, String repositoryId) {
-    if (expression == null) return new Annotation("expression", null);
+    if (expression == null) return new Annotation(EXPRESSION_PROPERTY, null);
 
     if (expression.getEntityId() != null)
       return classRepository
           .findByIdAndRepositoryId(expression.getEntityId(), repositoryId)
-          .map(aClass -> new Annotation("expression", aClass, null))
-          .orElseGet(() -> new Annotation("expression", "class"));
+          .map(aClass -> new Annotation(EXPRESSION_PROPERTY, aClass, null))
+          .orElseGet(() -> new Annotation(EXPRESSION_PROPERTY, "class"));
 
     if (expression.getValue() != null) return ApiModelMapper.toAnnotation(expression.getValue());
 
-    Annotation annotation = new Annotation("expression", expression.getFunction(), null);
+    Annotation annotation = new Annotation(EXPRESSION_PROPERTY, expression.getFunction(), null);
     if (expression.getArguments() != null)
       annotation.addAnnotations(
           expression.getArguments().stream()
@@ -986,9 +991,7 @@ public class EntityService implements ContentService {
             ((DateTimeRestriction) restriction)
                 .getValues().stream()
                     .filter(Objects::nonNull)
-                    .map(v -> new Annotation("value", v.toInstant(
-                            ZoneId.systemDefault().getRules().getOffset(Instant.now())
-                            ), null))
+                    .map(v -> new Annotation("value", v, null))
                     .collect(Collectors.toList()));
     } else if (restriction instanceof BooleanRestriction) {
       if (((BooleanRestriction) restriction).getValues() != null)
@@ -1015,8 +1018,8 @@ public class EntityService implements ContentService {
    * @return The matching repository, if it exists.
    */
   private Repository getRepository(String organisationId, String repositoryId) {
-    return repositoryRepository
-        .findByIdAndSuperDirectoryId(repositoryId, organisationId)
+    return repositoryService
+        .getRepository(organisationId, repositoryId)
         .orElseThrow(
             () ->
                 new ResponseStatusException(
