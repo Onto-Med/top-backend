@@ -1,0 +1,35 @@
+server:
+  port: ${APP_PORT:8080}
+  servlet:
+    context-path: ${APP_PATH:/}
+
+logging:
+  level:
+    root: INFO
+
+spring:
+  jpa:
+    hibernate:
+      dialect: org.hibernate.dialect.HSQLDialect
+  datasource:
+    url: jdbc:hsqldb:mem:test
+  security:
+    cors:
+      allowed-origins: "*"
+    oauth2:
+      enabled: ${OAUTH2_ENABLED:false}
+      resourceserver:
+        jwt:
+          issuer-url: ${OAUTH2_URL:http://127.0.0.1:8081}/realms/${OAUTH2_REALM:top-realm}
+          jwk-set-uri: ${OAUTH2_URL:http://127.0.0.1:8081}/realms/${OAUTH2_REALM:top-realm}/protocol/openid-connect/certs
+  paging:
+    page-size: 1000
+
+org:
+  jobrunr:
+    background-job-server:
+      enabled: true
+
+top:
+  phenotyping:
+    data-source-config-dir: src/test/resources/config/data_sources
