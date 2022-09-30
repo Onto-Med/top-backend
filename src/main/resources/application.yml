@@ -9,6 +9,7 @@ logging:
 
 spring:
   jpa:
+    open-in-view: false
     hibernate:
       ddl-auto: update
       dialect: org.hibernate.dialect.PostgreSQLDialect
