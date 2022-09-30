@@ -8,6 +8,11 @@ logging:
     root: INFO
 
 spring:
+  neo4j:
+    uri: bolt://${NEO4J_HOST:localhost}:${NEO4J_PORT:7687}
+    authentication:
+      username: ${NEO4J_USER:neo4j}
+      password: ${NEO4J_PASS}
   jpa:
     hibernate:
       ddl-auto: update
