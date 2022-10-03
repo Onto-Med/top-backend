@@ -1,10 +1,7 @@
 package care.smith.top.backend.model;
 
 import care.smith.top.backend.util.ApiModelMapper;
-import care.smith.top.model.Category;
-import care.smith.top.model.EntityType;
-import care.smith.top.model.Phenotype;
-import care.smith.top.model.Repository;
+import care.smith.top.model.*;
 
 import javax.persistence.Entity;
 import javax.persistence.*;
@@ -151,14 +148,21 @@ public class EntityDao {
     if (entityDao.getSuperEntities() != null) {
       if (ApiModelMapper.isRestricted(entityDao.getEntityType())) {
         EntityDao superPhenotype = entityDao.getSuperEntities().stream().findFirst().orElse(null);
-        if (superPhenotype != null)
+        if (superPhenotype != null) {
+          List<LocalisableText> titles = null;
+          if (superPhenotype.getCurrentVersion() != null && superPhenotype.getCurrentVersion().getTitles() != null)
+            titles = superPhenotype.getCurrentVersion().getTitles().stream()
+              .map(LocalisableTextDao::toApiModel)
+              .collect(Collectors.toList());
           ((Phenotype) entity)
               .superPhenotype(
                   ((Phenotype)
                       new Phenotype()
                           .id(superPhenotype.getId())
-                          .entityType(superPhenotype.getEntityType())))
+                          .entityType(superPhenotype.getEntityType())
+                          .titles(titles)))
               .dataType(superPhenotype.currentVersion.getDataType());
+        }
       } else {
         entity.setSuperCategories(
             entityDao.getSuperEntities().stream()
