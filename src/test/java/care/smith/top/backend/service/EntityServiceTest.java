@@ -4,7 +4,6 @@ import care.smith.top.backend.model.EntityDao;
 import care.smith.top.model.*;
 import care.smith.top.simple_onto_api.calculator.functions.bool.Not;
 import org.junit.jupiter.api.Test;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
@@ -186,8 +185,8 @@ class EntityServiceTest extends AbstractTest {
                 .unit("cm")
                 .expression(
                     new Expression()
-                        .function(Not.get().getId())
-                        .addArgumentsItem(new Expression().function("entity")))
+                        .functionId(Not.get().getId())
+                        .addArgumentsItem(new Expression().functionId("entity")))
                 .addSuperCategoriesItem(category)
                 .id(UUID.randomUUID().toString())
                 .entityType(EntityType.SINGLE_PHENOTYPE);
@@ -209,8 +208,8 @@ class EntityServiceTest extends AbstractTest {
                   .isNotNull()
                   .satisfies(
                       e -> {
-                        assertThat(e.getFunction())
-                            .isEqualTo(abstractPhenotype.getExpression().getFunction());
+                        assertThat(e.getFunctionId())
+                            .isEqualTo(abstractPhenotype.getExpression().getFunctionId());
                         assertThat(e.getArguments()).size().isEqualTo(1);
                       });
             });

@@ -1,7 +1,7 @@
 package care.smith.top.backend.model;
 
 import care.smith.top.model.Expression;
-import care.smith.top.model.ExpressionValue;
+import care.smith.top.model.Value;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
@@ -13,10 +13,11 @@ public class ExpressionDao {
   @Id @GeneratedValue private Long id;
 
   @Column(nullable = false)
-  private String function;
+  private String functionId;
 
   private String entityId;
-  private ExpressionValue value;
+  private String constantId;
+  private Value value;
 
   @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
   private List<ExpressionDao> arguments = null;
@@ -24,8 +25,9 @@ public class ExpressionDao {
   public ExpressionDao() {}
 
   public ExpressionDao(@NotNull Expression expression) {
-    function = expression.getFunction();
+    functionId = expression.getFunctionId();
     entityId = expression.getEntityId();
+    constantId = expression.getConstantId();
     value = expression.getValue();
     if (expression.getArguments() != null)
       arguments =
@@ -33,15 +35,25 @@ public class ExpressionDao {
   }
 
   public ExpressionDao(
-      String function, String entityId, ExpressionValue value, List<ExpressionDao> arguments) {
-    this.function = function;
+      String function,
+      String entityId,
+      String constantId,
+      Value value,
+      List<ExpressionDao> arguments) {
+    this.functionId = function;
     this.entityId = entityId;
+    this.constantId = constantId;
     this.value = value;
     this.arguments = arguments;
   }
 
   public Expression toApiModel() {
-    Expression expression = new Expression().function(function).entityId(entityId).value(value);
+    Expression expression =
+        new Expression()
+            .functionId(functionId)
+            .entityId(entityId)
+            .constantId(constantId)
+            .value(value);
     if (arguments != null)
       expression.setArguments(
           arguments.stream().map(ExpressionDao::toApiModel).collect(Collectors.toList()));
@@ -57,12 +69,12 @@ public class ExpressionDao {
     return this;
   }
 
-  public String getFunction() {
-    return function;
+  public String getFunctionId() {
+    return functionId;
   }
 
-  public ExpressionDao function(String function) {
-    this.function = function;
+  public ExpressionDao functionId(String functionId) {
+    this.functionId = functionId;
     return this;
   }
 
@@ -75,11 +87,20 @@ public class ExpressionDao {
     return this;
   }
 
-  public ExpressionValue getValue() {
+  public String getConstantId() {
+    return constantId;
+  }
+
+  public ExpressionDao constantId(String constantId) {
+    this.constantId = constantId;
+    return this;
+  }
+
+  public Value getValue() {
     return value;
   }
 
-  public ExpressionDao value(ExpressionValue value) {
+  public ExpressionDao value(Value value) {
     this.value = value;
     return this;
   }
@@ -101,8 +122,9 @@ public class ExpressionDao {
     ExpressionDao that = (ExpressionDao) o;
 
     if (getId() != null ? !getId().equals(that.getId()) : that.getId() != null) return false;
-    if (!getFunction().equals(that.getFunction())) return false;
+    if (!getFunctionId().equals(that.getFunctionId())) return false;
     if (!getEntityId().equals(that.getEntityId())) return false;
+    if (!getConstantId().equals(that.getConstantId())) return false;
     if (!getValue().equals(that.getValue())) return false;
     return getArguments().equals(that.getArguments());
   }
@@ -110,8 +132,9 @@ public class ExpressionDao {
   @Override
   public int hashCode() {
     int result = getId() != null ? getId().hashCode() : 0;
-    result = 31 * result + getFunction().hashCode();
+    result = 31 * result + getFunctionId().hashCode();
     result = 31 * result + getEntityId().hashCode();
+    result = 31 * result + getConstantId().hashCode();
     result = 31 * result + getValue().hashCode();
     result = 31 * result + getArguments().hashCode();
     return result;
