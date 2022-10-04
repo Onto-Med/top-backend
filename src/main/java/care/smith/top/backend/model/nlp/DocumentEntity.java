@@ -1,8 +1,9 @@
-package care.smith.top.backend.model;
+package care.smith.top.backend.model.nlp;
 
 import org.springframework.data.neo4j.core.schema.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Node("Document")
 public class DocumentEntity {
@@ -16,7 +17,7 @@ public class DocumentEntity {
     private final String documentText;
 
     @Relationship(type = "HAS_PHRASE", direction = Relationship.Direction.OUTGOING)
-    private List<PhraseEntity> phrases;
+    private List<PhraseEntity> documentPhrases;
 
     public DocumentEntity(String documentId, String documentText) {
         this.id = null;
@@ -41,4 +42,6 @@ public class DocumentEntity {
     public String documentText() {
         return documentText;
     }
+
+    public List<PhraseEntity> documentPhrases() { return documentPhrases; }
 }
