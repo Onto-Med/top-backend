@@ -73,7 +73,7 @@
         <dependency>
             <groupId>care.smith.top</groupId>
             <artifactId>phenotype2r</artifactId>
-            <version>0.3.0</version>
+            <version>0.3.1</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
