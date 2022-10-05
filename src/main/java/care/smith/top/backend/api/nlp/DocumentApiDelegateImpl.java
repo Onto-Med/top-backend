@@ -13,15 +13,17 @@ import java.util.List;
 @Service
 public class DocumentApiDelegateImpl implements DocumentApiDelegate {
 
-    @Autowired
-    DocumentService documentService;
+    @Autowired DocumentService documentService;
 
     @Override
     public ResponseEntity<List<Document>> getDocuments(List<String> include, String id, Integer page, Integer pageSize) {
+        if (page != null && pageSize != null) {
+            return getDocumentsByPage(page, pageSize);
+        }
         return new ResponseEntity<>(documentService.getDocuments(), HttpStatus.OK);
     }
 
-    public ResponseEntity<List<Document>> getDocumentsByPage(int page, int pageSize) {
+    private ResponseEntity<List<Document>> getDocumentsByPage(int page, int pageSize) {
         return new ResponseEntity<>(documentService.getDocumentsByPage(page, pageSize), HttpStatus.OK);
     }
 }

@@ -51,4 +51,7 @@ public class PhraseEntity {
     public Boolean isExemplar() { return this.isExemplar; }
 
     public String phraseId() { return this.phraseId; }
+
+    public Long nodeId() { return this.id; }
+
 }
