@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -27,6 +28,13 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
     return new ResponseEntity<>(
         phenotypeQueryService.enqueueQuery(organisationId, repositoryId, query),
         HttpStatus.CREATED);
+  }
+
+  @Override
+  public ResponseEntity<List<Query>> getQueries(
+      String organisationId, String repositoryId, Integer page) {
+    return new ResponseEntity<>(
+        phenotypeQueryService.getQueries(organisationId, repositoryId, page), HttpStatus.OK);
   }
 
   @Override

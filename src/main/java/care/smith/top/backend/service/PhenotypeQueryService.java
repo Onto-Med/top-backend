@@ -1,5 +1,8 @@
 package care.smith.top.backend.service;
 
+import care.smith.top.backend.model.QueryDao;
+import care.smith.top.backend.model.RepositoryDao;
+import care.smith.top.backend.repository.QueryRepository;
 import care.smith.top.model.*;
 import care.smith.top.backend.util.ApiModelMapper;
 import care.smith.top.top_phenotypic_query.adapter.config.DataAdapterConfig;
@@ -9,6 +12,7 @@ import org.jobrunr.scheduling.JobScheduler;
 import org.jobrunr.storage.StorageProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -27,14 +31,16 @@ import java.util.stream.Stream;
 public class PhenotypeQueryService {
   private static final Logger LOGGER = Logger.getLogger(PhenotypeQueryService.class.getName());
 
-  @Inject
-  private JobScheduler jobScheduler;
+  @Value("${spring.paging.page-size:10}")
+  private int pageSize;
+
+  @Inject private JobScheduler jobScheduler;
 
   @Inject private StorageProvider storageProvider;
 
-  @Autowired
-  private            RepositoryService repositoryService;
-  @Autowired private EntityService     entityService;
+  @Autowired private RepositoryService repositoryService;
+  @Autowired private EntityService entityService;
+  @Autowired private QueryRepository queryRepository;
 
   @Value("${top.phenotyping.data-source-config-dir:config/data_sources}")
   private String dataSourceConfigDir;
@@ -51,51 +57,54 @@ public class PhenotypeQueryService {
     // TODO: cleanup stored query results
   }
 
-  public QueryResult enqueueQuery(String organisationId, String repositoryId, Query query) {
-    if (!repositoryService.repositoryExists(organisationId, repositoryId))
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+  public QueryResult enqueueQuery(String organisationId, String repositoryId, Query data) {
+    RepositoryDao repository =
+        repositoryService
+            .getRepository(organisationId, repositoryId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-    if (query == null
-      || query.getId() == null
-      || query.getDataSources() == null
-      || query.getDataSources().isEmpty())
+    if (data == null
+        || data.getId() == null
+        || data.getDataSources() == null
+        || data.getDataSources().isEmpty())
       throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE);
 
     List<DataAdapterConfig> configs =
-      query.getDataSources().stream()
-        .map(s -> getDataAdapterConfig(s.getId()).orElse(null))
-        .filter(Objects::nonNull)
-        .collect(Collectors.toList());
+        data.getDataSources().stream()
+            .map(s -> getDataAdapterConfig(s.getId()).orElse(null))
+            .filter(Objects::nonNull)
+            .collect(Collectors.toList());
     if (configs.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE);
 
     jobScheduler
-      .enqueue(
-        query.getId(), () -> this.executeQuery(organisationId, repositoryId, query.getId()))
-      .asUUID();
+        .enqueue(data.getId(), () -> this.executeQuery(organisationId, repositoryId, data.getId()))
+        .asUUID();
 
-    return getQueryResult(organisationId, repositoryId, query.getId());
+    queryRepository.save(new QueryDao(data).repository(repository));
+
+    return getQueryResult(organisationId, repositoryId, data.getId());
   }
 
   @org.jobrunr.jobs.annotations.Job(name = "Phenotypic query", retries = 0)
   public void executeQuery(String organisationId, String repositoryId, UUID queryId) {
     LOGGER.info(
-      String.format(
-        "Running phenotypic query '%s' for repository '%s'...", queryId, repositoryId));
+        String.format(
+            "Running phenotypic query '%s' for repository '%s'...", queryId, repositoryId));
 
     DependentSubjectsMap phenotypes = new DependentSubjectsMap();
     phenotypes.putAll(
-      entityService
-        .getEntitiesByRepositoryId(
-          organisationId,
-          repositoryId,
-          null,
-          null,
-          ApiModelMapper.phenotypeTypes(),
-          null,
-          null)
-        .stream()
-        .map(p -> (Phenotype) p)
-        .collect(Collectors.toMap(Phenotype::getId, Function.identity())));
+        entityService
+            .getEntitiesByRepositoryId(
+                organisationId,
+                repositoryId,
+                null,
+                null,
+                ApiModelMapper.phenotypeTypes(),
+                null,
+                null)
+            .stream()
+            .map(p -> (Phenotype) p)
+            .collect(Collectors.toMap(Phenotype::getId, Function.identity())));
     // query.dependentSubjects(phenotypes);
     // TODO: call method from top-phenotypic-query package
   }
@@ -114,10 +123,10 @@ public class PhenotypeQueryService {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND);
 
     QueryResult queryResult =
-      new QueryResult()
-        .id(queryId)
-        .createdAt(job.getCreatedAt().atOffset(ZoneOffset.UTC))
-        .state(getState(job));
+        new QueryResult()
+            .id(queryId)
+            .createdAt(job.getCreatedAt().atOffset(ZoneOffset.UTC))
+            .state(getState(job));
 
     if (QueryState.FINISHED.equals(queryResult.getState())) {
       // TODO: get total count of subjects in query result
@@ -131,22 +140,31 @@ public class PhenotypeQueryService {
   public List<DataAdapterConfig> getDataAdapterConfigs() {
     try (Stream<Path> paths = Files.list(Path.of(dataSourceConfigDir))) {
       return paths
-        .map(this::toDataAdapterConfig)
-        .filter(Objects::nonNull)
-        .sorted(Comparator.comparing(DataAdapterConfig::getId))
-        .collect(Collectors.toList());
+          .map(this::toDataAdapterConfig)
+          .filter(Objects::nonNull)
+          .sorted(Comparator.comparing(DataAdapterConfig::getId))
+          .collect(Collectors.toList());
     } catch (Exception e) {
       LOGGER.warning(
-        String.format("Could not load data adapter configs from dir '%s'.", dataSourceConfigDir));
+          String.format("Could not load data adapter configs from dir '%s'.", dataSourceConfigDir));
     }
     return Collections.emptyList();
   }
 
   public List<DataSource> getDataSources() {
     return getDataAdapterConfigs().stream()
-      .map(a -> new DataSource().id(a.getId()).title(a.getId().replace('_', ' ')))
-      .sorted(Comparator.comparing(DataSource::getId))
-      .collect(Collectors.toList());
+        .map(a -> new DataSource().id(a.getId()).title(a.getId().replace('_', ' ')))
+        .sorted(Comparator.comparing(DataSource::getId))
+        .collect(Collectors.toList());
+  }
+
+  public List<Query> getQueries(String organisationId, String repositoryId, Integer page) {
+    PageRequest pageRequest = PageRequest.of(page == null ? 0 : page - 1, pageSize);
+    return queryRepository
+        .findAllByRepository_OrganisationIdAndRepositoryId(
+            organisationId, repositoryId, pageRequest)
+        .map(QueryDao::toApiModel)
+        .getContent();
   }
 
   private QueryState getState(Job job) {
@@ -166,9 +184,9 @@ public class PhenotypeQueryService {
       return dataAdapterConfig.getId() == null ? null : dataAdapterConfig;
     } catch (Exception e) {
       LOGGER.warning(
-        String.format(
-          "Data adapter config could not be loaded from file '%s'. Error: %s",
-          path.toString(), e.getMessage()));
+          String.format(
+              "Data adapter config could not be loaded from file '%s'. Error: %s",
+              path.toString(), e.getMessage()));
     }
     return null;
   }
