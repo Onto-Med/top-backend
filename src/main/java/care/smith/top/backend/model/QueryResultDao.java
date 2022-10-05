@@ -3,17 +3,15 @@ package care.smith.top.backend.model;
 import care.smith.top.model.QueryResult;
 import care.smith.top.model.QueryState;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
+import javax.persistence.*;
 import java.time.OffsetDateTime;
 import java.util.Objects;
 
 @Entity
 public class QueryResultDao {
   @Id @GeneratedValue private Long id;
-  @ManyToOne private QueryDao query;
+  @OneToOne
+  private QueryDao query;
   private OffsetDateTime createdAt;
   private Long count;
   private OffsetDateTime finishedAt;

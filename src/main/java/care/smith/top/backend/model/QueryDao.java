@@ -6,7 +6,6 @@ import care.smith.top.model.Query;
 import javax.persistence.*;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -18,8 +17,8 @@ public class QueryDao {
   @ElementCollection private List<QueryCriterionDao> criteria = null;
   @ElementCollection private List<ProjectionEntryDao> projection = null;
 
-  @OneToMany(cascade = CascadeType.REMOVE)
-  private Set<QueryResultDao> results = null;
+  @OneToOne(cascade = CascadeType.REMOVE)
+  private QueryResultDao result = null;
 
   @ManyToOne private RepositoryDao repository;
 
@@ -106,12 +105,12 @@ public class QueryDao {
     return this;
   }
 
-  public Set<QueryResultDao> getResults() {
-    return results;
+  public QueryResultDao getResult() {
+    return result;
   }
 
-  public QueryDao results(Set<QueryResultDao> results) {
-    this.results = results;
+  public QueryDao result(QueryResultDao result) {
+    this.result = result;
     return this;
   }
 

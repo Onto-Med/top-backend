@@ -169,4 +169,9 @@ public class RepositoryDao {
   public List<EntityDao> getEntities() {
     return entities;
   }
+
+  public String getDisplayName() {
+    if (getName() != null) return getName();
+    return getId();
+  }
 }
