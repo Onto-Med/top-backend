@@ -64,6 +64,11 @@ class PhenotypeQueryServiceTest extends AbstractTest {
         .atMost(100, TimeUnit.SECONDS)
         .until(() -> storageProvider.getJobStats().getSucceeded() == 1);
 
+    assertThat(queryService.getQueries(orga.getId(), repo1.getId(), null))
+        .isNotNull()
+        .size()
+        .isEqualTo(1);
+
     assertThatThrownBy(
             () -> queryService.getQueryResult(orga.getId(), repo2.getId(), query.getId()))
         .isInstanceOf(ResponseStatusException.class)
@@ -82,6 +87,7 @@ class PhenotypeQueryServiceTest extends AbstractTest {
 
     queryService.deleteQuery(orga.getId(), repo1.getId(), query.getId());
     assertThat(storageProvider.getJobStats().getSucceeded()).isEqualTo(0);
+    assertThat(queryService.getQueries(orga.getId(), repo1.getId(), null)).isNullOrEmpty();
   }
 
   @Test
