@@ -9,7 +9,7 @@ import java.util.Objects;
 @Embeddable
 public class QueryCriterionDao {
   private String subjectId;
-  private Boolean exclusion = false;
+  private Boolean inclusion = true;
   private String defaultAggregationFunctionId;
   private DateTimeRestriction dateTimeRestriction;
 
@@ -17,18 +17,18 @@ public class QueryCriterionDao {
 
   public QueryCriterionDao(
       String subjectId,
-      boolean exclusion,
+      boolean inclusion,
       String defaultAggregationFunctionId,
       DateTimeRestriction dateTimeRestriction) {
     this.subjectId = subjectId;
-    this.exclusion = exclusion;
+    this.inclusion = inclusion;
     this.defaultAggregationFunctionId = defaultAggregationFunctionId;
     this.dateTimeRestriction = dateTimeRestriction;
   }
 
   public QueryCriterionDao(QueryCriterion queryCriterion) {
     subjectId = queryCriterion.getSubjectId();
-    exclusion = queryCriterion.isExclusion();
+    inclusion = queryCriterion.isInclusion();
     defaultAggregationFunctionId = queryCriterion.getDefaultAggregationFunctionId();
     dateTimeRestriction = queryCriterion.getDateTimeRestriction();
   }
@@ -42,12 +42,12 @@ public class QueryCriterionDao {
     return this;
   }
 
-  public Boolean isExclusion() {
-    return exclusion;
+  public Boolean isInclusion() {
+    return inclusion;
   }
 
-  public QueryCriterionDao exclusion(Boolean exclusion) {
-    this.exclusion = exclusion;
+  public QueryCriterionDao inclusion(Boolean inclusion) {
+    this.inclusion = inclusion;
     return this;
   }
 
@@ -72,7 +72,7 @@ public class QueryCriterionDao {
   public QueryCriterion toApiModel() {
     return new QueryCriterion()
         .subjectId(getSubjectId())
-        .exclusion(isExclusion())
+        .inclusion(isInclusion())
         .defaultAggregationFunctionId(getDefaultAggregationFunctionId())
         .dateTimeRestriction(getDateTimeRestriction());
   }
@@ -83,7 +83,7 @@ public class QueryCriterionDao {
     if (o == null || getClass() != o.getClass()) return false;
     QueryCriterionDao that = (QueryCriterionDao) o;
     return getSubjectId().equals(that.getSubjectId())
-        && exclusion.equals(that.exclusion)
+        && inclusion.equals(that.inclusion)
         && getDefaultAggregationFunctionId().equals(that.getDefaultAggregationFunctionId())
         && Objects.equals(getDateTimeRestriction(), that.getDateTimeRestriction());
   }
@@ -91,6 +91,6 @@ public class QueryCriterionDao {
   @Override
   public int hashCode() {
     return Objects.hash(
-        getSubjectId(), exclusion, getDefaultAggregationFunctionId(), getDateTimeRestriction());
+        getSubjectId(), inclusion, getDefaultAggregationFunctionId(), getDateTimeRestriction());
   }
 }
