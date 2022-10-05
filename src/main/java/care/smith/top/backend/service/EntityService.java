@@ -427,7 +427,7 @@ public class EntityService implements ContentService {
       String organisationId, String repositoryId, String id, List<String> include) {
     getRepository(organisationId, repositoryId);
     return entityVersionRepository
-        .findAllByEntity_RepositoryIdAndEntityId(repositoryId, id)
+        .findAllByEntity_RepositoryIdAndEntityIdOrderByVersionDesc(repositoryId, id)
         .stream()
         .map(EntityVersionDao::toApiModel)
         .collect(Collectors.toList());
