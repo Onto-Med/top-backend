@@ -81,8 +81,7 @@ class PhenotypeQueryServiceTest extends AbstractTest {
               assertThat(r.getCreatedAt()).isNotNull();
               assertThat(r.getFinishedAt()).isNotNull();
               assertThat(r.getCreatedAt().compareTo(r.getFinishedAt())).isLessThanOrEqualTo(0);
-              assertThat(r.getCount()).isNotNull();
-              assertThat(r.getState()).isEqualTo(QueryState.FINISHED);
+              assertThat(r.getState()).isNotNull();
             });
 
     queryService.deleteQuery(orga.getId(), repo1.getId(), query.getId());

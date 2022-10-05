@@ -17,7 +17,7 @@ public class QueryDao {
   @ElementCollection private List<QueryCriterionDao> criteria = null;
   @ElementCollection private List<ProjectionEntryDao> projection = null;
 
-  @OneToOne(cascade = CascadeType.REMOVE)
+  @OneToOne(cascade = CascadeType.ALL)
   private QueryResultDao result = null;
 
   @ManyToOne private RepositoryDao repository;

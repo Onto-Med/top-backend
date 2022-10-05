@@ -6,7 +6,13 @@ import care.smith.top.backend.model.RepositoryDao;
 import care.smith.top.backend.repository.QueryRepository;
 import care.smith.top.model.*;
 import care.smith.top.backend.util.ApiModelMapper;
+import care.smith.top.top_phenotypic_query.adapter.DataAdapter;
 import care.smith.top.top_phenotypic_query.adapter.config.DataAdapterConfig;
+import care.smith.top.top_phenotypic_query.adapter.fhir.FHIRAdapter;
+import care.smith.top.top_phenotypic_query.adapter.sql.SQLAdapter;
+import care.smith.top.top_phenotypic_query.result.ResultSet;
+import care.smith.top.top_phenotypic_query.search.PhenotypeFinder;
+import org.jetbrains.annotations.NotNull;
 import org.jobrunr.jobs.Job;
 import org.jobrunr.jobs.states.StateName;
 import org.jobrunr.scheduling.JobScheduler;
@@ -83,12 +89,8 @@ public class PhenotypeQueryService {
     if (queryRepository.existsById(data.getId()))
       throw new ResponseStatusException(HttpStatus.CONFLICT);
 
-    List<DataAdapterConfig> configs =
-        data.getDataSources().stream()
-            .map(s -> getDataAdapterConfig(s.getId()).orElse(null))
-            .filter(Objects::nonNull)
-            .collect(Collectors.toList());
-    if (configs.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE);
+    if (getConfigs(data.getDataSources()).isEmpty())
+      throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE);
 
     jobScheduler.enqueue(data.getId(), () -> this.executeQuery(data.getId()));
     queryRepository.save(new QueryDao(data).repository(repository));
@@ -126,12 +128,33 @@ public class PhenotypeQueryService {
             .stream()
             .map(p -> (Phenotype) p)
             .collect(Collectors.toMap(Phenotype::getId, Function.identity())));
-    Query query = queryDao.toApiModel().dependentSubjects(phenotypes);
-    // TODO: call method from top-phenotypic-query package and get result
-    Long count = 0L;
+    Query query = queryDao.toApiModel();
+    List<DataAdapterConfig> configs = getConfigs(query.getDataSources());
 
-    queryDao.result(
-        new QueryResultDao(queryDao, createdAt, count, OffsetDateTime.now(), QueryState.FINISHED));
+    // TODO: only one data source supported yet
+    DataAdapterConfig config = configs.stream().findFirst().orElseThrow();
+
+    // TODO: top-phenotypic-query does not derive adaptor type
+    DataAdapter adapter = null;
+    if (config.getConnectionAttribute("url") != null) adapter = new SQLAdapter(config);
+    if (config.getConnectionAttribute("endpoint") != null) adapter = new FHIRAdapter(config);
+    if (adapter == null) throw new NullPointerException("Adaptor type could not be derived.");
+
+    // TODO: provide Writer to top-phenotypic-query and let it store the result set
+    QueryResultDao result;
+    try {
+      PhenotypeFinder finder = new PhenotypeFinder(query, phenotypes, adapter);
+      ResultSet rs = finder.execute();
+      adapter.close();
+      result =
+          new QueryResultDao(
+              queryDao, createdAt, (long) rs.size(), OffsetDateTime.now(), QueryState.FINISHED);
+    } catch (Exception e) {
+      result =
+          new QueryResultDao(queryDao, createdAt, null, OffsetDateTime.now(), QueryState.FAILED);
+    }
+
+    queryDao.result(result);
     queryRepository.save(queryDao);
   }
 
@@ -193,6 +216,14 @@ public class PhenotypeQueryService {
             organisationId, repositoryId, pageRequest)
         .map(QueryDao::toApiModel)
         .getContent();
+  }
+
+  @NotNull
+  private List<DataAdapterConfig> getConfigs(List<DataSource> dataSources) {
+    return dataSources.stream()
+        .map(s -> getDataAdapterConfig(s.getId()).orElse(null))
+        .filter(Objects::nonNull)
+        .collect(Collectors.toList());
   }
 
   private QueryState getState(Job job) {
