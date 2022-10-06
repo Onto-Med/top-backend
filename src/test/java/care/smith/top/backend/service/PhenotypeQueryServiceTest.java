@@ -81,6 +81,7 @@ class PhenotypeQueryServiceTest extends AbstractTest {
               assertThat(r.getCreatedAt()).isNotNull();
               assertThat(r.getFinishedAt()).isNotNull();
               assertThat(r.getCreatedAt().compareTo(r.getFinishedAt())).isLessThanOrEqualTo(0);
+              assertThat(r.getCount()).isEqualTo(0);
               assertThat(r.getState()).isNotNull();
             });
 

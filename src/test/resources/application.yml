@@ -33,3 +33,4 @@ org:
 top:
   phenotyping:
     data-source-config-dir: src/test/resources/config/data_sources
+    execute-queries: false

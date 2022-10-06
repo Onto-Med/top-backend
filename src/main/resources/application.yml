@@ -38,3 +38,4 @@ org:
 top:
   phenotyping:
     data-source-config-dir: ${DATA_SOURCE_CONFIG_DIR:config/data_sources}
+    execute-queries: ${EXECUTE_QUERIES:true}

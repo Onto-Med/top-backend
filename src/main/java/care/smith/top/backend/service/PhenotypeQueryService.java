@@ -44,6 +44,12 @@ public class PhenotypeQueryService {
   @Value("${spring.paging.page-size:10}")
   private int pageSize;
 
+  @Value("${top.phenotyping.data-source-config-dir:config/data_sources}")
+  private String dataSourceConfigDir;
+
+  @Value("${top.phenotyping.execute-queries:true}")
+  private boolean executeQueries;
+
   @Inject private JobScheduler jobScheduler;
 
   @Inject private StorageProvider storageProvider;
@@ -51,9 +57,6 @@ public class PhenotypeQueryService {
   @Autowired private RepositoryService repositoryService;
   @Autowired private EntityService entityService;
   @Autowired private QueryRepository queryRepository;
-
-  @Value("${top.phenotyping.data-source-config-dir:config/data_sources}")
-  private String dataSourceConfigDir;
 
   public void deleteQuery(String organisationId, String repositoryId, UUID queryId) {
     if (!repositoryService.repositoryExists(organisationId, repositoryId))
@@ -140,18 +143,23 @@ public class PhenotypeQueryService {
     if (config.getConnectionAttribute("endpoint") != null) adapter = new FHIRAdapter(config);
     if (adapter == null) throw new NullPointerException("Adaptor type could not be derived.");
 
-    // TODO: provide Writer to top-phenotypic-query and let it store the result set
     QueryResultDao result;
-    try {
-      PhenotypeFinder finder = new PhenotypeFinder(query, phenotypes, adapter);
-      ResultSet rs = finder.execute();
-      adapter.close();
+    if (executeQueries) {
+      try {
+        // TODO: provide Writer to top-phenotypic-query and let it store the result set
+        PhenotypeFinder finder = new PhenotypeFinder(query, phenotypes, adapter);
+        ResultSet rs = finder.execute();
+        adapter.close();
+        result =
+            new QueryResultDao(
+                queryDao, createdAt, (long) rs.size(), OffsetDateTime.now(), QueryState.FINISHED);
+      } catch (Exception e) {
+        result =
+            new QueryResultDao(queryDao, createdAt, null, OffsetDateTime.now(), QueryState.FAILED);
+      }
+    } else {
       result =
-          new QueryResultDao(
-              queryDao, createdAt, (long) rs.size(), OffsetDateTime.now(), QueryState.FINISHED);
-    } catch (Exception e) {
-      result =
-          new QueryResultDao(queryDao, createdAt, null, OffsetDateTime.now(), QueryState.FAILED);
+          new QueryResultDao(queryDao, createdAt, 0L, OffsetDateTime.now(), QueryState.FINISHED);
     }
 
     queryDao.result(result);
