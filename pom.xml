@@ -5,14 +5,13 @@
 
     <groupId>care.smith.top</groupId>
     <artifactId>top-backend</artifactId>
-    <version>${revision}</version>
+    <version>0.2.3</version>
     <packaging>jar</packaging>
 
     <name>TOP Backend</name>
     <description>Backend of the TOP Framework</description>
 
     <properties>
-        <revision>0.2.3</revision>
         <spring.version>2.7.4</spring.version>
         <spring.framework.version>5.3.23</spring.framework.version>
         <spring.security.version>5.7.3</spring.security.version>
