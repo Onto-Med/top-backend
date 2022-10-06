@@ -10,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Stream;
 
 @Service
 public class PhraseApiDelegateImpl implements PhraseApiDelegate {
@@ -17,7 +19,12 @@ public class PhraseApiDelegateImpl implements PhraseApiDelegate {
     @Autowired PhraseService phraseService;
 
     @Override
-    public ResponseEntity<List<Phrase>> getPhrases(List<String> include, String id, String text) {
-        return new ResponseEntity<>(phraseService.getPhrases(), HttpStatus.OK);
+    public ResponseEntity<List<Phrase>> getPhrases(List<String> include, String id, String text, String concept) {
+        if (concept != null && Stream.of(include, id, text).allMatch(Objects::isNull)) {
+            return new ResponseEntity<>(phraseService.getPhrasesByConcept(concept), HttpStatus.OK);
+        } else if (text != null && Stream.of(include, id, concept).allMatch(Objects::isNull)) {
+            return new ResponseEntity<>(phraseService.getPhraseByText(text), HttpStatus.OK);
+        }
+        return new ResponseEntity<>(List.of(), HttpStatus.OK);
     }
 }
