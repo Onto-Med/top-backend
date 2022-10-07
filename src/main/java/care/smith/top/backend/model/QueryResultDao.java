@@ -7,7 +7,7 @@ import javax.persistence.*;
 import java.time.OffsetDateTime;
 import java.util.Objects;
 
-@Entity
+@Entity(name = "query_result")
 public class QueryResultDao {
   @Id @GeneratedValue private Long id;
   @OneToOne
