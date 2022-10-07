@@ -19,10 +19,10 @@ public class PhraseApiDelegateImpl implements PhraseApiDelegate {
     @Autowired PhraseService phraseService;
 
     @Override
-    public ResponseEntity<List<Phrase>> getPhrases(List<String> include, String id, String text, String concept) {
-        if (concept != null && Stream.of(include, id, text).allMatch(Objects::isNull)) {
-            return new ResponseEntity<>(phraseService.getPhrasesByConcept(concept), HttpStatus.OK);
-        } else if (text != null && Stream.of(include, id, concept).allMatch(Objects::isNull)) {
+    public ResponseEntity<List<Phrase>> getPhrases(List<String> include, String id, String text, String conceptId) {
+        if (conceptId != null && Stream.of(include, id, text).allMatch(Objects::isNull)) {
+            return new ResponseEntity<>(phraseService.getPhrasesByConcept(conceptId), HttpStatus.OK);
+        } else if (text != null && Stream.of(include, id, conceptId).allMatch(Objects::isNull)) {
             return new ResponseEntity<>(phraseService.getPhraseByText(text), HttpStatus.OK);
         }
         return new ResponseEntity<>(List.of(), HttpStatus.OK);

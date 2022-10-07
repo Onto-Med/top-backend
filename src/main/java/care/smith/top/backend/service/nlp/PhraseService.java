@@ -11,7 +11,6 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 
@@ -25,8 +24,8 @@ public class PhraseService implements ContentService {
     public long count() { return phraseRepository.count(); }
 
     @Cacheable("phraseByConcept")
-    public List<Phrase> getPhrasesByConcept(String concept) {
-        return phraseRepository.findAll(phraseWithConcept(concept))
+    public List<Phrase> getPhrasesByConcept(String conceptId) {
+        return phraseRepository.findAll(phraseInConcept(conceptId))
                 .stream()
                 .map(phraseEntity -> new Phrase()
                         .id(phraseEntity.phraseId())
@@ -45,9 +44,13 @@ public class PhraseService implements ContentService {
                 .collect(Collectors.toList());
     }
 
-    static Statement phraseWithConcept(String concept) {
-        Node phrase = Cypher.node("Phrase", "Concept_" + concept).named("phrase");
-        return Cypher.match(phrase).returning(phrase).build();
+    static Statement phraseInConcept(String conceptId) {
+        Node phrase = Cypher.node("Phrase").named("phrase");
+        Node concept = Cypher.node("Concept")
+                .withProperties("conceptId", Cypher.literalOf(conceptId)).named("concept");
+        return Cypher
+                .match(phrase.relationshipTo(concept, "IN_CONCEPT"))
+                .returning(phrase).build();
     }
 
     static Statement phraseWithText(String text) {

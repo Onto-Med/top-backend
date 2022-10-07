@@ -18,12 +18,12 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
     @Override
     public ResponseEntity<List<Document>> getDocuments(List<String> include, String id, Integer page, Integer pageSize) {
         if (page != null && pageSize != null) {
-            return getDocumentsByPage(page, pageSize);
+            return getDocumentsByPage(include, page, pageSize);
         }
-        return new ResponseEntity<>(documentService.getDocuments(), HttpStatus.OK);
+        return new ResponseEntity<>(documentService.getDocuments(include), HttpStatus.OK);
     }
 
-    private ResponseEntity<List<Document>> getDocumentsByPage(int page, int pageSize) {
-        return new ResponseEntity<>(documentService.getDocumentsByPage(page, pageSize), HttpStatus.OK);
+    private ResponseEntity<List<Document>> getDocumentsByPage(List<String> include, int page, int pageSize) {
+        return new ResponseEntity<>(documentService.getDocumentsByPage(include, page, pageSize), HttpStatus.OK);
     }
 }
