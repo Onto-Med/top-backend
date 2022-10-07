@@ -19,7 +19,6 @@ public class RestrictionDao {
   @Column(nullable = false)
   private DataType dataType;
 
-  @Column(nullable = false)
   private Quantifier quantifier;
 
   private Integer cardinality;
@@ -225,11 +224,7 @@ public class RestrictionDao {
     if (DataType.BOOLEAN.equals(dataType)) {
       restriction = new BooleanRestriction().values(booleanValues);
     } else if (DataType.DATE_TIME.equals(dataType)) {
-      restriction =
-          new DateTimeRestriction()
-              .values(dateTimeValues)
-              .minOperator(minOperator)
-              .maxOperator(maxOperator);
+      restriction = new DateTimeRestriction().minOperator(minOperator).maxOperator(maxOperator);
       if (minOperator != null || maxOperator != null)
         ((DateTimeRestriction) restriction)
             .addValuesItem(minimumDateTimeValue)

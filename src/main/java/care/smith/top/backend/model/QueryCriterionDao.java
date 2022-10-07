@@ -3,7 +3,9 @@ package care.smith.top.backend.model;
 import care.smith.top.model.DateTimeRestriction;
 import care.smith.top.model.QueryCriterion;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Embeddable;
+import javax.persistence.OneToOne;
 import java.util.Objects;
 
 @Embeddable
@@ -11,7 +13,9 @@ public class QueryCriterionDao {
   private String subjectId;
   private Boolean inclusion = true;
   private String defaultAggregationFunctionId;
-  private DateTimeRestriction dateTimeRestriction;
+
+  @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+  private RestrictionDao dateTimeRestriction;
 
   public QueryCriterionDao() {}
 
@@ -23,14 +27,14 @@ public class QueryCriterionDao {
     this.subjectId = subjectId;
     this.inclusion = inclusion;
     this.defaultAggregationFunctionId = defaultAggregationFunctionId;
-    this.dateTimeRestriction = dateTimeRestriction;
+    this.dateTimeRestriction = new RestrictionDao(dateTimeRestriction);
   }
 
   public QueryCriterionDao(QueryCriterion queryCriterion) {
     subjectId = queryCriterion.getSubjectId();
     inclusion = queryCriterion.isInclusion();
     defaultAggregationFunctionId = queryCriterion.getDefaultAggregationFunctionId();
-    dateTimeRestriction = queryCriterion.getDateTimeRestriction();
+    dateTimeRestriction = new RestrictionDao(queryCriterion.getDateTimeRestriction());
   }
 
   public String getSubjectId() {
@@ -60,11 +64,11 @@ public class QueryCriterionDao {
     return this;
   }
 
-  public DateTimeRestriction getDateTimeRestriction() {
+  public RestrictionDao getDateTimeRestriction() {
     return dateTimeRestriction;
   }
 
-  public QueryCriterionDao dateTimeRestriction(DateTimeRestriction dateTimeRestriction) {
+  public QueryCriterionDao dateTimeRestriction(RestrictionDao dateTimeRestriction) {
     this.dateTimeRestriction = dateTimeRestriction;
     return this;
   }
@@ -74,7 +78,7 @@ public class QueryCriterionDao {
         .subjectId(getSubjectId())
         .inclusion(isInclusion())
         .defaultAggregationFunctionId(getDefaultAggregationFunctionId())
-        .dateTimeRestriction(getDateTimeRestriction());
+        .dateTimeRestriction((DateTimeRestriction) getDateTimeRestriction().toApiModel());
   }
 
   @Override

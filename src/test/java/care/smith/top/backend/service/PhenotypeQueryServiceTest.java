@@ -10,6 +10,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalUnit;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -58,10 +60,12 @@ class PhenotypeQueryServiceTest extends AbstractTest {
                 new QueryCriterion()
                     .subjectId(phenotype1.getId())
                     .dateTimeRestriction(
-                        new DateTimeRestriction()
-                            .maxOperator(RestrictionOperator.LESS_THAN)
-                            .addValuesItem(null)
-                            .addValuesItem(LocalDateTime.now())));
+                        (DateTimeRestriction)
+                            new DateTimeRestriction()
+                                .maxOperator(RestrictionOperator.LESS_THAN)
+                                .addValuesItem(null)
+                                .addValuesItem(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS))
+                                .type(DataType.DATE_TIME)));
 
     assertThatThrownBy(() -> queryService.enqueueQuery(orga.getId(), "invalid", query))
         .isInstanceOf(ResponseStatusException.class)
@@ -77,7 +81,8 @@ class PhenotypeQueryServiceTest extends AbstractTest {
         .anySatisfy(
             q -> {
               assertThat(q.getId()).isEqualTo(query.getId());
-              assertThat(q.getDataSources()).isEqualTo(query.getDataSources());
+              assertThat(q.getDataSources())
+                  .anyMatch(d -> d.getId().equals(query.getDataSources().get(0).getId()));
               assertThat(q.getCriteria()).size().isEqualTo(1);
               assertThat(q.getCriteria().get(0))
                   .satisfies(
