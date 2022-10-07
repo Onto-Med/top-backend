@@ -4,6 +4,7 @@ import care.smith.top.model.DataSource;
 import care.smith.top.model.Query;
 
 import javax.persistence.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -115,7 +116,7 @@ public class QueryDao {
   }
 
   public Query toApiModel() {
-    Query query = new Query().id(getId()).name(getName()).dataSources(getDataSources());
+    Query query = new Query().id(getId()).name(getName()).dataSources(new ArrayList<>(getDataSources()));
     if (getCriteria() != null)
       query.criteria(
           getCriteria().stream().map(QueryCriterionDao::toApiModel).collect(Collectors.toList()));
