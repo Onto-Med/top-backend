@@ -259,10 +259,10 @@ class EntityServiceTest extends AbstractTest {
                         assertThat(((NumberRestriction) r).getMinOperator())
                             .isNotNull()
                             .isEqualTo(RestrictionOperator.GREATER_THAN);
-                        assertThat(((NumberRestriction) r).getValues())
-                            .allMatch(v -> v.compareTo(BigDecimal.valueOf(50)) == 0)
-                            .size()
-                            .isEqualTo(1);
+                        assertThat(((NumberRestriction) r).getValues()).size().isEqualTo(2);
+                        assertThat(((NumberRestriction) r).getValues().get(0))
+                            .isEqualTo(BigDecimal.valueOf(50));
+                        assertThat(((NumberRestriction) r).getValues().get(1)).isNull();
                       });
             });
 
@@ -304,10 +304,10 @@ class EntityServiceTest extends AbstractTest {
                         assertThat(((NumberRestriction) r).getMaxOperator())
                             .isNotNull()
                             .isEqualTo(RestrictionOperator.LESS_THAN_OR_EQUAL_TO);
-                        assertThat(((NumberRestriction) r).getValues())
-                            .allMatch(v -> v.compareTo(BigDecimal.valueOf(50)) == 0)
-                            .size()
-                            .isEqualTo(1);
+                        assertThat(((NumberRestriction) r).getValues()).size().isEqualTo(2);
+                        assertThat(((NumberRestriction) r).getValues().get(0))
+                            .isEqualTo(BigDecimal.valueOf(50));
+                        assertThat(((NumberRestriction) r).getValues().get(1)).isNull();
                       });
             });
 
