@@ -154,6 +154,7 @@ public class PhenotypeQueryService {
             new QueryResultDao(
                 queryDao, createdAt, (long) rs.size(), OffsetDateTime.now(), QueryState.FINISHED);
       } catch (Exception e) {
+        e.printStackTrace();
         result =
             new QueryResultDao(queryDao, createdAt, null, OffsetDateTime.now(), QueryState.FAILED);
       }
