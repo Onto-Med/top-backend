@@ -9,6 +9,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -53,7 +54,14 @@ class PhenotypeQueryServiceTest extends AbstractTest {
         new Query()
             .id(UUID.randomUUID())
             .addDataSourcesItem(new DataSource().id(dataSources.get(0).getId()))
-            .addCriteriaItem(new QueryCriterion().subjectId(phenotype1.getId()));
+            .addCriteriaItem(
+                new QueryCriterion()
+                    .subjectId(phenotype1.getId())
+                    .dateTimeRestriction(
+                        new DateTimeRestriction()
+                            .maxOperator(RestrictionOperator.LESS_THAN)
+                            .addValuesItem(null)
+                            .addValuesItem(LocalDateTime.now())));
 
     assertThatThrownBy(() -> queryService.enqueueQuery(orga.getId(), "invalid", query))
         .isInstanceOf(ResponseStatusException.class)
@@ -66,6 +74,20 @@ class PhenotypeQueryServiceTest extends AbstractTest {
 
     assertThat(queryService.getQueries(orga.getId(), repo1.getId(), null))
         .isNotNull()
+        .anySatisfy(
+            q -> {
+              assertThat(q.getId()).isEqualTo(query.getId());
+              assertThat(q.getDataSources()).isEqualTo(query.getDataSources());
+              assertThat(q.getCriteria()).size().isEqualTo(1);
+              assertThat(q.getCriteria().get(0))
+                  .satisfies(
+                      c -> {
+                        assertThat(c.getSubjectId())
+                            .isEqualTo(query.getCriteria().get(0).getSubjectId());
+                        assertThat(c.getDateTimeRestriction())
+                            .isEqualTo(query.getCriteria().get(0).getDateTimeRestriction());
+                      });
+            })
         .size()
         .isEqualTo(1);
 
