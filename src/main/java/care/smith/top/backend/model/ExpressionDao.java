@@ -16,7 +16,6 @@ public class ExpressionDao {
   @Id @GeneratedValue private Long id;
 
   private String functionId;
-
   private String entityId;
   private String constantId;
   private Boolean booleanValue;
@@ -55,10 +54,14 @@ public class ExpressionDao {
   public Expression toApiModel() {
     Expression expression =
         new Expression().functionId(functionId).entityId(entityId).constantId(constantId);
-    if (booleanValue != null) expression.value(new BooleanValue().value(booleanValue));
-    if (dateTimeValue != null) expression.value(new DateTimeValue().value(dateTimeValue));
-    if (numberValue != null) expression.value(new NumberValue().value(numberValue));
-    if (stringValue != null) expression.value(new StringValue().value(stringValue));
+    if (booleanValue != null)
+      expression.value(new BooleanValue().value(booleanValue).dataType(DataType.BOOLEAN));
+    if (dateTimeValue != null)
+      expression.value(new DateTimeValue().value(dateTimeValue).dataType(DataType.DATE_TIME));
+    if (numberValue != null)
+      expression.value(new NumberValue().value(numberValue).dataType(DataType.NUMBER));
+    if (stringValue != null)
+      expression.value(new StringValue().value(stringValue).dataType(DataType.STRING));
     if (arguments != null)
       expression.setArguments(
           arguments.stream().map(ExpressionDao::toApiModel).collect(Collectors.toList()));
