@@ -156,11 +156,13 @@ public class PhenotypeQueryService {
       } catch (Exception e) {
         e.printStackTrace();
         result =
-            new QueryResultDao(queryDao, createdAt, null, OffsetDateTime.now(), QueryState.FAILED);
+            new QueryResultDao(queryDao, createdAt, null, OffsetDateTime.now(), QueryState.FAILED)
+                .message(e.getMessage());
       }
     } else {
       result =
-          new QueryResultDao(queryDao, createdAt, 0L, OffsetDateTime.now(), QueryState.FINISHED);
+          new QueryResultDao(queryDao, createdAt, 0L, OffsetDateTime.now(), QueryState.FINISHED)
+              .message("Query execution is disabled.");
     }
 
     queryDao.result(result);
