@@ -265,8 +265,7 @@ public class EntityService implements ContentService {
 
     EntityVersionDao previous = entityVersion.getPreviousVersion();
     EntityVersionDao next = entityVersion.getNextVersion();
-    if (previous != null && next != null)
-      entityVersionRepository.save(next.previousVersion(previous));
+    if (next != null) entityVersionRepository.save(next.previousVersion(previous));
 
     entityVersionRepository.delete(entityVersion);
   }
