@@ -73,7 +73,7 @@ public class PhenotypeQueryService {
       Job job = storageProvider.getJobById(queryId);
       storageProvider.deletePermanently(job.getId());
     } catch (Exception e) {
-      LOGGER.warning(e.getMessage());
+      LOGGER.fine(e.getMessage());
     }
   }
 
@@ -101,7 +101,7 @@ public class PhenotypeQueryService {
     return getQueryResult(organisationId, repositoryId, data.getId());
   }
 
-  @org.jobrunr.jobs.annotations.Job(name = "Phenotypic query")
+  @org.jobrunr.jobs.annotations.Job(name = "Phenotypic query", retries = 0)
   public void executeQuery(UUID queryId) {
     OffsetDateTime createdAt = OffsetDateTime.now();
     QueryDao queryDao =
@@ -156,11 +156,13 @@ public class PhenotypeQueryService {
       } catch (Exception e) {
         e.printStackTrace();
         result =
-            new QueryResultDao(queryDao, createdAt, null, OffsetDateTime.now(), QueryState.FAILED);
+            new QueryResultDao(queryDao, createdAt, null, OffsetDateTime.now(), QueryState.FAILED)
+                .message(e.getMessage());
       }
     } else {
       result =
-          new QueryResultDao(queryDao, createdAt, 0L, OffsetDateTime.now(), QueryState.FINISHED);
+          new QueryResultDao(queryDao, createdAt, 0L, OffsetDateTime.now(), QueryState.FINISHED)
+              .message("Query execution is disabled.");
     }
 
     queryDao.result(result);

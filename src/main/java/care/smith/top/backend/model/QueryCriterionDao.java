@@ -34,7 +34,8 @@ public class QueryCriterionDao {
     subjectId = queryCriterion.getSubjectId();
     inclusion = queryCriterion.isInclusion();
     defaultAggregationFunctionId = queryCriterion.getDefaultAggregationFunctionId();
-    dateTimeRestriction = new RestrictionDao(queryCriterion.getDateTimeRestriction());
+    if (queryCriterion.getDateTimeRestriction() != null)
+      dateTimeRestriction = new RestrictionDao(queryCriterion.getDateTimeRestriction());
   }
 
   public String getSubjectId() {
@@ -74,11 +75,15 @@ public class QueryCriterionDao {
   }
 
   public QueryCriterion toApiModel() {
-    return new QueryCriterion()
-        .subjectId(getSubjectId())
-        .inclusion(isInclusion())
-        .defaultAggregationFunctionId(getDefaultAggregationFunctionId())
-        .dateTimeRestriction((DateTimeRestriction) getDateTimeRestriction().toApiModel());
+    QueryCriterion queryCriterion =
+        new QueryCriterion()
+            .subjectId(getSubjectId())
+            .inclusion(isInclusion())
+            .defaultAggregationFunctionId(getDefaultAggregationFunctionId());
+    if (getDateTimeRestriction() != null)
+      queryCriterion.dateTimeRestriction(
+          (DateTimeRestriction) getDateTimeRestriction().toApiModel());
+    return queryCriterion;
   }
 
   @Override

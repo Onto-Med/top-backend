@@ -10,11 +10,11 @@ import java.util.Objects;
 @Entity(name = "query_result")
 public class QueryResultDao {
   @Id @GeneratedValue private Long id;
-  @OneToOne
-  private QueryDao query;
+  @OneToOne private QueryDao query;
   private OffsetDateTime createdAt;
   private Long count;
   private OffsetDateTime finishedAt;
+  private String message;
   private QueryState state;
 
   public QueryResultDao() {}
@@ -77,6 +77,15 @@ public class QueryResultDao {
     return this;
   }
 
+  public String getMessage() {
+    return message;
+  }
+
+  public QueryResultDao message(String message) {
+    this.message = message;
+    return this;
+  }
+
   public QueryState getState() {
     return state;
   }
@@ -92,6 +101,7 @@ public class QueryResultDao {
         .createdAt(getCreatedAt())
         .count(getCount())
         .finishedAt(getFinishedAt())
+        .message(getMessage())
         .state(getState());
   }
 
@@ -105,12 +115,13 @@ public class QueryResultDao {
         && Objects.equals(getCreatedAt(), that.getCreatedAt())
         && Objects.equals(getCount(), that.getCount())
         && Objects.equals(getFinishedAt(), that.getFinishedAt())
+        && Objects.equals(getMessage(), that.getMessage())
         && getState() == that.getState();
   }
 
   @Override
   public int hashCode() {
     return Objects.hash(
-        getId(), getQuery(), getCreatedAt(), getCount(), getFinishedAt(), getState());
+        getId(), getQuery(), getCreatedAt(), getCount(), getFinishedAt(), getMessage(), getState());
   }
 }
