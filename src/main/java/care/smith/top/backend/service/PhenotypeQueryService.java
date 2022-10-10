@@ -101,7 +101,7 @@ public class PhenotypeQueryService {
     return getQueryResult(organisationId, repositoryId, data.getId());
   }
 
-  @org.jobrunr.jobs.annotations.Job(name = "Phenotypic query")
+  @org.jobrunr.jobs.annotations.Job(name = "Phenotypic query", retries = 0)
   public void executeQuery(UUID queryId) {
     OffsetDateTime createdAt = OffsetDateTime.now();
     QueryDao queryDao =
