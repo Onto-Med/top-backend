@@ -34,7 +34,8 @@ public class QueryCriterionDao {
     subjectId = queryCriterion.getSubjectId();
     inclusion = queryCriterion.isInclusion();
     defaultAggregationFunctionId = queryCriterion.getDefaultAggregationFunctionId();
-    dateTimeRestriction = new RestrictionDao(queryCriterion.getDateTimeRestriction());
+    if (queryCriterion.getDateTimeRestriction() != null)
+      dateTimeRestriction = new RestrictionDao(queryCriterion.getDateTimeRestriction());
   }
 
   public String getSubjectId() {
