@@ -486,6 +486,15 @@ public class EntityService implements ContentService {
 
     newVersion = entityVersionRepository.save(newVersion);
 
+    if (!ApiModelMapper.isRestricted(entity.getEntityType())) {
+      entity.superEntities(null);
+      if (((Category) data).getSuperCategories() != null)
+        for (Category category : ((Category) data).getSuperCategories())
+          categoryRepository
+              .findByIdAndRepositoryId(category.getId(), repositoryId)
+              .ifPresent(entity::addSuperEntitiesItem);
+    }
+
     return entityRepository.save(entity.currentVersion(newVersion)).toApiModel();
   }
 
