@@ -11,7 +11,7 @@ import java.util.UUID;
 
 @Repository
 public interface QueryRepository extends JpaRepository<QueryDao, UUID> {
-  Page<QueryDao> findAllByRepository_OrganisationIdAndRepositoryId(
+  Page<QueryDao> findAllByRepository_OrganisationIdAndRepositoryIdOrderByIdDesc(
       String organisationId, String repositoryId, Pageable pagea);
 
   Optional<QueryDao> findByRepository_OrganisationIdAndRepositoryIdAndId(
