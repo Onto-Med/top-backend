@@ -21,7 +21,7 @@ import java.util.stream.Stream;
 
 @Service
 public class ExpressionFunctionApiDelegateImpl implements ExpressionFunctionApiDelegate {
-  public static final List<String> EXCLUDED_FUNCTION_IDS = Arrays.asList("switch", "list");
+  public static final List<String> EXCLUDED_FUNCTION_IDS = Arrays.asList("switch", "list", "restrict");
   private Calculator calculator = new Calculator();
 
   @Override
