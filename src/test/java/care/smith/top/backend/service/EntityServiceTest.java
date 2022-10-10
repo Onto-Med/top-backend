@@ -270,6 +270,7 @@ class EntityServiceTest extends AbstractTest {
         new Phenotype()
             .restriction(
                 new NumberRestriction()
+                    .addValuesItem(null)
                     .addValuesItem(BigDecimal.valueOf(50))
                     .maxOperator(RestrictionOperator.LESS_THAN_OR_EQUAL_TO)
                     .quantifier(Quantifier.ALL)
@@ -305,9 +306,9 @@ class EntityServiceTest extends AbstractTest {
                             .isNotNull()
                             .isEqualTo(RestrictionOperator.LESS_THAN_OR_EQUAL_TO);
                         assertThat(((NumberRestriction) r).getValues()).size().isEqualTo(2);
-                        assertThat(((NumberRestriction) r).getValues().get(0))
+                        assertThat(((NumberRestriction) r).getValues().get(0)).isNull();
+                        assertThat(((NumberRestriction) r).getValues().get(1))
                             .isEqualTo(BigDecimal.valueOf(50));
-                        assertThat(((NumberRestriction) r).getValues().get(1)).isNull();
                       });
             });
 
