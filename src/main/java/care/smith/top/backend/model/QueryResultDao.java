@@ -101,6 +101,7 @@ public class QueryResultDao {
         .createdAt(getCreatedAt())
         .count(getCount())
         .finishedAt(getFinishedAt())
+        .message(getMessage())
         .state(getState());
   }
 
