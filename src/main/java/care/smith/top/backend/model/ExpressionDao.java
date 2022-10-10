@@ -15,7 +15,6 @@ import java.util.stream.Collectors;
 public class ExpressionDao {
   @Id @GeneratedValue private Long id;
 
-  @Column(nullable = false)
   private String functionId;
 
   private String entityId;
