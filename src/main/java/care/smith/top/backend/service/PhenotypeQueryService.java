@@ -73,7 +73,7 @@ public class PhenotypeQueryService {
       Job job = storageProvider.getJobById(queryId);
       storageProvider.deletePermanently(job.getId());
     } catch (Exception e) {
-      LOGGER.warning(e.getMessage());
+      LOGGER.fine(e.getMessage());
     }
   }
 
