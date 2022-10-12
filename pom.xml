@@ -5,17 +5,16 @@
 
     <groupId>care.smith.top</groupId>
     <artifactId>top-backend</artifactId>
-    <version>${revision}</version>
+    <version>0.3.3</version>
     <packaging>jar</packaging>
 
     <name>TOP Backend</name>
     <description>Backend of the TOP Framework</description>
 
     <properties>
-        <revision>0.2.3</revision>
-        <spring.version>2.6.3</spring.version>
-        <spring.framework.version>5.3.19</spring.framework.version>
-        <spring.security.version>5.6.3</spring.security.version>
+        <spring.version>2.7.4</spring.version>
+        <spring.framework.version>5.3.23</spring.framework.version>
+        <spring.security.version>5.7.3</spring.security.version>
         <java.version>11</java.version>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
@@ -68,13 +67,13 @@
         <dependency>
             <groupId>care.smith.top</groupId>
             <artifactId>top-phenotypic-query</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>0.1.0-SNAPSHOT</version>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>care.smith.top</groupId>-->
-<!--            <artifactId>phenotype2r</artifactId>-->
-<!--            <version>0.2.2-SNAPSHOT</version>-->
-<!--        </dependency>-->
+        <dependency>
+            <groupId>care.smith.top</groupId>
+            <artifactId>phenotype2r</artifactId>
+            <version>0.3.1</version>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
@@ -88,29 +87,17 @@
         <dependency>
             <groupId>org.jobrunr</groupId>
             <artifactId>jobrunr</artifactId>
-            <version>5.0.0</version>
+            <version>5.2.0</version>
         </dependency>
         <dependency>
             <groupId>org.jobrunr</groupId>
             <artifactId>jobrunr-spring-boot-starter</artifactId>
-            <version>5.0.0</version>
+            <version>5.2.0</version>
         </dependency>
         <dependency>
             <groupId>org.awaitility</groupId>
             <artifactId>awaitility</artifactId>
             <version>4.2.0</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-            <version>2.1.214</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.hamcrest</groupId>
-            <artifactId>hamcrest-core</artifactId>
-            <version>2.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>

@@ -7,17 +7,21 @@ import care.smith.top.backend.model.RepositoryDao;
 import care.smith.top.backend.repository.*;
 import care.smith.top.model.*;
 import care.smith.top.backend.util.ApiModelMapper;
+import care.smith.top.phenotype2r.Phenotype2RConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
 import java.io.StringWriter;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -261,43 +265,43 @@ public class EntityService implements ContentService {
 
     EntityVersionDao previous = entityVersion.getPreviousVersion();
     EntityVersionDao next = entityVersion.getNextVersion();
-    if (previous != null && next != null)
-      entityVersionRepository.save(next.previousVersion(previous));
+    if (next != null) entityVersionRepository.save(next.previousVersion(previous));
 
     entityVersionRepository.delete(entityVersion);
   }
 
   public StringWriter exportEntity(
       String organisationId, String repositoryId, String id, String format, Integer version) {
+    RepositoryDao repository = getRepository(organisationId, repositoryId);
     StringWriter writer = new StringWriter();
-    //    Collection<Entity> entities =
-    //        getEntitiesByRepositoryId(organisationId, repositoryId, null, null, null, null, null);
-    //    if ("vnd.r-project.r".equals(format)) {
-    //      Collection<Phenotype> phenotypes =
-    //          entities.stream()
-    //              .filter(e -> !EntityType.CATEGORY.equals(e.getEntityType()))
-    //              .map(e -> (Phenotype) e)
-    //              .collect(Collectors.toList());
-    //      try {
-    //        Phenotype2RConverter converter = new Phenotype2RConverter(phenotypes);
-    //        Entity entity = loadEntity(organisationId, repositoryId, id, version);
-    //        if (EntityType.CATEGORY.equals(entity.getEntityType())) {
-    //          for (Entity subClass :
-    //              getSubclasses(organisationId, repositoryId, id, null).stream()
-    //                  .filter(e -> !EntityType.CATEGORY.equals(e.getEntityType()))
-    //                  .collect(Collectors.toList())) {
-    //            converter.convert(subClass.getId(), writer);
-    //            writer.append(System.lineSeparator());
-    //          }
-    //        } else {
-    //          converter.convert(id, writer);
-    //        }
-    //      } catch (IOException e) {
-    //        throw new RuntimeException(e);
-    //      }
-    //    } else {
-    //      throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE);
-    //    }
+    Page<EntityDao> entities =
+        entityRepository.findAllByRepositoryId(repository.getId(), Pageable.unpaged());
+    EntityDao entity =
+        entities.stream()
+            .filter(e -> id.equals(e.getId()))
+            .findFirst()
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+    if ("vnd.r-project.r".equals(format)) {
+      Collection<Phenotype> phenotypes =
+          entities.stream()
+              .filter(e -> !EntityType.CATEGORY.equals(e.getEntityType()))
+              .map(EntityDao::toApiModel)
+              .map(e -> (Phenotype) e)
+              .collect(Collectors.toList());
+      try {
+        Phenotype2RConverter converter = new Phenotype2RConverter(phenotypes);
+        for (EntityDao subEntity : entity.getSubEntities()) { // TODO: recursively collect entities
+          converter.convert(subEntity.getId(), writer);
+          writer.append(System.lineSeparator());
+        }
+        converter.convert(id, writer);
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+    } else {
+      throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE);
+    }
     return writer;
   }
 
@@ -422,7 +426,7 @@ public class EntityService implements ContentService {
       String organisationId, String repositoryId, String id, List<String> include) {
     getRepository(organisationId, repositoryId);
     return entityVersionRepository
-        .findAllByEntity_RepositoryIdAndEntityId(repositoryId, id)
+        .findAllByEntity_RepositoryIdAndEntityIdOrderByVersionDesc(repositoryId, id)
         .stream()
         .map(EntityVersionDao::toApiModel)
         .collect(Collectors.toList());
@@ -480,6 +484,15 @@ public class EntityService implements ContentService {
     else newVersion.version(0);
 
     newVersion = entityVersionRepository.save(newVersion);
+
+    if (!ApiModelMapper.isRestricted(entity.getEntityType())) {
+      entity.superEntities(null);
+      if (((Category) data).getSuperCategories() != null)
+        for (Category category : ((Category) data).getSuperCategories())
+          categoryRepository
+              .findByIdAndRepositoryId(category.getId(), repositoryId)
+              .ifPresent(entity::addSuperEntitiesItem);
+    }
 
     return entityRepository.save(entity.currentVersion(newVersion)).toApiModel();
   }

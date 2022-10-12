@@ -2,6 +2,7 @@ package care.smith.top.backend.api;
 
 import care.smith.top.model.ExpressionFunction;
 import care.smith.top.backend.util.OntoModelMapper;
+import care.smith.top.simple_onto_api.calculator.Calculator;
 import care.smith.top.simple_onto_api.calculator.functions.aggregate.*;
 import care.smith.top.simple_onto_api.calculator.functions.arithmetic.*;
 import care.smith.top.simple_onto_api.calculator.functions.bool.And;
@@ -14,15 +15,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Service
 public class ExpressionFunctionApiDelegateImpl implements ExpressionFunctionApiDelegate {
+  public static final List<String> EXCLUDED_FUNCTION_IDS = Arrays.asList("switch", "list", "restrict");
+  private Calculator calculator = new Calculator();
+
   @Override
   public ResponseEntity<List<ExpressionFunction>> getExpressionFunctions(String type) {
     if ("math".equals(type)) return new ResponseEntity<>(getMathFunctions(), HttpStatus.OK);
@@ -31,70 +32,16 @@ public class ExpressionFunctionApiDelegateImpl implements ExpressionFunctionApiD
   }
 
   private List<ExpressionFunction> getBooleanFunctions() {
-    List<ExpressionFunction> list =
-        new java.util.ArrayList<>(
-            Collections.singletonList(
-                new ExpressionFunction()
-                    .id("entity")
-                    .title("entity")
-                    .notation(ExpressionFunction.NotationEnum.PREFIX)
-                    .minArgumentNumber(1)
-                    .maxArgumentNumber(1)));
-    list.addAll(
-        Stream.of(And.get(), Or.get(), Not.get())
-            .map(OntoModelMapper::map)
-            .collect(Collectors.toList()));
-    return list;
+    return Stream.of(And.get(), Or.get(), Not.get())
+        .map(OntoModelMapper::map)
+        .collect(Collectors.toList());
   }
 
   private List<ExpressionFunction> getMathFunctions() {
-    List<ExpressionFunction> list =
-        new java.util.ArrayList<>(
-            Arrays.asList(
-                new ExpressionFunction()
-                    .id("entity")
-                    .title("entity")
-                    .notation(ExpressionFunction.NotationEnum.PREFIX)
-                    .minArgumentNumber(1)
-                    .maxArgumentNumber(1),
-                new ExpressionFunction()
-                    .id("constant")
-                    .title("constant")
-                    .notation(ExpressionFunction.NotationEnum.PREFIX)
-                    .minArgumentNumber(1)
-                    .maxArgumentNumber(1)));
-    list.addAll(
-        Stream.of(
-                Add.get(),
-                Divide.get(),
-                Multiply.get(),
-                Power.get(),
-                Subtract.get(),
-                Avg.get(),
-                Count.get(),
-                First.get(),
-                Last.get(),
-                Max.get(),
-                Min.get(),
-                Eq.get(),
-                Ge.get(),
-                Gt.get(),
-                Le.get(),
-                Lt.get(),
-                Ne.get(),
-                Date.get(),
-                DiffDays.get(),
-                DiffMonths.get(),
-                DiffYears.get(),
-                PlusDays.get(),
-                PlusMonths.get(),
-                PlusYears.get(),
-                And.get(),
-                Or.get(),
-                Not.get())
-            .map(OntoModelMapper::map)
-            .sorted(Comparator.comparing(ExpressionFunction::getTitle))
-            .collect(Collectors.toList()));
-    return list;
+    return calculator.getFunctions().stream()
+        .filter(f -> !EXCLUDED_FUNCTION_IDS.contains(f.getId()))
+        .map(OntoModelMapper::map)
+        .sorted(Comparator.comparing(ExpressionFunction::getTitle))
+        .collect(Collectors.toList());
   }
 }
