@@ -1,6 +1,5 @@
 package care.smith.top.backend.model;
 
-import care.smith.top.model.DataSource;
 import care.smith.top.model.Query;
 
 import javax.persistence.*;
@@ -15,7 +14,7 @@ import java.util.stream.Collectors;
 public class QueryDao {
   @Id private UUID id;
   private String name;
-  @ElementCollection private List<DataSource> dataSources = null;
+  @ElementCollection private List<String> dataSources = null;
   @ElementCollection private List<QueryCriterionDao> criteria = null;
   @ElementCollection private List<ProjectionEntryDao> projection = null;
 
@@ -29,7 +28,7 @@ public class QueryDao {
   public QueryDao(
       @NotNull UUID id,
       String name,
-      List<DataSource> dataSources,
+      List<String> dataSources,
       List<QueryCriterionDao> criteria,
       List<ProjectionEntryDao> projection,
       RepositoryDao repository) {
@@ -71,11 +70,11 @@ public class QueryDao {
     return this;
   }
 
-  public List<DataSource> getDataSources() {
+  public List<String> getDataSources() {
     return dataSources;
   }
 
-  public QueryDao dataSources(List<DataSource> dataSources) {
+  public QueryDao dataSources(List<String> dataSources) {
     this.dataSources = dataSources;
     return this;
   }

@@ -230,9 +230,9 @@ public class PhenotypeQueryService {
   }
 
   @NotNull
-  private List<DataAdapterConfig> getConfigs(List<DataSource> dataSources) {
+  private List<DataAdapterConfig> getConfigs(List<String> dataSources) {
     return dataSources.stream()
-        .map(s -> getDataAdapterConfig(s.getId()).orElse(null))
+        .map(s -> getDataAdapterConfig(s).orElse(null))
         .filter(Objects::nonNull)
         .collect(Collectors.toList());
   }
