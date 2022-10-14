@@ -16,19 +16,19 @@ public class CodeDao {
   private String name;
 
   @Column(nullable = false)
-  private URI codeSystemUri;
+  private String codeSystemUri;
 
   private String codeSystemName;
 
   public CodeDao() {}
 
-  public CodeDao(@NotNull String code, @NotNull URI codeSystemUri) {
+  public CodeDao(@NotNull String code, @NotNull String codeSystemUri) {
     this.code = code;
     this.codeSystemUri = codeSystemUri;
   }
 
   public CodeDao(
-      @NotNull String code, String name, @NotNull URI codeSystemUri, String codeSystemName) {
+      @NotNull String code, String name, @NotNull String codeSystemUri, String codeSystemName) {
     this.code = code;
     this.name = name;
     this.codeSystemUri = codeSystemUri;
@@ -39,7 +39,7 @@ public class CodeDao {
     this.code = code.getCode();
     name = code.getName();
     if (code.getCodeSystem() != null) {
-      codeSystemUri = code.getCodeSystem().getUri();
+      codeSystemUri = code.getCodeSystem().getUri().toString();
       codeSystemName = code.getCodeSystem().getName();
     }
   }
@@ -48,7 +48,7 @@ public class CodeDao {
     return new Code()
         .code(code)
         .name(name)
-        .codeSystem(new CodeSystem().uri(codeSystemUri).name(codeSystemName));
+        .codeSystem(new CodeSystem().uri(URI.create(codeSystemUri)).name(codeSystemName));
   }
 
   public String getCode() {
@@ -69,11 +69,11 @@ public class CodeDao {
     return this;
   }
 
-  public URI getCodeSystemUri() {
+  public String getCodeSystemUri() {
     return codeSystemUri;
   }
 
-  public CodeDao codeSystemUri(@NotNull URI codeSystemUri) {
+  public CodeDao codeSystemUri(@NotNull String codeSystemUri) {
     this.codeSystemUri = codeSystemUri;
     return this;
   }
