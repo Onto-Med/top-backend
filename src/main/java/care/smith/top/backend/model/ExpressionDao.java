@@ -72,7 +72,7 @@ public class ExpressionDao {
     return id;
   }
 
-  public ExpressionDao id(Long id) {
+  public ExpressionDao id(@NotNull Long id) {
     this.id = id;
     return this;
   }

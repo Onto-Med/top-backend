@@ -22,12 +22,13 @@ public class CodeDao {
 
   public CodeDao() {}
 
-  public CodeDao(String code, URI codeSystemUri) {
+  public CodeDao(@NotNull String code, @NotNull URI codeSystemUri) {
     this.code = code;
     this.codeSystemUri = codeSystemUri;
   }
 
-  public CodeDao(String code, String name, URI codeSystemUri, String codeSystemName) {
+  public CodeDao(
+      @NotNull String code, String name, @NotNull URI codeSystemUri, String codeSystemName) {
     this.code = code;
     this.name = name;
     this.codeSystemUri = codeSystemUri;
@@ -54,7 +55,7 @@ public class CodeDao {
     return code;
   }
 
-  public CodeDao code(String code) {
+  public CodeDao code(@NotNull String code) {
     this.code = code;
     return this;
   }
@@ -72,7 +73,7 @@ public class CodeDao {
     return codeSystemUri;
   }
 
-  public CodeDao codeSystemUri(URI codeSystemUri) {
+  public CodeDao codeSystemUri(@NotNull URI codeSystemUri) {
     this.codeSystemUri = codeSystemUri;
     return this;
   }

@@ -4,13 +4,17 @@ import care.smith.top.model.QueryResult;
 import care.smith.top.model.QueryState;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 import java.time.OffsetDateTime;
 import java.util.Objects;
 
 @Entity(name = "query_result")
 public class QueryResultDao {
   @Id @GeneratedValue private Long id;
-  @OneToOne private QueryDao query;
+
+  @OneToOne(optional = false)
+  private QueryDao query;
+
   private OffsetDateTime createdAt;
   private Long count;
   private OffsetDateTime finishedAt;
@@ -20,7 +24,7 @@ public class QueryResultDao {
   public QueryResultDao() {}
 
   public QueryResultDao(
-      QueryDao query,
+      @NotNull QueryDao query,
       OffsetDateTime createdAt,
       Long count,
       OffsetDateTime finishedAt,
@@ -36,7 +40,7 @@ public class QueryResultDao {
     return id;
   }
 
-  public QueryResultDao id(Long id) {
+  public QueryResultDao id(@NotNull Long id) {
     this.id = id;
     return this;
   }
@@ -45,7 +49,7 @@ public class QueryResultDao {
     return query;
   }
 
-  public QueryResultDao query(QueryDao query) {
+  public QueryResultDao query(@NotNull QueryDao query) {
     this.query = query;
     return this;
   }

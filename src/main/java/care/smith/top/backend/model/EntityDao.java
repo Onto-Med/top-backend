@@ -5,8 +5,10 @@ import care.smith.top.model.*;
 
 import javax.persistence.Entity;
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Entity(name = "entity")
@@ -36,12 +38,12 @@ public class EntityDao {
 
   public EntityDao() {}
 
-  public EntityDao(EntityType entityType, String id) {
+  public EntityDao(@NotNull EntityType entityType, String id) {
     this.entityType = entityType;
-    this.id = id;
+    this.id = id == null ? UUID.randomUUID().toString() : id;
   }
 
-  public EntityDao(care.smith.top.model.Entity entity) {
+  public EntityDao(@NotNull care.smith.top.model.Entity entity) {
     id = entity.getId();
     entityType = entity.getEntityType();
   }
@@ -51,12 +53,12 @@ public class EntityDao {
     return this;
   }
 
-  public EntityDao entityType(EntityType entityType) {
+  public EntityDao entityType(@NotNull EntityType entityType) {
     this.entityType = entityType;
     return this;
   }
 
-  public EntityDao id(String id) {
+  public EntityDao id(@NotNull String id) {
     this.id = id;
     return this;
   }
@@ -150,10 +152,12 @@ public class EntityDao {
         EntityDao superPhenotype = entityDao.getSuperEntities().stream().findFirst().orElse(null);
         if (superPhenotype != null) {
           List<LocalisableText> titles = null;
-          if (superPhenotype.getCurrentVersion() != null && superPhenotype.getCurrentVersion().getTitles() != null)
-            titles = superPhenotype.getCurrentVersion().getTitles().stream()
-              .map(LocalisableTextDao::toApiModel)
-              .collect(Collectors.toList());
+          if (superPhenotype.getCurrentVersion() != null
+              && superPhenotype.getCurrentVersion().getTitles() != null)
+            titles =
+                superPhenotype.getCurrentVersion().getTitles().stream()
+                    .map(LocalisableTextDao::toApiModel)
+                    .collect(Collectors.toList());
           ((Phenotype) entity)
               .superPhenotype(
                   ((Phenotype)

@@ -33,13 +33,13 @@ public class OrganisationDao {
 
   public OrganisationDao() {}
 
-  public OrganisationDao(String id, String name, String description) {
+  public OrganisationDao(@NotNull String id, String name, String description) {
     this.id = id;
     this.name = name;
     this.description = description;
   }
 
-  public OrganisationDao(Organisation organisation) {
+  public OrganisationDao(@NotNull Organisation organisation) {
     id = organisation.getId() == null ? UUID.randomUUID().toString() : organisation.getId();
     name = organisation.getName();
     description = organisation.getDescription();
@@ -130,7 +130,6 @@ public class OrganisationDao {
     return name(data.getName()).description(data.getDescription());
   }
 
-  @NotNull
   public String getId() {
     return id;
   }

@@ -4,6 +4,7 @@ import care.smith.top.model.DataSource;
 import care.smith.top.model.Query;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -26,7 +27,7 @@ public class QueryDao {
   public QueryDao() {}
 
   public QueryDao(
-      UUID id,
+      @NotNull UUID id,
       String name,
       List<DataSource> dataSources,
       List<QueryCriterionDao> criteria,
@@ -40,7 +41,7 @@ public class QueryDao {
     this.repository = repository;
   }
 
-  public QueryDao(Query query) {
+  public QueryDao(@NotNull Query query) {
     this.id = query.getId();
     this.name = query.getName();
     this.dataSources = query.getDataSources();
@@ -56,7 +57,7 @@ public class QueryDao {
     return id;
   }
 
-  public QueryDao id(UUID id) {
+  public QueryDao id(@NotNull UUID id) {
     this.id = id;
     return this;
   }
@@ -116,7 +117,8 @@ public class QueryDao {
   }
 
   public Query toApiModel() {
-    Query query = new Query().id(getId()).name(getName()).dataSources(new ArrayList<>(getDataSources()));
+    Query query =
+        new Query().id(getId()).name(getName()).dataSources(new ArrayList<>(getDataSources()));
     if (getCriteria() != null)
       query.criteria(
           getCriteria().stream().map(QueryCriterionDao::toApiModel).collect(Collectors.toList()));
