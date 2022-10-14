@@ -16,6 +16,8 @@ import java.util.UUID;
 public class OrganisationDao {
   @Id private String id;
   private String name;
+
+  @Column(length = 5000)
   private String description;
 
   @CreatedDate

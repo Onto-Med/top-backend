@@ -1,3 +1,5 @@
 databaseChangeLog:
   - include:
       file: db/changelog/2022/10/14-01-init-db.yaml
+  - include:
+      file: db/changelog/2022/10/14-02-changelog.yaml

@@ -18,7 +18,10 @@ public class QueryResultDao {
   private OffsetDateTime createdAt;
   private Long count;
   private OffsetDateTime finishedAt;
+
+  @Column(length = 5000)
   private String message;
+
   private QueryState state;
 
   public QueryResultDao() {}
