@@ -1,0 +1,930 @@
+databaseChangeLog:
+  - property:
+      name: byte[].type
+      value: bytea
+      dbms: postgresql
+  - property:
+      name: byte[].type
+      value: BLOB
+      dbms: hsqldb
+  - changeSet:
+      id: 1665744195934-1
+      author: ChristophB
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createSequence:
+            incrementBy: 1
+            sequenceName: hibernate_sequence
+            startValue: 1
+  - changeSet:
+      id: 1665744195934-2
+      author: ChristophB
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_entity
+                  name: id
+                  type: VARCHAR(255)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: top_entity_type
+                  type: INT
+              - column:
+                  name: repository_id
+                  type: VARCHAR(255)
+              - column:
+                  name: current_version_id
+                  type: BIGINT
+              - column:
+                  name: origin_id
+                  type: VARCHAR(255)
+            tableName: entity
+  - changeSet:
+      id: 1665744195934-3
+      author: ChristophB
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                  name: sub_entities_id
+                  type: VARCHAR(255)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: super_entities_id
+                  type: VARCHAR(255)
+            tableName: entity_super_entities
+  - changeSet:
+      id: 1665744195934-4
+      author: ChristophB
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_entity_version
+                  name: id
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: entity_id
+                  type: VARCHAR(255)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: version
+                  type: INT
+              - column:
+                  name: previous_version_id
+                  type: BIGINT
+              - column:
+                  name: author
+                  type: VARCHAR(255)
+              - column:
+                  name: data_type
+                  type: INT
+              - column:
+                  name: item_type
+                  type: INT
+              - column:
+                  name: restriction_id
+                  type: BIGINT
+              - column:
+                  name: expression_id
+                  type: BIGINT
+              - column:
+                  name: unit
+                  type: VARCHAR(255)
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+            tableName: entity_version
+  - changeSet:
+      id: 1665744195934-5
+      author: ChristophB
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_entity_version_codes
+                  name: entity_version_id
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: code
+                  type: VARCHAR(255)
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: code_system_uri
+                  type: VARCHAR(255)
+              - column:
+                  name: code_system_name
+                  type: VARCHAR(255)
+              - column:
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_entity_version_codes
+                  name: codes_order
+                  type: INT
+            tableName: entity_version_codes
+  - changeSet:
+      id: 1665744195934-6
+      author: ChristophB
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_entity_version_descriptions
+                  name: entity_version_id
+                  type: BIGINT
+              - column:
+                  name: lang
+                  type: VARCHAR(255)
+              - column:
+                  name: text
+                  type: VARCHAR(255)
+              - column:
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_entity_version_descriptions
+                  name: descriptions_order
+                  type: INT
+            tableName: entity_version_descriptions
+  - changeSet:
+      id: 1665744195934-7
+      author: ChristophB
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_entity_version_equivalententityversions
+                  name: equivalent_entity_version_of_id
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_entity_version_equivalententityversions
+                  name: equivalent_entity_versions_id
+                  type: BIGINT
+            tableName: entity_version_equivalent_entity_versions
+  - changeSet:
+      id: 1665744195934-8
+      author: ChristophB
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_entity_version_synonyms
+                  name: entity_version_id
+                  type: BIGINT
+              - column:
+                  name: lang
+                  type: VARCHAR(255)
+              - column:
+                  name: text
+                  type: VARCHAR(255)
+              - column:
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_entity_version_synonyms
+                  name: synonyms_order
+                  type: INT
+            tableName: entity_version_synonyms
+  - changeSet:
+      id: 1665744195934-9
+      author: ChristophB
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_entity_version_titles
+                  name: entity_version_id
+                  type: BIGINT
+              - column:
+                  name: lang
+                  type: VARCHAR(255)
+              - column:
+                  name: text
+                  type: VARCHAR(255)
+              - column:
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_entity_version_titles
+                  name: titles_order
+                  type: INT
+            tableName: entity_version_titles
+  - changeSet:
+      id: 1665744195934-10
+      author: ChristophB
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_expression
+                  name: id
+                  type: BIGINT
+              - column:
+                  name: function_id
+                  type: VARCHAR(255)
+              - column:
+                  name: entity_id
+                  type: VARCHAR(255)
+              - column:
+                  name: constant_id
+                  type: VARCHAR(255)
+              - column:
+                  name: boolean_value
+                  type: BOOLEAN
+              - column:
+                  name: date_time_value
+                  type: DATETIME
+              - column:
+                  name: number_value
+                  type: DECIMAL
+              - column:
+                  name: string_value
+                  type: VARCHAR(255)
+            tableName: expression
+  - changeSet:
+      id: 1665744195934-11
+      author: ChristophB
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                  name: arguments_id
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: expression_id
+                  type: BIGINT
+            tableName: expression_arguments
+  - changeSet:
+      id: 1665744195934-12
+      author: ChristophB
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_organisation
+                  name: id
+                  type: VARCHAR(255)
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+              - column:
+                  name: description
+                  type: VARCHAR(255)
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+              - column:
+                  name: super_organisation_id
+                  type: VARCHAR(255)
+            tableName: organisation
+  - changeSet:
+      id: 1665744195934-13
+      author: ChristophB
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_query
+                  name: id
+                  type: UUID
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+              - column:
+                  name: result_id
+                  type: BIGINT
+              - column:
+                  name: repository_id
+                  type: VARCHAR(255)
+            tableName: query
+  - changeSet:
+      id: 1665744195934-14
+      author: ChristophB
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                  name: query_id
+                  type: UUID
+              - column:
+                  name: subject_id
+                  type: VARCHAR(255)
+              - column:
+                  name: inclusion
+                  type: BOOLEAN
+              - column:
+                  name: default_aggregation_function_id
+                  type: VARCHAR(255)
+              - column:
+                  name: date_time_restriction_id
+                  type: BIGINT
+            tableName: query_criteria
+  - changeSet:
+      id: 1665744195934-15
+      author: ChristophB
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                  name: query_id
+                  type: UUID
+              - column:
+                  name: data_sources
+                  type: ${byte[].type}
+            tableName: query_data_sources
+  - changeSet:
+      id: 1665744195934-16
+      author: ChristophB
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                  name: query_id
+                  type: UUID
+              - column:
+                  name: subject_id
+                  type: VARCHAR(255)
+              - column:
+                  name: sorting
+                  type: INT
+              - column:
+                  name: date_time_restriction
+                  type: ${byte[].type}
+            tableName: query_projection
+  - changeSet:
+      id: 1665744195934-17
+      author: ChristophB
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_query_result
+                  name: id
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: query_id
+                  type: UUID
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+              - column:
+                  name: count
+                  type: BIGINT
+              - column:
+                  name: finished_at
+                  type: timestamp with time zone
+              - column:
+                  name: message
+                  type: VARCHAR(255)
+              - column:
+                  name: state
+                  type: INT
+            tableName: query_result
+  - changeSet:
+      id: 1665744195934-18
+      author: ChristophB
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_repository
+                  name: id
+                  type: VARCHAR(255)
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+              - column:
+                  name: description
+                  type: VARCHAR(255)
+              - column:
+                  name: is_primary
+                  type: BOOLEAN
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+              - column:
+                  name: organisation_id
+                  type: VARCHAR(255)
+            tableName: repository
+  - changeSet:
+      id: 1665744195934-19
+      author: ChristophB
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_restriction
+                  name: id
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: data_type
+                  type: INT
+              - column:
+                  name: quantifier
+                  type: INT
+              - column:
+                  name: cardinality
+                  type: INT
+              - column:
+                  name: min_operator
+                  type: INT
+              - column:
+                  name: max_operator
+                  type: INT
+              - column:
+                  name: minimum_date_time_value
+                  type: DATETIME
+              - column:
+                  name: maximum_date_time_value
+                  type: DATETIME
+              - column:
+                  name: minimum_number_value
+                  type: DECIMAL
+              - column:
+                  name: maximum_number_value
+                  type: DECIMAL
+            tableName: restriction
+  - changeSet:
+      id: 1665744195934-20
+      author: ChristophB
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                  name: restriction_id
+                  type: BIGINT
+              - column:
+                  name: boolean_values
+                  type: BOOLEAN
+            tableName: restriction_boolean_values
+  - changeSet:
+      id: 1665744195934-21
+      author: ChristophB
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                  name: restriction_id
+                  type: BIGINT
+              - column:
+                  name: date_time_values
+                  type: DATETIME
+            tableName: restriction_date_time_values
+  - changeSet:
+      id: 1665744195934-22
+      author: ChristophB
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                  name: restriction_id
+                  type: BIGINT
+              - column:
+                  name: number_values
+                  type: DECIMAL
+            tableName: restriction_number_values
+  - changeSet:
+      id: 1665744195934-23
+      author: ChristophB
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                  name: restriction_id
+                  type: BIGINT
+              - column:
+                  name: string_values
+                  type: VARCHAR(255)
+            tableName: restriction_string_values
+  - changeSet:
+      id: 1665744195934-24
+      author: ChristophB
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addUniqueConstraint:
+            columnNames: arguments_id
+            constraintName: uc_expression_arguments_arguments
+            tableName: expression_arguments
+  - changeSet:
+      id: 1665744195934-25
+      author: ChristophB
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: current_version_id
+            baseTableName: entity
+            constraintName: FK_ENTITY_ON_CURRENTVERSION
+            referencedColumnNames: id
+            referencedTableName: entity_version
+  - changeSet:
+      id: 1665744195934-26
+      author: ChristophB
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: origin_id
+            baseTableName: entity
+            constraintName: FK_ENTITY_ON_ORIGIN
+            referencedColumnNames: id
+            referencedTableName: entity
+  - changeSet:
+      id: 1665744195934-27
+      author: ChristophB
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: repository_id
+            baseTableName: entity
+            constraintName: FK_ENTITY_ON_REPOSITORY
+            referencedColumnNames: id
+            referencedTableName: repository
+  - changeSet:
+      id: 1665744195934-28
+      author: ChristophB
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: entity_id
+            baseTableName: entity_version
+            constraintName: FK_ENTITY_VERSION_ON_ENTITY
+            referencedColumnNames: id
+            referencedTableName: entity
+  - changeSet:
+      id: 1665744195934-29
+      author: ChristophB
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: expression_id
+            baseTableName: entity_version
+            constraintName: FK_ENTITY_VERSION_ON_EXPRESSION
+            referencedColumnNames: id
+            referencedTableName: expression
+  - changeSet:
+      id: 1665744195934-30
+      author: ChristophB
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: previous_version_id
+            baseTableName: entity_version
+            constraintName: FK_ENTITY_VERSION_ON_PREVIOUSVERSION
+            referencedColumnNames: id
+            referencedTableName: entity_version
+  - changeSet:
+      id: 1665744195934-31
+      author: ChristophB
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: restriction_id
+            baseTableName: entity_version
+            constraintName: FK_ENTITY_VERSION_ON_RESTRICTION
+            referencedColumnNames: id
+            referencedTableName: restriction
+  - changeSet:
+      id: 1665744195934-32
+      author: ChristophB
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: super_organisation_id
+            baseTableName: organisation
+            constraintName: FK_ORGANISATION_ON_SUPERORGANISATION
+            referencedColumnNames: id
+            referencedTableName: organisation
+  - changeSet:
+      id: 1665744195934-33
+      author: ChristophB
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: repository_id
+            baseTableName: query
+            constraintName: FK_QUERY_ON_REPOSITORY
+            referencedColumnNames: id
+            referencedTableName: repository
+  - changeSet:
+      id: 1665744195934-34
+      author: ChristophB
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: result_id
+            baseTableName: query
+            constraintName: FK_QUERY_ON_RESULT
+            referencedColumnNames: id
+            referencedTableName: query_result
+  - changeSet:
+      id: 1665744195934-35
+      author: ChristophB
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: query_id
+            baseTableName: query_result
+            constraintName: FK_QUERY_RESULT_ON_QUERY
+            referencedColumnNames: id
+            referencedTableName: query
+  - changeSet:
+      id: 1665744195934-36
+      author: ChristophB
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: organisation_id
+            baseTableName: repository
+            constraintName: FK_REPOSITORY_ON_ORGANISATION
+            referencedColumnNames: id
+            referencedTableName: organisation
+  - changeSet:
+      id: 1665744195934-37
+      author: ChristophB
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: entity_version_id
+            baseTableName: entity_version_codes
+            constraintName: fk_entity_version_codes_on_entity_version_dao
+            referencedColumnNames: id
+            referencedTableName: entity_version
+  - changeSet:
+      id: 1665744195934-38
+      author: ChristophB
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: entity_version_id
+            baseTableName: entity_version_descriptions
+            constraintName: fk_entity_version_descriptions_on_entity_version_dao
+            referencedColumnNames: id
+            referencedTableName: entity_version
+  - changeSet:
+      id: 1665744195934-39
+      author: ChristophB
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: entity_version_id
+            baseTableName: entity_version_synonyms
+            constraintName: fk_entity_version_synonyms_on_entity_version_dao
+            referencedColumnNames: id
+            referencedTableName: entity_version
+  - changeSet:
+      id: 1665744195934-40
+      author: ChristophB
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: entity_version_id
+            baseTableName: entity_version_titles
+            constraintName: fk_entity_version_titles_on_entity_version_dao
+            referencedColumnNames: id
+            referencedTableName: entity_version
+  - changeSet:
+      id: 1665744195934-41
+      author: ChristophB
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: sub_entities_id
+            baseTableName: entity_super_entities
+            constraintName: fk_entsupent_on_subentities
+            referencedColumnNames: id
+            referencedTableName: entity
+  - changeSet:
+      id: 1665744195934-42
+      author: ChristophB
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: super_entities_id
+            baseTableName: entity_super_entities
+            constraintName: fk_entsupent_on_superentities
+            referencedColumnNames: id
+            referencedTableName: entity
+  - changeSet:
+      id: 1665744195934-43
+      author: ChristophB
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: equivalent_entity_version_of_id
+            baseTableName: entity_version_equivalent_entity_versions
+            constraintName: fk_entverequentver_on_equivalententityversionof
+            referencedColumnNames: id
+            referencedTableName: entity_version
+  - changeSet:
+      id: 1665744195934-44
+      author: ChristophB
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: equivalent_entity_versions_id
+            baseTableName: entity_version_equivalent_entity_versions
+            constraintName: fk_entverequentver_on_equivalententityversions
+            referencedColumnNames: id
+            referencedTableName: entity_version
+  - changeSet:
+      id: 1665744195934-45
+      author: ChristophB
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: arguments_id
+            baseTableName: expression_arguments
+            constraintName: fk_exparg_on_arguments
+            referencedColumnNames: id
+            referencedTableName: expression
+  - changeSet:
+      id: 1665744195934-46
+      author: ChristophB
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: expression_id
+            baseTableName: expression_arguments
+            constraintName: fk_exparg_on_expression
+            referencedColumnNames: id
+            referencedTableName: expression
+  - changeSet:
+      id: 1665744195934-47
+      author: ChristophB
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: query_id
+            baseTableName: query_criteria
+            constraintName: fk_query_criteria_on_query_dao
+            referencedColumnNames: id
+            referencedTableName: query
+  - changeSet:
+      id: 1665744195934-48
+      author: ChristophB
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: query_id
+            baseTableName: query_data_sources
+            constraintName: fk_query_datasources_on_query_dao
+            referencedColumnNames: id
+            referencedTableName: query
+  - changeSet:
+      id: 1665744195934-49
+      author: ChristophB
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: query_id
+            baseTableName: query_projection
+            constraintName: fk_query_projection_on_query_dao
+            referencedColumnNames: id
+            referencedTableName: query
+  - changeSet:
+      id: 1665744195934-50
+      author: ChristophB
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: restriction_id
+            baseTableName: restriction_boolean_values
+            constraintName: fk_restriction_booleanvalues_on_restriction_dao
+            referencedColumnNames: id
+            referencedTableName: restriction
+  - changeSet:
+      id: 1665744195934-51
+      author: ChristophB
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: restriction_id
+            baseTableName: restriction_date_time_values
+            constraintName: fk_restriction_datetimevalues_on_restriction_dao
+            referencedColumnNames: id
+            referencedTableName: restriction
+  - changeSet:
+      id: 1665744195934-52
+      author: ChristophB
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: restriction_id
+            baseTableName: restriction_number_values
+            constraintName: fk_restriction_numbervalues_on_restriction_dao
+            referencedColumnNames: id
+            referencedTableName: restriction
+  - changeSet:
+      id: 1665744195934-53
+      author: ChristophB
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: restriction_id
+            baseTableName: restriction_string_values
+            constraintName: fk_restriction_stringvalues_on_restriction_dao
+            referencedColumnNames: id
+            referencedTableName: restriction
+
