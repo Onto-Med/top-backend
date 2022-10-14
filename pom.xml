@@ -60,6 +60,11 @@
             <version>${spring.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.liquibase</groupId>
+            <artifactId>liquibase-core</artifactId>
+            <version>4.16.1</version>
+        </dependency>
+        <dependency>
             <groupId>care.smith.top</groupId>
             <artifactId>top-api</artifactId>
             <version>0.5.1-SNAPSHOT</version>
