@@ -8,7 +8,7 @@ databaseChangeLog:
       value: BLOB
       dbms: hsqldb
   - changeSet:
-      id: 1665744195934-1
+      id: 1665752685449-1
       author: ChristophB
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -17,7 +17,7 @@ databaseChangeLog:
             sequenceName: hibernate_sequence
             startValue: 1
   - changeSet:
-      id: 1665744195934-2
+      id: 1665752685449-2
       author: ChristophB
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -46,7 +46,7 @@ databaseChangeLog:
                   type: VARCHAR(255)
             tableName: entity
   - changeSet:
-      id: 1665744195934-3
+      id: 1665752685449-3
       author: ChristophB
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -64,7 +64,7 @@ databaseChangeLog:
                   type: VARCHAR(255)
             tableName: entity_super_entities
   - changeSet:
-      id: 1665744195934-4
+      id: 1665752685449-4
       author: ChristophB
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -113,7 +113,7 @@ databaseChangeLog:
                   type: timestamp with time zone
             tableName: entity_version
   - changeSet:
-      id: 1665744195934-5
+      id: 1665752685449-5
       author: ChristophB
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -150,7 +150,7 @@ databaseChangeLog:
                   type: INT
             tableName: entity_version_codes
   - changeSet:
-      id: 1665744195934-6
+      id: 1665752685449-6
       author: ChristophB
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -177,7 +177,7 @@ databaseChangeLog:
                   type: INT
             tableName: entity_version_descriptions
   - changeSet:
-      id: 1665744195934-7
+      id: 1665752685449-7
       author: ChristophB
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -199,7 +199,7 @@ databaseChangeLog:
                   type: BIGINT
             tableName: entity_version_equivalent_entity_versions
   - changeSet:
-      id: 1665744195934-8
+      id: 1665752685449-8
       author: ChristophB
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -226,7 +226,7 @@ databaseChangeLog:
                   type: INT
             tableName: entity_version_synonyms
   - changeSet:
-      id: 1665744195934-9
+      id: 1665752685449-9
       author: ChristophB
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -253,7 +253,7 @@ databaseChangeLog:
                   type: INT
             tableName: entity_version_titles
   - changeSet:
-      id: 1665744195934-10
+      id: 1665752685449-10
       author: ChristophB
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -289,7 +289,7 @@ databaseChangeLog:
                   type: VARCHAR(255)
             tableName: expression
   - changeSet:
-      id: 1665744195934-11
+      id: 1665752685449-11
       author: ChristophB
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -307,7 +307,7 @@ databaseChangeLog:
                   type: BIGINT
             tableName: expression_arguments
   - changeSet:
-      id: 1665744195934-12
+      id: 1665752685449-12
       author: ChristophB
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -337,7 +337,7 @@ databaseChangeLog:
                   type: VARCHAR(255)
             tableName: organisation
   - changeSet:
-      id: 1665744195934-13
+      id: 1665752685449-13
       author: ChristophB
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -354,14 +354,11 @@ databaseChangeLog:
                   name: name
                   type: VARCHAR(255)
               - column:
-                  name: result_id
-                  type: BIGINT
-              - column:
                   name: repository_id
                   type: VARCHAR(255)
             tableName: query
   - changeSet:
-      id: 1665744195934-14
+      id: 1665752685449-14
       author: ChristophB
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -386,7 +383,7 @@ databaseChangeLog:
                   type: BIGINT
             tableName: query_criteria
   - changeSet:
-      id: 1665744195934-15
+      id: 1665752685449-15
       author: ChristophB
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -402,7 +399,7 @@ databaseChangeLog:
                   type: ${byte[].type}
             tableName: query_data_sources
   - changeSet:
-      id: 1665744195934-16
+      id: 1665752685449-16
       author: ChristophB
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -424,7 +421,7 @@ databaseChangeLog:
                   type: ${byte[].type}
             tableName: query_projection
   - changeSet:
-      id: 1665744195934-17
+      id: 1665752685449-17
       author: ChristophB
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -459,7 +456,7 @@ databaseChangeLog:
                   type: INT
             tableName: query_result
   - changeSet:
-      id: 1665744195934-18
+      id: 1665752685449-18
       author: ChristophB
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -492,7 +489,7 @@ databaseChangeLog:
                   type: VARCHAR(255)
             tableName: repository
   - changeSet:
-      id: 1665744195934-19
+      id: 1665752685449-19
       author: ChristophB
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -536,7 +533,7 @@ databaseChangeLog:
                   type: DECIMAL
             tableName: restriction
   - changeSet:
-      id: 1665744195934-20
+      id: 1665752685449-20
       author: ChristophB
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -552,7 +549,7 @@ databaseChangeLog:
                   type: BOOLEAN
             tableName: restriction_boolean_values
   - changeSet:
-      id: 1665744195934-21
+      id: 1665752685449-21
       author: ChristophB
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -568,7 +565,7 @@ databaseChangeLog:
                   type: DATETIME
             tableName: restriction_date_time_values
   - changeSet:
-      id: 1665744195934-22
+      id: 1665752685449-22
       author: ChristophB
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -584,7 +581,7 @@ databaseChangeLog:
                   type: DECIMAL
             tableName: restriction_number_values
   - changeSet:
-      id: 1665744195934-23
+      id: 1665752685449-23
       author: ChristophB
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -600,7 +597,7 @@ databaseChangeLog:
                   type: VARCHAR(255)
             tableName: restriction_string_values
   - changeSet:
-      id: 1665744195934-24
+      id: 1665752685449-24
       author: ChristophB
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -609,7 +606,7 @@ databaseChangeLog:
             constraintName: uc_expression_arguments_arguments
             tableName: expression_arguments
   - changeSet:
-      id: 1665744195934-25
+      id: 1665752685449-25
       author: ChristophB
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -620,7 +617,7 @@ databaseChangeLog:
             referencedColumnNames: id
             referencedTableName: entity_version
   - changeSet:
-      id: 1665744195934-26
+      id: 1665752685449-26
       author: ChristophB
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -631,7 +628,7 @@ databaseChangeLog:
             referencedColumnNames: id
             referencedTableName: entity
   - changeSet:
-      id: 1665744195934-27
+      id: 1665752685449-27
       author: ChristophB
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -642,7 +639,7 @@ databaseChangeLog:
             referencedColumnNames: id
             referencedTableName: repository
   - changeSet:
-      id: 1665744195934-28
+      id: 1665752685449-28
       author: ChristophB
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -653,7 +650,7 @@ databaseChangeLog:
             referencedColumnNames: id
             referencedTableName: entity
   - changeSet:
-      id: 1665744195934-29
+      id: 1665752685449-29
       author: ChristophB
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -664,7 +661,7 @@ databaseChangeLog:
             referencedColumnNames: id
             referencedTableName: expression
   - changeSet:
-      id: 1665744195934-30
+      id: 1665752685449-30
       author: ChristophB
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -675,7 +672,7 @@ databaseChangeLog:
             referencedColumnNames: id
             referencedTableName: entity_version
   - changeSet:
-      id: 1665744195934-31
+      id: 1665752685449-31
       author: ChristophB
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -686,7 +683,7 @@ databaseChangeLog:
             referencedColumnNames: id
             referencedTableName: restriction
   - changeSet:
-      id: 1665744195934-32
+      id: 1665752685449-32
       author: ChristophB
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -697,7 +694,7 @@ databaseChangeLog:
             referencedColumnNames: id
             referencedTableName: organisation
   - changeSet:
-      id: 1665744195934-33
+      id: 1665752685449-33
       author: ChristophB
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -708,18 +705,7 @@ databaseChangeLog:
             referencedColumnNames: id
             referencedTableName: repository
   - changeSet:
-      id: 1665744195934-34
-      author: ChristophB
-      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
-      changes:
-        - addForeignKeyConstraint:
-            baseColumnNames: result_id
-            baseTableName: query
-            constraintName: FK_QUERY_ON_RESULT
-            referencedColumnNames: id
-            referencedTableName: query_result
-  - changeSet:
-      id: 1665744195934-35
+      id: 1665752685449-34
       author: ChristophB
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -730,7 +716,7 @@ databaseChangeLog:
             referencedColumnNames: id
             referencedTableName: query
   - changeSet:
-      id: 1665744195934-36
+      id: 1665752685449-35
       author: ChristophB
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -741,7 +727,7 @@ databaseChangeLog:
             referencedColumnNames: id
             referencedTableName: organisation
   - changeSet:
-      id: 1665744195934-37
+      id: 1665752685449-36
       author: ChristophB
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -752,7 +738,7 @@ databaseChangeLog:
             referencedColumnNames: id
             referencedTableName: entity_version
   - changeSet:
-      id: 1665744195934-38
+      id: 1665752685449-37
       author: ChristophB
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -763,7 +749,7 @@ databaseChangeLog:
             referencedColumnNames: id
             referencedTableName: entity_version
   - changeSet:
-      id: 1665744195934-39
+      id: 1665752685449-38
       author: ChristophB
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -774,7 +760,7 @@ databaseChangeLog:
             referencedColumnNames: id
             referencedTableName: entity_version
   - changeSet:
-      id: 1665744195934-40
+      id: 1665752685449-39
       author: ChristophB
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -785,7 +771,7 @@ databaseChangeLog:
             referencedColumnNames: id
             referencedTableName: entity_version
   - changeSet:
-      id: 1665744195934-41
+      id: 1665752685449-40
       author: ChristophB
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -796,7 +782,7 @@ databaseChangeLog:
             referencedColumnNames: id
             referencedTableName: entity
   - changeSet:
-      id: 1665744195934-42
+      id: 1665752685449-41
       author: ChristophB
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -807,7 +793,7 @@ databaseChangeLog:
             referencedColumnNames: id
             referencedTableName: entity
   - changeSet:
-      id: 1665744195934-43
+      id: 1665752685449-42
       author: ChristophB
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -818,7 +804,7 @@ databaseChangeLog:
             referencedColumnNames: id
             referencedTableName: entity_version
   - changeSet:
-      id: 1665744195934-44
+      id: 1665752685449-43
       author: ChristophB
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -829,7 +815,7 @@ databaseChangeLog:
             referencedColumnNames: id
             referencedTableName: entity_version
   - changeSet:
-      id: 1665744195934-45
+      id: 1665752685449-44
       author: ChristophB
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -840,7 +826,7 @@ databaseChangeLog:
             referencedColumnNames: id
             referencedTableName: expression
   - changeSet:
-      id: 1665744195934-46
+      id: 1665752685449-45
       author: ChristophB
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -851,7 +837,7 @@ databaseChangeLog:
             referencedColumnNames: id
             referencedTableName: expression
   - changeSet:
-      id: 1665744195934-47
+      id: 1665752685449-46
       author: ChristophB
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -862,7 +848,7 @@ databaseChangeLog:
             referencedColumnNames: id
             referencedTableName: query
   - changeSet:
-      id: 1665744195934-48
+      id: 1665752685449-47
       author: ChristophB
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -873,7 +859,7 @@ databaseChangeLog:
             referencedColumnNames: id
             referencedTableName: query
   - changeSet:
-      id: 1665744195934-49
+      id: 1665752685449-48
       author: ChristophB
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -884,7 +870,7 @@ databaseChangeLog:
             referencedColumnNames: id
             referencedTableName: query
   - changeSet:
-      id: 1665744195934-50
+      id: 1665752685449-49
       author: ChristophB
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -895,7 +881,7 @@ databaseChangeLog:
             referencedColumnNames: id
             referencedTableName: restriction
   - changeSet:
-      id: 1665744195934-51
+      id: 1665752685449-50
       author: ChristophB
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -906,7 +892,7 @@ databaseChangeLog:
             referencedColumnNames: id
             referencedTableName: restriction
   - changeSet:
-      id: 1665744195934-52
+      id: 1665752685449-51
       author: ChristophB
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -917,7 +903,7 @@ databaseChangeLog:
             referencedColumnNames: id
             referencedTableName: restriction
   - changeSet:
-      id: 1665744195934-53
+      id: 1665752685449-52
       author: ChristophB
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
