@@ -5,6 +5,7 @@ import care.smith.top.model.ProjectionEntry;
 import care.smith.top.model.Sorting;
 
 import javax.persistence.Embeddable;
+import javax.persistence.Lob;
 import javax.validation.constraints.NotNull;
 import java.util.Objects;
 
@@ -12,6 +13,7 @@ import java.util.Objects;
 public class ProjectionEntryDao {
   private String subjectId;
   private Sorting sorting;
+  @Lob
   private DateTimeRestriction dateTimeRestriction = null;
 
   public ProjectionEntryDao() {}
