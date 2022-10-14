@@ -10,7 +10,7 @@ logging:
 spring:
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
       dialect: org.hibernate.dialect.PostgreSQLDialect
   datasource:
     url: jdbc:${DB_TYPE:postgresql}://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:postgres}
