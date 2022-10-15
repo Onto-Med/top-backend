@@ -1,0 +1,969 @@
+databaseChangeLog:
+- changeSet:
+    id: 1665824396922-1
+    author: ChristophB (generated)
+    changes:
+    - createSequence:
+        incrementBy: 1
+        sequenceName: hibernate_sequence
+        startValue: 1
+- changeSet:
+    id: 1665824396922-2
+    author: ChristophB (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: entityPK
+            name: id
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: top_entity_type
+            type: INT
+        - column:
+            name: current_version_id
+            type: BIGINT
+        - column:
+            name: origin_id
+            type: VARCHAR(255)
+        - column:
+            name: repository_id
+            type: VARCHAR(255)
+        tableName: entity
+- changeSet:
+    id: 1665824396922-3
+    author: ChristophB (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+            name: sub_entities_id
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: super_entities_id
+            type: VARCHAR(255)
+        tableName: entity_super_entities
+- changeSet:
+    id: 1665824396922-4
+    author: ChristophB (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            autoIncrement: true
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: entity_versionPK
+            name: id
+            type: BIGINT
+        - column:
+            name: author
+            type: VARCHAR(255)
+        - column:
+            name: created_at
+            type: TIMESTAMP
+        - column:
+            name: data_type
+            type: INT
+        - column:
+            name: item_type
+            type: INT
+        - column:
+            name: unit
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: version
+            type: INT
+        - column:
+            constraints:
+              nullable: false
+            name: entity_id
+            type: VARCHAR(255)
+        - column:
+            name: expression_id
+            type: BIGINT
+        - column:
+            name: previous_version_id
+            type: BIGINT
+        - column:
+            name: restriction_id
+            type: BIGINT
+        tableName: entity_version
+- changeSet:
+    id: 1665824396922-5
+    author: ChristophB (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: entity_version_codesPK
+            name: entity_version_id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: code
+            type: VARCHAR(255)
+        - column:
+            name: code_system_name
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: code_system_uri
+            type: VARCHAR(255)
+        - column:
+            name: name
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: entity_version_codesPK
+            name: codes_order
+            type: INT
+        tableName: entity_version_codes
+- changeSet:
+    id: 1665824396922-6
+    author: ChristophB (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: entity_version_descriptionsPK
+            name: entity_version_id
+            type: BIGINT
+        - column:
+            name: lang
+            type: VARCHAR(255)
+        - column:
+            name: text
+            type: VARCHAR(5000)
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: entity_version_descriptionsPK
+            name: descriptions_order
+            type: INT
+        tableName: entity_version_descriptions
+- changeSet:
+    id: 1665824396922-7
+    author: ChristophB (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: entity_version_equivalent_entity_versionsPK
+            name: equivalent_entity_version_of_id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: entity_version_equivalent_entity_versionsPK
+            name: equivalent_entity_versions_id
+            type: BIGINT
+        tableName: entity_version_equivalent_entity_versions
+- changeSet:
+    id: 1665824396922-8
+    author: ChristophB (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: entity_version_synonymsPK
+            name: entity_version_id
+            type: BIGINT
+        - column:
+            name: lang
+            type: VARCHAR(255)
+        - column:
+            name: text
+            type: VARCHAR(5000)
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: entity_version_synonymsPK
+            name: synonyms_order
+            type: INT
+        tableName: entity_version_synonyms
+- changeSet:
+    id: 1665824396922-9
+    author: ChristophB (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: entity_version_titlesPK
+            name: entity_version_id
+            type: BIGINT
+        - column:
+            name: lang
+            type: VARCHAR(255)
+        - column:
+            name: text
+            type: VARCHAR(5000)
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: entity_version_titlesPK
+            name: titles_order
+            type: INT
+        tableName: entity_version_titles
+- changeSet:
+    id: 1665824396922-10
+    author: ChristophB (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            autoIncrement: true
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: expressionPK
+            name: id
+            type: BIGINT
+        - column:
+            name: boolean_value
+            type: BOOLEAN
+        - column:
+            name: constant_id
+            type: VARCHAR(255)
+        - column:
+            name: date_time_value
+            type: TIMESTAMP
+        - column:
+            name: entity_id
+            type: VARCHAR(255)
+        - column:
+            name: function_id
+            type: VARCHAR(255)
+        - column:
+            name: number_value
+            type: numeric(19, 2)
+        - column:
+            name: string_value
+            type: VARCHAR(255)
+        tableName: expression
+- changeSet:
+    id: 1665824396922-11
+    author: ChristophB (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+            name: expression_id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: arguments_id
+            type: BIGINT
+        tableName: expression_arguments
+- changeSet:
+    id: 1665824396922-12
+    author: ChristophB (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: organisationPK
+            name: id
+            type: VARCHAR(255)
+        - column:
+            name: created_at
+            type: TIMESTAMP
+        - column:
+            name: description
+            type: VARCHAR(5000)
+        - column:
+            name: name
+            type: VARCHAR(255)
+        - column:
+            name: updated_at
+            type: TIMESTAMP
+        - column:
+            name: super_organisation_id
+            type: VARCHAR(255)
+        tableName: organisation
+- changeSet:
+    id: 1665824396922-13
+    author: ChristophB (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: queryPK
+            name: id
+            type: BINARY(255)
+        - column:
+            name: name
+            type: VARCHAR(255)
+        - column:
+            name: repository_id
+            type: VARCHAR(255)
+        tableName: query
+- changeSet:
+    id: 1665824396922-14
+    author: ChristophB (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+            name: query_id
+            type: BINARY(255)
+        - column:
+            name: date_time_restriction_id
+            type: BIGINT
+        - column:
+            name: default_aggregation_function_id
+            type: VARCHAR(255)
+        - column:
+            name: inclusion
+            type: BOOLEAN
+        - column:
+            name: subject_id
+            type: VARCHAR(255)
+        tableName: query_criteria
+- changeSet:
+    id: 1665824396922-15
+    author: ChristophB (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+            name: query_id
+            type: BINARY(255)
+        - column:
+            name: data_sources
+            type: VARCHAR(255)
+        tableName: query_data_sources
+- changeSet:
+    id: 1665824396922-16
+    author: ChristophB (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+            name: query_id
+            type: BINARY(255)
+        - column:
+            name: date_time_restriction
+            type: BLOB
+        - column:
+            name: sorting
+            type: INT
+        - column:
+            name: subject_id
+            type: VARCHAR(255)
+        tableName: query_projection
+- changeSet:
+    id: 1665824396922-17
+    author: ChristophB (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            autoIncrement: true
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: query_resultPK
+            name: id
+            type: BIGINT
+        - column:
+            name: count
+            type: BIGINT
+        - column:
+            name: created_at
+            type: TIMESTAMP
+        - column:
+            name: finished_at
+            type: TIMESTAMP
+        - column:
+            name: message
+            type: VARCHAR(5000)
+        - column:
+            name: state
+            type: INT
+        - column:
+            constraints:
+              nullable: false
+            name: query_id
+            type: BINARY(255)
+        tableName: query_result
+- changeSet:
+    id: 1665824396922-18
+    author: ChristophB (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: repositoryPK
+            name: id
+            type: VARCHAR(255)
+        - column:
+            name: created_at
+            type: TIMESTAMP
+        - column:
+            name: description
+            type: VARCHAR(5000)
+        - column:
+            name: name
+            type: VARCHAR(255)
+        - column:
+            name: is_primary
+            type: BOOLEAN
+        - column:
+            name: updated_at
+            type: TIMESTAMP
+        - column:
+            name: organisation_id
+            type: VARCHAR(255)
+        tableName: repository
+- changeSet:
+    id: 1665824396922-19
+    author: ChristophB (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            autoIncrement: true
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: restrictionPK
+            name: id
+            type: BIGINT
+        - column:
+            name: cardinality
+            type: INT
+        - column:
+            constraints:
+              nullable: false
+            name: data_type
+            type: INT
+        - column:
+            name: max_operator
+            type: INT
+        - column:
+            name: maximum_date_time_value
+            type: TIMESTAMP
+        - column:
+            name: maximum_number_value
+            type: numeric(19, 2)
+        - column:
+            name: min_operator
+            type: INT
+        - column:
+            name: minimum_date_time_value
+            type: TIMESTAMP
+        - column:
+            name: minimum_number_value
+            type: numeric(19, 2)
+        - column:
+            name: quantifier
+            type: INT
+        tableName: restriction
+- changeSet:
+    id: 1665824396922-20
+    author: ChristophB (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+            name: restriction_id
+            type: BIGINT
+        - column:
+            name: boolean_values
+            type: BOOLEAN
+        tableName: restriction_boolean_values
+- changeSet:
+    id: 1665824396922-21
+    author: ChristophB (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+            name: restriction_id
+            type: BIGINT
+        - column:
+            name: date_time_values
+            type: TIMESTAMP
+        tableName: restriction_date_time_values
+- changeSet:
+    id: 1665824396922-22
+    author: ChristophB (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+            name: restriction_id
+            type: BIGINT
+        - column:
+            name: number_values
+            type: numeric(19, 2)
+        tableName: restriction_number_values
+- changeSet:
+    id: 1665824396922-23
+    author: ChristophB (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+            name: restriction_id
+            type: BIGINT
+        - column:
+            name: string_values
+            type: VARCHAR(255)
+        tableName: restriction_string_values
+- changeSet:
+    id: 1665824396922-24
+    author: ChristophB (generated)
+    changes:
+    - addUniqueConstraint:
+        columnNames: arguments_id
+        constraintName: UK_f3ag2cmf9imhjpkp9y4x8r6l8
+        tableName: expression_arguments
+- changeSet:
+    id: 1665824396922-25
+    author: ChristophB (generated)
+    changes:
+    - addUniqueConstraint:
+        columnNames: query_id
+        constraintName: UK_mlp3vfxytdcx2n5jea87ahx10
+        tableName: query_result
+- changeSet:
+    id: 1665824396922-26
+    author: ChristophB (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: super_organisation_id
+        baseTableName: organisation
+        constraintName: FK2ikfxcpw9cuxqh58fs0ldu0k1
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: id
+        referencedTableName: organisation
+        validate: true
+- changeSet:
+    id: 1665824396922-27
+    author: ChristophB (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: super_entities_id
+        baseTableName: entity_super_entities
+        constraintName: FK2nm7gruhojbtylucpvw6uckwb
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: id
+        referencedTableName: entity
+        validate: true
+- changeSet:
+    id: 1665824396922-28
+    author: ChristophB (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: date_time_restriction_id
+        baseTableName: query_criteria
+        constraintName: FK31pd2s6d5bw8n238h0lqq3pps
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: id
+        referencedTableName: restriction
+        validate: true
+- changeSet:
+    id: 1665824396922-29
+    author: ChristophB (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: organisation_id
+        baseTableName: repository
+        constraintName: FK3do0boo7ccs6wx9m826i6ctfq
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: id
+        referencedTableName: organisation
+        validate: true
+- changeSet:
+    id: 1665824396922-30
+    author: ChristophB (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: restriction_id
+        baseTableName: entity_version
+        constraintName: FK41rs22tvtutlmbhme44wyur06
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: id
+        referencedTableName: restriction
+        validate: true
+- changeSet:
+    id: 1665824396922-31
+    author: ChristophB (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: expression_id
+        baseTableName: entity_version
+        constraintName: FK45yhtwc3wge1mrp2mu46kv49q
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: id
+        referencedTableName: expression
+        validate: true
+- changeSet:
+    id: 1665824396922-32
+    author: ChristophB (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: expression_id
+        baseTableName: expression_arguments
+        constraintName: FK6m4fakr70nwi8j6odp7etxplb
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: id
+        referencedTableName: expression
+        validate: true
+- changeSet:
+    id: 1665824396922-33
+    author: ChristophB (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: entity_id
+        baseTableName: entity_version
+        constraintName: FK6n22u6f81b0cynril9fpol6j6
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: id
+        referencedTableName: entity
+        validate: true
+- changeSet:
+    id: 1665824396922-34
+    author: ChristophB (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: sub_entities_id
+        baseTableName: entity_super_entities
+        constraintName: FK99wqg9nbb9pkuv6bk9e6ih0ch
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: id
+        referencedTableName: entity
+        validate: true
+- changeSet:
+    id: 1665824396922-35
+    author: ChristophB (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: origin_id
+        baseTableName: entity
+        constraintName: FK9ovvc74d4cmvntnrqytivi652
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: id
+        referencedTableName: entity
+        validate: true
+- changeSet:
+    id: 1665824396922-36
+    author: ChristophB (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: repository_id
+        baseTableName: entity
+        constraintName: FKa0rvx0mchqkqtg3xdehg6yxmt
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: id
+        referencedTableName: repository
+        validate: true
+- changeSet:
+    id: 1665824396922-37
+    author: ChristophB (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: arguments_id
+        baseTableName: expression_arguments
+        constraintName: FKd5gokgl0rlfoh56vcp2fw5l8f
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: id
+        referencedTableName: expression
+        validate: true
+- changeSet:
+    id: 1665824396922-38
+    author: ChristophB (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: query_id
+        baseTableName: query_projection
+        constraintName: FKeded1g1b66k48f83vluhckc35
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: id
+        referencedTableName: query
+        validate: true
+- changeSet:
+    id: 1665824396922-39
+    author: ChristophB (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: entity_version_id
+        baseTableName: entity_version_titles
+        constraintName: FKfqcagpo41xikrr6vrg0kaq222
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: id
+        referencedTableName: entity_version
+        validate: true
+- changeSet:
+    id: 1665824396922-40
+    author: ChristophB (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: current_version_id
+        baseTableName: entity
+        constraintName: FKhm30g9hf4kw0qbiqphbj47hpu
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: id
+        referencedTableName: entity_version
+        validate: true
+- changeSet:
+    id: 1665824396922-41
+    author: ChristophB (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: restriction_id
+        baseTableName: restriction_string_values
+        constraintName: FKil53oqkcfw92p8buslrtd86t3
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: id
+        referencedTableName: restriction
+        validate: true
+- changeSet:
+    id: 1665824396922-42
+    author: ChristophB (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: entity_version_id
+        baseTableName: entity_version_synonyms
+        constraintName: FKjgnc5q7guxm28qpmuc1afjm8
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: id
+        referencedTableName: entity_version
+        validate: true
+- changeSet:
+    id: 1665824396922-43
+    author: ChristophB (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: query_id
+        baseTableName: query_criteria
+        constraintName: FKlujxvg45qibgv5ajlw0ry3fvf
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: id
+        referencedTableName: query
+        validate: true
+- changeSet:
+    id: 1665824396922-44
+    author: ChristophB (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: previous_version_id
+        baseTableName: entity_version
+        constraintName: FKm9csettms6lutjj25v9qs62va
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: id
+        referencedTableName: entity_version
+        validate: true
+- changeSet:
+    id: 1665824396922-45
+    author: ChristophB (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: restriction_id
+        baseTableName: restriction_number_values
+        constraintName: FKmjwkry9oa746eqev5070eqr3t
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: id
+        referencedTableName: restriction
+        validate: true
+- changeSet:
+    id: 1665824396922-46
+    author: ChristophB (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: query_id
+        baseTableName: query_data_sources
+        constraintName: FKn76qq858dn2hoqdt9by11qbu5
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: id
+        referencedTableName: query
+        validate: true
+- changeSet:
+    id: 1665824396922-47
+    author: ChristophB (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: restriction_id
+        baseTableName: restriction_date_time_values
+        constraintName: FKp4mr54ht2lb384tfryyr7piyc
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: id
+        referencedTableName: restriction
+        validate: true
+- changeSet:
+    id: 1665824396922-48
+    author: ChristophB (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: query_id
+        baseTableName: query_result
+        constraintName: FKp5lt4j29y3j2w7p9u47824dr7
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: id
+        referencedTableName: query
+        validate: true
+- changeSet:
+    id: 1665824396922-49
+    author: ChristophB (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: repository_id
+        baseTableName: query
+        constraintName: FKpgig1o5bdlp7g0xwo153phd35
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: id
+        referencedTableName: repository
+        validate: true
+- changeSet:
+    id: 1665824396922-50
+    author: ChristophB (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: equivalent_entity_version_of_id
+        baseTableName: entity_version_equivalent_entity_versions
+        constraintName: FKre69jpnqg112uo9s8j7r36q2u
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: id
+        referencedTableName: entity_version
+        validate: true
+- changeSet:
+    id: 1665824396922-51
+    author: ChristophB (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: restriction_id
+        baseTableName: restriction_boolean_values
+        constraintName: FKrl8cukqsa7484w13563q7cpa2
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: id
+        referencedTableName: restriction
+        validate: true
+- changeSet:
+    id: 1665824396922-52
+    author: ChristophB (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: entity_version_id
+        baseTableName: entity_version_codes
+        constraintName: FKrqk7ovmu3heoe2ulh6i2w1u9v
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: id
+        referencedTableName: entity_version
+        validate: true
+- changeSet:
+    id: 1665824396922-53
+    author: ChristophB (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: entity_version_id
+        baseTableName: entity_version_descriptions
+        constraintName: FKsju1qr3u2pfrvsovaler96o9e
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: id
+        referencedTableName: entity_version
+        validate: true
+- changeSet:
+    id: 1665824396922-54
+    author: ChristophB (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: equivalent_entity_versions_id
+        baseTableName: entity_version_equivalent_entity_versions
+        constraintName: FKt4au5g3n751i6dnjqhs7vx5qn
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: id
+        referencedTableName: entity_version
+        validate: true
+
