@@ -3,6 +3,10 @@ server:
   servlet:
     context-path: ${APP_PATH:/}
 
+openapi:
+  tOP:
+    base-path: /
+
 logging:
   level:
     root: INFO
