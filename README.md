@@ -45,7 +45,7 @@ To generate new changelogs, a local HSQL database is used to reflect the state p
      -Dliquibase.diffChangeLogFile=src/main/resources/db/changelog/changesets/<timestamp>-<changelog name>.yaml
    ```
    You can call `set user.name=<change author>` before above command to modify the changelog author name.
-5. Review the generated changelog file and add it to [src/main/resources/db/changelog/db.changelog-master.yaml](src/main/resources/db/changelog/db.changelog-master.yaml).
+5. Review the generated changelog file!
 
 *There is a bug in `liquibase-maven-plugin` that results in recreation of some constraints and of the hibernate sequence.
 You should manually remove these changes from the generated changelog file.*
