@@ -25,7 +25,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import javax.inject.Inject;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.OffsetDateTime;
@@ -50,10 +49,8 @@ public class PhenotypeQueryService {
   @Value("${top.phenotyping.execute-queries:true}")
   private boolean executeQueries;
 
-  @Inject private JobScheduler jobScheduler;
-
-  @Inject private StorageProvider storageProvider;
-
+  @Autowired private JobScheduler jobScheduler;
+  @Autowired private StorageProvider storageProvider;
   @Autowired private RepositoryService repositoryService;
   @Autowired private EntityService entityService;
   @Autowired private QueryRepository queryRepository;

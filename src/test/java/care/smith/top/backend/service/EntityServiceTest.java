@@ -2,7 +2,7 @@ package care.smith.top.backend.service;
 
 import care.smith.top.backend.model.EntityDao;
 import care.smith.top.model.*;
-import care.smith.top.simple_onto_api.calculator.functions.bool.Not;
+import care.smith.top.top_phenotypic_query.c2reasoner.functions.bool.Not;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -185,7 +185,7 @@ class EntityServiceTest extends AbstractTest {
                 .unit("cm")
                 .expression(
                     new Expression()
-                        .functionId(Not.get().getId())
+                        .functionId(Not.get().getFunction().getId())
                         .addArgumentsItem(new Expression().functionId("entity")))
                 .addSuperCategoriesItem(category)
                 .id(UUID.randomUUID().toString())
