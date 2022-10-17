@@ -108,7 +108,9 @@ public class EntityDao {
         .repository(
             new Repository()
                 .id(entityDao.getRepository().getId())
-                .name(entityDao.getRepository().getName()));
+                .name(entityDao.getRepository().getName())
+                .organisation(
+                    new Organisation().id(entityDao.getRepository().getOrganisation().getId())));
 
     entity
         .author(entityVersionDao.getAuthor())
