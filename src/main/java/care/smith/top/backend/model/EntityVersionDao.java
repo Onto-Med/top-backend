@@ -48,8 +48,6 @@ public class EntityVersionDao {
 
   private DataType dataType;
 
-  private ItemType itemType;
-
   @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
   private RestrictionDao restriction;
 
@@ -73,7 +71,6 @@ public class EntityVersionDao {
       List<CodeDao> codes,
       String author,
       DataType dataType,
-      ItemType itemType,
       RestrictionDao restriction,
       ExpressionDao expression,
       String unit) {
@@ -85,7 +82,6 @@ public class EntityVersionDao {
     this.codes = codes;
     this.author = author;
     this.dataType = dataType;
-    this.itemType = itemType;
     this.restriction = restriction;
     this.expression = expression;
     this.unit = unit;
@@ -107,7 +103,6 @@ public class EntityVersionDao {
       codes = entity.getCodes().stream().map(CodeDao::new).collect(Collectors.toList());
     if (entity instanceof Phenotype) {
       dataType = ((Phenotype) entity).getDataType();
-      itemType = ((Phenotype) entity).getItemType();
       if (((Phenotype) entity).getRestriction() != null)
         restriction = new RestrictionDao(((Phenotype) entity).getRestriction());
       if (((Phenotype) entity).getExpression() != null)
@@ -146,11 +141,6 @@ public class EntityVersionDao {
 
   public EntityVersionDao id(@NotNull Long id) {
     this.id = id;
-    return this;
-  }
-
-  public EntityVersionDao itemType(ItemType itemType) {
-    this.itemType = itemType;
     return this;
   }
 
@@ -231,10 +221,6 @@ public class EntityVersionDao {
 
   public DataType getDataType() {
     return dataType;
-  }
-
-  public ItemType getItemType() {
-    return itemType;
   }
 
   public RestrictionDao getRestriction() {
@@ -319,7 +305,6 @@ public class EntityVersionDao {
     if (getAuthor() != null ? !getAuthor().equals(that.getAuthor()) : that.getAuthor() != null)
       return false;
     if (getDataType() != that.getDataType()) return false;
-    if (getItemType() != that.getItemType()) return false;
     if (getRestriction() != null
         ? !getRestriction().equals(that.getRestriction())
         : that.getRestriction() != null) return false;
@@ -343,7 +328,6 @@ public class EntityVersionDao {
     result = 31 * result + (getCodes() != null ? getCodes().hashCode() : 0);
     result = 31 * result + (getAuthor() != null ? getAuthor().hashCode() : 0);
     result = 31 * result + (getDataType() != null ? getDataType().hashCode() : 0);
-    result = 31 * result + (getItemType() != null ? getItemType().hashCode() : 0);
     result = 31 * result + (getRestriction() != null ? getRestriction().hashCode() : 0);
     result = 31 * result + (getExpression() != null ? getExpression().hashCode() : 0);
     result = 31 * result + (getUnit() != null ? getUnit().hashCode() : 0);
