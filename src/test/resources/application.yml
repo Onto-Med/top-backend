@@ -8,6 +8,8 @@ logging:
     root: INFO
 
 spring:
+  liquibase:
+    drop-first: true
   jpa:
     hibernate:
       dialect: org.hibernate.dialect.HSQLDialect

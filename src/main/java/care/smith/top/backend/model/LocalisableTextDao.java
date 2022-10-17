@@ -2,12 +2,15 @@ package care.smith.top.backend.model;
 
 import care.smith.top.model.LocalisableText;
 
+import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.validation.constraints.NotNull;
 
 @Embeddable
 public class LocalisableTextDao {
   private String lang;
+
+  @Column(length = 5000)
   private String text;
 
   public LocalisableTextDao() {}

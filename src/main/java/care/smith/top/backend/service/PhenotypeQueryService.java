@@ -65,7 +65,7 @@ public class PhenotypeQueryService {
     QueryDao query =
         queryRepository
             .findByRepository_OrganisationIdAndRepositoryIdAndId(
-                organisationId, repositoryId, queryId)
+                organisationId, repositoryId, queryId.toString())
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     queryRepository.delete(query);
 
@@ -89,7 +89,7 @@ public class PhenotypeQueryService {
         || data.getDataSources().isEmpty())
       throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE);
 
-    if (queryRepository.existsById(data.getId()))
+    if (queryRepository.existsById(data.getId().toString()))
       throw new ResponseStatusException(HttpStatus.CONFLICT);
 
     if (getConfigs(data.getDataSources()).isEmpty())
@@ -106,7 +106,7 @@ public class PhenotypeQueryService {
     OffsetDateTime createdAt = OffsetDateTime.now();
     QueryDao queryDao =
         queryRepository
-            .findById(queryId)
+            .findById(queryId.toString())
             .orElseThrow(
                 () ->
                     new NullPointerException(
@@ -181,7 +181,7 @@ public class PhenotypeQueryService {
     QueryDao query =
         queryRepository
             .findByRepository_OrganisationIdAndRepositoryIdAndId(
-                organisationId, repositoryId, queryId)
+                organisationId, repositoryId, queryId.toString())
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
     if (query.getResult() != null) return query.getResult().toApiModel();
@@ -230,9 +230,9 @@ public class PhenotypeQueryService {
   }
 
   @NotNull
-  private List<DataAdapterConfig> getConfigs(List<DataSource> dataSources) {
+  private List<DataAdapterConfig> getConfigs(List<String> dataSources) {
     return dataSources.stream()
-        .map(s -> getDataAdapterConfig(s.getId()).orElse(null))
+        .map(s -> getDataAdapterConfig(s).orElse(null))
         .filter(Objects::nonNull)
         .collect(Collectors.toList());
   }

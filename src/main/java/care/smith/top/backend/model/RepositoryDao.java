@@ -10,12 +10,15 @@ import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Entity(name = "repository")
 @EntityListeners(AuditingEntityListener.class)
 public class RepositoryDao {
   @Id private String id;
   private String name;
+
+  @Column(length = 5000)
   private String description;
 
   @Column(name = "is_primary")
@@ -34,13 +37,13 @@ public class RepositoryDao {
   public RepositoryDao() {}
 
   public RepositoryDao(String id, String name, String description, Boolean primary) {
-    this.id = id;
+    this.id = id == null ? UUID.randomUUID().toString() : id;
     this.name = name;
     this.description = description;
     this.primary = primary;
   }
 
-  public RepositoryDao(Repository repository) {
+  public RepositoryDao(@NotNull Repository repository) {
     id = repository.getId();
     name = repository.getName();
     description = repository.getDescription();
@@ -137,7 +140,6 @@ public class RepositoryDao {
     return name(data.getName()).description(data.getDescription()).primary(data.isPrimary());
   }
 
-  @NotNull
   public String getId() {
     return id;
   }

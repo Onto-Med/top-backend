@@ -2,7 +2,6 @@ package care.smith.top.backend.service;
 
 import care.smith.top.model.*;
 import org.jobrunr.storage.StorageProvider;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -11,7 +10,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalUnit;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -23,20 +21,12 @@ import static org.awaitility.Awaitility.await;
 
 @SpringBootTest
 class PhenotypeQueryServiceTest extends AbstractTest {
-  static List<DataSource> dataSources;
+  static List<String> dataSources = Arrays.asList("Test_Data_Source_1", "Test_Data_Source_2");
   @Autowired PhenotypeQueryService queryService;
   @Autowired StorageProvider storageProvider;
   @Autowired OrganisationService organisationService;
   @Autowired RepositoryService repositoryService;
   @Autowired EntityService entityService;
-
-  @BeforeAll
-  static void setup() {
-    dataSources =
-        Arrays.asList(
-            new DataSource().id("Test_Data_Source_1").title("Test Data Source 1"),
-            new DataSource().id("Test_Data_Source_2").title("Test Data Source 2"));
-  }
 
   @Test
   void executeQuery() {
@@ -55,7 +45,7 @@ class PhenotypeQueryServiceTest extends AbstractTest {
     Query query =
         new Query()
             .id(UUID.randomUUID())
-            .addDataSourcesItem(new DataSource().id(dataSources.get(0).getId()))
+            .addDataSourcesItem(dataSources.get(0))
             .addCriteriaItem(
                 new QueryCriterion()
                     .subjectId(phenotype1.getId())
@@ -81,8 +71,7 @@ class PhenotypeQueryServiceTest extends AbstractTest {
         .anySatisfy(
             q -> {
               assertThat(q.getId()).isEqualTo(query.getId());
-              assertThat(q.getDataSources())
-                  .anyMatch(d -> d.getId().equals(query.getDataSources().get(0).getId()));
+              assertThat(q.getDataSources()).anyMatch(d -> d.equals(query.getDataSources().get(0)));
               assertThat(q.getCriteria()).size().isEqualTo(1);
               assertThat(q.getCriteria().get(0))
                   .satisfies(
@@ -119,7 +108,7 @@ class PhenotypeQueryServiceTest extends AbstractTest {
 
   @Test
   void getDataAdapterConfig() {
-    String id = dataSources.get(0).getId();
+    String id = dataSources.get(0);
     assertThat(queryService.getDataAdapterConfig("invalid")).isNotPresent();
     assertThat(queryService.getDataAdapterConfig(id))
         .satisfies(
@@ -133,12 +122,15 @@ class PhenotypeQueryServiceTest extends AbstractTest {
   void getDataAdapterConfigs() {
     assertThat(queryService.getDataAdapterConfigs())
         .satisfiesExactly(
-            a -> assertThat(a.getId()).isEqualTo(dataSources.get(0).getId()),
-            a -> assertThat(a.getId()).isEqualTo(dataSources.get(1).getId()));
+            a -> assertThat(a.getId()).isEqualTo(dataSources.get(0)),
+            a -> assertThat(a.getId()).isEqualTo(dataSources.get(1)));
   }
 
   @Test
   void getDataSources() {
-    assertThat(queryService.getDataSources()).isEqualTo(dataSources);
+    assertThat(queryService.getDataSources())
+        .satisfiesExactly(
+            d -> assertThat(d.getId()).isEqualTo(dataSources.get(0)),
+            d -> assertThat(d.getId()).isEqualTo(dataSources.get(1)));
   }
 }

@@ -10,10 +10,10 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface QueryRepository extends JpaRepository<QueryDao, UUID> {
+public interface QueryRepository extends JpaRepository<QueryDao, String> {
   Page<QueryDao> findAllByRepository_OrganisationIdAndRepositoryIdOrderByIdDesc(
       String organisationId, String repositoryId, Pageable pagea);
 
   Optional<QueryDao> findByRepository_OrganisationIdAndRepositoryIdAndId(
-      String organisationId, String repositoryId, UUID id);
+      String organisationId, String repositoryId, String id);
 }

@@ -7,6 +7,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.Entity;
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 import java.time.OffsetDateTime;
 import java.util.HashSet;
 import java.util.List;
@@ -38,8 +39,7 @@ public class EntityVersionDao {
   @OneToOne(mappedBy = "previousVersion")
   private EntityVersionDao nextVersion;
 
-  @ManyToMany
-  private Set<EntityVersionDao> equivalentEntityVersions = null;
+  @ManyToMany private Set<EntityVersionDao> equivalentEntityVersions = null;
 
   @ManyToMany(mappedBy = "equivalentEntityVersions")
   private Set<EntityVersionDao> equivalentEntityVersionOf = null;
@@ -65,8 +65,8 @@ public class EntityVersionDao {
   public EntityVersionDao() {}
 
   public EntityVersionDao(
-      EntityDao entity,
-      Integer version,
+      @NotNull EntityDao entity,
+      @NotNull Integer version,
       List<LocalisableTextDao> titles,
       List<LocalisableTextDao> synonyms,
       List<LocalisableTextDao> descriptions,
@@ -91,7 +91,7 @@ public class EntityVersionDao {
     this.unit = unit;
   }
 
-  public EntityVersionDao(care.smith.top.model.Entity entity) {
+  public EntityVersionDao(@NotNull care.smith.top.model.Entity entity) {
     if (entity.getTitles() != null)
       titles =
           entity.getTitles().stream().map(LocalisableTextDao::new).collect(Collectors.toList());
@@ -144,7 +144,7 @@ public class EntityVersionDao {
     return id;
   }
 
-  public EntityVersionDao id(Long id) {
+  public EntityVersionDao id(@NotNull Long id) {
     this.id = id;
     return this;
   }
@@ -168,12 +168,12 @@ public class EntityVersionDao {
     return this;
   }
 
-  public EntityVersionDao entity(EntityDao entity) {
+  public EntityVersionDao entity(@NotNull EntityDao entity) {
     this.entity = entity;
     return this;
   }
 
-  public EntityVersionDao version(Integer version) {
+  public EntityVersionDao version(@NotNull Integer version) {
     this.version = version;
     return this;
   }
@@ -208,7 +208,8 @@ public class EntityVersionDao {
     return this;
   }
 
-  public EntityVersionDao equivalentEntityVersionOf(Set<EntityVersionDao> equivalentEntityVersionOf) {
+  public EntityVersionDao equivalentEntityVersionOf(
+      Set<EntityVersionDao> equivalentEntityVersionOf) {
     this.equivalentEntityVersionOf = equivalentEntityVersionOf;
     return this;
   }
@@ -308,11 +309,11 @@ public class EntityVersionDao {
     if (getTitles() != null ? !getTitles().equals(that.getTitles()) : that.getTitles() != null)
       return false;
     if (getSynonyms() != null
-      ? !getSynonyms().equals(that.getSynonyms())
-      : that.getSynonyms() != null) return false;
+        ? !getSynonyms().equals(that.getSynonyms())
+        : that.getSynonyms() != null) return false;
     if (getDescriptions() != null
-      ? !getDescriptions().equals(that.getDescriptions())
-      : that.getDescriptions() != null) return false;
+        ? !getDescriptions().equals(that.getDescriptions())
+        : that.getDescriptions() != null) return false;
     if (getCodes() != null ? !getCodes().equals(that.getCodes()) : that.getCodes() != null)
       return false;
     if (getAuthor() != null ? !getAuthor().equals(that.getAuthor()) : that.getAuthor() != null)
@@ -320,16 +321,16 @@ public class EntityVersionDao {
     if (getDataType() != that.getDataType()) return false;
     if (getItemType() != that.getItemType()) return false;
     if (getRestriction() != null
-      ? !getRestriction().equals(that.getRestriction())
-      : that.getRestriction() != null) return false;
+        ? !getRestriction().equals(that.getRestriction())
+        : that.getRestriction() != null) return false;
     if (getExpression() != null
-      ? !getExpression().equals(that.getExpression())
-      : that.getExpression() != null) return false;
+        ? !getExpression().equals(that.getExpression())
+        : that.getExpression() != null) return false;
     if (getUnit() != null ? !getUnit().equals(that.getUnit()) : that.getUnit() != null)
       return false;
     return getCreatedAt() != null
-      ? getCreatedAt().equals(that.getCreatedAt())
-      : that.getCreatedAt() == null;
+        ? getCreatedAt().equals(that.getCreatedAt())
+        : that.getCreatedAt() == null;
   }
 
   @Override
