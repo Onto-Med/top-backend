@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 
 @Entity(name = "query")
 public class QueryDao {
-  @Id private UUID id;
+  @Id private String id;
   private String name;
   @ElementCollection private List<String> dataSources = null;
   @ElementCollection private List<QueryCriterionDao> criteria = null;
@@ -26,7 +26,7 @@ public class QueryDao {
   public QueryDao() {}
 
   public QueryDao(
-      @NotNull UUID id,
+      @NotNull String id,
       String name,
       List<String> dataSources,
       List<QueryCriterionDao> criteria,
@@ -41,7 +41,7 @@ public class QueryDao {
   }
 
   public QueryDao(@NotNull Query query) {
-    this.id = query.getId();
+    this.id = query.getId().toString();
     this.name = query.getName();
     this.dataSources = query.getDataSources();
     if (query.getCriteria() != null)
@@ -52,11 +52,11 @@ public class QueryDao {
           query.getProjection().stream().map(ProjectionEntryDao::new).collect(Collectors.toList());
   }
 
-  public UUID getId() {
+  public String getId() {
     return id;
   }
 
-  public QueryDao id(@NotNull UUID id) {
+  public QueryDao id(@NotNull String id) {
     this.id = id;
     return this;
   }
@@ -117,7 +117,7 @@ public class QueryDao {
 
   public Query toApiModel() {
     Query query =
-        new Query().id(getId()).name(getName()).dataSources(new ArrayList<>(getDataSources()));
+        new Query().id(UUID.fromString(getId())).name(getName()).dataSources(new ArrayList<>(getDataSources()));
     if (getCriteria() != null)
       query.criteria(
           getCriteria().stream().map(QueryCriterionDao::toApiModel).collect(Collectors.toList()));

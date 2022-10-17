@@ -1,6 +1,6 @@
 databaseChangeLog:
 - changeSet:
-    id: 1665824396922-1
+    id: 1665990027334-1
     author: ChristophB (generated)
     changes:
     - createSequence:
@@ -8,7 +8,7 @@ databaseChangeLog:
         sequenceName: hibernate_sequence
         startValue: 1
 - changeSet:
-    id: 1665824396922-2
+    id: 1665990027334-2
     author: ChristophB (generated)
     changes:
     - createTable:
@@ -36,7 +36,7 @@ databaseChangeLog:
             type: VARCHAR(255)
         tableName: entity
 - changeSet:
-    id: 1665824396922-3
+    id: 1665990027334-3
     author: ChristophB (generated)
     changes:
     - createTable:
@@ -53,7 +53,7 @@ databaseChangeLog:
             type: VARCHAR(255)
         tableName: entity_super_entities
 - changeSet:
-    id: 1665824396922-4
+    id: 1665990027334-4
     author: ChristophB (generated)
     changes:
     - createTable:
@@ -102,7 +102,7 @@ databaseChangeLog:
             type: BIGINT
         tableName: entity_version
 - changeSet:
-    id: 1665824396922-5
+    id: 1665990027334-5
     author: ChristophB (generated)
     changes:
     - createTable:
@@ -139,7 +139,7 @@ databaseChangeLog:
             type: INT
         tableName: entity_version_codes
 - changeSet:
-    id: 1665824396922-6
+    id: 1665990027334-6
     author: ChristophB (generated)
     changes:
     - createTable:
@@ -166,7 +166,7 @@ databaseChangeLog:
             type: INT
         tableName: entity_version_descriptions
 - changeSet:
-    id: 1665824396922-7
+    id: 1665990027334-7
     author: ChristophB (generated)
     changes:
     - createTable:
@@ -187,7 +187,7 @@ databaseChangeLog:
             type: BIGINT
         tableName: entity_version_equivalent_entity_versions
 - changeSet:
-    id: 1665824396922-8
+    id: 1665990027334-8
     author: ChristophB (generated)
     changes:
     - createTable:
@@ -214,7 +214,7 @@ databaseChangeLog:
             type: INT
         tableName: entity_version_synonyms
 - changeSet:
-    id: 1665824396922-9
+    id: 1665990027334-9
     author: ChristophB (generated)
     changes:
     - createTable:
@@ -241,7 +241,7 @@ databaseChangeLog:
             type: INT
         tableName: entity_version_titles
 - changeSet:
-    id: 1665824396922-10
+    id: 1665990027334-10
     author: ChristophB (generated)
     changes:
     - createTable:
@@ -277,7 +277,7 @@ databaseChangeLog:
             type: VARCHAR(255)
         tableName: expression
 - changeSet:
-    id: 1665824396922-11
+    id: 1665990027334-11
     author: ChristophB (generated)
     changes:
     - createTable:
@@ -294,7 +294,7 @@ databaseChangeLog:
             type: BIGINT
         tableName: expression_arguments
 - changeSet:
-    id: 1665824396922-12
+    id: 1665990027334-12
     author: ChristophB (generated)
     changes:
     - createTable:
@@ -323,7 +323,7 @@ databaseChangeLog:
             type: VARCHAR(255)
         tableName: organisation
 - changeSet:
-    id: 1665824396922-13
+    id: 1665990027334-13
     author: ChristophB (generated)
     changes:
     - createTable:
@@ -334,7 +334,7 @@ databaseChangeLog:
               primaryKey: true
               primaryKeyName: queryPK
             name: id
-            type: BINARY(255)
+            type: VARCHAR(255)
         - column:
             name: name
             type: VARCHAR(255)
@@ -343,7 +343,7 @@ databaseChangeLog:
             type: VARCHAR(255)
         tableName: query
 - changeSet:
-    id: 1665824396922-14
+    id: 1665990027334-14
     author: ChristophB (generated)
     changes:
     - createTable:
@@ -352,7 +352,7 @@ databaseChangeLog:
             constraints:
               nullable: false
             name: query_id
-            type: BINARY(255)
+            type: VARCHAR(255)
         - column:
             name: date_time_restriction_id
             type: BIGINT
@@ -367,7 +367,7 @@ databaseChangeLog:
             type: VARCHAR(255)
         tableName: query_criteria
 - changeSet:
-    id: 1665824396922-15
+    id: 1665990027334-15
     author: ChristophB (generated)
     changes:
     - createTable:
@@ -376,13 +376,13 @@ databaseChangeLog:
             constraints:
               nullable: false
             name: query_id
-            type: BINARY(255)
+            type: VARCHAR(255)
         - column:
             name: data_sources
             type: VARCHAR(255)
         tableName: query_data_sources
 - changeSet:
-    id: 1665824396922-16
+    id: 1665990027334-16
     author: ChristophB (generated)
     changes:
     - createTable:
@@ -391,7 +391,7 @@ databaseChangeLog:
             constraints:
               nullable: false
             name: query_id
-            type: BINARY(255)
+            type: VARCHAR(255)
         - column:
             name: date_time_restriction
             type: BLOB
@@ -403,7 +403,7 @@ databaseChangeLog:
             type: VARCHAR(255)
         tableName: query_projection
 - changeSet:
-    id: 1665824396922-17
+    id: 1665990027334-17
     author: ChristophB (generated)
     changes:
     - createTable:
@@ -435,10 +435,10 @@ databaseChangeLog:
             constraints:
               nullable: false
             name: query_id
-            type: BINARY(255)
+            type: VARCHAR(255)
         tableName: query_result
 - changeSet:
-    id: 1665824396922-18
+    id: 1665990027334-18
     author: ChristophB (generated)
     changes:
     - createTable:
@@ -470,7 +470,7 @@ databaseChangeLog:
             type: VARCHAR(255)
         tableName: repository
 - changeSet:
-    id: 1665824396922-19
+    id: 1665990027334-19
     author: ChristophB (generated)
     changes:
     - createTable:
@@ -514,7 +514,7 @@ databaseChangeLog:
             type: INT
         tableName: restriction
 - changeSet:
-    id: 1665824396922-20
+    id: 1665990027334-20
     author: ChristophB (generated)
     changes:
     - createTable:
@@ -529,7 +529,7 @@ databaseChangeLog:
             type: BOOLEAN
         tableName: restriction_boolean_values
 - changeSet:
-    id: 1665824396922-21
+    id: 1665990027334-21
     author: ChristophB (generated)
     changes:
     - createTable:
@@ -544,7 +544,7 @@ databaseChangeLog:
             type: TIMESTAMP
         tableName: restriction_date_time_values
 - changeSet:
-    id: 1665824396922-22
+    id: 1665990027334-22
     author: ChristophB (generated)
     changes:
     - createTable:
@@ -559,7 +559,7 @@ databaseChangeLog:
             type: numeric(19, 2)
         tableName: restriction_number_values
 - changeSet:
-    id: 1665824396922-23
+    id: 1665990027334-23
     author: ChristophB (generated)
     changes:
     - createTable:
@@ -574,7 +574,7 @@ databaseChangeLog:
             type: VARCHAR(255)
         tableName: restriction_string_values
 - changeSet:
-    id: 1665824396922-24
+    id: 1665990027334-24
     author: ChristophB (generated)
     changes:
     - addUniqueConstraint:
@@ -582,7 +582,7 @@ databaseChangeLog:
         constraintName: UK_f3ag2cmf9imhjpkp9y4x8r6l8
         tableName: expression_arguments
 - changeSet:
-    id: 1665824396922-25
+    id: 1665990027334-25
     author: ChristophB (generated)
     changes:
     - addUniqueConstraint:
@@ -590,7 +590,7 @@ databaseChangeLog:
         constraintName: UK_mlp3vfxytdcx2n5jea87ahx10
         tableName: query_result
 - changeSet:
-    id: 1665824396922-26
+    id: 1665990027334-26
     author: ChristophB (generated)
     changes:
     - addForeignKeyConstraint:
@@ -603,7 +603,7 @@ databaseChangeLog:
         referencedTableName: organisation
         validate: true
 - changeSet:
-    id: 1665824396922-27
+    id: 1665990027334-27
     author: ChristophB (generated)
     changes:
     - addForeignKeyConstraint:
@@ -616,7 +616,7 @@ databaseChangeLog:
         referencedTableName: entity
         validate: true
 - changeSet:
-    id: 1665824396922-28
+    id: 1665990027334-28
     author: ChristophB (generated)
     changes:
     - addForeignKeyConstraint:
@@ -629,7 +629,7 @@ databaseChangeLog:
         referencedTableName: restriction
         validate: true
 - changeSet:
-    id: 1665824396922-29
+    id: 1665990027334-29
     author: ChristophB (generated)
     changes:
     - addForeignKeyConstraint:
@@ -642,7 +642,7 @@ databaseChangeLog:
         referencedTableName: organisation
         validate: true
 - changeSet:
-    id: 1665824396922-30
+    id: 1665990027334-30
     author: ChristophB (generated)
     changes:
     - addForeignKeyConstraint:
@@ -655,7 +655,7 @@ databaseChangeLog:
         referencedTableName: restriction
         validate: true
 - changeSet:
-    id: 1665824396922-31
+    id: 1665990027334-31
     author: ChristophB (generated)
     changes:
     - addForeignKeyConstraint:
@@ -668,7 +668,7 @@ databaseChangeLog:
         referencedTableName: expression
         validate: true
 - changeSet:
-    id: 1665824396922-32
+    id: 1665990027334-32
     author: ChristophB (generated)
     changes:
     - addForeignKeyConstraint:
@@ -681,7 +681,7 @@ databaseChangeLog:
         referencedTableName: expression
         validate: true
 - changeSet:
-    id: 1665824396922-33
+    id: 1665990027334-33
     author: ChristophB (generated)
     changes:
     - addForeignKeyConstraint:
@@ -694,7 +694,7 @@ databaseChangeLog:
         referencedTableName: entity
         validate: true
 - changeSet:
-    id: 1665824396922-34
+    id: 1665990027334-34
     author: ChristophB (generated)
     changes:
     - addForeignKeyConstraint:
@@ -707,7 +707,7 @@ databaseChangeLog:
         referencedTableName: entity
         validate: true
 - changeSet:
-    id: 1665824396922-35
+    id: 1665990027334-35
     author: ChristophB (generated)
     changes:
     - addForeignKeyConstraint:
@@ -720,7 +720,7 @@ databaseChangeLog:
         referencedTableName: entity
         validate: true
 - changeSet:
-    id: 1665824396922-36
+    id: 1665990027334-36
     author: ChristophB (generated)
     changes:
     - addForeignKeyConstraint:
@@ -733,7 +733,7 @@ databaseChangeLog:
         referencedTableName: repository
         validate: true
 - changeSet:
-    id: 1665824396922-37
+    id: 1665990027334-37
     author: ChristophB (generated)
     changes:
     - addForeignKeyConstraint:
@@ -746,7 +746,7 @@ databaseChangeLog:
         referencedTableName: expression
         validate: true
 - changeSet:
-    id: 1665824396922-38
+    id: 1665990027334-38
     author: ChristophB (generated)
     changes:
     - addForeignKeyConstraint:
@@ -759,7 +759,7 @@ databaseChangeLog:
         referencedTableName: query
         validate: true
 - changeSet:
-    id: 1665824396922-39
+    id: 1665990027334-39
     author: ChristophB (generated)
     changes:
     - addForeignKeyConstraint:
@@ -772,7 +772,7 @@ databaseChangeLog:
         referencedTableName: entity_version
         validate: true
 - changeSet:
-    id: 1665824396922-40
+    id: 1665990027334-40
     author: ChristophB (generated)
     changes:
     - addForeignKeyConstraint:
@@ -785,7 +785,7 @@ databaseChangeLog:
         referencedTableName: entity_version
         validate: true
 - changeSet:
-    id: 1665824396922-41
+    id: 1665990027334-41
     author: ChristophB (generated)
     changes:
     - addForeignKeyConstraint:
@@ -798,7 +798,7 @@ databaseChangeLog:
         referencedTableName: restriction
         validate: true
 - changeSet:
-    id: 1665824396922-42
+    id: 1665990027334-42
     author: ChristophB (generated)
     changes:
     - addForeignKeyConstraint:
@@ -811,7 +811,7 @@ databaseChangeLog:
         referencedTableName: entity_version
         validate: true
 - changeSet:
-    id: 1665824396922-43
+    id: 1665990027334-43
     author: ChristophB (generated)
     changes:
     - addForeignKeyConstraint:
@@ -824,7 +824,7 @@ databaseChangeLog:
         referencedTableName: query
         validate: true
 - changeSet:
-    id: 1665824396922-44
+    id: 1665990027334-44
     author: ChristophB (generated)
     changes:
     - addForeignKeyConstraint:
@@ -837,7 +837,7 @@ databaseChangeLog:
         referencedTableName: entity_version
         validate: true
 - changeSet:
-    id: 1665824396922-45
+    id: 1665990027334-45
     author: ChristophB (generated)
     changes:
     - addForeignKeyConstraint:
@@ -850,7 +850,7 @@ databaseChangeLog:
         referencedTableName: restriction
         validate: true
 - changeSet:
-    id: 1665824396922-46
+    id: 1665990027334-46
     author: ChristophB (generated)
     changes:
     - addForeignKeyConstraint:
@@ -863,7 +863,7 @@ databaseChangeLog:
         referencedTableName: query
         validate: true
 - changeSet:
-    id: 1665824396922-47
+    id: 1665990027334-47
     author: ChristophB (generated)
     changes:
     - addForeignKeyConstraint:
@@ -876,7 +876,7 @@ databaseChangeLog:
         referencedTableName: restriction
         validate: true
 - changeSet:
-    id: 1665824396922-48
+    id: 1665990027334-48
     author: ChristophB (generated)
     changes:
     - addForeignKeyConstraint:
@@ -889,7 +889,7 @@ databaseChangeLog:
         referencedTableName: query
         validate: true
 - changeSet:
-    id: 1665824396922-49
+    id: 1665990027334-49
     author: ChristophB (generated)
     changes:
     - addForeignKeyConstraint:
@@ -902,7 +902,7 @@ databaseChangeLog:
         referencedTableName: repository
         validate: true
 - changeSet:
-    id: 1665824396922-50
+    id: 1665990027334-50
     author: ChristophB (generated)
     changes:
     - addForeignKeyConstraint:
@@ -915,7 +915,7 @@ databaseChangeLog:
         referencedTableName: entity_version
         validate: true
 - changeSet:
-    id: 1665824396922-51
+    id: 1665990027334-51
     author: ChristophB (generated)
     changes:
     - addForeignKeyConstraint:
@@ -928,7 +928,7 @@ databaseChangeLog:
         referencedTableName: restriction
         validate: true
 - changeSet:
-    id: 1665824396922-52
+    id: 1665990027334-52
     author: ChristophB (generated)
     changes:
     - addForeignKeyConstraint:
@@ -941,7 +941,7 @@ databaseChangeLog:
         referencedTableName: entity_version
         validate: true
 - changeSet:
-    id: 1665824396922-53
+    id: 1665990027334-53
     author: ChristophB (generated)
     changes:
     - addForeignKeyConstraint:
@@ -954,7 +954,7 @@ databaseChangeLog:
         referencedTableName: entity_version
         validate: true
 - changeSet:
-    id: 1665824396922-54
+    id: 1665990027334-54
     author: ChristophB (generated)
     changes:
     - addForeignKeyConstraint:

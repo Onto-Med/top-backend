@@ -42,7 +42,7 @@ To generate new changelogs, a local HSQL database is used to reflect the state p
 4. Run the following command to generate new changelogs:
    ```sh
    mvn liquibase:diff \
-     -Dliquibase.diffChangeLogFile=src/main/resources/db/changelog/<year>/<month>/<day>-<index>-<changelog name>.yaml
+     -Dliquibase.diffChangeLogFile=src/main/resources/db/changelog/changesets/<timestamp>-<changelog name>.yaml
    ```
    You can call `set user.name=<change author>` before above command to modify the changelog author name.
 5. Review the generated changelog file and add it to [src/main/resources/db/changelog/db.changelog-master.yaml](src/main/resources/db/changelog/db.changelog-master.yaml).

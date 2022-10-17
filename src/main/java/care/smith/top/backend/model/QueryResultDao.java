@@ -7,6 +7,7 @@ import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.time.OffsetDateTime;
 import java.util.Objects;
+import java.util.UUID;
 
 @Entity(name = "query_result")
 public class QueryResultDao {
@@ -104,7 +105,7 @@ public class QueryResultDao {
 
   public QueryResult toApiModel() {
     return new QueryResult()
-        .id(getQuery().getId())
+        .id(UUID.fromString(getQuery().getId()))
         .createdAt(getCreatedAt())
         .count(getCount())
         .finishedAt(getFinishedAt())
