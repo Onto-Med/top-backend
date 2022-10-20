@@ -19,12 +19,24 @@ public class PhraseApiDelegateImpl implements PhraseApiDelegate {
     @Autowired PhraseService phraseService;
 
     @Override
-    public ResponseEntity<List<Phrase>> getPhrases(List<String> include, String id, String text, String conceptId) {
-        if (conceptId != null && Stream.of(include, id, text).allMatch(Objects::isNull)) {
-            return new ResponseEntity<>(phraseService.getPhrasesByConcept(conceptId), HttpStatus.OK);
-        } else if (text != null && Stream.of(include, id, conceptId).allMatch(Objects::isNull)) {
-            return new ResponseEntity<>(phraseService.getPhraseByText(text), HttpStatus.OK);
-        }
-        return new ResponseEntity<>(List.of(), HttpStatus.OK);
+    public ResponseEntity<List<Phrase>> getPhraseByConceptId(String conceptId, List<String> include, String name, Integer page) {
+        //ToDo: add filtering by phraseText --> name
+        return new ResponseEntity<>(phraseService.getPhrasesByConcept(conceptId), HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<List<Phrase>> getPhraseByDocumentId(String documentId, List<String> include, String name, Integer page) {
+        return PhraseApiDelegate.super.getPhraseByDocumentId(documentId, include, name, page);
+    }
+
+    @Override
+    public ResponseEntity<Phrase> getPhraseById(String phraseId, List<String> include) {
+        return PhraseApiDelegate.super.getPhraseById(phraseId, include);
+    }
+
+    @Override
+    public ResponseEntity<List<Phrase>> getPhrases(String text, String conceptText) {
+        //ToDo: add filtering by conceptText
+        return new ResponseEntity<>(phraseService.getPhraseByText(text), HttpStatus.OK);
     }
 }

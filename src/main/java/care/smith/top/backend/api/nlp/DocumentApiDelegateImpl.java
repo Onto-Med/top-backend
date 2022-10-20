@@ -16,14 +16,22 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
     @Autowired DocumentService documentService;
 
     @Override
-    public ResponseEntity<List<Document>> getDocuments(List<String> include, String id, Integer page, Integer pageSize) {
-        if (page != null && pageSize != null) {
-            return getDocumentsByPage(include, page, pageSize);
-        }
-        return new ResponseEntity<>(documentService.getDocuments(include), HttpStatus.OK);
+    public ResponseEntity<List<Document>> getDocumentByConceptId(String conceptId, List<String> include, String name, Integer page) {
+        return new ResponseEntity<>(documentService.getDocumentsForConcept(conceptId), HttpStatus.OK);
     }
 
-    private ResponseEntity<List<Document>> getDocumentsByPage(List<String> include, int page, int pageSize) {
-        return new ResponseEntity<>(documentService.getDocumentsByPage(include, page, pageSize), HttpStatus.OK);
+    @Override
+    public ResponseEntity<Document> getDocumentById(String documentId, List<String> include) {
+        return new ResponseEntity<>(documentService.getDocumentById(documentId), HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<List<Document>> getDocumentByPhraseId(String phraseId, List<String> include, String name, Integer page) {
+        return DocumentApiDelegate.super.getDocumentByPhraseId(phraseId, include, name, page);
+    }
+
+    @Override
+    public ResponseEntity<List<Document>> getDocuments(List<String> include, String phraseText, String conceptText, String phraseId, String conceptId) {
+        return DocumentApiDelegate.super.getDocuments(include, phraseText, conceptText, phraseId, conceptId);
     }
 }

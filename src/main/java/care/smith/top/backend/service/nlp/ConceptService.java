@@ -46,5 +46,5 @@ public class ConceptService implements ContentService {
 
     private final Function<ConceptEntity, Concept> conceptEntityMapper = conceptEntity -> new Concept()
             .id(conceptEntity.conceptId())
-            .text(String.join(", ", conceptEntity.lables()));
+            .labels(String.join(", ", conceptEntity.lables()));
 }
