@@ -2,13 +2,11 @@ package care.smith.top.backend.model;
 
 import care.smith.top.model.*;
 
-import javax.persistence.*;
 import javax.persistence.Entity;
-import javax.validation.Valid;
+import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -234,23 +232,23 @@ public class RestrictionDao {
   public Restriction toApiModel() {
     Restriction restriction;
     if (DataType.BOOLEAN.equals(dataType)) {
-      restriction = new BooleanRestriction().values(booleanValues);
+      restriction = new BooleanRestriction().values(getBooleanValues());
     } else if (DataType.DATE_TIME.equals(dataType)) {
       restriction = new DateTimeRestriction().minOperator(minOperator).maxOperator(maxOperator);
       if (minOperator != null || maxOperator != null)
         ((DateTimeRestriction) restriction)
             .addValuesItem(minimumDateTimeValue)
             .addValuesItem(maximumDateTimeValue);
-      else ((DateTimeRestriction) restriction).values(dateTimeValues);
+      else ((DateTimeRestriction) restriction).values(getDateTimeValues());
     } else if (DataType.NUMBER.equals(dataType)) {
       restriction = new NumberRestriction().minOperator(minOperator).maxOperator(maxOperator);
       if (minOperator != null || maxOperator != null)
         ((NumberRestriction) restriction)
             .addValuesItem(minimumNumberValue)
             .addValuesItem(maximumNumberValue);
-      else ((NumberRestriction) restriction).values(numberValues);
+      else ((NumberRestriction) restriction).values(getNumberValues());
     } else if (DataType.STRING.equals(dataType)) {
-      restriction = new StringRestriction().values(stringValues);
+      restriction = new StringRestriction().values(getStringValues());
     } else {
       restriction = new Restriction();
     }
@@ -354,19 +352,19 @@ public class RestrictionDao {
   }
 
   public List<String> getStringValues() {
-    return stringValues;
+    return new ArrayList<>(stringValues);
   }
 
   public List<BigDecimal> getNumberValues() {
-    return numberValues;
+    return new ArrayList<>(numberValues);
   }
 
   public List<LocalDateTime> getDateTimeValues() {
-    return dateTimeValues;
+    return new ArrayList<>(dateTimeValues);
   }
 
   public List<Boolean> getBooleanValues() {
-    return booleanValues;
+    return new ArrayList<>(booleanValues);
   }
 
   public RestrictionOperator getMinOperator() {
