@@ -352,19 +352,19 @@ public class RestrictionDao {
   }
 
   public List<String> getStringValues() {
-    return new ArrayList<>(stringValues);
+    return stringValues == null ? null : new ArrayList<>(stringValues);
   }
 
   public List<BigDecimal> getNumberValues() {
-    return new ArrayList<>(numberValues);
+    return numberValues == null ? null : new ArrayList<>(numberValues);
   }
 
   public List<LocalDateTime> getDateTimeValues() {
-    return new ArrayList<>(dateTimeValues);
+    return dateTimeValues == null ? null : new ArrayList<>(dateTimeValues);
   }
 
   public List<Boolean> getBooleanValues() {
-    return new ArrayList<>(booleanValues);
+    return booleanValues == null ? null : new ArrayList<>(booleanValues);
   }
 
   public RestrictionOperator getMinOperator() {
