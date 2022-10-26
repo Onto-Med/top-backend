@@ -134,15 +134,15 @@ public class PhenotypeQueryService {
     // TODO: only one data source supported yet
     DataAdapterConfig config = configs.stream().findFirst().orElseThrow();
 
-    // TODO: top-phenotypic-query does not derive adaptor type
-    DataAdapter adapter = null;
-    if (config.getConnectionAttribute("url") != null) adapter = new SQLAdapter(config);
-    if (config.getConnectionAttribute("endpoint") != null) adapter = new FHIRAdapter(config);
-    if (adapter == null) throw new NullPointerException("Adaptor type could not be derived.");
-
     QueryResultDao result;
     if (executeQueries) {
       try {
+        // TODO: top-phenotypic-query does not derive adaptor type
+        DataAdapter adapter = null;
+        if (config.getConnectionAttribute("url") != null) adapter = new SQLAdapter(config);
+        if (config.getConnectionAttribute("endpoint") != null) adapter = new FHIRAdapter(config);
+        if (adapter == null) throw new NullPointerException("Adaptor type could not be derived.");
+
         // TODO: provide Writer to top-phenotypic-query and let it store the result set
         PhenotypeFinder finder = new PhenotypeFinder(query, phenotypes, adapter);
         ResultSet rs = finder.execute();
