@@ -154,7 +154,7 @@ public class PhenotypeQueryService {
         e.printStackTrace();
         result =
             new QueryResultDao(queryDao, createdAt, null, OffsetDateTime.now(), QueryState.FAILED)
-                .message(e.getMessage());
+                .message("Cause: " + (e.getMessage() != null ? e.getMessage() : e.toString()));
       }
     } else {
       result =
