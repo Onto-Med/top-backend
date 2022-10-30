@@ -16,8 +16,8 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
     @Autowired DocumentService documentService;
 
     @Override
-    public ResponseEntity<List<Document>> getDocumentByConceptId(String conceptId, List<String> include, String name, Integer page) {
-        return new ResponseEntity<>(documentService.getDocumentsForConcept(conceptId), HttpStatus.OK);
+    public ResponseEntity<List<Document>> getDocumentByConceptId(String conceptId, Boolean idOnly, List<String> include, String name, Integer page) {
+        return new ResponseEntity<>(documentService.getDocumentsForConcept(conceptId, idOnly), HttpStatus.OK);
     }
 
     @Override

@@ -57,11 +57,12 @@ public class DocumentService implements ContentService {
                 .orElse(null);
     }
 
-    public List<Document> getDocumentsForConcept(String conceptId) {
+    @Cacheable("conceptDocumentIds")
+    public List<Document> getDocumentsForConcept(String conceptId, Boolean idOnly) {
         return documentRepository
                 .findAll(documentsForConcept(conceptId))
                 .stream()
-                .map(documentEntityMapper)
+                .map(idOnly ? documentEntityMapperIdOnly : documentEntityMapper)
                 .collect(Collectors.toList());
     }
 
@@ -115,5 +116,8 @@ public class DocumentService implements ContentService {
                     .map(PhraseEntity::phraseText)
                     .sorted()
                     .collect(Collectors.toList()));
+
+    private final Function<DocumentEntity, Document> documentEntityMapperIdOnly = documentEntity -> new Document()
+            .id(documentEntity.documentId());
 
 }
