@@ -8,10 +8,10 @@ import care.smith.top.backend.repository.nlp.DocumentRepository;
 import org.neo4j.cypherdsl.core.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -25,30 +25,6 @@ public class DocumentService implements ContentService {
     public long count() { return documentRepository.count(); }
 
 
-//    @Cacheable("documents")
-//    public List<Document> getDocuments(List<String> docIds) {
-//        if (docIds == null || docIds.size() == 0) {
-//            return documentRepository
-//                    .findAll()
-//                    .stream()
-//                    .map(documentEntityMapper)
-//                    .collect(Collectors.toList());
-//        }
-//        return documentRepository
-//                .findAll(documentWithId(docIds))
-//                .stream()
-//                .map(documentEntityMapper)
-//                .collect(Collectors.toList());
-//    }
-//
-//    public List<Document> getDocumentsByPage(List<String> include, int page, int pageSize) {
-//        return documentRepository
-//                .findAll(PageRequest.of(page, pageSize))// use pageing together with "ongoing and return"
-//                .stream()
-//                .map(documentEntityMapper)
-//                .collect(Collectors.toList());
-//    }
-
     public Document getDocumentById(String documentId) {
         //ToDo: I don't want to return 'null' -> rather some form of 'Empty'-Document
         return documentRepository
@@ -58,9 +34,12 @@ public class DocumentService implements ContentService {
     }
 
     @Cacheable("conceptDocumentIds")
-    public List<Document> getDocumentsForConcept(String conceptId, Boolean idOnly) {
+    public List<Document> getDocumentsForConcepts(Set<String> conceptIds, Boolean idOnly) {
+        if (conceptIds.size() == 0) {
+            return List.of();
+        }
         return documentRepository
-                .findAll(documentsForConcept(conceptId))
+                .findAll(documentsForConceptsUnion(conceptIds))
                 .stream()
                 .map(idOnly ? documentEntityMapperIdOnly : documentEntityMapper)
                 .collect(Collectors.toList());
@@ -76,36 +55,28 @@ public class DocumentService implements ContentService {
                 .build();
     }
 
-    static Statement documentsForConcept(String conceptId) {
-        Node concept = Cypher.node("Concept")
-                .withProperties("conceptId", Cypher.literalOf(conceptId)).named("concept");
+    static Statement documentsForConceptsUnion(Set<String> conceptIds) {
         Node document = Cypher.node("Document").named("document");
         Node phrase = Cypher.node("Phrase").named("phrase");
+        Node concept = Cypher.node("Concept").named("concept");
 
         return Cypher
                 .match(
                         concept.relationshipFrom(phrase, "IN_CONCEPT"),
                         document.relationshipTo(phrase, "HAS_PHRASE")
                 )
+                .where(concept.property("conceptId").in(someIdList(conceptIds)))
                 .returning(document)
                 .build();
-
     }
-//    static Statement documentWithId(List<String> docIds) {
-//        Node document = Cypher.node("Document").named("document");
-//        Property docIdProp = document.property("docId");
-//
-//        Expression idList = Cypher.listOf(docIds
-//                .stream()
-//                .map(id -> docIdProp.eq(Cypher.literalOf(id)))
-//                .collect(Collectors.toList())
-//        );
-//
-//        return Cypher.match(document)
-//                .where(idList.asCondition())
-//                .returning(document)
-//                .build();
-//    }
+
+    static Expression someIdList(Set<String> someIds) {
+        return Cypher.listOf(someIds
+                .stream()
+                .map(Cypher::literalOf)
+                .collect(Collectors.toList())
+        );
+    }
 
     private final Function<DocumentEntity, Document> documentEntityMapper = documentEntity -> new Document()
             .id(documentEntity.documentId())

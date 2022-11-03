@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class DocumentApiDelegateImpl implements DocumentApiDelegate {
@@ -16,8 +17,8 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
     @Autowired DocumentService documentService;
 
     @Override
-    public ResponseEntity<List<Document>> getDocumentByConceptId(String conceptId, Boolean idOnly, List<String> include, String name, Integer page) {
-        return new ResponseEntity<>(documentService.getDocumentsForConcept(conceptId, idOnly), HttpStatus.OK);
+    public ResponseEntity<List<Document>> getDocumentsByConceptIds(List<String> conceptIds, Boolean idOnly, List<String> include, String name, Integer page) {
+        return new ResponseEntity<>(documentService.getDocumentsForConcepts(Set.copyOf(conceptIds), idOnly), HttpStatus.OK);
     }
 
     @Override
