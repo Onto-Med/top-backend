@@ -2,6 +2,7 @@ package care.smith.top.backend.model;
 
 import care.smith.top.model.Organisation;
 import care.smith.top.model.Repository;
+import care.smith.top.model.RepositoryType;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -21,6 +22,8 @@ public class RepositoryDao {
   @Column(name = "is_primary")
   private Boolean primary = false;
 
+  private RepositoryType repositoryType;
+
   @CreatedDate
   @Column(updatable = false)
   private OffsetDateTime createdAt;
@@ -33,11 +36,13 @@ public class RepositoryDao {
 
   public RepositoryDao() {}
 
-  public RepositoryDao(String id, String name, String description, Boolean primary) {
+  public RepositoryDao(
+      String id, String name, String description, Boolean primary, RepositoryType repositoryType) {
     this.id = id;
     this.name = name;
     this.description = description;
     this.primary = primary;
+    this.repositoryType = repositoryType;
   }
 
   public RepositoryDao(Repository repository) {
@@ -45,6 +50,7 @@ public class RepositoryDao {
     name = repository.getName();
     description = repository.getDescription();
     primary = repository.isPrimary();
+    repositoryType = repository.getRepositoryType();
   }
 
   public RepositoryDao id(@NotNull String id) {
@@ -64,6 +70,11 @@ public class RepositoryDao {
 
   public RepositoryDao primary(Boolean primary) {
     this.primary = primary;
+    return this;
+  }
+
+  public RepositoryDao repositoryType(RepositoryType repositoryType) {
+    this.repositoryType = repositoryType;
     return this;
   }
 
@@ -102,6 +113,9 @@ public class RepositoryDao {
         : that.getDescription() != null) return false;
     if (getPrimary() != null ? !getPrimary().equals(that.getPrimary()) : that.getPrimary() != null)
       return false;
+    if (getRepositoryType() != null
+        ? !getRepositoryType().equals(that.getRepositoryType())
+        : that.getRepositoryType() != null) return false;
     return getOrganisation() != null
         ? getOrganisation().equals(that.getOrganisation())
         : that.getOrganisation() == null;
@@ -113,6 +127,7 @@ public class RepositoryDao {
     result = 31 * result + (getName() != null ? getName().hashCode() : 0);
     result = 31 * result + (getDescription() != null ? getDescription().hashCode() : 0);
     result = 31 * result + (getPrimary() != null ? getPrimary().hashCode() : 0);
+    result = 31 * result + (getRepositoryType() != null ? getRepositoryType().hashCode() : 0);
     result = 31 * result + (getOrganisation() != null ? getOrganisation().hashCode() : 0);
     return result;
   }
@@ -125,7 +140,8 @@ public class RepositoryDao {
             .description(description)
             .createdAt(createdAt)
             .updatedAt(updatedAt)
-            .primary(primary);
+            .primary(primary)
+            .repositoryType(repositoryType);
     if (organisation != null)
       repository.organisation(
           new Organisation().id(organisation.getId()).name(organisation.getName()));
@@ -152,6 +168,10 @@ public class RepositoryDao {
 
   public Boolean getPrimary() {
     return primary;
+  }
+
+  public RepositoryType getRepositoryType() {
+    return repositoryType;
   }
 
   public OffsetDateTime getCreatedAt() {

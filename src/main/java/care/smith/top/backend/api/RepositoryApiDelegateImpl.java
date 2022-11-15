@@ -2,6 +2,7 @@ package care.smith.top.backend.api;
 
 import care.smith.top.model.Repository;
 import care.smith.top.backend.service.RepositoryService;
+import care.smith.top.model.RepositoryType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -36,16 +37,26 @@ public class RepositoryApiDelegateImpl implements RepositoryApiDelegate {
 
   @Override
   public ResponseEntity<List<Repository>> getRepositories(
-      List<String> include, String name, Boolean primary, Integer page) {
+      List<String> include,
+      String name,
+      Boolean primary,
+      RepositoryType repositoryType,
+      Integer page) {
     return new ResponseEntity<>(
-        repositoryService.getRepositories(include, name, primary, page), HttpStatus.OK);
+        repositoryService.getRepositories(include, name, primary, repositoryType, page),
+        HttpStatus.OK);
   }
 
   @Override
   public ResponseEntity<List<Repository>> getRepositoriesByOrganisationId(
-      String organisationId, List<String> include, String name, Integer page) {
+      String organisationId,
+      List<String> include,
+      String name,
+      RepositoryType repositoryType,
+      Integer page) {
     return new ResponseEntity<>(
-        repositoryService.getRepositoriesByOrganisationId(organisationId, include, name, page),
+        repositoryService.getRepositoriesByOrganisationId(
+            organisationId, include, name, repositoryType, page),
         HttpStatus.OK);
   }
 

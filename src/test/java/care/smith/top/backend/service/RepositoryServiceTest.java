@@ -1,10 +1,7 @@
 package care.smith.top.backend.service;
 
 import care.smith.top.backend.model.RepositoryDao;
-import care.smith.top.model.Entity;
-import care.smith.top.model.EntityType;
-import care.smith.top.model.Organisation;
-import care.smith.top.model.Repository;
+import care.smith.top.model.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
@@ -17,7 +14,11 @@ class RepositoryServiceTest extends AbstractTest {
     Organisation organisation =
         organisationService.createOrganisation(new Organisation().id("org"));
     Repository repository =
-        new Repository().id("repo").name("Repository").description("Some description");
+        new Repository()
+            .id("repo")
+            .name("Repository")
+            .description("Some description")
+            .repositoryType(RepositoryType.PHENOTYPE_REPOSITORY);
 
     assertThatThrownBy(
             () -> repositoryService.createRepository("does not exists", repository, null))
@@ -31,6 +32,8 @@ class RepositoryServiceTest extends AbstractTest {
               assertThat(r.getId()).isEqualTo(repository.getId());
               assertThat(r.getName()).isEqualTo(repository.getName());
               assertThat(r.getDescription()).isEqualTo(repository.getDescription());
+              assertThat(r.isPrimary()).isFalse();
+              assertThat(r.getRepositoryType()).isEqualTo(repository.getRepositoryType());
               assertThat(r.getCreatedAt()).isNotNull();
               assertThat(r.getUpdatedAt()).isNotNull();
               assertThat(r.getOrganisation())
@@ -200,24 +203,24 @@ class RepositoryServiceTest extends AbstractTest {
     repositoryService.createRepository(
         organisation2.getId(), new Repository().id("repo_2").name("Another repository"), null);
 
-    assertThat(repositoryService.getRepositories(null, "another", null, 1))
+    assertThat(repositoryService.getRepositories(null, "another", null, null, 1))
         .isNotEmpty()
         .size()
         .isEqualTo(1);
-    assertThat(repositoryService.getRepositories(null, "repo", null, 1))
+    assertThat(repositoryService.getRepositories(null, "repo", null, null, 1))
         .isNotEmpty()
         .size()
         .isEqualTo(2);
-    assertThat(repositoryService.getRepositories(null, "something else", null, 1)).isEmpty();
-    assertThat(repositoryService.getRepositories(null, null, true, 1))
+    assertThat(repositoryService.getRepositories(null, "something else", null, null, 1)).isEmpty();
+    assertThat(repositoryService.getRepositories(null, null, true, null, 1))
         .isNotEmpty()
         .size()
         .isEqualTo(1);
-    assertThat(repositoryService.getRepositories(null, null, false, 1))
+    assertThat(repositoryService.getRepositories(null, null, false, null, 1))
         .isNotEmpty()
         .size()
         .isEqualTo(1);
-    assertThat(repositoryService.getRepositories(null, null, null, 1))
+    assertThat(repositoryService.getRepositories(null, null, null, null, 1))
         .isNotEmpty()
         .size()
         .isEqualTo(2);
@@ -231,7 +234,12 @@ class RepositoryServiceTest extends AbstractTest {
         organisationService.createOrganisation(new Organisation().id("org_2"));
     Repository repository1 =
         repositoryService.createRepository(
-            organisation1.getId(), new Repository().id("repo_1").name("Repository"), null);
+            organisation1.getId(),
+            new Repository()
+                .id("repo_1")
+                .name("Repository")
+                .repositoryType(RepositoryType.PHENOTYPE_REPOSITORY),
+            null);
     assertThat(
             repositoryService.createRepository(
                 organisation2.getId(),
@@ -241,25 +249,38 @@ class RepositoryServiceTest extends AbstractTest {
 
     assertThat(
             repositoryService.getRepositoriesByOrganisationId(
-                organisation1.getId(), null, "another", 1))
+                organisation1.getId(), null, "another", null, 1))
         .isNullOrEmpty();
 
     assertThat(
             repositoryService.getRepositoriesByOrganisationId(
-                organisation1.getId(), null, "repo", 1))
+                organisation1.getId(), null, "repo", null, 1))
         .isNotEmpty()
         .allMatch(r -> r.getId().equals(repository1.getId()))
         .size()
         .isEqualTo(1);
 
     assertThat(
-            repositoryService.getRepositoriesByOrganisationId(organisation1.getId(), null, null, 1))
+            repositoryService.getRepositoriesByOrganisationId(
+                organisation1.getId(), null, null, null, 1))
         .isNotEmpty()
         .allMatch(r -> r.getId().equals(repository1.getId()))
         .size()
         .isEqualTo(1);
 
-    assertThat(repositoryService.getRepositoriesByOrganisationId("something else", null, "repo", 1))
+    assertThat(
+            repositoryService.getRepositoriesByOrganisationId(
+                "something else", null, "repo", null, 1))
+        .isNullOrEmpty();
+
+    assertThat(
+            repositoryService.getRepositoriesByOrganisationId(
+                organisation1.getId(), null, null, RepositoryType.PHENOTYPE_REPOSITORY, 1))
+        .isNotEmpty();
+
+    assertThat(
+            repositoryService.getRepositoriesByOrganisationId(
+                organisation1.getId(), null, null, RepositoryType.CONCEPT_REPOSITORY, 1))
         .isNullOrEmpty();
   }
 }
