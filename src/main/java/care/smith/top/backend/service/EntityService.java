@@ -68,6 +68,11 @@ public class EntityService implements ContentService {
     if (data.getEntityType() == null)
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "entityType is missing");
 
+    if (RepositoryType.CONCEPT_REPOSITORY.equals(repository.getRepositoryType())
+        && !EntityType.CATEGORY.equals(data.getEntityType()))
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST, "entityType is invalid for concept repository");
+
     EntityDao entity = new EntityDao(data).repository(repository);
 
     if (data instanceof Category && ((Category) data).getSuperCategories() != null)
@@ -116,6 +121,11 @@ public class EntityService implements ContentService {
         getRepository(forkingInstruction.getOrganisationId(), forkingInstruction.getRepositoryId());
 
     Entity entity = loadEntity(organisationId, repositoryId, id, null);
+
+    if (RepositoryType.CONCEPT_REPOSITORY.equals(destinationRepo.getRepositoryType())
+        && !EntityType.CATEGORY.equals(entity.getEntityType()))
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST, "entityType is invalid for concept repository");
 
     List<Entity> origins = new ArrayList<>();
     if (ApiModelMapper.isRestricted(entity)) {
