@@ -479,9 +479,13 @@ public class EntityService implements ContentService {
     EntityVersionDao latestVersion = entityVersionRepository.findByEntityIdAndNextVersionNull(id);
     EntityVersionDao newVersion = new EntityVersionDao(data).entity(entity);
 
-    if (latestVersion != null)
+    if (latestVersion != null) {
+      if (latestVersion.getDataType() != newVersion.getDataType())
+        throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "update of data type is forbidden");
       newVersion.previousVersion(latestVersion).version(latestVersion.getVersion() + 1);
-    else newVersion.version(0);
+    } else {
+      newVersion.version(0);
+    }
 
     newVersion = entityVersionRepository.save(newVersion);
 

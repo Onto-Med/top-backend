@@ -641,6 +641,7 @@ class EntityServiceTest extends AbstractTest {
     Phenotype phenotype =
         (Phenotype)
             new Phenotype()
+                .dataType(DataType.NUMBER)
                 .addSuperCategoriesItem(category)
                 .id(UUID.randomUUID().toString())
                 .entityType(EntityType.SINGLE_PHENOTYPE)
@@ -693,5 +694,16 @@ class EntityServiceTest extends AbstractTest {
     assertThat(entityRepository.findById(phenotype.getId()))
         .isPresent()
         .hasValueSatisfying(e -> assertThat(e.getCurrentVersion().getVersion()).isEqualTo(4));
+
+    assertThatThrownBy(
+            () ->
+                entityService.updateEntityById(
+                    organisation.getId(),
+                    repository.getId(),
+                    phenotype.getId(),
+                    phenotype.dataType(DataType.STRING),
+                    null))
+        .isInstanceOf(ResponseStatusException.class)
+        .hasFieldOrPropertyWithValue("status", HttpStatus.NOT_ACCEPTABLE);
   }
 }
