@@ -54,4 +54,11 @@ public abstract class ApiModelMapper {
   public static boolean isRestricted(Entity entity) {
     return isRestricted(entity.getEntityType());
   }
+
+  public static int compareByEntityType(Entity a, Entity b) {
+    if (a.getEntityType().equals(b.getEntityType())) return 0;
+    if (isCategory(a)) return -1;
+    if (isCategory(b)) return 1;
+    return isAbstract(a) ? -1 : 1;
+  }
 }
