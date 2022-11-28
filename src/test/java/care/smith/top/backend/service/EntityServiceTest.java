@@ -85,12 +85,10 @@ class EntityServiceTest extends AbstractTest {
                 assertThat(((Phenotype) e).getExpression())
                     .isNotNull()
                     .satisfies(
-                        ex -> {
-                          assertThat(ex.getArguments()).isNotEmpty();
-                          assertThat(ex.getArguments().get(0).getEntityId())
-                              .isNotNull()
-                              .isNotEqualTo(singlePhenotype.getId());
-                        }));
+                        ex ->
+                            assertThat(ex.getEntityId())
+                                .isNotNull()
+                                .isNotEqualTo(singlePhenotype.getId())));
   }
 
   @Test

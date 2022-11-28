@@ -1,13 +1,8 @@
 package care.smith.top.backend.util;
 
-import care.smith.top.model.Entity;
-import care.smith.top.model.EntityType;
-import care.smith.top.model.Expression;
+import care.smith.top.model.*;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public abstract class ApiModelMapper {
@@ -22,6 +17,25 @@ public abstract class ApiModelMapper {
     return expression.getArguments().stream()
         .flatMap(a -> getEntityIdsFromExpression(a).stream())
         .collect(Collectors.toSet());
+  }
+
+  public static Expression replaceEntityIds(Expression expression, Map<String, String> ids) {
+    if (expression == null) return null;
+    Expression newExpression =
+        new Expression()
+            .functionId(expression.getFunctionId())
+            .constantId(expression.getConstantId())
+            .value(clone(expression.getValue()));
+    if (expression.getEntityId() != null) {
+      String newEntityId = ids.get(expression.getEntityId());
+      if (newEntityId != null) newExpression.entityId(newEntityId);
+    } else if (expression.getArguments() != null) {
+      newExpression.arguments(
+          expression.getArguments().stream()
+              .map(a -> replaceEntityIds(a, ids))
+              .collect(Collectors.toList()));
+    }
+    return newExpression;
   }
 
   public static EntityType toRestrictedEntityType(EntityType entityType) {
@@ -77,5 +91,25 @@ public abstract class ApiModelMapper {
     if (isCategory(a)) return -1;
     if (isCategory(b)) return 1;
     return isAbstract(a) ? -1 : 1;
+  }
+
+  public static Value clone(Value value) {
+    if (value instanceof StringValue)
+      return new StringValue()
+          .value(((StringValue) value).getValue())
+          .dataType(value.getDataType());
+    if (value instanceof NumberValue)
+      return new NumberValue()
+          .value(((NumberValue) value).getValue())
+          .dataType(value.getDataType());
+    if (value instanceof BooleanValue)
+      return new BooleanValue()
+          .value(((BooleanValue) value).isValue())
+          .dataType(value.getDataType());
+    if (value instanceof DateTimeValue)
+      return new DateTimeValue()
+          .value(((DateTimeValue) value).getValue())
+          .dataType(value.getDataType());
+    return null;
   }
 }

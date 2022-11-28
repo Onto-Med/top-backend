@@ -68,7 +68,6 @@ public class EntityService implements ContentService {
         entities.stream()
             .sorted(ApiModelMapper::compareByEntityType)
             .collect(Collectors.toList())) {
-      // TODO: modify IDs in referencing entities!
       createEntity(organisationId, repositoryId, entity, ids, entities);
     }
 
@@ -93,26 +92,30 @@ public class EntityService implements ContentService {
    * @param data The category to be created.
    * @param ids Hash map containing all IDs of created entities.
    */
-  private void createEntity(
+  private Entity createEntity(
       String organisationId,
       String repositoryId,
       Entity data,
       Map<String, String> ids,
       List<Entity> entities) {
     // TODO: handle circular references!
-    if (data == null || ids.get(data.getId()) != null) return;
+    if (data == null || ids.get(data.getId()) != null) return data;
     if (ApiModelMapper.isCategory(data)) {
       if (((Category) data).getSuperCategories() != null)
         ((Category) data)
-            .getSuperCategories()
-            .forEach(
-                e ->
-                    createEntity(
-                        organisationId,
-                        repositoryId,
-                        ApiModelMapper.getEntity(entities, e.getId()),
-                        ids,
-                        entities));
+            .setSuperCategories(
+                ((Category) data)
+                    .getSuperCategories().stream()
+                        .map(
+                            e ->
+                                (Category)
+                                    createEntity(
+                                        organisationId,
+                                        repositoryId,
+                                        ApiModelMapper.getEntity(entities, e.getId()),
+                                        ids,
+                                        entities))
+                        .collect(Collectors.toList()));
     } else if (ApiModelMapper.isAbstract(data)) {
       ApiModelMapper.getEntityIdsFromExpression(((Phenotype) data).getExpression())
           .forEach(
@@ -123,8 +126,12 @@ public class EntityService implements ContentService {
                       ApiModelMapper.getEntity(entities, id),
                       ids,
                       entities));
+      ((Phenotype) data)
+          .setExpression(ApiModelMapper.replaceEntityIds(((Phenotype) data).getExpression(), ids));
     }
-    ids.put(data.getId(), createEntity(organisationId, repositoryId, data, true).getId());
+    Entity entity = createEntity(organisationId, repositoryId, data, true);
+    ids.put(data.getId(), entity.getId());
+    return entity;
   }
 
   private Entity createEntity(
