@@ -98,8 +98,9 @@ public class EntityService implements ContentService {
       Entity data,
       Map<String, String> ids,
       List<Entity> entities) {
-    // TODO: handle circular references!
-    if (data == null || ids.get(data.getId()) != null) return data;
+    if (data == null || ids.containsKey(data.getId())) return data;
+    ids.put(data.getId(), null);
+
     if (ApiModelMapper.isCategory(data)) {
       if (((Category) data).getSuperCategories() != null)
         ((Category) data)
