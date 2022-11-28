@@ -2,11 +2,28 @@ package care.smith.top.backend.util;
 
 import care.smith.top.model.Entity;
 import care.smith.top.model.EntityType;
+import care.smith.top.model.Expression;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public abstract class ApiModelMapper {
+  public static Entity getEntity(List<Entity> entities, String id) {
+    return entities.stream().filter(e -> e.getId().equals(id)).findFirst().orElse(null);
+  }
+
+  public static Set<String> getEntityIdsFromExpression(Expression expression) {
+    if (expression == null) return Collections.emptySet();
+    if (expression.getEntityId() != null) return Collections.singleton(expression.getEntityId());
+    if (expression.getArguments() == null) return Collections.emptySet();
+    return expression.getArguments().stream()
+        .flatMap(a -> getEntityIdsFromExpression(a).stream())
+        .collect(Collectors.toSet());
+  }
+
   public static EntityType toRestrictedEntityType(EntityType entityType) {
     if (EntityType.SINGLE_PHENOTYPE.equals(entityType)) return EntityType.SINGLE_RESTRICTION;
     if (EntityType.COMPOSITE_PHENOTYPE.equals(entityType)) return EntityType.COMPOSITE_RESTRICTION;
