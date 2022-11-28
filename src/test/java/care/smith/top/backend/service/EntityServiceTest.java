@@ -10,14 +10,89 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.net.URI;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.*;
 
 class EntityServiceTest extends AbstractTest {
+  @Test
+  void createEntities() {
+    Organisation organisation =
+        organisationService.createOrganisation(new Organisation().id("org"));
+    Repository repository =
+        repositoryService.createRepository(
+            organisation.getId(), new Repository().id("repo").organisation(organisation), null);
+    entityService.createEntity(
+        organisation.getId(),
+        repository.getId(),
+        new Phenotype()
+            .dataType(DataType.STRING)
+            .id("single_phen")
+            .entityType(EntityType.SINGLE_PHENOTYPE));
+
+    Category superCategory =
+        (Category) new Category().id("super_cat").entityType(EntityType.CATEGORY);
+    Category subCategory =
+        (Category)
+            new Category()
+                .addSubCategoriesItem(superCategory)
+                .id("sub_cat")
+                .entityType(EntityType.CATEGORY);
+    Phenotype singlePhenotype =
+        (Phenotype)
+            new Phenotype()
+                .dataType(DataType.NUMBER)
+                .entityType(EntityType.SINGLE_PHENOTYPE)
+                .id("single_phen");
+    Phenotype compositePhenotype =
+        (Phenotype)
+            new Phenotype()
+                .expression(new Expression().entityId(singlePhenotype.getId()))
+                .entityType(EntityType.COMPOSITE_PHENOTYPE)
+                .id("composite_phen");
+    Phenotype restriction =
+        (Phenotype)
+            new Phenotype()
+                .restriction(
+                    new NumberRestriction()
+                        .minOperator(RestrictionOperator.GREATER_THAN)
+                        .addValuesItem(BigDecimal.valueOf(15))
+                        .type(DataType.NUMBER))
+                .dataType(DataType.BOOLEAN)
+                .entityType(EntityType.COMPOSITE_RESTRICTION)
+                .id("res");
+
+    List<Entity> bulk =
+        Arrays.asList(
+            compositePhenotype,
+            singlePhenotype,
+            superCategory,
+            restriction,
+            subCategory,
+            singlePhenotype,
+            subCategory);
+
+    assertThatCode(
+            () ->
+                entityService.createEntities(organisation.getId(), repository.getId(), bulk, null))
+        .doesNotThrowAnyException();
+    assertThat(entityService.count()).isEqualTo(6);
+    assertThat(
+            entityService.loadEntity(
+                organisation.getId(), repository.getId(), compositePhenotype.getId(), null))
+        .satisfies(
+            e ->
+                assertThat(((Phenotype) e).getExpression())
+                    .isNotNull()
+                    .satisfies(
+                        ex -> {
+                          assertThat(ex.getArguments()).isNotEmpty();
+                          assertThat(ex.getArguments().get(0).getEntityId())
+                              .isNotNull()
+                              .isNotEqualTo(singlePhenotype.getId());
+                        }));
+  }
+
   @Test
   void createFork() {
     Organisation organisation =
