@@ -30,8 +30,13 @@ class EntityServiceTest extends AbstractTest {
             .id("single_phen")
             .entityType(EntityType.SINGLE_PHENOTYPE));
 
+    Category invalidCategory = (Category) new Category().id("invalid_cat");
     Category superCategory =
-        (Category) new Category().id("super_cat").entityType(EntityType.CATEGORY);
+        (Category)
+            new Category()
+                .addSuperCategoriesItem(invalidCategory)
+                .id("super_cat")
+                .entityType(EntityType.CATEGORY);
     Category subCategory =
         (Category)
             new Category()
@@ -70,13 +75,20 @@ class EntityServiceTest extends AbstractTest {
             restriction,
             subCategory,
             singlePhenotype,
-            subCategory);
+            subCategory,
+            invalidCategory);
 
     assertThatCode(
             () ->
                 entityService.createEntities(organisation.getId(), repository.getId(), bulk, null))
         .doesNotThrowAnyException();
     assertThat(entityService.count()).isEqualTo(6);
+    assertThatThrownBy(
+            () ->
+                entityService.loadEntity(
+                    organisation.getId(), repository.getId(), invalidCategory.getId(), null))
+        .isInstanceOf(ResponseStatusException.class)
+        .hasFieldOrPropertyWithValue("status", HttpStatus.NOT_FOUND);
     assertThat(
             entityService.loadEntity(
                 organisation.getId(), repository.getId(), compositePhenotype.getId(), null))

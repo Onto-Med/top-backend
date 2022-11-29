@@ -130,8 +130,13 @@ public class EntityService implements ContentService {
       ((Phenotype) data)
           .setExpression(ApiModelMapper.replaceEntityIds(((Phenotype) data).getExpression(), ids));
     }
-    Entity entity = createEntity(organisationId, repositoryId, data, true);
-    ids.put(data.getId(), entity.getId());
+
+    Entity entity = null;
+    try {
+      entity = createEntity(organisationId, repositoryId, data, true);
+      ids.put(data.getId(), entity.getId());
+    } catch (Exception ignored) {
+    }
     return entity;
   }
 
