@@ -87,6 +87,9 @@ public abstract class ApiModelMapper {
   }
 
   public static int compareByEntityType(Entity a, Entity b) {
+    if ((a == null || a.getEntityType() == null))
+      return b == null || b.getEntityType() == null ? 0 : -1;
+    if (b == null || b.getEntityType() == null) return 1;
     if (a.getEntityType().equals(b.getEntityType())) return 0;
     if (isCategory(a)) return -1;
     if (isCategory(b)) return 1;
