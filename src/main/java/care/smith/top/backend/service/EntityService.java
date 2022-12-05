@@ -498,10 +498,9 @@ public class EntityService implements ContentService {
       List<String> include,
       String name,
       List<EntityType> type,
-      DataType dataType,
-      Integer page) {
+      DataType dataType) {
     getRepository(organisationId, repositoryId);
-    PageRequest pageRequest = PageRequest.of(page == null ? 0 : page - 1, pageSize);
+    Pageable pageRequest = Pageable.unpaged();
     return entityRepository
         .findAllByRepositoryIdAndSuperEntitiesEmpty(repositoryId, pageRequest)
         .map(EntityDao::toApiModel)

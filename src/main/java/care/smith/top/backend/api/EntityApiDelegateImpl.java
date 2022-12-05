@@ -116,7 +116,7 @@ public class EntityApiDelegateImpl implements EntityApiDelegate {
       Integer page) {
     return new ResponseEntity<>(
         entityService.getRootEntitiesByRepositoryId(
-            organisationId, repositoryId, include, name, type, dataType, page),
+            organisationId, repositoryId, include, name, type, dataType),
         HttpStatus.OK);
   }
 
