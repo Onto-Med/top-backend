@@ -5,7 +5,7 @@
 
     <groupId>care.smith.top</groupId>
     <artifactId>top-backend</artifactId>
-    <version>0.3.8</version>
+    <version>0.3.9</version>
     <packaging>jar</packaging>
 
     <name>TOP Backend</name>
