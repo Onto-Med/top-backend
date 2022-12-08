@@ -256,6 +256,8 @@ class EntityServiceTest extends AbstractTest {
                   .isNotNull()
                   .hasFieldOrPropertyWithValue("id", repository.getId());
               assertThat(((Category) c).getSuperCategories()).isNullOrEmpty();
+              assertThat(((Category) c).getSubCategories()).isNotNull().isEmpty();
+              assertThat(((Category) c).getPhenotypes()).isNotNull().isEmpty();
             });
 
     assertThatThrownBy(
@@ -297,6 +299,7 @@ class EntityServiceTest extends AbstractTest {
                             .isEqualTo(abstractPhenotype.getExpression().getFunctionId());
                         assertThat(e.getArguments()).size().isEqualTo(1);
                       });
+              assertThat(((Phenotype) p).getPhenotypes()).isNotNull().isEmpty();
             });
 
     /* Create restricted phenotype */

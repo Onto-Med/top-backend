@@ -99,8 +99,19 @@ public class EntityDao {
 
     Category entity;
 
-    if (ApiModelMapper.isCategory(entityType)) entity = new Category();
-    else entity = new Phenotype();
+    if (ApiModelMapper.isCategory(entityType)) {
+      entity = new Category();
+      if (entityDao.getSubEntities() == null
+          || entityDao.getSubEntities().stream()
+              .noneMatch(e -> ApiModelMapper.isCategory(e.getEntityType())))
+        entity.subCategories(new ArrayList<>());
+      if (entityDao.getSubEntities() == null
+          || entityDao.getSubEntities().stream()
+              .noneMatch(e -> ApiModelMapper.isPhenotype(e.getEntityType())))
+        entity.phenotypes(new ArrayList<>());
+    } else {
+      entity = new Phenotype();
+    }
 
     entity
         .id(entityDao.getId())
@@ -144,6 +155,7 @@ public class EntityDao {
           .unit(entityVersionDao.getUnit());
       if (entityVersionDao.getExpression() != null)
         ((Phenotype) entity).expression(entityVersionDao.getExpression().toApiModel());
+      if (entityDao.getSubEntities() == null) entity.phenotypes(new ArrayList<>());
     } else if (ApiModelMapper.isRestricted(entityDao.getEntityType())
         && entityVersionDao.getRestriction() != null)
       ((Phenotype) entity).restriction(entityVersionDao.getRestriction().toApiModel());
