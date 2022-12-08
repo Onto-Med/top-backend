@@ -155,7 +155,8 @@ public class EntityDao {
           .unit(entityVersionDao.getUnit());
       if (entityVersionDao.getExpression() != null)
         ((Phenotype) entity).expression(entityVersionDao.getExpression().toApiModel());
-      if (entityDao.getSubEntities() == null) entity.phenotypes(new ArrayList<>());
+      if (entityDao.getSubEntities() == null || entityDao.getSubEntities().size() == 0)
+        entity.phenotypes(new ArrayList<>());
     } else if (ApiModelMapper.isRestricted(entityDao.getEntityType())
         && entityVersionDao.getRestriction() != null)
       ((Phenotype) entity).restriction(entityVersionDao.getRestriction().toApiModel());
