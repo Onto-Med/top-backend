@@ -1,0 +1,12 @@
+databaseChangeLog:
+- changeSet:
+    id: 1671028818545-6
+    author: ChristophB (generated)
+    changes:
+    - addColumn:
+        columns:
+        - column:
+            name: repository_type
+            type: integer
+        tableName: repository
+
