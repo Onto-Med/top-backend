@@ -30,6 +30,13 @@ public class EntityApiDelegateImpl implements EntityApiDelegate {
   }
 
   @Override
+  public ResponseEntity<Void> bulkUploadEntities(
+      String organisationId, String repositoryId, List<Entity> entities, List<String> include) {
+    entityService.createEntities(organisationId, repositoryId, entities, include);
+    return new ResponseEntity<>(HttpStatus.CREATED);
+  }
+
+  @Override
   public ResponseEntity<Entity> getEntityById(
       String organisationId,
       String repositoryId,
@@ -41,8 +48,10 @@ public class EntityApiDelegateImpl implements EntityApiDelegate {
   }
 
   @Override
-  public ResponseEntity<String> exportEntity(String organisationId, String repositoryId, String id, String format, Integer version) {
-    StringWriter writer = entityService.exportEntity(organisationId, repositoryId, id, format, version);
+  public ResponseEntity<String> exportEntity(
+      String organisationId, String repositoryId, String id, String format, Integer version) {
+    StringWriter writer =
+        entityService.exportEntity(organisationId, repositoryId, id, format, version);
     return new ResponseEntity<>(writer.toString(), HttpStatus.OK);
   }
 
@@ -107,7 +116,7 @@ public class EntityApiDelegateImpl implements EntityApiDelegate {
       Integer page) {
     return new ResponseEntity<>(
         entityService.getRootEntitiesByRepositoryId(
-            organisationId, repositoryId, include, name, type, dataType, page),
+            organisationId, repositoryId, include, name, type, dataType),
         HttpStatus.OK);
   }
 

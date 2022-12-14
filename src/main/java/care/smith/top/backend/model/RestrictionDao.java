@@ -2,13 +2,11 @@ package care.smith.top.backend.model;
 
 import care.smith.top.model.*;
 
-import javax.persistence.*;
 import javax.persistence.Entity;
-import javax.validation.Valid;
+import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -82,7 +80,7 @@ public class RestrictionDao {
   }
 
   public <T> RestrictionDao(
-      DataType dataType, Quantifier quantifier, Integer cardinality, List<T> values) {
+      @NotNull DataType dataType, Quantifier quantifier, Integer cardinality, List<T> values) {
     this.dataType = dataType;
     this.quantifier = quantifier;
     this.cardinality = cardinality;
@@ -95,7 +93,7 @@ public class RestrictionDao {
   }
 
   public RestrictionDao(
-      DataType dataType,
+      @NotNull DataType dataType,
       Quantifier quantifier,
       Integer cardinality,
       LocalDateTime min,
@@ -112,7 +110,7 @@ public class RestrictionDao {
   }
 
   public RestrictionDao(
-      DataType dataType,
+      @NotNull DataType dataType,
       Quantifier quantifier,
       Integer cardinality,
       BigDecimal min,
@@ -128,12 +126,12 @@ public class RestrictionDao {
     this.maxOperator = maxOperator;
   }
 
-  public RestrictionDao id(Long id) {
+  public RestrictionDao id(@NotNull Long id) {
     this.id = id;
     return this;
   }
 
-  public RestrictionDao dataType(DataType dataType) {
+  public RestrictionDao dataType(@NotNull DataType dataType) {
     this.dataType = dataType;
     return this;
   }
@@ -234,23 +232,23 @@ public class RestrictionDao {
   public Restriction toApiModel() {
     Restriction restriction;
     if (DataType.BOOLEAN.equals(dataType)) {
-      restriction = new BooleanRestriction().values(booleanValues);
+      restriction = new BooleanRestriction().values(getBooleanValues());
     } else if (DataType.DATE_TIME.equals(dataType)) {
       restriction = new DateTimeRestriction().minOperator(minOperator).maxOperator(maxOperator);
       if (minOperator != null || maxOperator != null)
         ((DateTimeRestriction) restriction)
             .addValuesItem(minimumDateTimeValue)
             .addValuesItem(maximumDateTimeValue);
-      else ((DateTimeRestriction) restriction).values(dateTimeValues);
+      else ((DateTimeRestriction) restriction).values(getDateTimeValues());
     } else if (DataType.NUMBER.equals(dataType)) {
       restriction = new NumberRestriction().minOperator(minOperator).maxOperator(maxOperator);
       if (minOperator != null || maxOperator != null)
         ((NumberRestriction) restriction)
             .addValuesItem(minimumNumberValue)
             .addValuesItem(maximumNumberValue);
-      else ((NumberRestriction) restriction).values(numberValues);
+      else ((NumberRestriction) restriction).values(getNumberValues());
     } else if (DataType.STRING.equals(dataType)) {
-      restriction = new StringRestriction().values(stringValues);
+      restriction = new StringRestriction().values(getStringValues());
     } else {
       restriction = new Restriction();
     }
@@ -354,19 +352,19 @@ public class RestrictionDao {
   }
 
   public List<String> getStringValues() {
-    return stringValues;
+    return stringValues == null ? null : new ArrayList<>(stringValues);
   }
 
   public List<BigDecimal> getNumberValues() {
-    return numberValues;
+    return numberValues == null ? null : new ArrayList<>(numberValues);
   }
 
   public List<LocalDateTime> getDateTimeValues() {
-    return dateTimeValues;
+    return dateTimeValues == null ? null : new ArrayList<>(dateTimeValues);
   }
 
   public List<Boolean> getBooleanValues() {
-    return booleanValues;
+    return booleanValues == null ? null : new ArrayList<>(booleanValues);
   }
 
   public RestrictionOperator getMinOperator() {

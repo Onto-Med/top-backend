@@ -60,9 +60,93 @@ public class EntityService implements ContentService {
 
   @Caching(
       evict = {@CacheEvict("entityCount"), @CacheEvict(value = "entities", key = "#repositoryId")})
-  public Entity createEntity(String organisationId, String repositoryId, Entity data) {
-    if (entityRepository.existsById(data.getId()))
-      throw new ResponseStatusException(HttpStatus.CONFLICT);
+  public int createEntities(
+      String organisationId, String repositoryId, List<Entity> entities, List<String> include) {
+    Map<String, String> ids = new HashMap<>();
+
+    for (Entity entity :
+        entities.stream()
+            .sorted(ApiModelMapper::compareByEntityType)
+            .collect(Collectors.toList())) {
+      createEntity(organisationId, repositoryId, entity, ids, entities);
+    }
+
+    return ids.size();
+  }
+
+  /**
+   * Create an entity, if the entity depends on other entities, depending on the entity type the
+   * following will happen:
+   *
+   * <ul>
+   *   <li>category: super categories are created too
+   *   <li>abstract phenotype: entities referenced in expressions are created too
+   *   <li>restriction: super phenotypes are created too
+   * </ul>
+   *
+   * If you are calling this method multiple times, you should sort the entities with the {@link
+   * ApiModelMapper#compareByEntityType(Entity, Entity)} comparator.
+   *
+   * @param organisationId The organisation ID.
+   * @param repositoryId The repository ID.
+   * @param data The category to be created.
+   * @param ids Hash map containing all IDs of created entities.
+   */
+  private Entity createEntity(
+      String organisationId,
+      String repositoryId,
+      Entity data,
+      Map<String, String> ids,
+      List<Entity> entities) {
+    if (data == null || ids.containsKey(data.getId())) return data;
+    ids.put(data.getId(), null);
+
+    if (ApiModelMapper.isCategory(data)) {
+      if (((Category) data).getSuperCategories() != null)
+        ((Category) data)
+            .setSuperCategories(
+                ((Category) data)
+                    .getSuperCategories().stream()
+                        .map(
+                            e ->
+                                (Category)
+                                    createEntity(
+                                        organisationId,
+                                        repositoryId,
+                                        ApiModelMapper.getEntity(entities, e.getId()),
+                                        ids,
+                                        entities))
+                        .collect(Collectors.toList()));
+    } else if (ApiModelMapper.isAbstract(data)) {
+      ApiModelMapper.getEntityIdsFromExpression(((Phenotype) data).getExpression())
+          .forEach(
+              id ->
+                  createEntity(
+                      organisationId,
+                      repositoryId,
+                      ApiModelMapper.getEntity(entities, id),
+                      ids,
+                      entities));
+      ((Phenotype) data)
+          .setExpression(ApiModelMapper.replaceEntityIds(((Phenotype) data).getExpression(), ids));
+    }
+
+    Entity entity = null;
+    try {
+      entity = createEntity(organisationId, repositoryId, data, true);
+      ids.put(data.getId(), entity.getId());
+    } catch (Exception ignored) {
+    }
+    return entity;
+  }
+
+  private Entity createEntity(
+      String organisationId, String repositoryId, Entity data, boolean modifyId) {
+    String id = data.getId();
+    if (entityRepository.existsById(data.getId())) {
+      if (modifyId) id = UUID.randomUUID().toString();
+      else throw new ResponseStatusException(HttpStatus.CONFLICT);
+    }
     RepositoryDao repository = getRepository(organisationId, repositoryId);
 
     if (data.getEntityType() == null)
@@ -73,7 +157,7 @@ public class EntityService implements ContentService {
       throw new ResponseStatusException(
           HttpStatus.BAD_REQUEST, "entityType is invalid for concept repository");
 
-    EntityDao entity = new EntityDao(data).repository(repository);
+    EntityDao entity = new EntityDao(data).id(id).repository(repository);
 
     if (data instanceof Category && ((Category) data).getSuperCategories() != null)
       for (Category category : ((Category) data).getSuperCategories())
@@ -84,7 +168,11 @@ public class EntityService implements ContentService {
     if (data instanceof Phenotype && ((Phenotype) data).getSuperPhenotype() != null)
       phenotypeRepository
           .findByIdAndRepositoryId(((Phenotype) data).getSuperPhenotype().getId(), repositoryId)
-          .ifPresent(entity::addSuperEntitiesItem);
+          .ifPresentOrElse(
+              entity::addSuperEntitiesItem,
+              () -> {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+              });
 
     entity = entityRepository.save(entity);
     EntityVersionDao entityVersion =
@@ -92,6 +180,12 @@ public class EntityService implements ContentService {
     entity.currentVersion(entityVersion);
 
     return entityRepository.save(entity).toApiModel();
+  }
+
+  @Caching(
+      evict = {@CacheEvict("entityCount"), @CacheEvict(value = "entities", key = "#repositoryId")})
+  public Entity createEntity(String organisationId, String repositoryId, Entity data) {
+    return createEntity(organisationId, repositoryId, data, false);
   }
 
   @Caching(
@@ -414,10 +508,9 @@ public class EntityService implements ContentService {
       List<String> include,
       String name,
       List<EntityType> type,
-      DataType dataType,
-      Integer page) {
+      DataType dataType) {
     getRepository(organisationId, repositoryId);
-    PageRequest pageRequest = PageRequest.of(page == null ? 0 : page - 1, pageSize);
+    Pageable pageRequest = Pageable.unpaged();
     return entityRepository
         .findAllByRepositoryIdAndSuperEntitiesEmpty(repositoryId, pageRequest)
         .map(EntityDao::toApiModel)
@@ -489,9 +582,14 @@ public class EntityService implements ContentService {
     EntityVersionDao latestVersion = entityVersionRepository.findByEntityIdAndNextVersionNull(id);
     EntityVersionDao newVersion = new EntityVersionDao(data).entity(entity);
 
-    if (latestVersion != null)
+    if (latestVersion != null) {
+      if (latestVersion.getDataType() != newVersion.getDataType())
+        throw new ResponseStatusException(
+            HttpStatus.NOT_ACCEPTABLE, "update of data type is forbidden");
       newVersion.previousVersion(latestVersion).version(latestVersion.getVersion() + 1);
-    else newVersion.version(0);
+    } else {
+      newVersion.version(0);
+    }
 
     newVersion = entityVersionRepository.save(newVersion);
 

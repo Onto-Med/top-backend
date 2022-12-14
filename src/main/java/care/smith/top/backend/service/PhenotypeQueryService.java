@@ -25,7 +25,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import javax.inject.Inject;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.OffsetDateTime;
@@ -50,10 +49,8 @@ public class PhenotypeQueryService {
   @Value("${top.phenotyping.execute-queries:true}")
   private boolean executeQueries;
 
-  @Inject private JobScheduler jobScheduler;
-
-  @Inject private StorageProvider storageProvider;
-
+  @Autowired private JobScheduler jobScheduler;
+  @Autowired private StorageProvider storageProvider;
   @Autowired private RepositoryService repositoryService;
   @Autowired private EntityService entityService;
   @Autowired private QueryRepository queryRepository;
@@ -65,7 +62,7 @@ public class PhenotypeQueryService {
     QueryDao query =
         queryRepository
             .findByRepository_OrganisationIdAndRepositoryIdAndId(
-                organisationId, repositoryId, queryId)
+                organisationId, repositoryId, queryId.toString())
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     queryRepository.delete(query);
 
@@ -89,7 +86,7 @@ public class PhenotypeQueryService {
         || data.getDataSources().isEmpty())
       throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE);
 
-    if (queryRepository.existsById(data.getId()))
+    if (queryRepository.existsById(data.getId().toString()))
       throw new ResponseStatusException(HttpStatus.CONFLICT);
 
     if (getConfigs(data.getDataSources()).isEmpty())
@@ -106,7 +103,7 @@ public class PhenotypeQueryService {
     OffsetDateTime createdAt = OffsetDateTime.now();
     QueryDao queryDao =
         queryRepository
-            .findById(queryId)
+            .findById(queryId.toString())
             .orElseThrow(
                 () ->
                     new NullPointerException(
@@ -137,15 +134,15 @@ public class PhenotypeQueryService {
     // TODO: only one data source supported yet
     DataAdapterConfig config = configs.stream().findFirst().orElseThrow();
 
-    // TODO: top-phenotypic-query does not derive adaptor type
-    DataAdapter adapter = null;
-    if (config.getConnectionAttribute("url") != null) adapter = new SQLAdapter(config);
-    if (config.getConnectionAttribute("endpoint") != null) adapter = new FHIRAdapter(config);
-    if (adapter == null) throw new NullPointerException("Adaptor type could not be derived.");
-
     QueryResultDao result;
     if (executeQueries) {
       try {
+        // TODO: top-phenotypic-query does not derive adaptor type
+        DataAdapter adapter = null;
+        if (config.getConnectionAttribute("url") != null) adapter = new SQLAdapter(config);
+        if (config.getConnectionAttribute("endpoint") != null) adapter = new FHIRAdapter(config);
+        if (adapter == null) throw new NullPointerException("Adaptor type could not be derived.");
+
         // TODO: provide Writer to top-phenotypic-query and let it store the result set
         PhenotypeFinder finder = new PhenotypeFinder(query, phenotypes, adapter);
         ResultSet rs = finder.execute();
@@ -157,7 +154,7 @@ public class PhenotypeQueryService {
         e.printStackTrace();
         result =
             new QueryResultDao(queryDao, createdAt, null, OffsetDateTime.now(), QueryState.FAILED)
-                .message(e.getMessage());
+                .message("Cause: " + (e.getMessage() != null ? e.getMessage() : e.toString()));
       }
     } else {
       result =
@@ -181,7 +178,7 @@ public class PhenotypeQueryService {
     QueryDao query =
         queryRepository
             .findByRepository_OrganisationIdAndRepositoryIdAndId(
-                organisationId, repositoryId, queryId)
+                organisationId, repositoryId, queryId.toString())
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
     if (query.getResult() != null) return query.getResult().toApiModel();
@@ -230,9 +227,9 @@ public class PhenotypeQueryService {
   }
 
   @NotNull
-  private List<DataAdapterConfig> getConfigs(List<DataSource> dataSources) {
+  private List<DataAdapterConfig> getConfigs(List<String> dataSources) {
     return dataSources.stream()
-        .map(s -> getDataAdapterConfig(s.getId()).orElse(null))
+        .map(s -> getDataAdapterConfig(s).orElse(null))
         .filter(Objects::nonNull)
         .collect(Collectors.toList());
   }

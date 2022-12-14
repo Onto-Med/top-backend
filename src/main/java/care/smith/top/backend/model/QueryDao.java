@@ -1,9 +1,9 @@
 package care.smith.top.backend.model;
 
-import care.smith.top.model.DataSource;
 import care.smith.top.model.Query;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -12,13 +12,13 @@ import java.util.stream.Collectors;
 
 @Entity(name = "query")
 public class QueryDao {
-  @Id private UUID id;
+  @Id private String id;
   private String name;
-  @ElementCollection private List<DataSource> dataSources = null;
+  @ElementCollection private List<String> dataSources = null;
   @ElementCollection private List<QueryCriterionDao> criteria = null;
   @ElementCollection private List<ProjectionEntryDao> projection = null;
 
-  @OneToOne(cascade = CascadeType.ALL)
+  @OneToOne(mappedBy = "query", cascade = CascadeType.ALL, orphanRemoval = true)
   private QueryResultDao result = null;
 
   @ManyToOne private RepositoryDao repository;
@@ -26,9 +26,9 @@ public class QueryDao {
   public QueryDao() {}
 
   public QueryDao(
-      UUID id,
+      @NotNull String id,
       String name,
-      List<DataSource> dataSources,
+      List<String> dataSources,
       List<QueryCriterionDao> criteria,
       List<ProjectionEntryDao> projection,
       RepositoryDao repository) {
@@ -40,8 +40,8 @@ public class QueryDao {
     this.repository = repository;
   }
 
-  public QueryDao(Query query) {
-    this.id = query.getId();
+  public QueryDao(@NotNull Query query) {
+    this.id = query.getId().toString();
     this.name = query.getName();
     this.dataSources = query.getDataSources();
     if (query.getCriteria() != null)
@@ -52,11 +52,11 @@ public class QueryDao {
           query.getProjection().stream().map(ProjectionEntryDao::new).collect(Collectors.toList());
   }
 
-  public UUID getId() {
+  public String getId() {
     return id;
   }
 
-  public QueryDao id(UUID id) {
+  public QueryDao id(@NotNull String id) {
     this.id = id;
     return this;
   }
@@ -70,11 +70,11 @@ public class QueryDao {
     return this;
   }
 
-  public List<DataSource> getDataSources() {
+  public List<String> getDataSources() {
     return dataSources;
   }
 
-  public QueryDao dataSources(List<DataSource> dataSources) {
+  public QueryDao dataSources(List<String> dataSources) {
     this.dataSources = dataSources;
     return this;
   }
@@ -116,7 +116,8 @@ public class QueryDao {
   }
 
   public Query toApiModel() {
-    Query query = new Query().id(getId()).name(getName()).dataSources(new ArrayList<>(getDataSources()));
+    Query query =
+        new Query().id(UUID.fromString(getId())).name(getName()).dataSources(new ArrayList<>(getDataSources()));
     if (getCriteria() != null)
       query.criteria(
           getCriteria().stream().map(QueryCriterionDao::toApiModel).collect(Collectors.toList()));

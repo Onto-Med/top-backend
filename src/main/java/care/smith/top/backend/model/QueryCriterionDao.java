@@ -6,11 +6,12 @@ import care.smith.top.model.QueryCriterion;
 import javax.persistence.CascadeType;
 import javax.persistence.Embeddable;
 import javax.persistence.OneToOne;
+import javax.validation.constraints.NotNull;
 import java.util.Objects;
 
 @Embeddable
 public class QueryCriterionDao {
-  private String subjectId;
+  @NotNull private String subjectId;
   private Boolean inclusion = true;
   private String defaultAggregationFunctionId;
 
@@ -20,7 +21,7 @@ public class QueryCriterionDao {
   public QueryCriterionDao() {}
 
   public QueryCriterionDao(
-      String subjectId,
+      @NotNull String subjectId,
       boolean inclusion,
       String defaultAggregationFunctionId,
       DateTimeRestriction dateTimeRestriction) {
@@ -30,7 +31,7 @@ public class QueryCriterionDao {
     this.dateTimeRestriction = new RestrictionDao(dateTimeRestriction);
   }
 
-  public QueryCriterionDao(QueryCriterion queryCriterion) {
+  public QueryCriterionDao(@NotNull QueryCriterion queryCriterion) {
     subjectId = queryCriterion.getSubjectId();
     inclusion = queryCriterion.isInclusion();
     defaultAggregationFunctionId = queryCriterion.getDefaultAggregationFunctionId();
@@ -42,7 +43,7 @@ public class QueryCriterionDao {
     return subjectId;
   }
 
-  public QueryCriterionDao subjectId(String subjectId) {
+  public QueryCriterionDao subjectId(@NotNull String subjectId) {
     this.subjectId = subjectId;
     return this;
   }
