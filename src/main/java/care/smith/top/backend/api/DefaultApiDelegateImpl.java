@@ -1,5 +1,6 @@
 package care.smith.top.backend.api;
 
+import care.smith.top.backend.service.nlp.DocumentService;
 import care.smith.top.model.EntityType;
 import care.smith.top.model.Statistic;
 import care.smith.top.backend.service.EntityService;
@@ -15,6 +16,8 @@ public class DefaultApiDelegateImpl implements DefaultApiDelegate {
   @Autowired OrganisationService organisationService;
   @Autowired RepositoryService repositoryService;
   @Autowired EntityService entityService;
+
+  @Autowired DocumentService documentService;
 
   @Override
   public ResponseEntity<Void> ping() {
@@ -33,7 +36,8 @@ public class DefaultApiDelegateImpl implements DefaultApiDelegate {
                     EntityType.SINGLE_PHENOTYPE,
                     EntityType.SINGLE_RESTRICTION,
                     EntityType.COMPOSITE_PHENOTYPE,
-                    EntityType.COMPOSITE_RESTRICTION));
+                    EntityType.COMPOSITE_RESTRICTION))
+            .documents(documentService.count());
     return new ResponseEntity<>(statistic, HttpStatus.OK);
   }
 }

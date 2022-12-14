@@ -5,6 +5,7 @@ import care.smith.top.backend.model.RepositoryDao;
 import care.smith.top.model.Repository;
 import care.smith.top.backend.repository.OrganisationRepository;
 import care.smith.top.backend.repository.RepositoryRepository;
+import care.smith.top.model.RepositoryType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
@@ -57,22 +58,22 @@ public class RepositoryService implements ContentService {
   }
 
   public List<Repository> getRepositories(
-      List<String> include, String name, Boolean primary, Integer page) {
+    List<String> include, String name, Boolean primary, RepositoryType repositoryType, Integer page) {
     // TODO: check if user has read permission
     PageRequest pageRequest =
         PageRequest.of(page == null ? 0 : page - 1, pageSize, Sort.by("name"));
     return repositoryRepository
-        .findByNameAndPrimary(name, primary, pageRequest)
+        .findByNameAndPrimaryAndRepositoryType(name, primary, repositoryType, pageRequest)
         .map(RepositoryDao::toApiModel)
         .getContent();
   }
 
   public List<Repository> getRepositoriesByOrganisationId(
-      String organisationId, List<String> include, String name, Integer page) {
+      String organisationId, List<String> include, String name, RepositoryType repositoryType, Integer page) {
     PageRequest pageRequest =
         PageRequest.of(page == null ? 0 : page - 1, pageSize, Sort.by("name"));
     return repositoryRepository
-        .findByOrganisationIdAndName(organisationId, name, pageRequest)
+        .findByOrganisationIdAndNameAndRepositoryType(organisationId, name, repositoryType, pageRequest)
         .map(RepositoryDao::toApiModel)
         .getContent();
   }

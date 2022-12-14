@@ -8,12 +8,18 @@ Spring Boot based backend of the TOP framework
     * `APP_PORT`: the port where the spring application will run on, e.g. 8080
     * `APP_PATH`: the context path, e.g. "/" for root
     * `DB_TYPE`: type of the DB to be used, defaults to postgresql
-    * `DB_HOST`: host running the database server
+    * `DB_HOST`: host running the database server, defaults to localhost
     * `DB_NAME`: name of the database, defaults to postgres
     * `DB_PORT`: port of the database host, defaults to 5432
     * `DB_USER`: username for connecting to the database, defaults to postgres
     * `DB_PASS`: password for connecting to the database, required
     * `DATA_SOURCE_CONFIG_DIR`: location of data source configuration files, defaults to `config/data_sources`
+
+   Document related:
+    * `NEO4J_HOST`: host running the neo4j database server, defaults to neo4j
+    * `NEO4J_PORT`: port of the neo4j database, defaults to 7687
+    * `NEO4J_USER`: username for neo4j database, defaults to neo4j
+    * `NEO4J_PASS`: password for neo4j database
 
    OAuth2 related:
     * `OAUTH2_ENABLED`: enable or disable oauth2, defaults to `false`
