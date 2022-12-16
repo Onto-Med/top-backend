@@ -434,10 +434,6 @@ public class EntityService implements ContentService {
         .toList();
   }
 
-  @Cacheable(
-      value = "entities",
-      key = "#repositoryId",
-      condition = "#name == null && #type == null && #dataType == null")
   public List<Entity> getEntitiesByRepositoryId(
       String organisationId,
       String repositoryId,
@@ -502,6 +498,10 @@ public class EntityService implements ContentService {
     return forkingStats;
   }
 
+  @Cacheable(
+      value = "entities",
+      key = "#repositoryId",
+      condition = "#name == null && #type == null && #dataType == null")
   public List<Entity> getRootEntitiesByRepositoryId(
       String organisationId,
       String repositoryId,
