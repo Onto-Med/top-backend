@@ -16,7 +16,7 @@ import org.springframework.data.neo4j.repository.config.EnableNeo4jRepositories;
 @EnableCaching
 @EnableJpaRepositories
 @EnableJpaAuditing(dateTimeProviderRef = "auditingDateTimeProvider")
-@EnableNeo4jRepositories
+@EnableNeo4jRepositories(basePackages = "care.smith.top.backend.repository.nlp")
 public class TopBackendApplication {
 
   public static void main(String[] args) {
