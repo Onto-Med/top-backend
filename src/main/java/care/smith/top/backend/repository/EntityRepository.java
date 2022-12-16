@@ -56,8 +56,7 @@ public interface EntityRepository
   }
 
   static Specification<EntityDao> byEntityType(@Nullable EntityType entityType) {
-    return byEntityType(
-        entityType == null ? Collections.emptyList() : Collections.singletonList(entityType));
+    return byEntityType(entityType == null ? null : Collections.singletonList(entityType));
   }
 
   static Specification<EntityDao> byDataType(@Nullable List<DataType> dataTypes) {
@@ -68,8 +67,7 @@ public interface EntityRepository
   }
 
   static Specification<EntityDao> byDataType(@Nullable DataType dataType) {
-    return byDataType(
-        dataType == null ? Collections.emptyList() : Collections.singletonList(dataType));
+    return byDataType(dataType == null ? null : Collections.singletonList(dataType));
   }
 
   static Specification<EntityDao> byRepositoryId(@Nullable String repositoryId) {
