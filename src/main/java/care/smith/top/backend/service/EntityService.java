@@ -4,9 +4,12 @@ import care.smith.top.backend.model.EntityDao;
 import care.smith.top.backend.model.EntityVersionDao;
 import care.smith.top.backend.model.LocalisableTextDao;
 import care.smith.top.backend.model.RepositoryDao;
-import care.smith.top.backend.repository.*;
-import care.smith.top.model.*;
+import care.smith.top.backend.repository.CategoryRepository;
+import care.smith.top.backend.repository.EntityRepository;
+import care.smith.top.backend.repository.EntityVersionRepository;
+import care.smith.top.backend.repository.PhenotypeRepository;
 import care.smith.top.backend.util.ApiModelMapper;
+import care.smith.top.model.*;
 import care.smith.top.phenotype2r.Phenotype2RConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,11 +27,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 @Transactional
@@ -41,11 +40,6 @@ public class EntityService implements ContentService {
   @Autowired private CategoryRepository categoryRepository;
   @Autowired private PhenotypeRepository phenotypeRepository;
   @Autowired private RepositoryService repositoryService;
-
-  public static <T> Predicate<T> distinctByKey(Function<? super T, ?> keyExtractor) {
-    Set<Object> seen = ConcurrentHashMap.newKeySet();
-    return t -> seen.add(keyExtractor.apply(t));
-  }
 
   @Override
   @Cacheable("entityCount")
@@ -413,31 +407,12 @@ public class EntityService implements ContentService {
       List<String> include, String name, List<EntityType> type, DataType dataType, Integer page) {
     PageRequest pageRequest = PageRequest.of(page != null ? page - 1 : 0, pageSize);
     return phenotypeRepository
-        .findAllByTitleAndEntityTypeAndDataType(name, type, dataType, pageRequest)
-        .flatMap(
-            entity -> {
-              Stream<EntityDao> result = Stream.of(entity);
-              if (type == null
-                  || type.contains(ApiModelMapper.toRestrictedEntityType(entity.getEntityType()))) {
-                String repositoryId = entity.getRepository().getId();
-                result =
-                    Stream.concat(
-                        result,
-                        entityRepository
-                            .findAllByRepositoryIdAndSuperEntities_Id(repositoryId, entity.getId())
-                            .stream());
-              }
-              return result;
-            })
-        .filter(distinctByKey(EntityDao::getId))
+        .findAllByRepositoryIdAndTitleAndEntityTypeAndDataType(
+            null, name, type, dataType, pageRequest)
         .map(EntityDao::toApiModel)
         .toList();
   }
 
-  @Cacheable(
-      value = "entities",
-      key = "#repositoryId",
-      condition = "#name == null && #type == null && #dataType == null")
   public List<Entity> getEntitiesByRepositoryId(
       String organisationId,
       String repositoryId,
@@ -452,21 +427,6 @@ public class EntityService implements ContentService {
     return phenotypeRepository
         .findAllByRepositoryIdAndTitleAndEntityTypeAndDataType(
             repositoryId, name, type, dataType, pageRequest)
-        .flatMap(
-            entity -> {
-              Stream<EntityDao> result = Stream.of(entity);
-              if (type == null
-                  || type.contains(ApiModelMapper.toRestrictedEntityType(entity.getEntityType()))) {
-                result =
-                    Stream.concat(
-                        result,
-                        entityRepository
-                            .findAllByRepositoryIdAndSuperEntities_Id(repositoryId, entity.getId())
-                            .stream());
-              }
-              return result;
-            })
-        .filter(distinctByKey(EntityDao::getId))
         .map(EntityDao::toApiModel)
         .toList();
   }
@@ -502,6 +462,10 @@ public class EntityService implements ContentService {
     return forkingStats;
   }
 
+  @Cacheable(
+      value = "entities",
+      key = "#repositoryId",
+      condition = "#name == null && #type == null && #dataType == null")
   public List<Entity> getRootEntitiesByRepositoryId(
       String organisationId,
       String repositoryId,

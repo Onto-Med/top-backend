@@ -35,7 +35,7 @@ spring:
           issuer-url: ${OAUTH2_URL:http://127.0.0.1:8081}/realms/${OAUTH2_REALM:top-realm}
           jwk-set-uri: ${OAUTH2_URL:http://127.0.0.1:8081}/realms/${OAUTH2_REALM:top-realm}/protocol/openid-connect/certs
   paging:
-    page-size: 10
+    page-size: 25
   jackson:
     default-property-inclusion: NON_NULL
 

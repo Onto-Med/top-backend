@@ -63,7 +63,7 @@ public class RepositoryService implements ContentService {
     PageRequest pageRequest =
         PageRequest.of(page == null ? 0 : page - 1, pageSize, Sort.by("name"));
     return repositoryRepository
-        .findByNameAndPrimaryAndRepositoryType(name, primary, repositoryType, pageRequest)
+        .findByOrganisationIdAndNameAndPrimaryAndRepositoryType(null, name, primary, repositoryType, pageRequest)
         .map(RepositoryDao::toApiModel)
         .getContent();
   }
@@ -73,7 +73,7 @@ public class RepositoryService implements ContentService {
     PageRequest pageRequest =
         PageRequest.of(page == null ? 0 : page - 1, pageSize, Sort.by("name"));
     return repositoryRepository
-        .findByOrganisationIdAndNameAndRepositoryType(organisationId, name, repositoryType, pageRequest)
+        .findByOrganisationIdAndNameAndPrimaryAndRepositoryType(organisationId, name, null, repositoryType, pageRequest)
         .map(RepositoryDao::toApiModel)
         .getContent();
   }

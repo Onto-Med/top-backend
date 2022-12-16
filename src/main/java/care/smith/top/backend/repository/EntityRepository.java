@@ -1,32 +1,81 @@
 package care.smith.top.backend.repository;
 
-import care.smith.top.backend.model.EntityDao;
-import care.smith.top.backend.model.RepositoryDao;
-import care.smith.top.model.Entity;
+import care.smith.top.backend.model.*;
+import care.smith.top.model.DataType;
 import care.smith.top.model.EntityType;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
-import java.util.Collection;
+import javax.annotation.Nullable;
+import javax.persistence.criteria.JoinType;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface EntityRepository extends JpaRepository<EntityDao, String> {
+public interface EntityRepository
+    extends JpaRepository<EntityDao, String>, JpaSpecificationExecutor<EntityDao> {
   long count();
 
   long countByEntityTypeIn(EntityType[] entityType);
 
-  Optional<EntityDao> findById(String id, PageRequest pageRequest);
+  static Specification<EntityDao> byTitle(@Nullable String title) {
+    return (root, query, cb) -> {
+      if (title == null) return cb.and();
+      String pattern = "%" + title.toLowerCase() + "%";
+      return cb.or(
+          cb.like(
+              cb.lower(
+                  root.join(EntityDao_.CURRENT_VERSION)
+                      .join(EntityVersionDao_.TITLES)
+                      .get(LocalisableTextDao_.TEXT)),
+              pattern),
+          cb.and(
+              root.get(EntityDao_.ENTITY_TYPE)
+                  .in(EntityType.COMPOSITE_RESTRICTION, EntityType.SINGLE_RESTRICTION),
+              cb.like(
+                  cb.lower(
+                      root.join(EntityDao_.SUPER_ENTITIES, JoinType.LEFT)
+                          .join(EntityDao_.CURRENT_VERSION, JoinType.LEFT)
+                          .join(EntityVersionDao_.TITLES, JoinType.LEFT)
+                          .get(LocalisableTextDao_.TEXT)),
+                  pattern)));
+    };
+  }
 
-  Optional<EntityDao> findByIdAndCurrentVersion_Version(String id, Integer version);
+  static Specification<EntityDao> byEntityType(@Nullable List<EntityType> entityTypes) {
+    return (root, query, cb) -> {
+      if (entityTypes == null || entityTypes.isEmpty()) return cb.and();
+      return root.get(EntityDao_.ENTITY_TYPE).in(entityTypes);
+    };
+  }
 
-  List<EntityDao> findAllByRepositoryIdAndSuperEntities_IdAndEntityTypeIn(
-      String repositoryId, String superPhenotypeId, List<EntityType> entityTypes);
+  static Specification<EntityDao> byEntityType(@Nullable EntityType entityType) {
+    return byEntityType(entityType == null ? null : Collections.singletonList(entityType));
+  }
+
+  static Specification<EntityDao> byDataType(@Nullable List<DataType> dataTypes) {
+    return (root, query, cb) -> {
+      if (dataTypes == null || dataTypes.isEmpty()) return cb.and();
+      return root.join(EntityDao_.CURRENT_VERSION).get(EntityVersionDao_.DATA_TYPE).in(dataTypes);
+    };
+  }
+
+  static Specification<EntityDao> byDataType(@Nullable DataType dataType) {
+    return byDataType(dataType == null ? null : Collections.singletonList(dataType));
+  }
+
+  static Specification<EntityDao> byRepositoryId(@Nullable String repositoryId) {
+    return (root, query, cb) -> {
+      if (repositoryId == null) return cb.and();
+      return cb.equal(root.join(EntityDao_.REPOSITORY).get(RepositoryDao_.ID), repositoryId);
+    };
+  }
 
   List<EntityDao> findAllByRepositoryIdAndSuperEntities_Id(
       String repositoryId, String superCategoryId);
@@ -41,50 +90,7 @@ public interface EntityRepository extends JpaRepository<EntityDao, String> {
 
   Optional<EntityDao> findByIdAndRepositoryId(String id, String repositoryId);
 
-  Page<EntityDao> findAllByCurrentVersion_Titles_TextContainingIgnoreCaseAndEntityTypeIn(
-      String title, List<EntityType> entityTypes, Pageable pageable);
-
-  Page<EntityDao> findAllByCurrentVersion_Titles_TextContainingIgnoreCase(
-      String title, Pageable pageable);
-
-  default Page<EntityDao> findAllByTitleAndEntityTypes(
-      String title, List<EntityType> entityTypes, Pageable pageable) {
-    if (title != null && entityTypes != null)
-      return findAllByCurrentVersion_Titles_TextContainingIgnoreCaseAndEntityTypeIn(
-          title, entityTypes, pageable);
-    if (title != null)
-      return findAllByCurrentVersion_Titles_TextContainingIgnoreCase(title, pageable);
-    if (entityTypes != null) return findAllByEntityTypeIn(entityTypes, pageable);
-    return findAll(pageable);
-  }
-
-  Page<EntityDao> findAllByEntityTypeIn(List<EntityType> entityTypes, Pageable pageable);
-
-  default Page<EntityDao> findAllByRepositoryIdAndTitleAndEntityTypes(
-      String repositoryId, String title, List<EntityType> entityTypes, Pageable pageable) {
-    if (repositoryId == null) return findAllByTitleAndEntityTypes(title, entityTypes, pageable);
-    if (title != null && entityTypes != null)
-      return findAllByRepositoryIdAndCurrentVersion_Titles_TextContainingIgnoreCaseAndEntityTypeIn(
-          repositoryId, title, entityTypes, pageable);
-    if (title != null)
-      return findAllByRepositoryIdAndCurrentVersion_Titles_TextContainingIgnoreCase(
-          repositoryId, title, pageable);
-    if (entityTypes != null)
-      return findAllByRepositoryIdAndEntityTypeIn(repositoryId, entityTypes, pageable);
-    return findAllByRepositoryId(repositoryId, pageable);
-  }
-
   Page<EntityDao> findAllByRepositoryId(String repositoryId, Pageable pageable);
-
-  Page<EntityDao> findAllByRepositoryIdAndEntityTypeIn(
-      String repositoryId, List<EntityType> entityTypes, Pageable pageable);
-
-  Page<EntityDao> findAllByRepositoryIdAndCurrentVersion_Titles_TextContainingIgnoreCase(
-      String repositoryId, String title, Pageable pageable);
-
-  Page<EntityDao>
-      findAllByRepositoryIdAndCurrentVersion_Titles_TextContainingIgnoreCaseAndEntityTypeIn(
-          String repositoryId, String title, List<EntityType> entityTypes, Pageable pageable);
 
   Slice<EntityDao> findAllByRepositoryIdAndSuperEntitiesEmpty(
       String repositoryId, Pageable pageable);
