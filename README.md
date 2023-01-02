@@ -16,10 +16,10 @@ Spring Boot based backend of the TOP framework
     * `DATA_SOURCE_CONFIG_DIR`: location of data source configuration files, defaults to `config/data_sources`
 
    Document related:
-    * `NEO4J_HOST`: host running the neo4j database server, defaults to neo4j
-    * `NEO4J_PORT`: port of the neo4j database, defaults to 7687
-    * `NEO4J_USER`: username for neo4j database, defaults to neo4j
-    * `NEO4J_PASS`: password for neo4j database
+    * `DB_NEO4J_HOST`: host running the neo4j database server, defaults to neo4j
+    * `DB_NEO4J_PORT`: port of the neo4j database, defaults to 7687
+    * `DB_NEO4J_USER`: username for neo4j database, defaults to neo4j
+    * `DB_NEO4J_PASS`: password for neo4j database
 
    OAuth2 related:
     * `OAUTH2_ENABLED`: enable or disable oauth2, defaults to `false`
