@@ -29,8 +29,12 @@ Spring Boot based backend of the TOP framework
     ```sh
     docker run --rm -p 5432:5432 -e POSTGRES_PASSWORD=password postgres
     ```
-3. Start the OAuth2 server ([see dockerhub](https://hub.docker.com/r/bitnami/keycloak)).
-4. Execute the spring-boot plugin of the submodule [resource-server](resource-server) via `mvn spring-boot:run`.
+3. Start the Neo4J database ([see dockerhub](https://hub.docker.com/_/neo4j)). Please review the documentation for production use.
+    ```sh
+    docker run --rm -p 7687:7687 -e NEO4J_AUTH=neo4j/password neo4j
+    ```
+4. Start the OAuth2 server ([see dockerhub](https://hub.docker.com/r/bitnami/keycloak)).
+5. Execute the spring-boot plugin of the submodule [resource-server](resource-server) via `mvn spring-boot:run`.
 
 ## Development
 
