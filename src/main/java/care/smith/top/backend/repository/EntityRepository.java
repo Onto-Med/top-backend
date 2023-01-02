@@ -27,6 +27,7 @@ public interface EntityRepository
     return (root, query, cb) -> {
       if (title == null) return cb.and();
       String pattern = "%" + title.toLowerCase() + "%";
+      query.distinct(true);
       return cb.or(
           cb.like(
               cb.lower(
