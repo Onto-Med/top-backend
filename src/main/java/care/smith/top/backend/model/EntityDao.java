@@ -152,6 +152,7 @@ public class EntityDao {
     if (ApiModelMapper.isAbstract(entityDao.getEntityType())) {
       ((Phenotype) entity)
           .dataType(entityVersionDao.getDataType())
+          .itemType(entityVersionDao.getItemType())
           .unit(entityVersionDao.getUnit());
       if (entityVersionDao.getExpression() != null)
         ((Phenotype) entity).expression(entityVersionDao.getExpression().toApiModel());
