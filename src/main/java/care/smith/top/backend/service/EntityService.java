@@ -404,11 +404,16 @@ public class EntityService implements ContentService {
   }
 
   public List<Entity> getEntities(
-      List<String> include, String name, List<EntityType> type, DataType dataType, Integer page) {
+      List<String> include,
+      String name,
+      List<EntityType> type,
+      DataType dataType,
+      ItemType itemType,
+      Integer page) {
     PageRequest pageRequest = PageRequest.of(page != null ? page - 1 : 0, pageSize);
     return phenotypeRepository
-        .findAllByRepositoryIdAndTitleAndEntityTypeAndDataType(
-            null, name, type, dataType, pageRequest)
+        .findAllByRepositoryIdAndTitleAndEntityTypeAndDataTypeAndItemType(
+            null, name, type, dataType, itemType, pageRequest)
         .map(EntityDao::toApiModel)
         .toList();
   }
@@ -420,13 +425,14 @@ public class EntityService implements ContentService {
       String name,
       List<EntityType> type,
       DataType dataType,
+      ItemType itemType,
       Integer page) {
     getRepository(organisationId, repositoryId);
     PageRequest pageRequest = PageRequest.of(page != null ? page - 1 : 0, pageSize);
 
     return phenotypeRepository
-        .findAllByRepositoryIdAndTitleAndEntityTypeAndDataType(
-            repositoryId, name, type, dataType, pageRequest)
+        .findAllByRepositoryIdAndTitleAndEntityTypeAndDataTypeAndItemType(
+            repositoryId, name, type, dataType, itemType, pageRequest)
         .map(EntityDao::toApiModel)
         .toList();
   }
@@ -472,7 +478,9 @@ public class EntityService implements ContentService {
       List<String> include,
       String name,
       List<EntityType> type,
-      DataType dataType) {
+      DataType dataType,
+      ItemType itemType) {
+    // TODO: filter parameters are ignored
     getRepository(organisationId, repositoryId);
     Pageable pageRequest = Pageable.unpaged();
     return entityRepository

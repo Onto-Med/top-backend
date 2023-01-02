@@ -4,6 +4,7 @@ import care.smith.top.model.DataType;
 import care.smith.top.model.Entity;
 import care.smith.top.model.EntityType;
 import care.smith.top.backend.service.EntityService;
+import care.smith.top.model.ItemType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -91,18 +92,24 @@ public class EntityApiDelegateImpl implements EntityApiDelegate {
       String name,
       List<EntityType> type,
       DataType dataType,
+      ItemType itemType,
       Integer page) {
     return new ResponseEntity<>(
         entityService.getEntitiesByRepositoryId(
-            organisationId, repositoryId, include, name, type, dataType, page),
+            organisationId, repositoryId, include, name, type, dataType, itemType, page),
         HttpStatus.OK);
   }
 
   @Override
   public ResponseEntity<List<Entity>> getEntities(
-      List<String> include, String name, List<EntityType> type, DataType dataType, Integer page) {
+      List<String> include,
+      String name,
+      List<EntityType> type,
+      DataType dataType,
+      ItemType itemType,
+      Integer page) {
     return new ResponseEntity<>(
-        entityService.getEntities(include, name, type, dataType, page), HttpStatus.OK);
+        entityService.getEntities(include, name, type, dataType, itemType, page), HttpStatus.OK);
   }
 
   @Override
@@ -113,10 +120,12 @@ public class EntityApiDelegateImpl implements EntityApiDelegate {
       String name,
       List<EntityType> type,
       DataType dataType,
+      ItemType itemType,
       Integer page) {
+    // TODO: result is currently unpaged and 'page' parameter is ignored
     return new ResponseEntity<>(
         entityService.getRootEntitiesByRepositoryId(
-            organisationId, repositoryId, include, name, type, dataType),
+            organisationId, repositoryId, include, name, type, dataType, itemType),
         HttpStatus.OK);
   }
 

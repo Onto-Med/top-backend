@@ -59,17 +59,6 @@ public interface EntityRepository
     return byEntityType(entityType == null ? null : Collections.singletonList(entityType));
   }
 
-  static Specification<EntityDao> byDataType(@Nullable List<DataType> dataTypes) {
-    return (root, query, cb) -> {
-      if (dataTypes == null || dataTypes.isEmpty()) return cb.and();
-      return root.join(EntityDao_.CURRENT_VERSION).get(EntityVersionDao_.DATA_TYPE).in(dataTypes);
-    };
-  }
-
-  static Specification<EntityDao> byDataType(@Nullable DataType dataType) {
-    return byDataType(dataType == null ? null : Collections.singletonList(dataType));
-  }
-
   static Specification<EntityDao> byRepositoryId(@Nullable String repositoryId) {
     return (root, query, cb) -> {
       if (repositoryId == null) return cb.and();
