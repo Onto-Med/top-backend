@@ -552,6 +552,8 @@ class EntityServiceTest extends AbstractTest {
     Phenotype entity1 =
         (Phenotype)
             new Phenotype()
+                .dataType(DataType.NUMBER)
+                .itemType(ItemType.OBSERVATION)
                 .id(UUID.randomUUID().toString())
                 .entityType(EntityType.SINGLE_PHENOTYPE)
                 .titles(
@@ -578,37 +580,59 @@ class EntityServiceTest extends AbstractTest {
 
     assertThat(
             entityService.getEntities(
-                null, null, Collections.singletonList(EntityType.SINGLE_PHENOTYPE), null, null))
+                null,
+                null,
+                Collections.singletonList(EntityType.SINGLE_PHENOTYPE),
+                null,
+                null,
+                null))
         .isNotEmpty()
         .allSatisfy(e -> assertThat(e.getId()).isEqualTo(entity1.getId()))
         .size()
         .isEqualTo(1);
 
-    assertThat(entityService.getEntities(null, null, null, null, null))
+    assertThat(entityService.getEntities(null, null, null, null, null, null))
         .isNotEmpty()
         .anySatisfy(e -> assertThat(e.getId()).isEqualTo(entity1.getId()))
         .anySatisfy(e -> assertThat(e.getId()).isEqualTo(entity2.getId()))
         .size()
         .isEqualTo(2);
 
-    assertThat(entityService.getEntities(null, "xample", null, null, null))
+    assertThat(entityService.getEntities(null, "xample", null, null, null, null))
         .isNotEmpty()
         .anySatisfy(e -> assertThat(e.getId()).isEqualTo(entity1.getId()))
         .anySatisfy(e -> assertThat(e.getId()).isEqualTo(entity2.getId()))
         .size()
         .isEqualTo(2);
 
-    assertThat(entityService.getEntities(null, "test", null, null, null))
+    assertThat(entityService.getEntities(null, "test", null, null, null, null))
         .isNotEmpty()
         .allSatisfy(e -> assertThat(e.getId()).isEqualTo(entity1.getId()))
         .size()
         .isEqualTo(1);
 
-    assertThat(entityService.getEntities(null, null, null, DataType.BOOLEAN, null)).isNullOrEmpty();
+    assertThat(entityService.getEntities(null, null, null, DataType.NUMBER, null, null))
+        .isNotEmpty()
+        .allSatisfy(e -> assertThat(e.getId()).isEqualTo(entity1.getId()))
+        .size()
+        .isEqualTo(1);
+
+    assertThat(entityService.getEntities(null, null, null, DataType.BOOLEAN, null, null))
+        .isNullOrEmpty();
+
+    assertThat(entityService.getEntities(null, null, null, null, ItemType.OBSERVATION, null))
+        .isNotEmpty()
+        .allSatisfy(e -> assertThat(e.getId()).isEqualTo(entity1.getId()))
+        .size()
+        .isEqualTo(1);
+
+    assertThat(
+            entityService.getEntities(null, null, null, null, ItemType.ALLERGY_INTOLERANCE, null))
+        .isNullOrEmpty();
 
     assertThat(
             entityService.getEntitiesByRepositoryId(
-                organisation.getId(), repository1.getId(), null, "xample", null, null, null))
+                organisation.getId(), repository1.getId(), null, "xample", null, null, null, null))
         .isNotEmpty()
         .allSatisfy(e -> assertThat(e.getId()).isEqualTo(entity1.getId()))
         .size()

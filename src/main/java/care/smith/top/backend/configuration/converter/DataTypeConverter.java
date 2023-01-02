@@ -1,4 +1,4 @@
-package care.smith.top.backend.configuration;
+package care.smith.top.backend.configuration.converter;
 
 import care.smith.top.model.DataType;
 import org.springframework.core.convert.converter.Converter;

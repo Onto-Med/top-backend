@@ -3,13 +3,12 @@ package care.smith.top.backend.service;
 import care.smith.top.backend.model.QueryDao;
 import care.smith.top.backend.model.QueryResultDao;
 import care.smith.top.backend.model.RepositoryDao;
+import care.smith.top.backend.repository.PhenotypeRepository;
 import care.smith.top.backend.repository.QueryRepository;
-import care.smith.top.model.*;
 import care.smith.top.backend.util.ApiModelMapper;
+import care.smith.top.model.*;
 import care.smith.top.top_phenotypic_query.adapter.DataAdapter;
 import care.smith.top.top_phenotypic_query.adapter.config.DataAdapterConfig;
-import care.smith.top.top_phenotypic_query.adapter.fhir.FHIRAdapter;
-import care.smith.top.top_phenotypic_query.adapter.sql.SQLAdapter;
 import care.smith.top.top_phenotypic_query.result.ResultSet;
 import care.smith.top.top_phenotypic_query.search.PhenotypeFinder;
 import org.jetbrains.annotations.NotNull;
@@ -20,6 +19,7 @@ import org.jobrunr.storage.StorageProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -52,8 +52,8 @@ public class PhenotypeQueryService {
   @Autowired private JobScheduler jobScheduler;
   @Autowired private StorageProvider storageProvider;
   @Autowired private RepositoryService repositoryService;
-  @Autowired private EntityService entityService;
   @Autowired private QueryRepository queryRepository;
+  @Autowired private PhenotypeRepository phenotypeRepository;
 
   public void deleteQuery(String organisationId, String repositoryId, UUID queryId) {
     if (!repositoryService.repositoryExists(organisationId, repositoryId))
@@ -116,17 +116,13 @@ public class PhenotypeQueryService {
 
     DependentSubjectsMap phenotypes = new DependentSubjectsMap();
     phenotypes.putAll(
-        entityService
-            .getEntitiesByRepositoryId(
-                queryDao.getRepository().getOrganisation().getId(),
+        phenotypeRepository
+            .findAllByRepositoryIdAndEntityTypeIn(
                 queryDao.getRepository().getId(),
-                null,
-                null,
                 ApiModelMapper.phenotypeTypes(),
-                null,
-                null)
+                Pageable.unpaged())
+            .map(e -> (Phenotype) e.toApiModel())
             .stream()
-            .map(p -> (Phenotype) p)
             .collect(Collectors.toMap(Phenotype::getId, Function.identity())));
     Query query = queryDao.toApiModel();
     List<DataAdapterConfig> configs = getConfigs(query.getDataSources());
@@ -137,10 +133,7 @@ public class PhenotypeQueryService {
     QueryResultDao result;
     if (executeQueries) {
       try {
-        // TODO: top-phenotypic-query does not derive adaptor type
-        DataAdapter adapter = null;
-        if (config.getConnectionAttribute("url") != null) adapter = new SQLAdapter(config);
-        if (config.getConnectionAttribute("endpoint") != null) adapter = new FHIRAdapter(config);
+        DataAdapter adapter = DataAdapter.getInstance(config);
         if (adapter == null) throw new NullPointerException("Adaptor type could not be derived.");
 
         // TODO: provide Writer to top-phenotypic-query and let it store the result set
