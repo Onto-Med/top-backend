@@ -1,7 +1,6 @@
 package care.smith.top.backend.repository;
 
 import care.smith.top.backend.model.*;
-import care.smith.top.model.DataType;
 import care.smith.top.model.EntityType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -85,4 +84,7 @@ public interface EntityRepository
       String repositoryId, Pageable pageable);
 
   Optional<EntityDao> findByRepositoryIdAndOriginId(String repositoryId, String originId);
+
+  Page<EntityDao> findAllByRepositoryIdAndEntityTypeIn(
+      String repositoryId, List<EntityType> entityTypes, Pageable pageable);
 }
