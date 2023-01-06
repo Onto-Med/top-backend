@@ -30,7 +30,6 @@ import java.nio.file.Path;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
-import java.util.function.Function;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -114,16 +113,15 @@ public class PhenotypeQueryService {
             "Running phenotypic query '%s' for repository '%s'...",
             queryId, queryDao.getRepository().getDisplayName()));
 
-    DependentSubjectsMap phenotypes = new DependentSubjectsMap();
-    phenotypes.putAll(
+    Entity[] phenotypes =
         phenotypeRepository
             .findAllByRepositoryIdAndEntityTypeIn(
                 queryDao.getRepository().getId(),
                 ApiModelMapper.phenotypeTypes(),
                 Pageable.unpaged())
             .map(e -> (Phenotype) e.toApiModel())
-            .stream()
-            .collect(Collectors.toMap(Phenotype::getId, Function.identity())));
+            .getContent()
+            .toArray(new Phenotype[0]);
     Query query = queryDao.toApiModel();
     List<DataAdapterConfig> configs = getConfigs(query.getDataSources());
 
