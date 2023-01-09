@@ -55,17 +55,6 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>care.smith.top</groupId>
-            <artifactId>phenotype2r</artifactId>
-            <version>0.3.2</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>care.smith.top</groupId>
-                    <artifactId>top-api</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
             <groupId>jakarta.xml.bind</groupId>
             <artifactId>jakarta.xml.bind-api</artifactId>
             <version>4.0.0</version>
