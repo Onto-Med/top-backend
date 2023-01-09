@@ -36,6 +36,28 @@ Spring Boot based backend of the TOP framework
 4. Start the OAuth2 server ([see dockerhub](https://hub.docker.com/r/bitnami/keycloak)).
 5. Execute the spring-boot plugin of the submodule [resource-server](resource-server) via `mvn spring-boot:run`.
 
+## Plugins
+
+Any plugin you want to provide must be a member of the package `care.smith.top`.
+It is sufficient to build JAR files and place them in the classpath of this application.
+
+Please make sure to set all TOP Framework dependencies in your plugins to `provided`! e.g.:
+```xml
+<dependencies>
+   <dependency>
+      <groupId>care.smith.top</groupId>
+      <artifactId>top-api</artifactId>
+      <version>${version}</version>
+      <scope>provided</scope>
+   </dependency>
+</dependencies>
+```
+
+Currently supported plugin types:
+
+* **phenotype importer:** implement `care.smith.top.top_phenotypic_query.converter.PhenotypeImporter`
+* **phenotype exporter:** implement `care.smith.top.top_phenotypic_query.converter.PhenotypeExporter`
+
 ## Development
 
 ### Database Migrations

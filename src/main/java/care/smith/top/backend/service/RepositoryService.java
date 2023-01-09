@@ -2,9 +2,10 @@ package care.smith.top.backend.service;
 
 import care.smith.top.backend.model.OrganisationDao;
 import care.smith.top.backend.model.RepositoryDao;
-import care.smith.top.model.Repository;
+import care.smith.top.backend.repository.EntityRepository;
 import care.smith.top.backend.repository.OrganisationRepository;
 import care.smith.top.backend.repository.RepositoryRepository;
+import care.smith.top.model.Repository;
 import care.smith.top.model.RepositoryType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,6 +26,7 @@ public class RepositoryService implements ContentService {
 
   @Autowired private RepositoryRepository repositoryRepository;
   @Autowired private OrganisationRepository organisationRepository;
+  @Autowired private EntityRepository entityRepository;
 
   @Override
   public long count() {
@@ -58,22 +60,32 @@ public class RepositoryService implements ContentService {
   }
 
   public List<Repository> getRepositories(
-    List<String> include, String name, Boolean primary, RepositoryType repositoryType, Integer page) {
+      List<String> include,
+      String name,
+      Boolean primary,
+      RepositoryType repositoryType,
+      Integer page) {
     // TODO: check if user has read permission
     PageRequest pageRequest =
         PageRequest.of(page == null ? 0 : page - 1, pageSize, Sort.by("name"));
     return repositoryRepository
-        .findByOrganisationIdAndNameAndPrimaryAndRepositoryType(null, name, primary, repositoryType, pageRequest)
+        .findByOrganisationIdAndNameAndPrimaryAndRepositoryType(
+            null, name, primary, repositoryType, pageRequest)
         .map(RepositoryDao::toApiModel)
         .getContent();
   }
 
   public List<Repository> getRepositoriesByOrganisationId(
-      String organisationId, List<String> include, String name, RepositoryType repositoryType, Integer page) {
+      String organisationId,
+      List<String> include,
+      String name,
+      RepositoryType repositoryType,
+      Integer page) {
     PageRequest pageRequest =
         PageRequest.of(page == null ? 0 : page - 1, pageSize, Sort.by("name"));
     return repositoryRepository
-        .findByOrganisationIdAndNameAndPrimaryAndRepositoryType(organisationId, name, null, repositoryType, pageRequest)
+        .findByOrganisationIdAndNameAndPrimaryAndRepositoryType(
+            organisationId, name, null, repositoryType, pageRequest)
         .map(RepositoryDao::toApiModel)
         .getContent();
   }

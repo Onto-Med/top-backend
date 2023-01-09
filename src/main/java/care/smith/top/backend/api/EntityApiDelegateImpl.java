@@ -1,9 +1,9 @@
 package care.smith.top.backend.api;
 
+import care.smith.top.backend.service.EntityService;
 import care.smith.top.model.DataType;
 import care.smith.top.model.Entity;
 import care.smith.top.model.EntityType;
-import care.smith.top.backend.service.EntityService;
 import care.smith.top.model.ItemType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -11,7 +11,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.io.StringWriter;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.List;
 
 import static care.smith.top.backend.configuration.RequestValidator.isValidId;
@@ -46,14 +47,6 @@ public class EntityApiDelegateImpl implements EntityApiDelegate {
       List<String> include) {
     return new ResponseEntity<>(
         entityService.loadEntity(organisationId, repositoryId, id, version), HttpStatus.OK);
-  }
-
-  @Override
-  public ResponseEntity<String> exportEntity(
-      String organisationId, String repositoryId, String id, String format, Integer version) {
-    StringWriter writer =
-        entityService.exportEntity(organisationId, repositoryId, id, format, version);
-    return new ResponseEntity<>(writer.toString(), HttpStatus.OK);
   }
 
   @Override
