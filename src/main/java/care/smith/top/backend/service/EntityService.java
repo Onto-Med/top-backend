@@ -10,13 +10,14 @@ import care.smith.top.backend.repository.EntityVersionRepository;
 import care.smith.top.backend.repository.PhenotypeRepository;
 import care.smith.top.backend.util.ApiModelMapper;
 import care.smith.top.model.*;
-import care.smith.top.phenotype2r.Phenotype2RConverter;
+import care.smith.top.top_phenotypic_query.converter.PhenotypeExporter;
+import care.smith.top.top_phenotypic_query.converter.PhenotypeImporter;
+import org.reflections.Reflections;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -24,10 +25,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.io.IOException;
-import java.io.StringWriter;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static org.reflections.scanners.Scanners.SubTypes;
 
 @Service
 @Transactional
@@ -368,41 +372,6 @@ public class EntityService implements ContentService {
     entityVersionRepository.delete(entityVersion);
   }
 
-  public StringWriter exportEntity(
-      String organisationId, String repositoryId, String id, String format, Integer version) {
-    RepositoryDao repository = getRepository(organisationId, repositoryId);
-    StringWriter writer = new StringWriter();
-    Page<EntityDao> entities =
-        entityRepository.findAllByRepositoryId(repository.getId(), Pageable.unpaged());
-    EntityDao entity =
-        entities.stream()
-            .filter(e -> id.equals(e.getId()))
-            .findFirst()
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-
-    if ("vnd.r-project.r".equals(format)) {
-      Collection<Phenotype> phenotypes =
-          entities.stream()
-              .filter(e -> !EntityType.CATEGORY.equals(e.getEntityType()))
-              .map(EntityDao::toApiModel)
-              .map(e -> (Phenotype) e)
-              .collect(Collectors.toList());
-      try {
-        Phenotype2RConverter converter = new Phenotype2RConverter(phenotypes);
-        for (EntityDao subEntity : entity.getSubEntities()) { // TODO: recursively collect entities
-          converter.convert(subEntity.getId(), writer);
-          writer.append(System.lineSeparator());
-        }
-        converter.convert(id, writer);
-      } catch (IOException e) {
-        throw new RuntimeException(e);
-      }
-    } else {
-      throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE);
-    }
-    return writer;
-  }
-
   public List<Entity> getEntities(
       List<String> include,
       String name,
@@ -575,6 +544,72 @@ public class EntityService implements ContentService {
     }
 
     return entityRepository.save(entity.currentVersion(newVersion)).toApiModel();
+  }
+
+  public ByteArrayOutputStream exportRepository(
+      String organisationId, String repositoryId, String format) {
+    RepositoryDao repository = getRepository(organisationId, repositoryId);
+    Entity[] entities =
+        entityRepository
+            .findAllByRepositoryId(repositoryId, Pageable.unpaged())
+            .map(EntityDao::toApiModel)
+            .stream()
+            .toArray(Entity[]::new);
+
+    Reflections reflections = new Reflections("care.smith.top");
+    Optional<Class<?>> optional =
+        reflections.get(SubTypes.of(PhenotypeExporter.class).asClass()).stream()
+            .filter(c -> c.getSimpleName().equals(format))
+            .findFirst();
+
+    if (optional.isEmpty())
+      throw new ResponseStatusException(
+          HttpStatus.NOT_ACCEPTABLE,
+          String.format("No exporter for format '%s' available.", format));
+
+    ByteArrayOutputStream stream = new ByteArrayOutputStream();
+    try {
+      PhenotypeExporter exporter =
+          (PhenotypeExporter) optional.get().getConstructor().newInstance();
+      String uri = String.format("http://%s.org/%s", organisationId, repositoryId);
+      exporter.write(entities, repository.toApiModel(), uri, stream);
+    } catch (NoSuchMethodException
+        | InstantiationException
+        | IllegalAccessException
+        | InvocationTargetException e) {
+      throw new ResponseStatusException(
+          HttpStatus.INTERNAL_SERVER_ERROR, "Could not instantiate phenotype exporter.");
+    }
+
+    return stream;
+  }
+
+  @Caching(
+      evict = {@CacheEvict("entityCount"), @CacheEvict(value = "entities", key = "#repositoryId")})
+  public void importRepository(
+      String organisationId, String repositoryId, String format, InputStream stream) {
+    Reflections reflections = new Reflections("care.smith.top");
+    Optional<Class<?>> optional =
+        reflections.get(SubTypes.of(PhenotypeImporter.class).asClass()).stream()
+            .filter(c -> c.getSimpleName().equals(format))
+            .findFirst();
+
+    if (optional.isEmpty())
+      throw new ResponseStatusException(
+          HttpStatus.NOT_ACCEPTABLE,
+          String.format("No importer for format '%s' available.", format));
+
+    try {
+      PhenotypeImporter importer =
+          (PhenotypeImporter) optional.get().getConstructor().newInstance();
+      createEntities(organisationId, repositoryId, List.of(importer.read(stream)), null);
+    } catch (NoSuchMethodException
+        | InstantiationException
+        | IllegalAccessException
+        | InvocationTargetException e) {
+      throw new ResponseStatusException(
+          HttpStatus.INTERNAL_SERVER_ERROR, "Could not instantiate phenotype exporter.");
+    }
   }
 
   /**
