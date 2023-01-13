@@ -584,6 +584,8 @@ public class EntityService implements ContentService {
     return stream;
   }
 
+  @Caching(
+      evict = {@CacheEvict("entityCount"), @CacheEvict(value = "entities", key = "#repositoryId")})
   public void importRepository(
       String organisationId, String repositoryId, String format, InputStream stream) {
     Reflections reflections = new Reflections("care.smith.top");
