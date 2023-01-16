@@ -3,6 +3,8 @@ package care.smith.top.backend.api;
 import care.smith.top.model.ExpressionFunction;
 import care.smith.top.top_phenotypic_query.c2reasoner.C2R;
 import care.smith.top.top_phenotypic_query.c2reasoner.functions.FunctionEntity;
+import care.smith.top.top_phenotypic_query.c2reasoner.functions.advanced.Restrict;
+import care.smith.top.top_phenotypic_query.c2reasoner.functions.advanced.Switch;
 import care.smith.top.top_phenotypic_query.c2reasoner.functions.bool.And;
 import care.smith.top.top_phenotypic_query.c2reasoner.functions.bool.Not;
 import care.smith.top.top_phenotypic_query.c2reasoner.functions.bool.Or;
@@ -19,12 +21,14 @@ import java.util.stream.Stream;
 
 @Service
 public class ExpressionFunctionApiDelegateImpl implements ExpressionFunctionApiDelegate {
-  public static final List<String> EXCLUDED_FUNCTION_IDS = Arrays.asList("switch", "list", "restrict");
+  public static final List<String> EXCLUDED_FUNCTION_IDS =
+      Arrays.asList(Switch.get().getFunctionId(), Restrict.get().getFunctionId());
   private final C2R calculator = new C2R();
 
   @Override
   public ResponseEntity<List<ExpressionFunction>> getExpressionFunctions(String type) {
     if ("math".equals(type)) return new ResponseEntity<>(getMathFunctions(), HttpStatus.OK);
+    if ("boolean".equals(type)) return new ResponseEntity<>(getBooleanFunctions(), HttpStatus.OK);
     throw new ResponseStatusException(
         HttpStatus.NOT_ACCEPTABLE, "Expression operator type is not supported.");
   }
