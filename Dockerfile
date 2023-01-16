@@ -12,4 +12,4 @@ FROM openjdk:11-jdk-slim AS production-stage
 COPY --from=build-stage /app/target/*.jar /usr/src/top-backend/top-backend.jar
 WORKDIR /usr/src/top-backend
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "top-backend.jar"]
+ENTRYPOINT ["java", "-cp", "top-backend.jar:\plugins\*", "org.springframework.boot.loader.PropertiesLauncher"]
