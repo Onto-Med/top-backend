@@ -27,7 +27,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -573,12 +572,9 @@ public class EntityService implements ContentService {
           (PhenotypeExporter) optional.get().getConstructor().newInstance();
       String uri = String.format("http://%s.org/%s", organisationId, repositoryId);
       exporter.write(entities, repository.toApiModel(), uri, stream);
-    } catch (NoSuchMethodException
-        | InstantiationException
-        | IllegalAccessException
-        | InvocationTargetException e) {
+    } catch (Exception e) {
       throw new ResponseStatusException(
-          HttpStatus.INTERNAL_SERVER_ERROR, "Could not instantiate phenotype exporter.");
+          HttpStatus.INTERNAL_SERVER_ERROR, "Export failed with error: " + e.getMessage());
     }
 
     return stream;
@@ -603,12 +599,9 @@ public class EntityService implements ContentService {
       PhenotypeImporter importer =
           (PhenotypeImporter) optional.get().getConstructor().newInstance();
       createEntities(organisationId, repositoryId, List.of(importer.read(stream)), null);
-    } catch (NoSuchMethodException
-        | InstantiationException
-        | IllegalAccessException
-        | InvocationTargetException e) {
+    } catch (Exception e) {
       throw new ResponseStatusException(
-          HttpStatus.INTERNAL_SERVER_ERROR, "Could not instantiate phenotype exporter.");
+          HttpStatus.INTERNAL_SERVER_ERROR, "Importfailed with error: " + e.getMessage());
     }
   }
 
