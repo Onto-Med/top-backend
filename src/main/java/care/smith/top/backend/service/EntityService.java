@@ -126,6 +126,14 @@ public class EntityService implements ContentService {
                       entities));
       ((Phenotype) data)
           .setExpression(ApiModelMapper.replaceEntityIds(((Phenotype) data).getExpression(), ids));
+    } else if (ApiModelMapper.isRestricted(data)
+        && ((Phenotype) data).getSuperPhenotype() != null) {
+      createEntity(
+          organisationId,
+          repositoryId,
+          ApiModelMapper.getEntity(entities, ((Phenotype) data).getSuperPhenotype().getId()),
+          ids,
+          entities);
     }
 
     Entity entity = null;
@@ -598,7 +606,8 @@ public class EntityService implements ContentService {
     try {
       PhenotypeImporter importer =
           (PhenotypeImporter) optional.get().getConstructor().newInstance();
-      createEntities(organisationId, repositoryId, List.of(importer.read(stream)), null);
+      List<Entity> entities = List.of(importer.read(stream));
+      createEntities(organisationId, repositoryId, entities, null);
     } catch (Exception e) {
       throw new ResponseStatusException(
           HttpStatus.INTERNAL_SERVER_ERROR, "Importfailed with error: " + e.getMessage());
