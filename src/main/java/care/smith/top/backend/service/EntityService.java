@@ -128,12 +128,10 @@ public class EntityService implements ContentService {
           .setExpression(ApiModelMapper.replaceEntityIds(((Phenotype) data).getExpression(), ids));
     } else if (ApiModelMapper.isRestricted(data)
         && ((Phenotype) data).getSuperPhenotype() != null) {
+      String oldId = ((Phenotype) data).getSuperPhenotype().getId();
       createEntity(
-          organisationId,
-          repositoryId,
-          ApiModelMapper.getEntity(entities, ((Phenotype) data).getSuperPhenotype().getId()),
-          ids,
-          entities);
+          organisationId, repositoryId, ApiModelMapper.getEntity(entities, oldId), ids, entities);
+      ((Phenotype) data).getSuperPhenotype().setId(ids.get(oldId));
     }
 
     Entity entity = null;
