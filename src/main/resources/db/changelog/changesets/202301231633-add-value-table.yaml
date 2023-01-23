@@ -1,0 +1,108 @@
+databaseChangeLog:
+- changeSet:
+    id: 1674488016958-6
+    author: ChristophB (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+            name: expression_id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: values_id
+            type: BIGINT
+        tableName: expression_values
+- changeSet:
+    id: 1674488016958-7
+    author: ChristophB (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            autoIncrement: true
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: valuePK
+            name: id
+            type: BIGINT
+        - column:
+            name: boolean_value
+            type: BOOLEAN
+        - column:
+            name: date_time_value
+            type: TIMESTAMP
+        - column:
+            name: number_value
+            type: numeric(19, 2)
+        - column:
+            name: string_value
+            type: VARCHAR(255)
+        tableName: value
+- changeSet:
+    id: 1674488016958-8
+    author: ChristophB (generated)
+    changes:
+    - addUniqueConstraint:
+        columnNames: values_id
+        constraintName: UK_l0jma069stnwgdl1peurekpl8
+        tableName: expression_values
+- changeSet:
+    id: 1674488016958-9
+    author: ChristophB (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: values_id
+        baseTableName: expression_values
+        constraintName: FK9ts37j4rlwlk8t6nk7bgab3qv
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: id
+        referencedTableName: value
+        validate: true
+- changeSet:
+    id: 1674488016958-10
+    author: ChristophB (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: expression_id
+        baseTableName: expression_values
+        constraintName: FKka2s2hwm9lqrn48tg15g0xuad
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: id
+        referencedTableName: expression
+        validate: true
+- changeSet:
+    id: 1674488016958-11
+    author: ChristophB (generated)
+    changes:
+    - dropColumn:
+        columnName: BOOLEAN_VALUE
+        tableName: EXPRESSION
+- changeSet:
+    id: 1674488016958-12
+    author: ChristophB (generated)
+    changes:
+    - dropColumn:
+        columnName: DATE_TIME_VALUE
+        tableName: EXPRESSION
+- changeSet:
+    id: 1674488016958-13
+    author: ChristophB (generated)
+    changes:
+    - dropColumn:
+        columnName: NUMBER_VALUE
+        tableName: EXPRESSION
+- changeSet:
+    id: 1674488016958-14
+    author: ChristophB (generated)
+    changes:
+    - dropColumn:
+        columnName: STRING_VALUE
+        tableName: EXPRESSION
+
