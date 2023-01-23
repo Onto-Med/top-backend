@@ -41,7 +41,7 @@
         <dependency>
             <groupId>care.smith.top</groupId>
             <artifactId>top-api</artifactId>
-            <version>0.6.4</version>
+            <version>0.6.5</version>
         </dependency>
         <dependency>
             <groupId>care.smith.top</groupId>
