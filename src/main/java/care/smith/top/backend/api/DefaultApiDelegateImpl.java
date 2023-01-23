@@ -1,27 +1,22 @@
 package care.smith.top.backend.api;
 
-import care.smith.top.backend.service.nlp.DocumentService;
-import care.smith.top.model.EntityType;
-import care.smith.top.model.Format;
-import care.smith.top.model.Purpose;
-import care.smith.top.model.Statistic;
 import care.smith.top.backend.service.EntityService;
 import care.smith.top.backend.service.OrganisationService;
 import care.smith.top.backend.service.RepositoryService;
+import care.smith.top.backend.service.nlp.DocumentService;
+import care.smith.top.model.*;
 import care.smith.top.top_phenotypic_query.converter.PhenotypeExporter;
 import care.smith.top.top_phenotypic_query.converter.PhenotypeImporter;
 import org.reflections.Reflections;
-import org.reflections.util.ConfigurationBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import static org.reflections.scanners.Scanners.SubTypes;
 
 @Service
 public class DefaultApiDelegateImpl implements DefaultApiDelegate {
@@ -37,23 +32,45 @@ public class DefaultApiDelegateImpl implements DefaultApiDelegate {
   }
 
   @Override
-  public ResponseEntity<List<Format>> getFormats(Purpose purpose) {
+  public ResponseEntity<List<Converter>> getConverters(Purpose purpose) {
     Reflections reflections = new Reflections("care.smith.top");
-    List<Format> formats =
-        reflections
-            .get(SubTypes.of(PhenotypeImporter.class, PhenotypeExporter.class).asClass())
-            .stream()
-            .map(
-                c -> {
-                  Format format = new Format().id(c.getSimpleName()).purposes(new ArrayList<>());
-                  if (PhenotypeImporter.class.isAssignableFrom(c))
-                    format.addPurposesItem(Purpose.IMPORT);
-                  if (PhenotypeExporter.class.isAssignableFrom(c))
-                    format.addPurposesItem(Purpose.EXPORT);
-                  return format;
-                })
-            .filter(f -> purpose == null || f.getPurposes().contains(purpose))
-            .collect(Collectors.toList());
+    List<Converter> formats = new ArrayList<>();
+
+    if (purpose == null || purpose.equals(Purpose.IMPORT)) {
+      formats.addAll(
+          reflections.getSubTypesOf(PhenotypeImporter.class).stream()
+              .map(
+                  c -> {
+                    Converter format =
+                        new Converter().id(c.getSimpleName()).purpose(Purpose.IMPORT);
+                    try {
+                      PhenotypeImporter instance = c.getConstructor().newInstance();
+                      format.setFileExtension(instance.getFileExtension());
+                    } catch (Exception ignored) {
+                    }
+                    return format;
+                  })
+              .collect(Collectors.toList()));
+    }
+
+    if (purpose == null || purpose.equals(Purpose.EXPORT)) {
+      formats.addAll(
+          reflections.getSubTypesOf(PhenotypeExporter.class).stream()
+              .map(
+                  c -> {
+                    Converter format =
+                        new Converter().id(c.getSimpleName()).purpose(Purpose.EXPORT);
+                    try {
+                      PhenotypeExporter instance = c.getConstructor().newInstance();
+                      format.setFileExtension(instance.getFileExtension());
+                    } catch (Exception ignored) {
+                    }
+                    return format;
+                  })
+              .collect(Collectors.toList()));
+    }
+
+    formats.sort(Comparator.comparing(Converter::getId));
     return new ResponseEntity<>(formats, HttpStatus.OK);
   }
 

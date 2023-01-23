@@ -552,7 +552,7 @@ public class EntityService implements ContentService {
   }
 
   public ByteArrayOutputStream exportRepository(
-      String organisationId, String repositoryId, String format) {
+      String organisationId, String repositoryId, String converter) {
     RepositoryDao repository = getRepository(organisationId, repositoryId);
     Entity[] entities =
         entityRepository
@@ -564,13 +564,13 @@ public class EntityService implements ContentService {
     Reflections reflections = new Reflections("care.smith.top");
     Optional<Class<?>> optional =
         reflections.get(SubTypes.of(PhenotypeExporter.class).asClass()).stream()
-            .filter(c -> c.getSimpleName().equals(format))
+            .filter(c -> c.getSimpleName().equals(converter))
             .findFirst();
 
     if (optional.isEmpty())
       throw new ResponseStatusException(
           HttpStatus.NOT_ACCEPTABLE,
-          String.format("No exporter for format '%s' available.", format));
+          String.format("No converter '%s' available.", converter));
 
     ByteArrayOutputStream stream = new ByteArrayOutputStream();
     try {
@@ -589,17 +589,17 @@ public class EntityService implements ContentService {
   @Caching(
       evict = {@CacheEvict("entityCount"), @CacheEvict(value = "entities", key = "#repositoryId")})
   public void importRepository(
-      String organisationId, String repositoryId, String format, InputStream stream) {
+      String organisationId, String repositoryId, String converter, InputStream stream) {
     Reflections reflections = new Reflections("care.smith.top");
     Optional<Class<?>> optional =
         reflections.get(SubTypes.of(PhenotypeImporter.class).asClass()).stream()
-            .filter(c -> c.getSimpleName().equals(format))
+            .filter(c -> c.getSimpleName().equals(converter))
             .findFirst();
 
     if (optional.isEmpty())
       throw new ResponseStatusException(
           HttpStatus.NOT_ACCEPTABLE,
-          String.format("No importer for format '%s' available.", format));
+          String.format("No converter '%s' available.", converter));
 
     try {
       PhenotypeImporter importer =
@@ -608,7 +608,7 @@ public class EntityService implements ContentService {
       createEntities(organisationId, repositoryId, entities, null);
     } catch (Exception e) {
       throw new ResponseStatusException(
-          HttpStatus.INTERNAL_SERVER_ERROR, "Importfailed with error: " + e.getMessage());
+          HttpStatus.INTERNAL_SERVER_ERROR, "Import failed with error: " + e.getMessage());
     }
   }
 

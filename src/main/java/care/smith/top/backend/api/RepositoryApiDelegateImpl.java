@@ -84,17 +84,17 @@ public class RepositoryApiDelegateImpl implements RepositoryApiDelegate {
 
   @Override
   public ResponseEntity<Resource> exportRepository(
-      String organisationId, String repositoryId, String format) {
+      String organisationId, String repositoryId, String converter) {
     ByteArrayOutputStream stream =
-        entityService.exportRepository(organisationId, repositoryId, format);
+        entityService.exportRepository(organisationId, repositoryId, converter);
     return new ResponseEntity<>(new ByteArrayResource(stream.toByteArray()), HttpStatus.OK);
   }
 
   @Override
   public ResponseEntity<Void> importRepository(
-      String organisationId, String repositoryId, String format, MultipartFile file) {
+      String organisationId, String repositoryId, String converter, MultipartFile file) {
     try {
-      entityService.importRepository(organisationId, repositoryId, format, file.getInputStream());
+      entityService.importRepository(organisationId, repositoryId, converter, file.getInputStream());
     } catch (IOException e) {
       throw new ResponseStatusException(
           HttpStatus.INTERNAL_SERVER_ERROR,
