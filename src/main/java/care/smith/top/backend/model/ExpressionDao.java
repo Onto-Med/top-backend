@@ -18,13 +18,12 @@ public class ExpressionDao {
   private String functionId;
   private String entityId;
   private String constantId;
-  private Boolean booleanValue;
-  private LocalDateTime dateTimeValue;
-  private BigDecimal numberValue;
-  private String stringValue;
 
   @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
   private List<ExpressionDao> arguments = null;
+
+  @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<ValueDao> values = null;
 
   public ExpressionDao() {}
 
@@ -32,7 +31,8 @@ public class ExpressionDao {
     functionId = expression.getFunctionId();
     entityId = expression.getEntityId();
     constantId = expression.getConstantId();
-    value(expression.getValue());
+    if (expression.getValues() != null)
+      values = expression.getValues().stream().map(ValueDao::new).collect(Collectors.toList());
     if (expression.getArguments() != null)
       arguments =
           expression.getArguments().stream().map(ExpressionDao::new).collect(Collectors.toList());
@@ -42,29 +42,23 @@ public class ExpressionDao {
       String function,
       String entityId,
       String constantId,
-      Value value,
+      List<ValueDao> values,
       List<ExpressionDao> arguments) {
     this.functionId = function;
     this.entityId = entityId;
     this.constantId = constantId;
-    value(value);
+    this.values = values;
     this.arguments = arguments;
   }
 
   public Expression toApiModel() {
     Expression expression =
         new Expression().functionId(functionId).entityId(entityId).constantId(constantId);
-    if (booleanValue != null)
-      expression.value(new BooleanValue().value(booleanValue).dataType(DataType.BOOLEAN));
-    if (dateTimeValue != null)
-      expression.value(new DateTimeValue().value(dateTimeValue).dataType(DataType.DATE_TIME));
-    if (numberValue != null)
-      expression.value(new NumberValue().value(numberValue).dataType(DataType.NUMBER));
-    if (stringValue != null)
-      expression.value(new StringValue().value(stringValue).dataType(DataType.STRING));
     if (arguments != null)
       expression.setArguments(
           arguments.stream().map(ExpressionDao::toApiModel).collect(Collectors.toList()));
+    if (values != null)
+      expression.setValues(values.stream().map(ValueDao::toApiModel).collect(Collectors.toList()));
     return expression;
   }
 
@@ -104,22 +98,21 @@ public class ExpressionDao {
     return this;
   }
 
-  public ExpressionDao value(Value value) {
-    if (value != null) {
-      if (value instanceof BooleanValue) booleanValue = ((BooleanValue) value).isValue();
-      if (value instanceof DateTimeValue) dateTimeValue = ((DateTimeValue) value).getValue();
-      if (value instanceof NumberValue) numberValue = ((NumberValue) value).getValue();
-      if (value instanceof StringValue) stringValue = ((StringValue) value).getValue();
-    }
-    return this;
-  }
-
   public List<ExpressionDao> getArguments() {
     return arguments;
   }
 
   public ExpressionDao arguments(List<ExpressionDao> arguments) {
     this.arguments = arguments;
+    return this;
+  }
+
+  public List<ValueDao> getValues() {
+    return values;
+  }
+
+  public ExpressionDao setValues(List<ValueDao> values) {
+    this.values = values;
     return this;
   }
 
@@ -131,23 +124,13 @@ public class ExpressionDao {
     return Objects.equals(getFunctionId(), that.getFunctionId())
         && Objects.equals(getEntityId(), that.getEntityId())
         && Objects.equals(getConstantId(), that.getConstantId())
-        && Objects.equals(booleanValue, that.booleanValue)
-        && Objects.equals(dateTimeValue, that.dateTimeValue)
-        && Objects.equals(numberValue, that.numberValue)
-        && Objects.equals(stringValue, that.stringValue)
+        && Objects.equals(getValues(), that.getValues())
         && Objects.equals(getArguments(), that.getArguments());
   }
 
   @Override
   public int hashCode() {
     return Objects.hash(
-        getFunctionId(),
-        getEntityId(),
-        getConstantId(),
-        booleanValue,
-        dateTimeValue,
-        numberValue,
-        stringValue,
-        getArguments());
+        getFunctionId(), getEntityId(), getConstantId(), getValues(), getArguments());
   }
 }
