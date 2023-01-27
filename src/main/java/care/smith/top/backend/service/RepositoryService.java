@@ -2,13 +2,14 @@ package care.smith.top.backend.service;
 
 import care.smith.top.backend.model.OrganisationDao;
 import care.smith.top.backend.model.RepositoryDao;
-import care.smith.top.backend.repository.EntityRepository;
 import care.smith.top.backend.repository.OrganisationRepository;
 import care.smith.top.backend.repository.RepositoryRepository;
 import care.smith.top.model.Repository;
 import care.smith.top.model.RepositoryType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -26,7 +27,6 @@ public class RepositoryService implements ContentService {
 
   @Autowired private RepositoryRepository repositoryRepository;
   @Autowired private OrganisationRepository organisationRepository;
-  @Autowired private EntityRepository entityRepository;
 
   @Override
   public long count() {
@@ -53,6 +53,8 @@ public class RepositoryService implements ContentService {
   }
 
   @Transactional
+  @Caching(
+      evict = {@CacheEvict("entityCount"), @CacheEvict(value = "entities", key = "#repositoryId")})
   public void deleteRepository(String repositoryId, String organisationId, List<String> include) {
     repositoryRepository.delete(
         getRepository(organisationId, repositoryId)
