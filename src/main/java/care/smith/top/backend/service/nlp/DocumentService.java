@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import java.util.*;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -38,11 +38,13 @@ public class DocumentService implements ContentService {
         if (conceptIds.size() == 0) {
             return List.of();
         }
-        return documentRepository
+        HashMap<String, Document> docMap = documentRepository
                 .findAll(documentsForConceptsUnion(conceptIds))
                 .stream()
                 .map(idOnly ? documentEntityMapperIdOnly : documentEntityMapper)
-                .collect(Collectors.toList());
+                .collect(Collectors.toMap(Document::getId, Function.identity(), (prev, next) -> next, HashMap::new));
+
+        return new ArrayList<>(docMap.values());
     }
 
     static Statement documentForId(String documentId) {
