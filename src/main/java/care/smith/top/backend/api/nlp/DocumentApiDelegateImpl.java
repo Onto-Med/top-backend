@@ -19,7 +19,6 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
 
     @Override
     public ResponseEntity<List<Document>> getDocumentsByConceptIds(List<String> conceptId, Boolean idOnly, String gatheringMode, String name) {
-        boolean intersection = true;
         if (!Objects.equals(gatheringMode, "intersection")) {
             return new ResponseEntity<>(documentService.getDocumentsForConcepts(Set.copyOf(conceptId), idOnly), HttpStatus.OK);
         } else {
@@ -39,6 +38,7 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
                         .collect(Collectors.toSet())
                 );
             }
+
             return new ResponseEntity<>(
                     listOfSets
                             .stream()
@@ -46,7 +46,8 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
                             .collect( () -> listOfSets.get(0), Set::retainAll, Set::retainAll)
                             .stream()
                             .map(hashMapDocuments::get)
-                            .collect(Collectors.toList()), HttpStatus.OK);
+                            .collect(Collectors.toList()),
+                    HttpStatus.OK);
         }
     }
 
