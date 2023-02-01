@@ -5,19 +5,15 @@ import care.smith.top.top_phenotypic_query.c2reasoner.C2R;
 import care.smith.top.top_phenotypic_query.c2reasoner.functions.FunctionEntity;
 import care.smith.top.top_phenotypic_query.c2reasoner.functions.advanced.Restrict;
 import care.smith.top.top_phenotypic_query.c2reasoner.functions.advanced.Switch;
-import care.smith.top.top_phenotypic_query.c2reasoner.functions.bool.And;
-import care.smith.top.top_phenotypic_query.c2reasoner.functions.bool.Not;
-import care.smith.top.top_phenotypic_query.c2reasoner.functions.bool.Or;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 public class ExpressionFunctionApiDelegateImpl implements ExpressionFunctionApiDelegate {
@@ -27,23 +23,13 @@ public class ExpressionFunctionApiDelegateImpl implements ExpressionFunctionApiD
 
   @Override
   public ResponseEntity<List<ExpressionFunction>> getExpressionFunctions(String type) {
-    if ("math".equals(type)) return new ResponseEntity<>(getMathFunctions(), HttpStatus.OK);
-    if ("boolean".equals(type)) return new ResponseEntity<>(getBooleanFunctions(), HttpStatus.OK);
-    throw new ResponseStatusException(
-        HttpStatus.NOT_ACCEPTABLE, "Expression operator type is not supported.");
-  }
-
-  private List<ExpressionFunction> getBooleanFunctions() {
-    return Stream.of(And.get(), Or.get(), Not.get())
-        .map(FunctionEntity::getFunction)
-        .collect(Collectors.toList());
-  }
-
-  private List<ExpressionFunction> getMathFunctions() {
-    return calculator.getFunctions().stream()
-        .map(FunctionEntity::getFunction)
-        .filter(f -> !EXCLUDED_FUNCTION_IDS.contains(f.getId()))
-        .sorted(Comparator.comparing(ExpressionFunction::getTitle))
-        .collect(Collectors.toList());
+    return new ResponseEntity<>(
+        calculator.getFunctions().stream()
+            .filter(f -> StringUtils.isBlank(type) || type.equals(f.getType()))
+            .map(FunctionEntity::getFunction)
+            .filter(f -> !EXCLUDED_FUNCTION_IDS.contains(f.getId()))
+            .sorted(Comparator.comparing(ExpressionFunction::getTitle))
+            .collect(Collectors.toList()),
+        HttpStatus.OK);
   }
 }
