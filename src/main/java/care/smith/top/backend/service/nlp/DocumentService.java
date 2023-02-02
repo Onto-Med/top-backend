@@ -34,12 +34,12 @@ public class DocumentService implements ContentService {
     }
 
     @Cacheable("conceptDocumentIds")
-    public List<Document> getDocumentsForConcepts(Set<String> conceptIds, Boolean idOnly) {
+    public List<Document> getDocumentsForConcepts(Set<String> conceptIds, Boolean idOnly, Boolean exemplarOnly) {
         if (conceptIds.size() == 0) {
             return List.of();
         }
         HashMap<String, Document> docMap = documentRepository
-                .findAll(documentsForConceptsUnion(conceptIds))
+                .findAll(documentsForConceptsUnion(conceptIds, exemplarOnly))
                 .stream()
                 .map(idOnly ? documentEntityMapperIdOnly : documentEntityMapper)
                 .collect(Collectors.toMap(Document::getId, Function.identity(), (prev, next) -> next, HashMap::new));
@@ -57,9 +57,14 @@ public class DocumentService implements ContentService {
                 .build();
     }
 
-    static Statement documentsForConceptsUnion(Set<String> conceptIds) {
+    static Statement documentsForConceptsUnion(Set<String> conceptIds, Boolean exemplarOnly) {
         Node document = Cypher.node("Document").named("document");
-        Node phrase = Cypher.node("Phrase").named("phrase");
+        Node phrase;
+        if (exemplarOnly) {
+            phrase = Cypher.node("Phrase").withProperties(Map.of("exemplar", true)).named("phrase");
+        } else {
+            phrase = Cypher.node("Phrase").named("phrase");
+        }
         Node concept = Cypher.node("Concept").named("concept");
 
         return Cypher
