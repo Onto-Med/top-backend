@@ -18,9 +18,9 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
     @Autowired DocumentService documentService;
 
     @Override
-    public ResponseEntity<List<Document>> getDocumentsByConceptIds(List<String> conceptId, Boolean idOnly, String gatheringMode, String name) {
+    public ResponseEntity<List<Document>> getDocumentsByConceptIds(List<String> conceptId, Boolean idOnly, String gatheringMode, String name, Boolean exemplarOnly) {
         if (!Objects.equals(gatheringMode, "intersection")) {
-            return new ResponseEntity<>(documentService.getDocumentsForConcepts(Set.copyOf(conceptId), idOnly), HttpStatus.OK);
+            return new ResponseEntity<>(documentService.getDocumentsForConcepts(Set.copyOf(conceptId), idOnly, exemplarOnly), HttpStatus.OK);
         } else {
             Map<String, Document> hashMapDocuments = new HashMap<>();
             List<Set<String>> listOfSets = new ArrayList<>();
@@ -28,7 +28,7 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
 
             while (it.hasNext()) {
                 int idx = it.nextIndex();
-                List<Document> documentList = documentService.getDocumentsForConcepts(Set.of(it.next()), idOnly);
+                List<Document> documentList = documentService.getDocumentsForConcepts(Set.of(it.next()), idOnly, exemplarOnly);
                 for (Document doc: documentList) {
                     hashMapDocuments.put(doc.getId(), doc);
                 }
