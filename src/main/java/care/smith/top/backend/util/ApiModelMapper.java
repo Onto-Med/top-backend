@@ -28,12 +28,14 @@ public abstract class ApiModelMapper {
     if (expression.getEntityId() != null) {
       String newEntityId = ids.get(expression.getEntityId());
       if (newEntityId != null) newExpression.entityId(newEntityId);
-    } else if (expression.getArguments() != null) {
+    }
+    if (expression.getArguments() != null) {
       newExpression.arguments(
           expression.getArguments().stream()
               .map(a -> replaceEntityIds(a, ids))
               .collect(Collectors.toList()));
-    } else if (expression.getValues() != null) {
+    }
+    if (expression.getValues() != null) {
       newExpression.values(
           expression.getValues().stream().map(ApiModelMapper::clone).collect(Collectors.toList()));
     }
