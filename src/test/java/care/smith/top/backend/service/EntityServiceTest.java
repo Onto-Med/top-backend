@@ -1,6 +1,7 @@
 package care.smith.top.backend.service;
 
 import care.smith.top.backend.model.EntityDao;
+import care.smith.top.backend.util.TopJsonFormat;
 import care.smith.top.model.*;
 import care.smith.top.top_phenotypic_query.c2reasoner.functions.bool.Not;
 import org.junit.jupiter.api.Test;
@@ -8,6 +9,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.util.*;
@@ -15,6 +18,49 @@ import java.util.*;
 import static org.assertj.core.api.Assertions.*;
 
 class EntityServiceTest extends AbstractTest {
+  @Test
+  void exportRepository() {
+    Organisation organisation =
+        organisationService.createOrganisation(new Organisation().id("org"));
+    Repository repository1 =
+        repositoryService.createRepository(
+            organisation.getId(), new Repository().id("repo1").organisation(organisation), null);
+    Repository repository2 =
+        repositoryService.createRepository(
+            organisation.getId(), new Repository().id("repo2").organisation(organisation), null);
+    Phenotype phenotype =
+        (Phenotype)
+            new Phenotype()
+                .dataType(DataType.STRING)
+                .id("single_phen")
+                .entityType(EntityType.SINGLE_PHENOTYPE);
+    entityService.createEntity(organisation.getId(), repository1.getId(), phenotype);
+
+    ByteArrayInputStream export =
+        new ByteArrayInputStream(
+            entityService
+                .exportRepository(
+                    organisation.getId(), repository1.getId(), TopJsonFormat.class.getSimpleName())
+                .toByteArray());
+    entityService.importRepository(
+        organisation.getId(), repository2.getId(), TopJsonFormat.class.getSimpleName(), export);
+
+    assertThat(
+            entityService.getEntitiesByRepositoryId(
+                organisation.getId(), repository2.getId(), null, null, null, null, null, 1))
+        .allSatisfy(
+            e -> {
+              assertThat(e.getId()).isNotEqualTo(phenotype.getId());
+              assertThat(e.getEntityType()).isEqualTo(phenotype.getEntityType());
+              assertThat(((Phenotype) e).getDataType()).isEqualTo(phenotype.getDataType());
+            })
+        .size()
+        .isEqualTo(1);
+  }
+
+  @Test
+  void importRepository() {}
+
   @Test
   void createEntities() {
     Organisation organisation =
