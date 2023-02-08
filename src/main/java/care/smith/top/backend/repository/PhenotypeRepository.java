@@ -53,4 +53,22 @@ public interface PhenotypeRepository extends EntityRepository {
             .and(byItemType(itemType)),
         pageable);
   }
+
+  default Page<EntityDao>
+      findAllByRepositoryIdsAndRepository_PrimaryAndTitleAndEntityTypeAndDataTypeAndItemType(
+          List<String> repositoryIds,
+          Boolean includePrimary,
+          String title,
+          List<EntityType> entityTypes,
+          DataType dataType,
+          ItemType itemType,
+          Pageable pageable) {
+    return findAll(
+        EntityRepository.byRepositoryIds(repositoryIds, includePrimary)
+            .and(EntityRepository.byTitle(title))
+            .and(EntityRepository.byEntityType(entityTypes))
+            .and(byDataType(dataType))
+            .and(byItemType(itemType)),
+        pageable);
+  }
 }

@@ -12,6 +12,7 @@ import org.springframework.stereotype.Repository;
 
 import javax.annotation.Nullable;
 import javax.persistence.criteria.JoinType;
+import javax.persistence.criteria.Predicate;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -63,6 +64,28 @@ public interface EntityRepository
     return (root, query, cb) -> {
       if (repositoryId == null) return cb.and();
       return cb.equal(root.join(EntityDao_.REPOSITORY).get(RepositoryDao_.ID), repositoryId);
+    };
+  }
+
+  static Specification<EntityDao> byRepositoryIds(
+      List<String> repositoryIds, Boolean includePrimary) {
+    return (root, query, cb) -> {
+      if (repositoryIds == null && includePrimary == null) return cb.and();
+      Predicate repositoryPredicate =
+          repositoryIds != null
+              ? root.join(EntityDao_.REPOSITORY).get(RepositoryDao_.ID).in(repositoryIds)
+              : cb.or();
+      if (repositoryIds != null) {
+        return cb.or(
+            repositoryPredicate,
+            (includePrimary != null && includePrimary)
+                ? cb.isTrue(root.join(EntityDao_.REPOSITORY).get(RepositoryDao_.PRIMARY))
+                : cb.or());
+      } else {
+        return !includePrimary
+            ? cb.isFalse(root.join(EntityDao_.REPOSITORY).get(RepositoryDao_.PRIMARY))
+            : cb.and();
+      }
     };
   }
 

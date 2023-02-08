@@ -11,8 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.io.IOException;
-import java.io.OutputStream;
 import java.util.List;
 
 import static care.smith.top.backend.configuration.RequestValidator.isValidId;
@@ -100,9 +98,13 @@ public class EntityApiDelegateImpl implements EntityApiDelegate {
       List<EntityType> type,
       DataType dataType,
       ItemType itemType,
+      List<String> repositoryIds,
+      Boolean includePrimary,
       Integer page) {
     return new ResponseEntity<>(
-        entityService.getEntities(include, name, type, dataType, itemType, page), HttpStatus.OK);
+        entityService.getEntities(
+            include, name, type, dataType, itemType, repositoryIds, includePrimary, page),
+        HttpStatus.OK);
   }
 
   @Override
