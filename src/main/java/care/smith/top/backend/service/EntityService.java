@@ -383,11 +383,13 @@ public class EntityService implements ContentService {
       List<EntityType> type,
       DataType dataType,
       ItemType itemType,
+      List<String> repositoryIds,
+      Boolean includePrimary,
       Integer page) {
     PageRequest pageRequest = PageRequest.of(page != null ? page - 1 : 0, pageSize);
     return phenotypeRepository
-        .findAllByRepositoryIdAndTitleAndEntityTypeAndDataTypeAndItemType(
-            null, name, type, dataType, itemType, pageRequest)
+        .findAllByRepositoryIdsAndRepository_PrimaryAndTitleAndEntityTypeAndDataTypeAndItemType(
+            repositoryIds, includePrimary, name, type, dataType, itemType, pageRequest)
         .map(EntityDao::toApiModel)
         .toList();
   }

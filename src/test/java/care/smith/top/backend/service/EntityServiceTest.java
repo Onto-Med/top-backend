@@ -10,7 +10,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.util.*;
@@ -594,7 +593,7 @@ class EntityServiceTest extends AbstractTest {
             organisation.getId(), new Repository().id("repo1").primary(true), null);
     Repository repository2 =
         repositoryService.createRepository(
-            organisation.getId(), new Repository().id("repo2").primary(true), null);
+            organisation.getId(), new Repository().id("repo2").primary(false), null);
     Phenotype entity1 =
         (Phenotype)
             new Phenotype()
@@ -631,49 +630,79 @@ class EntityServiceTest extends AbstractTest {
                 Collections.singletonList(EntityType.SINGLE_PHENOTYPE),
                 null,
                 null,
+                null,
+                null,
                 null))
         .isNotEmpty()
         .allSatisfy(e -> assertThat(e.getId()).isEqualTo(entity1.getId()))
         .size()
         .isEqualTo(1);
 
-    assertThat(entityService.getEntities(null, null, null, null, null, null))
+    assertThat(entityService.getEntities(null, null, null, null, null, null, null, null))
         .isNotEmpty()
         .anySatisfy(e -> assertThat(e.getId()).isEqualTo(entity1.getId()))
         .anySatisfy(e -> assertThat(e.getId()).isEqualTo(entity2.getId()))
         .size()
         .isEqualTo(2);
 
-    assertThat(entityService.getEntities(null, "xample", null, null, null, null))
+    assertThat(entityService.getEntities(null, null, null, null, null, null, false, null))
+        .isNotEmpty()
+        .size()
+        .isEqualTo(1);
+
+    assertThat(entityService.getEntities(null, null, null, null, null, null, true, null))
+        .isNotEmpty()
+        .size()
+        .isEqualTo(2);
+
+    assertThat(
+            entityService.getEntities(
+                null,
+                null,
+                null,
+                null,
+                null,
+                Collections.singletonList(repository1.getId()),
+                false,
+                null))
+        .isNotEmpty()
+        .size()
+        .isEqualTo(1);
+
+    assertThat(entityService.getEntities(null, "xample", null, null, null, null, null, null))
         .isNotEmpty()
         .anySatisfy(e -> assertThat(e.getId()).isEqualTo(entity1.getId()))
         .anySatisfy(e -> assertThat(e.getId()).isEqualTo(entity2.getId()))
         .size()
         .isEqualTo(2);
 
-    assertThat(entityService.getEntities(null, "test", null, null, null, null))
+    assertThat(entityService.getEntities(null, "test", null, null, null, null, null, null))
         .isNotEmpty()
         .allSatisfy(e -> assertThat(e.getId()).isEqualTo(entity1.getId()))
         .size()
         .isEqualTo(1);
 
-    assertThat(entityService.getEntities(null, null, null, DataType.NUMBER, null, null))
-        .isNotEmpty()
-        .allSatisfy(e -> assertThat(e.getId()).isEqualTo(entity1.getId()))
-        .size()
-        .isEqualTo(1);
-
-    assertThat(entityService.getEntities(null, null, null, DataType.BOOLEAN, null, null))
-        .isNullOrEmpty();
-
-    assertThat(entityService.getEntities(null, null, null, null, ItemType.OBSERVATION, null))
+    assertThat(entityService.getEntities(null, null, null, DataType.NUMBER, null, null, null, null))
         .isNotEmpty()
         .allSatisfy(e -> assertThat(e.getId()).isEqualTo(entity1.getId()))
         .size()
         .isEqualTo(1);
 
     assertThat(
-            entityService.getEntities(null, null, null, null, ItemType.ALLERGY_INTOLERANCE, null))
+            entityService.getEntities(null, null, null, DataType.BOOLEAN, null, null, null, null))
+        .isNullOrEmpty();
+
+    assertThat(
+            entityService.getEntities(
+                null, null, null, null, ItemType.OBSERVATION, null, null, null))
+        .isNotEmpty()
+        .allSatisfy(e -> assertThat(e.getId()).isEqualTo(entity1.getId()))
+        .size()
+        .isEqualTo(1);
+
+    assertThat(
+            entityService.getEntities(
+                null, null, null, null, ItemType.ALLERGY_INTOLERANCE, null, null, null))
         .isNullOrEmpty();
 
     assertThat(
