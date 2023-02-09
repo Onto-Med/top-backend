@@ -52,7 +52,10 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
 
     @Override
     public ResponseEntity<Document> getDocumentById(String documentId, List<String> include) {
-        return new ResponseEntity<>(documentService.getDocumentById(documentId), HttpStatus.OK);
+        //ToDo: change this. right now, the document name is taken as id, because neo4j node id (short string that is just a simple number)
+        // and elasticsearch document id (uuid) don't match
+//            return new ResponseEntity<>(documentService.getDocumentByName(documentId), HttpStatus.OK);
+            return new ResponseEntity<>(documentService.getDocumentsByTerms(new String[]{documentId}, new String[]{"name"}).get(0), HttpStatus.OK);
     }
 
     @Override

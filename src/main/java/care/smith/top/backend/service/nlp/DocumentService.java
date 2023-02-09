@@ -1,13 +1,21 @@
 package care.smith.top.backend.service.nlp;
 
 import care.smith.top.backend.model.nlp.DocumentEntity;
+import care.smith.top.backend.model.nlp.DocumentNodeEntity;
 import care.smith.top.backend.model.nlp.PhraseEntity;
+import care.smith.top.backend.repository.nlp.DocumentNodeRepository;
+import care.smith.top.backend.repository.nlp.DocumentRepository;
 import care.smith.top.backend.service.ContentService;
 import care.smith.top.model.Document;
-import care.smith.top.backend.repository.nlp.DocumentRepository;
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.neo4j.cypherdsl.core.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.elasticsearch.core.SearchHit;
+import org.springframework.data.elasticsearch.core.query.Query;
+import org.springframework.data.elasticsearch.core.query.StringQuery;
+import org.springframework.data.elasticsearch.core.query.StringQueryBuilder;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -19,18 +27,25 @@ import java.util.stream.Collectors;
 public class DocumentService implements ContentService {
 
     @Autowired DocumentRepository documentRepository;
+    @Autowired DocumentNodeRepository documentNodeRepository;
 
     @Override
     @Cacheable("documentCount")
-    public long count() { return documentRepository.count(); }
+    public long count() { return documentNodeRepository.count(); }
 
 
-    public Document getDocumentById(String documentId) {
-        //ToDo: I don't want to return 'null' -> rather some form of 'Empty'-Document
+    public Document getDocumentByName(String documentName) {
+        return documentEntityMapper.apply(
+                documentRepository.findDocumentEntityByDocumentName(documentName)
+        );
+    }
+
+    public List<Document> getDocumentsByTerms(String[] terms, String[] fields) {
         return documentRepository
-                .findOne(documentForId(documentId))
+                .getDocumentsByTerms(terms, fields)
+                .stream()
                 .map(documentEntityMapper)
-                .orElse(null);
+                .collect(Collectors.toList());
     }
 
     @Cacheable("conceptDocumentIds")
@@ -38,23 +53,13 @@ public class DocumentService implements ContentService {
         if (conceptIds.size() == 0) {
             return List.of();
         }
-        HashMap<String, Document> docMap = documentRepository
+        HashMap<String, Document> docMap = documentNodeRepository
                 .findAll(documentsForConceptsUnion(conceptIds, exemplarOnly))
                 .stream()
-                .map(idOnly ? documentEntityMapperIdOnly : documentEntityMapper)
+                .map(idOnly ? documentNodeEntityMapperIdOnly : documentNodeEntityMapper)
                 .collect(Collectors.toMap(Document::getId, Function.identity(), (prev, next) -> next, HashMap::new));
 
         return new ArrayList<>(docMap.values());
-    }
-
-    static Statement documentForId(String documentId) {
-        Node document = Cypher.node("Document")
-                .withProperties("docId", Cypher.literalOf(documentId)).named("Document");
-
-        return Cypher
-                .match(document)
-                .returning(document)
-                .build();
     }
 
     static Statement documentsForConceptsUnion(Set<String> conceptIds, Boolean exemplarOnly) {
@@ -86,16 +91,19 @@ public class DocumentService implements ContentService {
     }
 
     private final Function<DocumentEntity, Document> documentEntityMapper = documentEntity -> new Document()
-            .id(documentEntity.documentId())
-            .text(documentEntity.documentText())
-            .phrases(documentEntity
+            .id(documentEntity.getDocumentName())
+            .text(documentEntity.getDocumentText());
+
+    private final Function<DocumentNodeEntity, Document> documentNodeEntityMapper = documentNodeEntity -> new Document()
+            .id(documentNodeEntity.documentId())
+            .phrases(documentNodeEntity
                     .documentPhrases()
                     .stream()
                     .map(PhraseEntity::phraseText)
                     .sorted()
                     .collect(Collectors.toList()));
 
-    private final Function<DocumentEntity, Document> documentEntityMapperIdOnly = documentEntity -> new Document()
-            .id(documentEntity.documentId());
+    private final Function<DocumentNodeEntity, Document> documentNodeEntityMapperIdOnly = documentNodeEntity -> new Document()
+            .id(documentNodeEntity.documentId());
 
 }

@@ -16,10 +16,14 @@ Spring Boot based backend of the TOP framework
     * `DATA_SOURCE_CONFIG_DIR`: location of data source configuration files, defaults to `config/data_sources`
 
    Document related:
-    * `DB_NEO4J_HOST`: host running the neo4j database server, defaults to neo4j
+    * `DB_NEO4J_HOST`: host running the neo4j database server, defaults to localhost
     * `DB_NEO4J_PORT`: port of the neo4j database, defaults to 7687
     * `DB_NEO4J_USER`: username for neo4j database, defaults to neo4j
     * `DB_NEO4J_PASS`: password for neo4j database
+    * `DB_ELASTIC_HOST`: host running the Elasticsearch document storage, defaults to localhost
+    * `DB_ELASTIC_PORT`: port of the Elasticsearch document storage, defaults to 9200
+    * `DB_ELASTIC_CONNECTION_TIMEOUT`: timeout in seconds, defaults to 1s
+    * `DB_ELASTIC_SOCKET_TIMEOUT` timeout in seconds, defaults to 30s
 
    OAuth2 related:
     * `OAUTH2_ENABLED`: enable or disable oauth2, defaults to `false`
