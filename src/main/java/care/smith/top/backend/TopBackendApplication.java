@@ -6,6 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.neo4j.repository.config.EnableNeo4jRepositories;
@@ -17,6 +18,7 @@ import org.springframework.data.neo4j.repository.config.EnableNeo4jRepositories;
 @EnableJpaRepositories
 @EnableJpaAuditing(dateTimeProviderRef = "auditingDateTimeProvider")
 @EnableNeo4jRepositories(basePackages = "care.smith.top.backend.repository.nlp")
+@EnableElasticsearchRepositories(basePackages = "care.smith.top.backend.repository.nlp")
 public class TopBackendApplication {
 
   public static void main(String[] args) {

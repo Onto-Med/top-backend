@@ -1,47 +1,38 @@
 package care.smith.top.backend.model.nlp;
 
-import org.springframework.data.neo4j.core.schema.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
-@Node("Document")
+@Document(indexName = "documents")
 public class DocumentEntity {
 
-    @Id @GeneratedValue private Long id;
+    @Id
+    private String id;
 
-    @Property("docId")
-    private final String documentId;
+    @Field(name = "name", type = FieldType.Keyword)
+    private String documentName;
 
-    @Property("text")
-    private final String documentText;
+    @Field(name = "text", type = FieldType.Text)
+    private String documentText;
 
-    @Relationship(type = "HAS_PHRASE", direction = Relationship.Direction.OUTGOING)
-    private List<PhraseEntity> documentPhrases;
+    public String getId() { return id; };
 
-    public DocumentEntity(String documentId, String documentText) {
-        this.id = null;
-        this.documentId = documentId;
-        this.documentText = documentText;
+    public void setDocumentName(String documentName) {
+        this.documentName = documentName;
     }
 
-    public DocumentEntity withId(Long id) {
-        if (this.id.equals(id)) {
-            return this;
-        } else {
-            DocumentEntity newObj = new DocumentEntity(this.documentId, this.documentText);
-            newObj.id = id;
-            return newObj;
-        }
+    public String getDocumentName() {
+        return documentName;
     }
 
-    public String documentId() {
-        return documentId;
+    public void setDocumentText(String text) {
+        this.documentText = text;
     }
 
-    public String documentText() {
+    public String getDocumentText() {
         return documentText;
     }
 
-    public List<PhraseEntity> documentPhrases() { return documentPhrases; }
 }
