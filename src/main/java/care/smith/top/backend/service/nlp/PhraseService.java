@@ -17,7 +17,12 @@ import java.util.stream.Collectors;
 @Service
 public class PhraseService implements ContentService {
 
-    @Autowired PhraseRepository phraseRepository;
+    private final PhraseRepository phraseRepository;
+
+    @Autowired
+    public PhraseService(PhraseRepository phraseRepository) {
+        this.phraseRepository = phraseRepository;
+    }
 
     @Override
     @Cacheable("phraseCount")
