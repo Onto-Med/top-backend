@@ -20,9 +20,6 @@ public class SecurityConfiguration {
   @Value("${spring.security.cors.allowed-origins}")
   private String[] allowedOrigins;
 
-  @Value("${spring.security.oauth2.enabled}")
-  private Boolean oauth2Enabled;
-
   @Bean
   SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http.cors()
@@ -30,11 +27,8 @@ public class SecurityConfiguration {
         .csrf()
         .disable()
         .authorizeRequests()
-        .antMatchers("/statistic", "/ping", "/entity")
+        .anyRequest()
         .permitAll();
-
-    if (oauth2Enabled) http.authorizeRequests().anyRequest().fullyAuthenticated();
-    else http.authorizeRequests().anyRequest().permitAll();
 
     http.oauth2ResourceServer(OAuth2ResourceServerConfigurer::jwt);
     return http.build();

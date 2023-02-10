@@ -21,6 +21,7 @@ import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -34,6 +35,7 @@ import static org.reflections.scanners.Scanners.SubTypes;
 
 @Service
 @Transactional
+@Secured("ROLE_USER")
 public class EntityService implements ContentService {
   @Value("${spring.paging.page-size:10}")
   private int pageSize;
@@ -46,11 +48,13 @@ public class EntityService implements ContentService {
 
   @Override
   @Cacheable("entityCount")
+  @Secured({})
   public long count() {
     return entityRepository.count();
   }
 
   @Cacheable("entityCount")
+  @Secured({})
   public long count(EntityType... types) {
     return entityRepository.countByEntityTypeIn(types);
   }
@@ -377,6 +381,7 @@ public class EntityService implements ContentService {
     entityVersionRepository.delete(entityVersion);
   }
 
+  @Secured({})
   public List<Entity> getEntities(
       List<String> include,
       String name,
@@ -394,6 +399,7 @@ public class EntityService implements ContentService {
         .toList();
   }
 
+  @Secured({})
   public List<Entity> getEntitiesByRepositoryId(
       String organisationId,
       String repositoryId,
@@ -413,6 +419,7 @@ public class EntityService implements ContentService {
         .toList();
   }
 
+  @Secured({})
   public ForkingStats getForkingStats(
       String organisationId, String repositoryId, String id, List<String> include) {
     getRepository(organisationId, repositoryId);
@@ -448,6 +455,7 @@ public class EntityService implements ContentService {
       value = "entities",
       key = "#repositoryId",
       condition = "#name == null && #type == null && #dataType == null")
+  @Secured({})
   public List<Entity> getRootEntitiesByRepositoryId(
       String organisationId,
       String repositoryId,
@@ -465,6 +473,7 @@ public class EntityService implements ContentService {
         .getContent();
   }
 
+  @Secured({})
   public List<Entity> getSubclasses(
       String organisationId, String repositoryId, String id, List<String> include) {
     getRepository(organisationId, repositoryId);
@@ -473,6 +482,7 @@ public class EntityService implements ContentService {
         .collect(Collectors.toList());
   }
 
+  @Secured({})
   public List<Entity> getVersions(
       String organisationId, String repositoryId, String id, List<String> include) {
     getRepository(organisationId, repositoryId);
@@ -483,6 +493,7 @@ public class EntityService implements ContentService {
         .collect(Collectors.toList());
   }
 
+  @Secured({})
   public Entity loadEntity(String organisationId, String repositoryId, String id, Integer version) {
     getRepository(organisationId, repositoryId);
     if (version == null)

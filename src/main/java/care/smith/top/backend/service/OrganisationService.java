@@ -6,15 +6,25 @@ import care.smith.top.model.Organisation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Slice;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-import java.util.Objects;
 
+/**
+ * This service provides organisation related business logic. If oauth2 authentication is enabled
+ * the following restrictions will be applied to CRUD operations:
+ *
+ * <ul>
+ *   <li>Create: authenticated users
+ *   <li>Read: anonymous users
+ *   <li>Update: authenticated users with write authority
+ *   <li>Delete: authenticated users with write authority
+ * </ul>
+ */
 @Service
 public class OrganisationService implements ContentService {
   @Autowired OrganisationRepository organisationRepository;
@@ -27,15 +37,9 @@ public class OrganisationService implements ContentService {
     return organisationRepository.count();
   }
 
+  @PreAuthorize("isAuthenticated()")
   @Transactional
   public Organisation createOrganisation(Organisation data) {
-    // TODO: use below code to get current user
-    // UserDetails userDetails =
-    //   (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-    //
-    // throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-    // userDetails.getUsername());
-
     if (organisationRepository.existsById(data.getId()))
       throw new ResponseStatusException(HttpStatus.CONFLICT);
 
@@ -48,6 +52,7 @@ public class OrganisationService implements ContentService {
     return organisationRepository.save(organisation).toApiModel();
   }
 
+  @PreAuthorize("isAuthenticated() and hasAuthority('write')")
   @Transactional
   public Organisation updateOrganisationById(String id, Organisation data) {
     OrganisationDao organisation =
@@ -63,6 +68,7 @@ public class OrganisationService implements ContentService {
     return organisationRepository.saveAndFlush(organisation.update(data)).toApiModel();
   }
 
+  @PreAuthorize("isAuthenticated() and hasAuthority('write')")
   @Transactional
   public void deleteOrganisationById(String organisationId) {
     OrganisationDao organisation =

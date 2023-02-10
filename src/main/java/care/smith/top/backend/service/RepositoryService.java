@@ -13,6 +13,7 @@ import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -21,6 +22,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@Secured("ROLE_USER")
 public class RepositoryService implements ContentService {
   @Value("${spring.paging.page-size:10}")
   private int pageSize;
@@ -29,6 +31,7 @@ public class RepositoryService implements ContentService {
   @Autowired private OrganisationRepository organisationRepository;
 
   @Override
+  @Secured({})
   public long count() {
     return repositoryRepository.count();
   }
@@ -61,6 +64,7 @@ public class RepositoryService implements ContentService {
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND)));
   }
 
+  @Secured({})
   public List<Repository> getRepositories(
       List<String> include,
       String name,
@@ -77,6 +81,7 @@ public class RepositoryService implements ContentService {
         .getContent();
   }
 
+  @Secured({})
   public List<Repository> getRepositoriesByOrganisationId(
       String organisationId,
       List<String> include,
@@ -92,6 +97,7 @@ public class RepositoryService implements ContentService {
         .getContent();
   }
 
+  @Secured({})
   public Repository getRepository(
       String organisationId, String repositoryId, List<String> include) {
     // TODO: include organisation if requested
@@ -100,12 +106,14 @@ public class RepositoryService implements ContentService {
         .toApiModel();
   }
 
+  @Secured({})
   public Optional<RepositoryDao> getRepository(String organisationId, String repositoryId) {
     return repositoryRepository
         .findById(repositoryId)
         .filter(r -> organisationId.equals(r.getOrganisation().getId()));
   }
 
+  @Secured({})
   public boolean repositoryExists(String organisationId, String repositoryId) {
     return getRepository(organisationId, repositoryId).isPresent();
   }

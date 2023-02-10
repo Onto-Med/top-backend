@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -36,6 +37,7 @@ import java.util.stream.Stream;
 
 @Service
 @Transactional
+@Secured("ROLE_USER")
 public class PhenotypeQueryService {
   private static final Logger LOGGER = Logger.getLogger(PhenotypeQueryService.class.getName());
 
