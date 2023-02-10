@@ -7,15 +7,9 @@ import care.smith.top.backend.repository.nlp.DocumentNodeRepository;
 import care.smith.top.backend.repository.nlp.DocumentRepository;
 import care.smith.top.backend.service.ContentService;
 import care.smith.top.model.Document;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
 import org.neo4j.cypherdsl.core.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.elasticsearch.core.SearchHit;
-import org.springframework.data.elasticsearch.core.query.Query;
-import org.springframework.data.elasticsearch.core.query.StringQuery;
-import org.springframework.data.elasticsearch.core.query.StringQueryBuilder;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -26,8 +20,14 @@ import java.util.stream.Collectors;
 @Service
 public class DocumentService implements ContentService {
 
-    @Autowired DocumentRepository documentRepository;
-    @Autowired DocumentNodeRepository documentNodeRepository;
+    private final DocumentRepository documentRepository;
+    private final DocumentNodeRepository documentNodeRepository;
+
+    @Autowired
+    public DocumentService(DocumentRepository documentRepository, DocumentNodeRepository documentNodeRepository) {
+        this.documentRepository = documentRepository;
+        this.documentNodeRepository = documentNodeRepository;
+    }
 
     @Override
     @Cacheable("documentCount")

@@ -91,6 +91,12 @@ To generate new changelogs, a local HSQL database is used to reflect the state p
 *There is a bug in `liquibase-maven-plugin` that results in recreation of some constraints and of the hibernate sequence.
 You should manually remove these changes from the generated changelog file.*
 
+### NLP related Tests
+
+Tests need to be run with the following arguments:  
+`--add-opens java.base/java.nio=ALL-UNNAMED`  
+`--add-opens java.base/java.lang=ALL-UNNAMED`
+
 ## License
 
 The code in this repository and the package `care.smith.top:top-backend` are licensed under [GPL-3.0](LICENSE).
