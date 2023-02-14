@@ -5,9 +5,8 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 
-@Document(indexName = "documents")
+@Document(indexName = "#{ @elasticsearchConfigBean.getIndexName() }", createIndex = false)
 public class DocumentEntity {
-
     @Id
     private String id;
 
@@ -34,5 +33,4 @@ public class DocumentEntity {
     public String getDocumentText() {
         return documentText;
     }
-
 }
