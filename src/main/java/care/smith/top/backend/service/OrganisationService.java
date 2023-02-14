@@ -68,7 +68,7 @@ public class OrganisationService implements ContentService {
     return organisationRepository.saveAndFlush(organisation.update(data)).toApiModel();
   }
 
-  @PreAuthorize("isAuthenticated() and hasAuthority('write')")
+  @PreAuthorize("isAuthenticated() and hasAuthority('manage')")
   @Transactional
   public void deleteOrganisationById(String organisationId) {
     OrganisationDao organisation =

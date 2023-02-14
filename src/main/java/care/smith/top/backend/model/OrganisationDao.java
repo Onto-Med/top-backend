@@ -8,8 +8,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.time.OffsetDateTime;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Entity(name = "organisation")
 @EntityListeners(AuditingEntityListener.class)
@@ -32,6 +31,9 @@ public class OrganisationDao {
 
   @OneToMany(mappedBy = "organisation", cascade = CascadeType.REMOVE)
   private List<RepositoryDao> repositories = null;
+
+  @OneToMany(mappedBy = "organisation", cascade = CascadeType.ALL, orphanRemoval = true)
+  private Collection<OrganisationMembershipDao> members = new ArrayList<>();
 
   public OrganisationDao() {}
 
@@ -74,6 +76,11 @@ public class OrganisationDao {
 
   public OrganisationDao superOrganisation(OrganisationDao superOrganisation) {
     this.superOrganisation = superOrganisation;
+    return this;
+  }
+
+  public OrganisationDao members(Collection<OrganisationMembershipDao> members) {
+    this.members = members;
     return this;
   }
 
@@ -130,6 +137,20 @@ public class OrganisationDao {
 
   public OrganisationDao update(Organisation data) {
     return name(data.getName()).description(data.getDescription());
+  }
+
+  public void setMemberPermission(UserDao user, Permission permission) {
+    Optional<OrganisationMembershipDao> member =
+        members.stream().filter(m -> m.getUser().getId().equals(user.getId())).findFirst();
+    if (member.isPresent()) {
+      member.get().permission(permission);
+    } else {
+      members.add(new OrganisationMembershipDao(user, this, permission));
+    }
+  }
+
+  public Collection<OrganisationMembershipDao> getMembers() {
+    return members;
   }
 
   public String getId() {
