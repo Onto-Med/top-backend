@@ -22,6 +22,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -37,7 +38,6 @@ import java.util.stream.Stream;
 
 @Service
 @Transactional
-@Secured("ROLE_USER")
 public class PhenotypeQueryService {
   private static final Logger LOGGER = Logger.getLogger(PhenotypeQueryService.class.getName());
 
@@ -56,6 +56,8 @@ public class PhenotypeQueryService {
   @Autowired private QueryRepository queryRepository;
   @Autowired private PhenotypeRepository phenotypeRepository;
 
+  @PreAuthorize(
+    "hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
   public void deleteQuery(String organisationId, String repositoryId, UUID queryId) {
     if (!repositoryService.repositoryExists(organisationId, repositoryId))
       throw new ResponseStatusException(HttpStatus.NOT_FOUND);
@@ -75,6 +77,8 @@ public class PhenotypeQueryService {
     }
   }
 
+  @PreAuthorize(
+    "hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
   public QueryResult enqueueQuery(String organisationId, String repositoryId, Query data) {
     RepositoryDao repository =
         repositoryService
@@ -164,6 +168,8 @@ public class PhenotypeQueryService {
     return getDataAdapterConfigs().stream().filter(a -> id.equals(a.getId())).findFirst();
   }
 
+  @PreAuthorize(
+    "hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
   public QueryResult getQueryResult(String organisationId, String repositoryId, UUID queryId) {
     if (!repositoryService.repositoryExists(organisationId, repositoryId))
       throw new ResponseStatusException(HttpStatus.NOT_FOUND);
@@ -210,6 +216,8 @@ public class PhenotypeQueryService {
         .collect(Collectors.toList());
   }
 
+  @PreAuthorize(
+    "hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
   public List<Query> getQueries(String organisationId, String repositoryId, Integer page) {
     PageRequest pageRequest = PageRequest.of(page == null ? 0 : page - 1, pageSize);
     return queryRepository
