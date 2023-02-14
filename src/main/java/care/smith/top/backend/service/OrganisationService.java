@@ -1,6 +1,8 @@
 package care.smith.top.backend.service;
 
 import care.smith.top.backend.model.OrganisationDao;
+import care.smith.top.backend.model.Permission;
+import care.smith.top.backend.model.UserDao;
 import care.smith.top.backend.repository.OrganisationRepository;
 import care.smith.top.model.Organisation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +30,7 @@ import java.util.List;
 @Service
 public class OrganisationService implements ContentService {
   @Autowired OrganisationRepository organisationRepository;
+  @Autowired UserService userService;
 
   @Value("${spring.paging.page-size:10}")
   private int pageSize = 10;
@@ -43,24 +46,28 @@ public class OrganisationService implements ContentService {
     if (organisationRepository.existsById(data.getId()))
       throw new ResponseStatusException(HttpStatus.CONFLICT);
 
+    UserDao user = userService.getCurrentUser();
     OrganisationDao organisation = new OrganisationDao(data);
     if (data.getSuperOrganisation() != null)
       organisationRepository
           .findById(data.getSuperOrganisation().getId())
           .ifPresent(organisation::superOrganisation);
 
+    organisation.setMemberPermission(user, Permission.MANAGE);
     return organisationRepository.save(organisation).toApiModel();
   }
 
-  @PreAuthorize("isAuthenticated() and hasAuthority('write')")
+  @PreAuthorize(
+      "hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
   @Transactional
-  public Organisation updateOrganisationById(String id, Organisation data) {
+  public Organisation updateOrganisationById(String organisationId, Organisation data) {
     OrganisationDao organisation =
         organisationRepository
-            .findById(id)
+            .findById(organisationId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-    if (data.getSuperOrganisation() != null && !id.equals(data.getSuperOrganisation().getId()))
+    if (data.getSuperOrganisation() != null
+        && !organisationId.equals(data.getSuperOrganisation().getId()))
       organisationRepository
           .findById(data.getSuperOrganisation().getId())
           .ifPresent(organisation::superOrganisation);
@@ -68,7 +75,8 @@ public class OrganisationService implements ContentService {
     return organisationRepository.saveAndFlush(organisation.update(data)).toApiModel();
   }
 
-  @PreAuthorize("isAuthenticated() and hasAuthority('manage')")
+  @PreAuthorize(
+      "hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'MANAGE')")
   @Transactional
   public void deleteOrganisationById(String organisationId) {
     OrganisationDao organisation =
