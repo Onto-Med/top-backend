@@ -46,14 +46,15 @@ public class OrganisationService implements ContentService {
     if (organisationRepository.existsById(data.getId()))
       throw new ResponseStatusException(HttpStatus.CONFLICT);
 
-    UserDao user = userService.getCurrentUser();
     OrganisationDao organisation = new OrganisationDao(data);
     if (data.getSuperOrganisation() != null)
       organisationRepository
           .findById(data.getSuperOrganisation().getId())
           .ifPresent(organisation::superOrganisation);
 
-    organisation.setMemberPermission(user, Permission.MANAGE);
+    UserDao user = userService.getCurrentUser();
+    if (user != null) organisation.setMemberPermission(user, Permission.MANAGE);
+
     return organisationRepository.save(organisation).toApiModel();
   }
 

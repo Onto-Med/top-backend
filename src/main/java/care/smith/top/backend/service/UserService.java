@@ -1,10 +1,12 @@
 package care.smith.top.backend.service;
 
+import care.smith.top.backend.model.Role;
 import care.smith.top.backend.model.UserDao;
 import care.smith.top.backend.repository.UserRepository;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -38,11 +40,16 @@ public class UserService implements ContentService, UserDetailsService {
    * "preferred_username", "username" or subject ID. If no user was found, a new user will be
    * created.
    *
+   * <p>If authentication is disabled by property, this method will return `null`.
+   *
    * @return UserDetails of the currently authenticated user.
    */
   @PreAuthorize("isAuthenticated()")
   public UserDao getCurrentUser() {
-    Jwt jwt = ((Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+    if (auth == null) return null;
+
+    Jwt jwt = (Jwt) auth.getPrincipal();
     Optional<UserDao> existingUser = userRepository.findById(jwt.getSubject());
 
     String username =
@@ -52,8 +59,18 @@ public class UserService implements ContentService, UserDetailsService {
 
     if (existingUser.isPresent()) {
       UserDao user = existingUser.get();
+      boolean modified = false;
+
       if (!user.getUsername().equals(username)) {
-        return userRepository.save(user.username(username));
+        user.username(username);
+        modified = true;
+      }
+      if (user.getRole() == null) {
+        user.role(Role.defaultValue());
+        modified = true;
+      }
+      if (modified) {
+        return userRepository.save(user);
       }
       return user;
     }

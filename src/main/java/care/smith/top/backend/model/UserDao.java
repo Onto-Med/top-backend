@@ -1,13 +1,9 @@
 package care.smith.top.backend.model;
 
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
+import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -21,6 +17,9 @@ public class UserDao implements UserDetails {
   private boolean enabled = true;
   private boolean locked = false;
   private Date expirationDate;
+
+  @Enumerated(EnumType.STRING)
+  private Role role = Role.USER;
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   private Collection<OrganisationMembershipDao> memberships = new ArrayList<>();
@@ -54,6 +53,11 @@ public class UserDao implements UserDetails {
 
   public UserDao username(String username) {
     this.username = username;
+    return this;
+  }
+
+  public UserDao role(Role role) {
+    this.role = role;
     return this;
   }
 
@@ -96,7 +100,7 @@ public class UserDao implements UserDetails {
 
   @Override
   public Collection<? extends GrantedAuthority> getAuthorities() {
-    return Collections.singleton(new SimpleGrantedAuthority("USER"));
+    return Collections.singleton(role.toGrantedAuthority());
   }
 
   @Override
@@ -106,6 +110,10 @@ public class UserDao implements UserDetails {
 
   public String getUsername() {
     return username;
+  }
+
+  public Role getRole() {
+    return role;
   }
 
   public Date getExpirationDate() {

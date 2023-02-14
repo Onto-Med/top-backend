@@ -139,7 +139,7 @@ public class OrganisationDao {
     return name(data.getName()).description(data.getDescription());
   }
 
-  public void setMemberPermission(UserDao user, Permission permission) {
+  public void setMemberPermission(@NotNull UserDao user, @NotNull Permission permission) {
     Optional<OrganisationMembershipDao> member =
         members.stream().filter(m -> m.getUser().getId().equals(user.getId())).findFirst();
     if (member.isPresent()) {
