@@ -27,6 +27,7 @@ Spring Boot based backend of the TOP framework
     * `DB_ELASTIC_PORT`: port of the Elasticsearch document storage, defaults to 9200
     * `DB_ELASTIC_CONNECTION_TIMEOUT`: timeout in seconds, defaults to 1s
     * `DB_ELASTIC_SOCKET_TIMEOUT` timeout in seconds, defaults to 30s
+    * `DB_ELASTIC_INDEX` name of the document index, defaults to 'documents'
 
    OAuth2 related:
     * `OAUTH2_ENABLED`: enable or disable oauth2, defaults to `false`

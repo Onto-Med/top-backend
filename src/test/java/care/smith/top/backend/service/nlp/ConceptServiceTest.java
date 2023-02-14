@@ -42,12 +42,12 @@ class ConceptServiceTest extends AbstractNLPTest {
         populateNeo4j(conceptCount);
 
         // count the concepts
-        assertEquals(conceptService.concepts().size(), conceptCount);
+        assertEquals(conceptCount, conceptService.concepts().size());
 
         // check if all concepts have the proper labels
         for (Concept concept : conceptService.concepts()) {
             ConceptEntity conceptEntity = conceptList.get(Integer.parseInt(concept.getId().substring(1)));
-            assertEquals(concept.getLabels(), String.join(", ", conceptEntity.lables()));
+            assertEquals(String.join(", ", conceptEntity.lables()), concept.getLabels());
         }
     }
 
@@ -58,6 +58,6 @@ class ConceptServiceTest extends AbstractNLPTest {
 
         String testConceptId = String.format("c%s", ThreadLocalRandom.current().nextInt(0, conceptCount));
         Concept concept = conceptService.conceptById(testConceptId);
-        assertEquals(concept.getId(), testConceptId);
+        assertEquals(testConceptId, concept.getId());
     }
 }

@@ -14,13 +14,10 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.utility.DockerImageName;
 
 @Transactional(propagation = Propagation.NEVER)
-@Testcontainers
 public abstract class AbstractNLPTest extends AbstractTest {
+
     @Autowired
     ConceptService conceptService;
     @Autowired
@@ -37,9 +34,9 @@ public abstract class AbstractNLPTest extends AbstractTest {
     PhraseRepository phraseRepository;
 
     private static Neo4j embeddedNeo4j;
-    private static GenericContainer elasticContainer;
     private static final int ELASTIC_PORT = 9200;
-    private static final String ELASTIC_VERSION = "7.17.6";
+    private static final String ELASTIC_VERSION = "8.6.1";
+    private static final String ELASTIC_TEST_INDEX = "test_documents";
 
     @BeforeAll
     static void initializeDBs() {
@@ -47,13 +44,7 @@ public abstract class AbstractNLPTest extends AbstractTest {
                 .withDisabledServer()
                 .build();
 
-        elasticContainer = new GenericContainer(DockerImageName
-                .parse("docker.elastic.co/elasticsearch/elasticsearch")
-                .withTag(ELASTIC_VERSION));
-        elasticContainer.addEnv("discovery.type", "single-node");
-        elasticContainer.addEnv("xpack.security.enabled", "false");
-        elasticContainer.addExposedPort(ELASTIC_PORT);
-        elasticContainer.start();
+        // use elasticsearch test instance here
     }
 
     @DynamicPropertySource
@@ -63,11 +54,11 @@ public abstract class AbstractNLPTest extends AbstractTest {
         registry.add("spring.neo4j.authentication.password", () -> null);
 
         registry.add("spring.elasticsearch.uris", () -> String.format("http://localhost:%s", ELASTIC_PORT));
+        registry.add("spring.elasticsearch.index.name", () -> ELASTIC_TEST_INDEX);
     }
 
     @AfterAll
     static void stopDBs() {
         embeddedNeo4j.close();
-        elasticContainer.stop();
     }
 }

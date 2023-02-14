@@ -2,7 +2,6 @@ package care.smith.top.backend.service.nlp;
 
 import care.smith.top.backend.model.nlp.DocumentEntity;
 import care.smith.top.backend.model.nlp.DocumentNodeEntity;
-import care.smith.top.backend.model.nlp.PhraseEntity;
 import care.smith.top.backend.repository.nlp.DocumentNodeRepository;
 import care.smith.top.backend.repository.nlp.DocumentRepository;
 import care.smith.top.backend.service.ContentService;
@@ -48,15 +47,22 @@ public class DocumentService implements ContentService {
                 .collect(Collectors.toList());
     }
 
+    public List<Document> getDocumentsByTermsBoolean(String[] mustTerms, String[] shouldTerms, String[] notTerms, String[] fields) {
+        String mustString = (mustTerms != null) ? String.format("+( %s )", String.join(" ", mustTerms)) : "";
+        String shouldString = (shouldTerms != null) ? String.join(" ", shouldTerms) : "";
+        String notString = (notTerms != null) ? String.format("-( %s )", String.join(" ", notTerms)) : "";
+        return getDocumentsByTerms(new String[]{mustString, shouldString, notString}, fields);
+    }
+
     @Cacheable("conceptDocumentIds")
-    public List<Document> getDocumentsForConcepts(Set<String> conceptIds, Boolean idOnly, Boolean exemplarOnly) {
+    public List<Document> getDocumentsForConcepts(Set<String> conceptIds, Boolean exemplarOnly) {
         if (conceptIds.size() == 0) {
             return List.of();
         }
         HashMap<String, Document> docMap = documentNodeRepository
                 .findAll(documentsForConceptsUnion(conceptIds, exemplarOnly))
                 .stream()
-                .map(idOnly ? documentNodeEntityMapperIdOnly : documentNodeEntityMapper)
+                .map(documentNodeEntityMapper)
                 .collect(Collectors.toMap(Document::getId, Function.identity(), (prev, next) -> next, HashMap::new));
 
         return new ArrayList<>(docMap.values());
@@ -91,19 +97,10 @@ public class DocumentService implements ContentService {
     }
 
     private final Function<DocumentEntity, Document> documentEntityMapper = documentEntity -> new Document()
-            .id(documentEntity.getDocumentName())
+            .id(documentEntity.getId())
+            .name(documentEntity.getDocumentName())
             .text(documentEntity.getDocumentText());
 
     private final Function<DocumentNodeEntity, Document> documentNodeEntityMapper = documentNodeEntity -> new Document()
-            .id(documentNodeEntity.documentId())
-            .phrases(documentNodeEntity
-                    .documentPhrases()
-                    .stream()
-                    .map(PhraseEntity::phraseText)
-                    .sorted()
-                    .collect(Collectors.toList()));
-
-    private final Function<DocumentNodeEntity, Document> documentNodeEntityMapperIdOnly = documentNodeEntity -> new Document()
             .id(documentNodeEntity.documentId());
-
 }

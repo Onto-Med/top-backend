@@ -24,6 +24,8 @@ spring:
     uris: http://${DB_ELASTIC_HOST:localhost}:${DB_ELASTIC_PORT:9200}
     connection-timeout: ${DB_ELASTIC_CONNECTION_TIMEOUT:1}s
     socket-timeout: ${DB_ELASTIC_SOCKET_TIMEOUT:30}s
+    index:
+      name: ${DB_ELASTIC_INDEX:documents}
   jpa:
     hibernate:
       ddl-auto: validate
