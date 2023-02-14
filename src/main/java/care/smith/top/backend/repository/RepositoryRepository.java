@@ -19,6 +19,8 @@ import java.util.Optional;
 @Repository
 public interface RepositoryRepository
     extends JpaRepository<RepositoryDao, String>, JpaSpecificationExecutor<RepositoryDao> {
+  boolean existsByIdAndOrganisation_Id(String id, String id1);
+
   static Specification<RepositoryDao> byPrimary(@Nullable Boolean primary) {
     return (root, query, cb) -> {
       if (primary == null) return cb.and();

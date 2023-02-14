@@ -21,7 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class RepositoryService implements ContentService {
@@ -54,7 +53,7 @@ public class RepositoryService implements ContentService {
                         String.format("Organisation '%s' does not exist!", organisationId)));
 
     UserDao user = userService.getCurrentUser();
-    if (user == null || !user.getRole().equals(Role.ADMIN)) {
+    if (user != null && !user.getRole().equals(Role.ADMIN)) {
       data.setPrimary(false);
     }
 
@@ -66,10 +65,11 @@ public class RepositoryService implements ContentService {
   @Caching(
       evict = {@CacheEvict("entityCount"), @CacheEvict(value = "entities", key = "#repositoryId")})
   @PreAuthorize(
-      "hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
+      "hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'WRITE')")
   public void deleteRepository(String repositoryId, String organisationId, List<String> include) {
     repositoryRepository.delete(
-        getRepository(organisationId, repositoryId)
+        repositoryRepository
+            .findByIdAndOrganisationId(repositoryId, organisationId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND)));
   }
 
@@ -107,31 +107,19 @@ public class RepositoryService implements ContentService {
         .getContent();
   }
 
-  // TODO: allow read access to primary repositories
   @PreAuthorize(
-      "hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'READ')")
+      "hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'READ')")
   public Repository getRepository(
       String organisationId, String repositoryId, List<String> include) {
-    return getRepository(organisationId, repositoryId)
+    return repositoryRepository
+        .findByIdAndOrganisationId(repositoryId, organisationId)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND))
         .toApiModel();
   }
 
-  // TODO: make this method private
-  public Optional<RepositoryDao> getRepository(String organisationId, String repositoryId) {
-    return repositoryRepository
-        .findById(repositoryId)
-        .filter(r -> organisationId.equals(r.getOrganisation().getId()));
-  }
-
-  // TODO: make this method private
-  public boolean repositoryExists(String organisationId, String repositoryId) {
-    return getRepository(organisationId, repositoryId).isPresent();
-  }
-
   @Transactional
   @PreAuthorize(
-      "hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
+      "hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'Write')")
   public Repository updateRepository(
       String organisationId, String repositoryId, Repository data, List<String> include) {
     RepositoryDao repository =

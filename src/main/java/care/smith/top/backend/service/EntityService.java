@@ -4,10 +4,7 @@ import care.smith.top.backend.model.EntityDao;
 import care.smith.top.backend.model.EntityVersionDao;
 import care.smith.top.backend.model.LocalisableTextDao;
 import care.smith.top.backend.model.RepositoryDao;
-import care.smith.top.backend.repository.CategoryRepository;
-import care.smith.top.backend.repository.EntityRepository;
-import care.smith.top.backend.repository.EntityVersionRepository;
-import care.smith.top.backend.repository.PhenotypeRepository;
+import care.smith.top.backend.repository.*;
 import care.smith.top.backend.util.ApiModelMapper;
 import care.smith.top.model.*;
 import care.smith.top.top_phenotypic_query.converter.PhenotypeExporter;
@@ -21,7 +18,6 @@ import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,7 +40,7 @@ public class EntityService implements ContentService {
   @Autowired private EntityVersionRepository entityVersionRepository;
   @Autowired private CategoryRepository categoryRepository;
   @Autowired private PhenotypeRepository phenotypeRepository;
-  @Autowired private RepositoryService repositoryService;
+  @Autowired private RepositoryRepository repositoryRepository;
 
   @Override
   @Cacheable("entityCount")
@@ -200,7 +196,7 @@ public class EntityService implements ContentService {
   @Caching(
       evict = {@CacheEvict("entityCount"), @CacheEvict(value = "entities", key = "#repositoryId")})
   @PreAuthorize(
-      "hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'READ') "
+      "hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'READ') "
           + "and hasPermission(#forkingInstruction.organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
   public List<Entity> createFork(
       String organisationId,
@@ -326,7 +322,7 @@ public class EntityService implements ContentService {
   @Caching(
       evict = {@CacheEvict("entityCount"), @CacheEvict(value = "entities", key = "#repositoryId")})
   @PreAuthorize(
-    "hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
+      "hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
   public void deleteEntity(String organisationId, String repositoryId, String id) {
     getRepository(organisationId, repositoryId);
 
@@ -361,7 +357,7 @@ public class EntityService implements ContentService {
   }
 
   @PreAuthorize(
-    "hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'READ')")
+      "hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
   public void deleteVersion(
       String organisationId, String repositoryId, String id, Integer version) {
     getRepository(organisationId, repositoryId);
@@ -408,9 +404,8 @@ public class EntityService implements ContentService {
         .toList();
   }
 
-  // TODO: include primary repositories
   @PreAuthorize(
-    "hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'READ')")
+      "hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'READ')")
   public List<Entity> getEntitiesByRepositoryId(
       String organisationId,
       String repositoryId,
@@ -431,7 +426,7 @@ public class EntityService implements ContentService {
   }
 
   @PreAuthorize(
-    "hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'READ')")
+      "hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'READ')")
   public ForkingStats getForkingStats(
       String organisationId, String repositoryId, String id, List<String> include) {
     getRepository(organisationId, repositoryId);
@@ -468,7 +463,7 @@ public class EntityService implements ContentService {
       key = "#repositoryId",
       condition = "#name == null && #type == null && #dataType == null")
   @PreAuthorize(
-    "hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'READ')")
+      "hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'READ')")
   public List<Entity> getRootEntitiesByRepositoryId(
       String organisationId,
       String repositoryId,
@@ -487,7 +482,7 @@ public class EntityService implements ContentService {
   }
 
   @PreAuthorize(
-    "hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'READ')")
+      "hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'READ')")
   public List<Entity> getSubclasses(
       String organisationId, String repositoryId, String id, List<String> include) {
     getRepository(organisationId, repositoryId);
@@ -497,7 +492,7 @@ public class EntityService implements ContentService {
   }
 
   @PreAuthorize(
-    "hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'READ')")
+      "hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'READ')")
   public List<Entity> getVersions(
       String organisationId, String repositoryId, String id, List<String> include) {
     getRepository(organisationId, repositoryId);
@@ -509,7 +504,7 @@ public class EntityService implements ContentService {
   }
 
   @PreAuthorize(
-    "hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'READ')")
+      "hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'READ')")
   public Entity loadEntity(String organisationId, String repositoryId, String id, Integer version) {
     getRepository(organisationId, repositoryId);
     if (version == null)
@@ -526,7 +521,7 @@ public class EntityService implements ContentService {
 
   @CacheEvict(value = "entities", key = "#repositoryId")
   @PreAuthorize(
-    "hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
+      "hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
   public Entity setCurrentEntityVersion(
       String organisationId,
       String repositoryId,
@@ -549,7 +544,7 @@ public class EntityService implements ContentService {
 
   @CacheEvict(value = "entities", key = "#repositoryId")
   @PreAuthorize(
-    "hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
+      "hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
   public Entity updateEntityById(
       String organisationId, String repositoryId, String id, Entity data, List<String> include) {
     getRepository(organisationId, repositoryId);
@@ -585,7 +580,7 @@ public class EntityService implements ContentService {
   }
 
   @PreAuthorize(
-    "hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'READ')")
+      "hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'READ')")
   public ByteArrayOutputStream exportRepository(
       String organisationId, String repositoryId, String converter) {
     RepositoryDao repository = getRepository(organisationId, repositoryId);
@@ -623,7 +618,7 @@ public class EntityService implements ContentService {
   @Caching(
       evict = {@CacheEvict("entityCount"), @CacheEvict(value = "entities", key = "#repositoryId")})
   @PreAuthorize(
-    "hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
+      "hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
   public void importRepository(
       String organisationId, String repositoryId, String converter, InputStream stream) {
     Reflections reflections = new Reflections("care.smith.top");
@@ -656,8 +651,8 @@ public class EntityService implements ContentService {
    * @return The matching repository, if it exists.
    */
   private RepositoryDao getRepository(String organisationId, String repositoryId) {
-    return repositoryService
-        .getRepository(organisationId, repositoryId)
+    return repositoryRepository
+        .findByIdAndOrganisationId(repositoryId, organisationId)
         .orElseThrow(
             () ->
                 new ResponseStatusException(
