@@ -52,11 +52,6 @@ public class RepositoryService implements ContentService {
                         HttpStatus.NOT_FOUND,
                         String.format("Organisation '%s' does not exist!", organisationId)));
 
-    UserDao user = userService.getCurrentUser();
-    if (user != null && !user.getRole().equals(Role.ADMIN)) {
-      data.setPrimary(false);
-    }
-
     RepositoryDao repository = new RepositoryDao(data).organisation(organisation);
     return repositoryRepository.save(repository).toApiModel();
   }
