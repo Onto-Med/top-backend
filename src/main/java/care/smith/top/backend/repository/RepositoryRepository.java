@@ -1,8 +1,6 @@
 package care.smith.top.backend.repository;
 
-import care.smith.top.backend.model.OrganisationDao_;
-import care.smith.top.backend.model.RepositoryDao;
-import care.smith.top.backend.model.RepositoryDao_;
+import care.smith.top.backend.model.*;
 import care.smith.top.model.RepositoryType;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -55,17 +53,34 @@ public interface RepositoryRepository
     };
   }
 
+  static Specification<RepositoryDao> byUser(UserDao user) {
+    return (root, query, cb) -> {
+      if (user == null || user.getRole().equals(Role.ADMIN)) return cb.and();
+      return cb.or(
+          cb.isTrue(root.get(RepositoryDao_.PRIMARY)),
+          cb.equal(
+              root.join(RepositoryDao_.ORGANISATION)
+                  .join(OrganisationDao_.MEMBERS)
+                  .join(OrganisationMembershipDao_.USER)
+                  .get(UserDao_.ID),
+              user.getId()));
+    };
+  }
+
   default Slice<RepositoryDao> findByOrganisationIdAndNameAndPrimaryAndRepositoryType(
       String organisationId,
       String name,
       Boolean primary,
       RepositoryType repositoryType,
+      UserDao user,
       Pageable pageable) {
+
     return findAll(
         byOrganisationId(organisationId)
             .and(byName(name))
             .and(byPrimary(primary))
-            .and(byRepositoryType(repositoryType)),
+            .and(byRepositoryType(repositoryType))
+            .and(byUser(user)),
         pageable);
   }
 

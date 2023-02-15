@@ -41,6 +41,7 @@ public class EntityService implements ContentService {
   @Autowired private CategoryRepository categoryRepository;
   @Autowired private PhenotypeRepository phenotypeRepository;
   @Autowired private RepositoryRepository repositoryRepository;
+  @Autowired private UserService userService;
 
   @Override
   @Cacheable("entityCount")
@@ -399,7 +400,7 @@ public class EntityService implements ContentService {
     PageRequest pageRequest = PageRequest.of(page != null ? page - 1 : 0, pageSize);
     return phenotypeRepository
         .findAllByRepositoryIdsAndRepository_PrimaryAndTitleAndEntityTypeAndDataTypeAndItemType(
-            repositoryIds, includePrimary, name, type, dataType, itemType, pageRequest)
+            repositoryIds, includePrimary, name, type, dataType, itemType, userService.getCurrentUser(), pageRequest)
         .map(EntityDao::toApiModel)
         .toList();
   }

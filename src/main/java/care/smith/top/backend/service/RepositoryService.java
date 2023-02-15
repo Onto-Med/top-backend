@@ -73,7 +73,6 @@ public class RepositoryService implements ContentService {
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND)));
   }
 
-  // TODO: restrict access to organisations with read permission and primary repositories
   public List<Repository> getRepositories(
       List<String> include,
       String name,
@@ -84,12 +83,11 @@ public class RepositoryService implements ContentService {
         PageRequest.of(page == null ? 0 : page - 1, pageSize, Sort.by("name"));
     return repositoryRepository
         .findByOrganisationIdAndNameAndPrimaryAndRepositoryType(
-            null, name, primary, repositoryType, pageRequest)
+            null, name, primary, repositoryType, userService.getCurrentUser(), pageRequest)
         .map(RepositoryDao::toApiModel)
         .getContent();
   }
 
-  // TODO: allow read access to primary repositories
   @PreAuthorize(
       "hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'READ')")
   public List<Repository> getRepositoriesByOrganisationId(
@@ -102,7 +100,7 @@ public class RepositoryService implements ContentService {
         PageRequest.of(page == null ? 0 : page - 1, pageSize, Sort.by("name"));
     return repositoryRepository
         .findByOrganisationIdAndNameAndPrimaryAndRepositoryType(
-            organisationId, name, null, repositoryType, pageRequest)
+            organisationId, name, null, repositoryType, userService.getCurrentUser(), pageRequest)
         .map(RepositoryDao::toApiModel)
         .getContent();
   }

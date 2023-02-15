@@ -1,8 +1,6 @@
 package care.smith.top.backend.repository;
 
-import care.smith.top.backend.model.EntityDao;
-import care.smith.top.backend.model.EntityDao_;
-import care.smith.top.backend.model.EntityVersionDao_;
+import care.smith.top.backend.model.*;
 import care.smith.top.model.DataType;
 import care.smith.top.model.EntityType;
 import care.smith.top.model.ItemType;
@@ -38,6 +36,21 @@ public interface PhenotypeRepository extends EntityRepository {
     return byItemType(itemType == null ? null : Collections.singletonList(itemType));
   }
 
+  static Specification<EntityDao> byUser(UserDao user) {
+    return (root, query, cb) -> {
+      if (user == null || user.getRole().equals(Role.ADMIN)) return cb.and();
+      return cb.or(
+          cb.isTrue(root.join(EntityDao_.REPOSITORY).get(RepositoryDao_.PRIMARY)),
+          cb.equal(
+              root.join(EntityDao_.REPOSITORY)
+                  .join(RepositoryDao_.ORGANISATION)
+                  .join(OrganisationDao_.MEMBERS)
+                  .join(OrganisationMembershipDao_.USER)
+                  .get(UserDao_.ID),
+              user.getId()));
+    };
+  }
+
   default Page<EntityDao> findAllByRepositoryIdAndTitleAndEntityTypeAndDataTypeAndItemType(
       String repositoryId,
       String title,
@@ -62,13 +75,15 @@ public interface PhenotypeRepository extends EntityRepository {
           List<EntityType> entityTypes,
           DataType dataType,
           ItemType itemType,
+          UserDao user,
           Pageable pageable) {
     return findAll(
         EntityRepository.byRepositoryIds(repositoryIds, includePrimary)
             .and(EntityRepository.byTitle(title))
             .and(EntityRepository.byEntityType(entityTypes))
             .and(byDataType(dataType))
-            .and(byItemType(itemType)),
+            .and(byItemType(itemType))
+            .and(byUser(user)),
         pageable);
   }
 }

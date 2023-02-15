@@ -5,6 +5,7 @@ import care.smith.top.backend.model.UserDao;
 import care.smith.top.backend.repository.UserRepository;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -21,6 +22,9 @@ import java.util.Optional;
 @Transactional
 public class UserService implements ContentService, UserDetailsService {
   @Autowired private UserRepository userRepository;
+
+  @Value("${spring.security.oauth2.enabled}")
+  private Boolean oauth2Enabled;
 
   @Override
   public long count() {
@@ -46,8 +50,9 @@ public class UserService implements ContentService, UserDetailsService {
    */
   @PreAuthorize("isAuthenticated()")
   public UserDao getCurrentUser() {
+    if (!oauth2Enabled) return null;
     Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-    if (auth == null) return null;
+    if (auth == null || !(auth.getPrincipal() instanceof Jwt)) return null;
 
     Jwt jwt = (Jwt) auth.getPrincipal();
     Optional<UserDao> existingUser = userRepository.findById(jwt.getSubject());
