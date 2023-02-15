@@ -36,6 +36,8 @@ Spring Boot based backend of the TOP framework
 4. Start the OAuth2 server ([see dockerhub](https://hub.docker.com/r/bitnami/keycloak)).
 5. Execute the spring-boot plugin of the submodule [resource-server](resource-server) via `mvn spring-boot:run`.
 
+If you run the TOP Framework with an OAuth2 server, the first user that is created will have the admin role.
+
 ## Plugins
 
 Any plugin you want to provide must be a member of the package `care.smith.top`.

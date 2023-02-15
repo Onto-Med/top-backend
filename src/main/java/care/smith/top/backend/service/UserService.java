@@ -80,6 +80,8 @@ public class UserService implements ContentService, UserDetailsService {
       return user;
     }
 
-    return userRepository.save(new UserDao(jwt.getSubject(), username));
+    return userRepository.save(
+        new UserDao(jwt.getSubject(), username)
+            .role(userRepository.count() == 0 ? Role.ADMIN : Role.defaultValue()));
   }
 }
