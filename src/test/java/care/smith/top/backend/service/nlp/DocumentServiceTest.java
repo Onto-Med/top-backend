@@ -9,8 +9,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class DocumentServiceTest extends AbstractNLPTest {
 
-    // Since indexing from within Spring Apps did not work on creation of Test Cases, there are these three documents
-    // prepared on a test index within the proper ES instance:
+    // Since indexing from within Spring Apps did not work on creation time of Test Cases,
+    // there are these three documents prepared on a test index within the proper ES instance:
     //      {"id": "01", "name": "test01", "text": "What do we have here? A test document. With an entity. Nice."},
     //      {"id": "02", "name": "test02", "text": "Another document is here. It has two entities."},
     //      {"id": "03", "name": "test03", "text": "And a third document; but this one features nothing."}
@@ -39,17 +39,27 @@ class DocumentServiceTest extends AbstractNLPTest {
         List<Document> documents_with_term_fuzzy_entity = documentService
                 .getDocumentsByTerms(new String[]{"entitie~"}, new String[]{"text"});
         assertEquals(2, documents_with_term_fuzzy_entity.size());
+
+        assertEquals(documents_with_term_fuzzy_entity, documents_with_term_more_entities);
     }
 
     @Test
     void getDocumentsByTermsBoolean() {
-        List<Document> documents_with_term_boolean = documentService
+        List<Document> documents_with_term_boolean1 = documentService
                 .getDocumentsByTermsBoolean(
-                        new String[]{"document"},
-                        new String[]{""},
-                        new String[]{"entitie~"},
+                        new String[]{"document"},   // must
+                        new String[]{""},           // should
+                        new String[]{"entitie~"},   // not
                         new String[]{"text"});
-        assertEquals(1, documents_with_term_boolean.size());
+        assertEquals(1, documents_with_term_boolean1.size());
+
+        List<Document> documents_with_term_boolean2 = documentService
+                .getDocumentsByTermsBoolean(
+                        new String[]{""},                 // must
+                        new String[]{""},                 // should
+                        new String[]{"nothing", "two"},   // not
+                        new String[]{"text"});
+        assertEquals(1, documents_with_term_boolean2.size());
     }
 
     @Test

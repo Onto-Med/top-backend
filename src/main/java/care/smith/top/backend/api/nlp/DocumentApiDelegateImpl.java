@@ -63,7 +63,7 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
     }
 
     @Override
-    public ResponseEntity<List<Document>> getDocuments(List<String> include, String phraseText, String conceptText, String phraseId, String conceptId) {
-        return DocumentApiDelegate.super.getDocuments(include, phraseText, conceptText, phraseId, conceptId);
+    public ResponseEntity<List<Document>> getDocuments(List<String> include, List<String> phraseText) {
+        return DocumentApiDelegate.super.getDocuments(include, phraseText);
     }
 }
