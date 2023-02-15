@@ -33,6 +33,15 @@ public class DocumentService implements ContentService {
     public long count() { return documentNodeRepository.count(); }
 
 
+    public Document getDocumentById(String documentId) {
+        DocumentEntity document = documentRepository.findById(documentId).orElse(null);
+        if (document != null) {
+            return documentEntityMapper.apply(document);
+        } else {
+            return new Document().id("No Id").text("No text").name("No Name");
+        }
+    }
+
     public Document getDocumentByName(String documentName) {
         return documentEntityMapper.apply(
                 documentRepository.findDocumentEntityByDocumentName(documentName)
@@ -51,7 +60,11 @@ public class DocumentService implements ContentService {
         String mustString = (mustTerms != null) ? String.format("+( %s )", String.join(" ", mustTerms)) : "";
         String shouldString = (shouldTerms != null) ? String.join(" ", shouldTerms) : "";
         String notString = (notTerms != null) ? String.format("-( %s )", String.join(" ", notTerms)) : "";
-        return getDocumentsByTerms(new String[]{mustString, shouldString, notString}, fields);
+        return getDocumentsByTerms(new String[]{
+                shouldString,
+                !Objects.equals(mustString, "+(  )") ? mustString : null,
+                !Objects.equals(notString, "-(  )") ? notString : null
+        }, fields);
     }
 
     @Cacheable("conceptDocumentIds")
@@ -99,7 +112,14 @@ public class DocumentService implements ContentService {
     private final Function<DocumentEntity, Document> documentEntityMapper = documentEntity -> new Document()
             .id(documentEntity.getId())
             .name(documentEntity.getDocumentName())
-            .text(documentEntity.getDocumentText());
+            .text(documentEntity.getDocumentText())
+            .highlightedText(documentEntity
+                    .getHighlights()
+                    .values()
+                    .stream()
+                    .flatMap(Collection::stream)
+                    .collect(Collectors.joining())
+            );
 
     private final Function<DocumentNodeEntity, Document> documentNodeEntityMapper = documentNodeEntity -> new Document()
             .id(documentNodeEntity.documentId());

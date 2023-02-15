@@ -5,6 +5,9 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 
+import java.util.List;
+import java.util.Map;
+
 @Document(indexName = "#{ @elasticsearchConfigBean.getIndexName() }", createIndex = false)
 public class DocumentEntity {
     @Id
@@ -15,6 +18,8 @@ public class DocumentEntity {
 
     @Field(name = "text", type = FieldType.Text)
     private String documentText;
+
+    private Map<String, List<String>> highlights;
 
     public String getId() { return id; };
 
@@ -32,5 +37,16 @@ public class DocumentEntity {
 
     public String getDocumentText() {
         return documentText;
+    }
+
+    public void setHighlights(Map<String, List<String>> highlights) {
+        this.highlights = highlights;
+    }
+
+    public Map<String, List<String>> getHighlights() {
+        if (this.highlights == null) {
+            return Map.of("documentText", List.of(getDocumentText()));
+        }
+        return highlights;
     }
 }
