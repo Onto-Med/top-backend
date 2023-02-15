@@ -38,23 +38,7 @@ public class UserService implements ContentService, UserDetailsService {
         .orElseThrow(() -> new UsernameNotFoundException(username));
   }
 
-  /**
-   * This method takes the JWT token of the current request and checks of a user with equal ID
-   * (OAuth2 subject ID) exists. If a user exists, it's username will be updated by JWT claim
-   * "preferred_username", "username" or subject ID. If no user was found, a new user will be
-   * created.
-   *
-   * <p>If authentication is disabled by property, this method will return `null`.
-   *
-   * @return UserDetails of the currently authenticated user.
-   */
-  @PreAuthorize("isAuthenticated()")
-  public UserDao getCurrentUser() {
-    if (!oauth2Enabled) return null;
-    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-    if (auth == null || !(auth.getPrincipal() instanceof Jwt)) return null;
-
-    Jwt jwt = (Jwt) auth.getPrincipal();
+  public Optional<UserDao> getUser(Jwt jwt) {
     Optional<UserDao> existingUser = userRepository.findById(jwt.getSubject());
 
     String username =
@@ -75,13 +59,34 @@ public class UserService implements ContentService, UserDetailsService {
         modified = true;
       }
       if (modified) {
-        return userRepository.save(user);
+        return Optional.of(userRepository.save(user));
       }
-      return user;
+      return Optional.of(user);
     }
 
-    return userRepository.save(
-        new UserDao(jwt.getSubject(), username)
-            .role(userRepository.count() == 0 ? Role.ADMIN : Role.defaultValue()));
+    return Optional.of(
+        userRepository.save(
+            new UserDao(jwt.getSubject(), username)
+                .role(userRepository.count() == 0 ? Role.ADMIN : Role.defaultValue())));
+  }
+
+  /**
+   * This method takes the JWT token of the current request and checks of a user with equal ID
+   * (OAuth2 subject ID) exists. If a user exists, it's username will be updated by JWT claim
+   * "preferred_username", "username" or subject ID. If no user was found, a new user will be
+   * created.
+   *
+   * <p>If authentication is disabled by property, this method will return `null`.
+   *
+   * @return UserDetails of the currently authenticated user.
+   */
+  @PreAuthorize("isAuthenticated()")
+  public UserDao getCurrentUser() {
+    if (!oauth2Enabled) return null;
+    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+    if (auth == null || !(auth.getPrincipal() instanceof Jwt)) return null;
+
+    Jwt jwt = (Jwt) auth.getPrincipal();
+    return getUser(jwt).orElse(null);
   }
 }
