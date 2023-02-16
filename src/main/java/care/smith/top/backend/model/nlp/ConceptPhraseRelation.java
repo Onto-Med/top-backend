@@ -6,18 +6,16 @@ import org.springframework.data.neo4j.core.schema.RelationshipProperties;
 import org.springframework.data.neo4j.core.schema.TargetNode;
 
 @RelationshipProperties
-public class DocumentPhraseRelation {
+public class ConceptPhraseRelation {
 
     @GeneratedValue
     @RelationshipId
     private Long id;
 
     @TargetNode
-    private final PhraseEntity phrase;
+    private final ConceptEntity concept;
 
-    public DocumentPhraseRelation(PhraseEntity phrase) {
-        this.phrase = phrase;
+    public ConceptPhraseRelation(ConceptEntity concept) {
+        this.concept = concept;
     }
-
-    public PhraseEntity phrase() { return this.phrase; }
 }

@@ -8,6 +8,7 @@ import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.elasticsearch.core.query.highlight.Highlight;
 import org.springframework.data.elasticsearch.core.query.highlight.HighlightField;
+import org.springframework.data.elasticsearch.core.query.highlight.HighlightFieldParameters;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -51,8 +52,18 @@ public class DocumentCustomRepositoryImpl implements DocumentCustomRepository{
                         "}"
         );
 
+//        String spanTag = "<span style=\"border-width:3px; border-style:solid; border-color:#FF0000; padding:1px\">";
+        String spanTag = "<span style=\"background-color:#FF000080; border-radius:3px; padding:2px\">";
         Highlight highlight = new Highlight(
-                Arrays.stream(fields).map(HighlightField::new).collect(Collectors.toList())
+                Arrays.stream(fields)
+                        .map(s -> new HighlightField(s,
+                                // makes it so, that not only fragments (which contain the phrase) are returned but the whole field
+                                HighlightFieldParameters.builder()
+                                        .withNumberOfFragments(0)
+                                        .withPreTags(new String[]{spanTag})
+                                        .withPostTags(new String[]{"</span>"})
+                                        .build())
+                        ).collect(Collectors.toList())
         );
         searchQuery.setHighlightQuery(new HighlightQuery(highlight, DocumentEntity.class));
         return operations.search(searchQuery, DocumentEntity.class);

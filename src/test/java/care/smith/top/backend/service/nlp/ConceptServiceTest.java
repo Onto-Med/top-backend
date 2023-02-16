@@ -1,6 +1,7 @@
 package care.smith.top.backend.service.nlp;
 
 import care.smith.top.backend.model.nlp.ConceptEntity;
+import care.smith.top.backend.model.nlp.PhraseEntity;
 import care.smith.top.backend.repository.nlp.ConceptRepository;
 import care.smith.top.model.Concept;
 import org.junit.jupiter.api.*;
@@ -8,6 +9,7 @@ import org.springframework.test.context.event.annotation.BeforeTestClass;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
@@ -23,16 +25,34 @@ class ConceptServiceTest extends AbstractNLPTest {
     void populateNeo4j(int conceptCount) {
         conceptList.clear();
         conceptRepository.deleteAll();
+        phraseRepository.deleteAll();
 
         for (int i = 0; i < conceptCount; i++) {
+            List<String> phraseList = List.of(String.format("c%s-phrase1", i),
+                    String.format("c%s-phrase2", i),
+                    String.format("c%s-phrase3", i));
+
+            List<PhraseEntity> phraseEntityList = new ArrayList<>();
+            for (String phrase : phraseList) {
+                String[] substrings = phrase.split("-");
+                String phraseName = substrings[1];
+                PhraseEntity phraseEntity = new PhraseEntity(
+                        List.of(),
+                        !phraseName.substring("phrase".length()).equals("3"),
+                        phraseName,
+                        phraseName.substring("phrase".length()));
+                phraseEntityList.add(phraseEntity);
+                phraseRepository.save(phraseEntity);
+            }
+
             ConceptEntity concept = new ConceptEntity(
                     String.format("c%s", i), // id that is retrieved by Concept::getId()
-                    List.of(String.format("c%s-phrase1", i),
-                            String.format("c%s-phrase2", i),
-                            String.format("c%s-phrase3", i)) // list of labels that is retrieved by Concept::getLabels()
+                    phraseList,              // list of labels that is retrieved by Concept::getLabels()
+                    new HashSet<>(phraseEntityList)
             );
             conceptList.add(concept);
             conceptRepository.save(concept);
+
         }
     }
 

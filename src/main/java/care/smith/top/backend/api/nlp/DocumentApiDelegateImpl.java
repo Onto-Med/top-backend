@@ -2,7 +2,9 @@ package care.smith.top.backend.api.nlp;
 
 import care.smith.top.backend.api.DocumentApiDelegate;
 import care.smith.top.backend.service.nlp.DocumentService;
+import care.smith.top.backend.service.nlp.PhraseService;
 import care.smith.top.model.Document;
+import care.smith.top.model.Phrase;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,9 +17,10 @@ import java.util.stream.Collectors;
 public class DocumentApiDelegateImpl implements DocumentApiDelegate {
 
     @Autowired DocumentService documentService;
+    @Autowired PhraseService phraseService;
 
     @Override
-    public ResponseEntity<List<Document>> getDocumentsByConceptIds(List<String> conceptId, String gatheringMode, String name, Boolean exemplarOnly) {
+    public ResponseEntity<List<Document>> getDocumentIdsByConceptIds(List<String> conceptId, String gatheringMode, String name, Boolean exemplarOnly) {
         if (!Objects.equals(gatheringMode, "intersection")) {
             return new ResponseEntity<>(documentService.getDocumentsForConcepts(Set.copyOf(conceptId), exemplarOnly), HttpStatus.OK);
         } else {
@@ -52,9 +55,22 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
 
     @Override
     public ResponseEntity<Document> getDocumentById(String documentId, List<String> include) {
+        // Todo: just testing
+        List<Document> documents = documentService.getDocumentsByTermsBoolean(
+                phraseService.getPhrasesForDocument(documentId, true)
+                        .stream()
+                        .map(Phrase::getText)
+                        .filter(s -> s.matches("[a-zA-Z]+"))
+                        .toArray(String[]::new)
+                ,
+                null, null,
+                new String[]{"text"}
+        );
+        return new ResponseEntity<>(documents.stream().filter(d -> d.getName().equals(documentId)).findFirst().get(), HttpStatus.OK);
+
         // ToDo: change this. right now, the document name is taken as id, because neo4j node id (short string that is just a simple number
         //  and elasticsearch document id (uuid) don't match
-            return new ResponseEntity<>(documentService.getDocumentByName(documentId), HttpStatus.OK);
+//        return new ResponseEntity<>(documentService.getDocumentByName(documentId), HttpStatus.OK);
     }
 
     @Override
@@ -64,6 +80,6 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
 
     @Override
     public ResponseEntity<List<Document>> getDocuments(List<String> include, List<String> phraseText) {
-        return DocumentApiDelegate.super.getDocuments(include, phraseText);
+        return new ResponseEntity<>(documentService.getDocumentsByTerms(phraseText.toArray(new String[0]), new String[]{"text"}), HttpStatus.OK);
     }
 }

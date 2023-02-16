@@ -1,7 +1,6 @@
 package care.smith.top.backend.api.nlp;
 
 import care.smith.top.backend.api.PhraseApiDelegate;
-import care.smith.top.backend.service.nlp.DocumentService;
 import care.smith.top.backend.service.nlp.PhraseService;
 import care.smith.top.model.Phrase;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,8 +9,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Objects;
-import java.util.stream.Stream;
 
 @Service
 public class PhraseApiDelegateImpl implements PhraseApiDelegate {
@@ -21,7 +18,7 @@ public class PhraseApiDelegateImpl implements PhraseApiDelegate {
     @Override
     public ResponseEntity<List<Phrase>> getPhraseByConceptId(String conceptId, List<String> include, String name, Integer page) {
         //ToDo: add filtering by phraseText --> name
-        return new ResponseEntity<>(phraseService.getPhrasesByConcept(conceptId), HttpStatus.OK);
+        return new ResponseEntity<>(phraseService.getPhrasesForConcept(conceptId), HttpStatus.OK);
     }
 
     @Override
