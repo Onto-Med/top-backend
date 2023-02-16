@@ -1,7 +1,9 @@
 package care.smith.top.backend.service.nlp;
 
 import care.smith.top.backend.model.nlp.ConceptEntity;
+import care.smith.top.backend.model.nlp.PhraseEntity;
 import care.smith.top.backend.repository.nlp.ConceptRepository;
+import care.smith.top.backend.repository.nlp.PhraseRepository;
 import care.smith.top.backend.service.ContentService;
 import care.smith.top.model.Concept;
 import org.neo4j.cypherdsl.core.Cypher;
@@ -12,6 +14,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -57,4 +60,5 @@ public class ConceptService implements ContentService {
                 .withProperties("conceptId", Cypher.literalOf(id));
         return Cypher.match(concept).returning(concept).build();
     }
+
 }
