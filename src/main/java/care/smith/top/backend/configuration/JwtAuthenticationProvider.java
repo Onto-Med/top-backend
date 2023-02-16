@@ -1,20 +1,15 @@
 package care.smith.top.backend.configuration;
 
-import care.smith.top.backend.model.UserDao;
 import care.smith.top.backend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtValidationException;
 import org.springframework.security.oauth2.server.resource.BearerTokenAuthenticationToken;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Component;
-
-import java.util.Optional;
 
 @Component
 public class JwtAuthenticationProvider implements AuthenticationProvider {
@@ -38,10 +33,7 @@ public class JwtAuthenticationProvider implements AuthenticationProvider {
       return null;
     }
 
-    Optional<UserDao> user = userService.getUser(jwt);
-
-    return user.map(userDao -> new JwtAuthenticationToken(jwt, userDao.getAuthorities()))
-        .orElse(null);
+    return new AuthenticatedUser(userService.getOrCreateUser(jwt).orElse(null));
   }
 
   @Override

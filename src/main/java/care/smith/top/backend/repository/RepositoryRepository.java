@@ -53,6 +53,19 @@ public interface RepositoryRepository
     };
   }
 
+  /**
+   * This filter does the following:
+   *
+   * <ul>
+   *   <li>evaluates to true, if user is {@code null} or has role {@code Role.ADMIN}
+   *   <li>evaluates to true, if the repository is primary
+   *   <li>checks if the user has an organisation membership relation to the organisation the
+   *       repository belongs to
+   * </ul>
+   *
+   * @param user The user to filter by.
+   * @return A specification for Domain Driven Design.
+   */
   static Specification<RepositoryDao> byUser(UserDao user) {
     return (root, query, cb) -> {
       if (user == null || user.getRole().equals(Role.ADMIN)) return cb.and();

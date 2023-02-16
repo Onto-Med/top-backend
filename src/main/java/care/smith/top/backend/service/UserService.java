@@ -6,8 +6,6 @@ import care.smith.top.backend.repository.UserRepository;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -16,6 +14,8 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Optional;
 
 @Service
@@ -38,7 +38,17 @@ public class UserService implements ContentService, UserDetailsService {
         .orElseThrow(() -> new UsernameNotFoundException(username));
   }
 
-  public Optional<UserDao> getUser(Jwt jwt) {
+  /**
+   * This method checks if a user with equal ID (OAuth2 JWT token subject ID) exists. If that is the
+   * case, it's username will be updated by JWT claim "preferred_username", "username" or subject
+   * ID. If no user was found, a new user will be created.
+   *
+   * <p>If authentication is disabled by property, this method will return {@link Optional#empty()}.
+   *
+   * @return UserDetails of the currently authenticated user.
+   */
+  @Transactional
+  public Optional<UserDao> getOrCreateUser(@Nonnull Jwt jwt) {
     Optional<UserDao> existingUser = userRepository.findById(jwt.getSubject());
 
     String username =
@@ -70,23 +80,11 @@ public class UserService implements ContentService, UserDetailsService {
                 .role(userRepository.count() == 0 ? Role.ADMIN : Role.defaultValue())));
   }
 
-  /**
-   * This method takes the JWT token of the current request and checks of a user with equal ID
-   * (OAuth2 subject ID) exists. If a user exists, it's username will be updated by JWT claim
-   * "preferred_username", "username" or subject ID. If no user was found, a new user will be
-   * created.
-   *
-   * <p>If authentication is disabled by property, this method will return `null`.
-   *
-   * @return UserDetails of the currently authenticated user.
-   */
-  @PreAuthorize("isAuthenticated()")
+  @Nullable
   public UserDao getCurrentUser() {
     if (!oauth2Enabled) return null;
-    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-    if (auth == null || !(auth.getPrincipal() instanceof Jwt)) return null;
-
-    Jwt jwt = (Jwt) auth.getPrincipal();
-    return getUser(jwt).orElse(null);
+    Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    if (principal instanceof UserDao) return (UserDao) principal;
+    return new UserDao("anonymous_user", "Anonymous User").role(Role.ANONYMOUS);
   }
 }

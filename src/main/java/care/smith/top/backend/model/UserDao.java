@@ -7,8 +7,8 @@ import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
+import java.util.stream.Collectors;
 
 @Entity(name = "user_table")
 public class UserDao implements UserDetails {
@@ -100,7 +100,7 @@ public class UserDao implements UserDetails {
 
   @Override
   public Collection<? extends GrantedAuthority> getAuthorities() {
-    return Collections.singleton(role.toGrantedAuthority());
+    return role.toGrantedAuthorities();
   }
 
   @Override

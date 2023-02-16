@@ -67,25 +67,32 @@ public interface EntityRepository
     };
   }
 
+  /**
+   * This filter does the following:
+   *
+   * <ul>
+   *   <li>exclude entities that are not contained in one of the specified repositories
+   *   <li>if you set {@code includePrimary} to {@code true}, this filter will be relaxed and will
+   *       not exclude entities from primary repositories
+   *   <li>if {@code repositoryIds} is {@code null}, this filter does nothing
+   * </ul>
+   *
+   * @param repositoryIds List of repository IDs to folter for, or null to disable this filter.
+   * @param includePrimary Whether primary repositories shall be included in the result set. This
+   *     parameter has no effect, if {@code repositoryIds} is {@code null}.
+   * @return A specification for Domain Driven Design.
+   */
   static Specification<EntityDao> byRepositoryIds(
       List<String> repositoryIds, Boolean includePrimary) {
     return (root, query, cb) -> {
-      if (repositoryIds == null && includePrimary == null) return cb.and();
+      if (repositoryIds == null) return cb.and();
       Predicate repositoryPredicate =
-          repositoryIds != null
-              ? root.join(EntityDao_.REPOSITORY).get(RepositoryDao_.ID).in(repositoryIds)
-              : cb.or();
-      if (repositoryIds != null) {
-        return cb.or(
-            repositoryPredicate,
-            (includePrimary != null && includePrimary)
-                ? cb.isTrue(root.join(EntityDao_.REPOSITORY).get(RepositoryDao_.PRIMARY))
-                : cb.or());
-      } else {
-        return !includePrimary
-            ? cb.isFalse(root.join(EntityDao_.REPOSITORY).get(RepositoryDao_.PRIMARY))
-            : cb.and();
-      }
+          root.join(EntityDao_.REPOSITORY).get(RepositoryDao_.ID).in(repositoryIds);
+      return cb.or(
+          repositoryPredicate,
+          (includePrimary != null && includePrimary)
+              ? cb.isTrue(root.join(EntityDao_.REPOSITORY).get(RepositoryDao_.PRIMARY))
+              : cb.or());
     };
   }
 

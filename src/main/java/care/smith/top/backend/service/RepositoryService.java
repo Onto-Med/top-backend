@@ -2,8 +2,6 @@ package care.smith.top.backend.service;
 
 import care.smith.top.backend.model.OrganisationDao;
 import care.smith.top.backend.model.RepositoryDao;
-import care.smith.top.backend.model.Role;
-import care.smith.top.backend.model.UserDao;
 import care.smith.top.backend.repository.OrganisationRepository;
 import care.smith.top.backend.repository.RepositoryRepository;
 import care.smith.top.model.Repository;
@@ -38,7 +36,7 @@ public class RepositoryService implements ContentService {
 
   @Transactional
   @PreAuthorize(
-      "hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
+      "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
   public Repository createRepository(String organisationId, Repository data, List<String> include) {
     if (repositoryRepository.existsById(data.getId()))
       throw new ResponseStatusException(HttpStatus.CONFLICT);
@@ -60,7 +58,7 @@ public class RepositoryService implements ContentService {
   @Caching(
       evict = {@CacheEvict("entityCount"), @CacheEvict(value = "entities", key = "#repositoryId")})
   @PreAuthorize(
-      "hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'WRITE')")
+      "hasRole('ADMIN') or hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'WRITE')")
   public void deleteRepository(String repositoryId, String organisationId, List<String> include) {
     repositoryRepository.delete(
         repositoryRepository
@@ -83,8 +81,6 @@ public class RepositoryService implements ContentService {
         .getContent();
   }
 
-  @PreAuthorize(
-      "hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'READ')")
   public List<Repository> getRepositoriesByOrganisationId(
       String organisationId,
       List<String> include,
@@ -101,7 +97,7 @@ public class RepositoryService implements ContentService {
   }
 
   @PreAuthorize(
-      "hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'READ')")
+      "hasRole('ADMIN') or hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'READ')")
   public Repository getRepository(
       String organisationId, String repositoryId, List<String> include) {
     return repositoryRepository
@@ -112,7 +108,7 @@ public class RepositoryService implements ContentService {
 
   @Transactional
   @PreAuthorize(
-      "hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'Write')")
+      "hasRole('ADMIN') or hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'Write')")
   public Repository updateRepository(
       String organisationId, String repositoryId, Repository data, List<String> include) {
     RepositoryDao repository =

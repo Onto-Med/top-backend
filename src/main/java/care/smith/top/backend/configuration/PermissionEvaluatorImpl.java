@@ -32,6 +32,13 @@ public class PermissionEvaluatorImpl implements PermissionEvaluator {
           OrganisationDao.class.getName(),
           permission);
     }
+    if (targetDomainObject instanceof RepositoryDao) {
+      return hasPermission(
+          authentication,
+          ((RepositoryDao) targetDomainObject).getId(),
+          RepositoryDao.class.getName(),
+          permission);
+    }
     return false;
   }
 

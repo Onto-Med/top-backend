@@ -57,7 +57,7 @@ public class EntityService implements ContentService {
   @Caching(
       evict = {@CacheEvict("entityCount"), @CacheEvict(value = "entities", key = "#repositoryId")})
   @PreAuthorize(
-      "hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
+      "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
   public int createEntities(
       String organisationId, String repositoryId, List<Entity> entities, List<String> include) {
     Map<String, String> ids = new HashMap<>();
@@ -189,7 +189,7 @@ public class EntityService implements ContentService {
   @Caching(
       evict = {@CacheEvict("entityCount"), @CacheEvict(value = "entities", key = "#repositoryId")})
   @PreAuthorize(
-      "hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
+      "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
   public Entity createEntity(String organisationId, String repositoryId, Entity data) {
     return createEntity(organisationId, repositoryId, data, false);
   }
@@ -197,7 +197,7 @@ public class EntityService implements ContentService {
   @Caching(
       evict = {@CacheEvict("entityCount"), @CacheEvict(value = "entities", key = "#repositoryId")})
   @PreAuthorize(
-      "hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'READ') "
+      "hasRole('ADMIN') or hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'READ') "
           + "and hasPermission(#forkingInstruction.organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
   public List<Entity> createFork(
       String organisationId,
@@ -323,7 +323,7 @@ public class EntityService implements ContentService {
   @Caching(
       evict = {@CacheEvict("entityCount"), @CacheEvict(value = "entities", key = "#repositoryId")})
   @PreAuthorize(
-      "hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
+      "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
   public void deleteEntity(String organisationId, String repositoryId, String id) {
     getRepository(organisationId, repositoryId);
 
@@ -358,7 +358,7 @@ public class EntityService implements ContentService {
   }
 
   @PreAuthorize(
-      "hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
+      "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
   public void deleteVersion(
       String organisationId, String repositoryId, String id, Integer version) {
     getRepository(organisationId, repositoryId);
@@ -387,7 +387,6 @@ public class EntityService implements ContentService {
     entityVersionRepository.delete(entityVersion);
   }
 
-  // TODO: restrict access to organisations with read permission and primary repositories
   public List<Entity> getEntities(
       List<String> include,
       String name,
@@ -400,13 +399,20 @@ public class EntityService implements ContentService {
     PageRequest pageRequest = PageRequest.of(page != null ? page - 1 : 0, pageSize);
     return phenotypeRepository
         .findAllByRepositoryIdsAndRepository_PrimaryAndTitleAndEntityTypeAndDataTypeAndItemType(
-            repositoryIds, includePrimary, name, type, dataType, itemType, userService.getCurrentUser(), pageRequest)
+            repositoryIds,
+            includePrimary,
+            name,
+            type,
+            dataType,
+            itemType,
+            userService.getCurrentUser(),
+            pageRequest)
         .map(EntityDao::toApiModel)
         .toList();
   }
 
   @PreAuthorize(
-      "hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'READ')")
+      "hasRole('ADMIN') or hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'READ')")
   public List<Entity> getEntitiesByRepositoryId(
       String organisationId,
       String repositoryId,
@@ -427,7 +433,7 @@ public class EntityService implements ContentService {
   }
 
   @PreAuthorize(
-      "hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'READ')")
+      "hasRole('ADMIN') or hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'READ')")
   public ForkingStats getForkingStats(
       String organisationId, String repositoryId, String id, List<String> include) {
     getRepository(organisationId, repositoryId);
@@ -464,7 +470,7 @@ public class EntityService implements ContentService {
       key = "#repositoryId",
       condition = "#name == null && #type == null && #dataType == null")
   @PreAuthorize(
-      "hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'READ')")
+      "hasRole('ADMIN') or hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'READ')")
   public List<Entity> getRootEntitiesByRepositoryId(
       String organisationId,
       String repositoryId,
@@ -483,7 +489,7 @@ public class EntityService implements ContentService {
   }
 
   @PreAuthorize(
-      "hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'READ')")
+      "hasRole('ADMIN') or hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'READ')")
   public List<Entity> getSubclasses(
       String organisationId, String repositoryId, String id, List<String> include) {
     getRepository(organisationId, repositoryId);
@@ -493,7 +499,7 @@ public class EntityService implements ContentService {
   }
 
   @PreAuthorize(
-      "hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'READ')")
+      "hasRole('ADMIN') or hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'READ')")
   public List<Entity> getVersions(
       String organisationId, String repositoryId, String id, List<String> include) {
     getRepository(organisationId, repositoryId);
@@ -505,7 +511,7 @@ public class EntityService implements ContentService {
   }
 
   @PreAuthorize(
-      "hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'READ')")
+      "hasRole('ADMIN') or hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'READ')")
   public Entity loadEntity(String organisationId, String repositoryId, String id, Integer version) {
     getRepository(organisationId, repositoryId);
     if (version == null)
@@ -522,7 +528,7 @@ public class EntityService implements ContentService {
 
   @CacheEvict(value = "entities", key = "#repositoryId")
   @PreAuthorize(
-      "hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
+      "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
   public Entity setCurrentEntityVersion(
       String organisationId,
       String repositoryId,
@@ -545,7 +551,7 @@ public class EntityService implements ContentService {
 
   @CacheEvict(value = "entities", key = "#repositoryId")
   @PreAuthorize(
-      "hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
+      "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
   public Entity updateEntityById(
       String organisationId, String repositoryId, String id, Entity data, List<String> include) {
     getRepository(organisationId, repositoryId);
@@ -581,7 +587,7 @@ public class EntityService implements ContentService {
   }
 
   @PreAuthorize(
-      "hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'READ')")
+      "hasRole('ADMIN') or hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'READ')")
   public ByteArrayOutputStream exportRepository(
       String organisationId, String repositoryId, String converter) {
     RepositoryDao repository = getRepository(organisationId, repositoryId);
@@ -619,7 +625,7 @@ public class EntityService implements ContentService {
   @Caching(
       evict = {@CacheEvict("entityCount"), @CacheEvict(value = "entities", key = "#repositoryId")})
   @PreAuthorize(
-      "hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
+      "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
   public void importRepository(
       String organisationId, String repositoryId, String converter, InputStream stream) {
     Reflections reflections = new Reflections("care.smith.top");

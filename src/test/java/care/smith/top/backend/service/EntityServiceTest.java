@@ -648,7 +648,7 @@ class EntityServiceTest extends AbstractTest {
     assertThat(entityService.getEntities(null, null, null, null, null, null, false, null))
         .isNotEmpty()
         .size()
-        .isEqualTo(1);
+        .isEqualTo(2);
 
     assertThat(entityService.getEntities(null, null, null, null, null, null, true, null))
         .isNotEmpty()

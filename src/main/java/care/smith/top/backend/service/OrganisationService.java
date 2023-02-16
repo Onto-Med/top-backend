@@ -40,7 +40,7 @@ public class OrganisationService implements ContentService {
     return organisationRepository.count();
   }
 
-  @PreAuthorize("isAuthenticated()")
+  @PreAuthorize("hasRole('USER')")
   @Transactional
   public Organisation createOrganisation(Organisation data) {
     if (organisationRepository.existsById(data.getId()))
@@ -59,7 +59,7 @@ public class OrganisationService implements ContentService {
   }
 
   @PreAuthorize(
-      "hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
+      "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
   @Transactional
   public Organisation updateOrganisationById(String organisationId, Organisation data) {
     OrganisationDao organisation =
@@ -77,7 +77,7 @@ public class OrganisationService implements ContentService {
   }
 
   @PreAuthorize(
-      "hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'MANAGE')")
+      "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'MANAGE')")
   @Transactional
   public void deleteOrganisationById(String organisationId) {
     OrganisationDao organisation =
