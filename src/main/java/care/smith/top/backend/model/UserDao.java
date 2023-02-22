@@ -1,5 +1,6 @@
 package care.smith.top.backend.model;
 
+import care.smith.top.model.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -92,6 +93,16 @@ public class UserDao implements UserDetails {
     result = 31 * result + (locked ? 1 : 0);
     result = 31 * result + (getExpirationDate() != null ? getExpirationDate().hashCode() : 0);
     return result;
+  }
+
+  public User toApiModel() {
+    return new User()
+        .id(getId())
+        .username(getUsername())
+        .organisations(
+            getMemberships().stream()
+                .map(m -> m.getOrganisation().toApiModel())
+                .collect(Collectors.toList()));
   }
 
   public String getId() {
