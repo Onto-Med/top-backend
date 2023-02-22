@@ -28,6 +28,8 @@ class UserServiceTest extends AbstractTest {
                 user, organisation.getId(), organisation.getClass().getName(), Permission.READ))
         .isTrue();
 
+    assertThat(organisationService.getMemberships(organisation.getId())).size().isEqualTo(1);
+
     userService.revokeMembership(organisation, user);
     assertThat(
             userService.hasPermission(

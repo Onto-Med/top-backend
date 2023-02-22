@@ -1,6 +1,7 @@
 package care.smith.top.backend.model;
 
 import care.smith.top.backend.model.key.OrganisationMembershipKeyDao;
+import care.smith.top.model.OrganisationMembership;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
@@ -70,6 +71,13 @@ public class OrganisationMembershipDao {
     result = 31 * result + getOrganisation().hashCode();
     result = 31 * result + getPermission().hashCode();
     return result;
+  }
+
+  public OrganisationMembership toApiModel() {
+    return new OrganisationMembership()
+        .organisation(getOrganisation().toApiModel())
+        .user(getUser().toApiModel())
+        .permission(care.smith.top.model.Permission.fromValue(getPermission().name()));
   }
 
   public UserDao getUser() {

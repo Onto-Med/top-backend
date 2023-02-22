@@ -1,9 +1,7 @@
 package care.smith.top.backend.repository;
 
-import care.smith.top.backend.model.OrganisationDao;
 import care.smith.top.backend.model.OrganisationMembershipDao;
 import care.smith.top.backend.model.Permission;
-import care.smith.top.backend.model.UserDao;
 import care.smith.top.backend.model.key.OrganisationMembershipKeyDao;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -14,4 +12,6 @@ public interface OrganisationMembershipRepository
   boolean
       existsById_OrganisationIdAndId_UserIdAndPermissionInAndUser_EnabledTrueAndUser_LockedFalse(
           String organisationId, String userId, List<Permission> permissions);
+
+  List<OrganisationMembershipDao> findAllByOrganisation_Id(String organisationId);
 }

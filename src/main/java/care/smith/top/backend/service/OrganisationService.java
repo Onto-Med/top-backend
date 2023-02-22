@@ -1,10 +1,13 @@
 package care.smith.top.backend.service;
 
 import care.smith.top.backend.model.OrganisationDao;
+import care.smith.top.backend.model.OrganisationMembershipDao;
 import care.smith.top.backend.model.Permission;
 import care.smith.top.backend.model.UserDao;
+import care.smith.top.backend.repository.OrganisationMembershipRepository;
 import care.smith.top.backend.repository.OrganisationRepository;
 import care.smith.top.model.Organisation;
+import care.smith.top.model.OrganisationMembership;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
@@ -15,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * This service provides organisation related business logic. If oauth2 authentication is enabled
@@ -34,6 +38,8 @@ public class OrganisationService implements ContentService {
 
   @Value("${spring.paging.page-size:10}")
   private int pageSize = 10;
+
+  @Autowired private OrganisationMembershipRepository organisationMembershipRepository;
 
   @Override
   public long count() {
@@ -105,5 +111,13 @@ public class OrganisationService implements ContentService {
         .findAllByNameOrDescription(name, pageRequest)
         .map(OrganisationDao::toApiModel)
         .getContent();
+  }
+
+  @PreAuthorize("hasRole('USER')")
+  @Transactional
+  public List<OrganisationMembership> getMemberships(String organisationId) {
+    return organisationMembershipRepository.findAllByOrganisation_Id(organisationId).stream()
+        .map(OrganisationMembershipDao::toApiModel)
+        .collect(Collectors.toList());
   }
 }
