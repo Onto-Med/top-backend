@@ -1,5 +1,6 @@
 package care.smith.top.backend.api;
 
+import care.smith.top.backend.model.UserDao;
 import care.smith.top.backend.service.UserService;
 import care.smith.top.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class UserApiDelegateImpl implements UserApiDelegate {
@@ -17,7 +19,7 @@ public class UserApiDelegateImpl implements UserApiDelegate {
   @Override
   @PreAuthorize("hasRole('USER')")
   public ResponseEntity<User> getUserById(String userId) {
-    Optional<User> user = userService.getUserById(userId);
+    Optional<User> user = userService.getUserById(userId).map(UserDao::toApiModel);
     return user.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
   }
 
@@ -25,6 +27,9 @@ public class UserApiDelegateImpl implements UserApiDelegate {
   @PreAuthorize("hasRole('USER')")
   public ResponseEntity<List<User>> getUsers(
       String name, List<String> organisationIds, Integer page) {
-    return ResponseEntity.ok(userService.getUsers(name, organisationIds, page));
+    return ResponseEntity.ok(
+        userService.getUsers(name, organisationIds, page).stream()
+            .map(UserDao::toApiModel)
+            .collect(Collectors.toList()));
   }
 }

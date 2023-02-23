@@ -76,7 +76,6 @@ class UserServiceTest extends AbstractTest {
             u -> {
               assertThat(u.getId()).isEqualTo(user.getId());
               assertThat(u.getUsername()).isEqualTo(user.getUsername());
-              assertThat(u.getOrganisations()).isEmpty();
             });
   }
 

@@ -14,4 +14,8 @@ public enum Permission {
         .filter(p -> p.ordinal() >= permission.ordinal())
         .collect(Collectors.toList());
   }
+
+  public static Permission fromApiModel(care.smith.top.model.Permission permission) {
+    return Permission.valueOf(permission.getValue());
+  }
 }

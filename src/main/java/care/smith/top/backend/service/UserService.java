@@ -96,15 +96,14 @@ public class UserService implements ContentService, UserDetailsService {
                 .role(userRepository.count() == 0 ? Role.ADMIN : Role.defaultValue())));
   }
 
-  public Optional<User> getUserById(String userId) {
-    return userRepository.findById(userId).map(UserDao::toApiModel);
+  public Optional<UserDao> getUserById(String userId) {
+    return userRepository.findById(userId);
   }
 
-  public List<User> getUsers(String name, List<String> organisationIds, Integer page) {
+  public List<UserDao> getUsers(String name, List<String> organisationIds, Integer page) {
     PageRequest pageRequest = PageRequest.of(page != null ? page - 1 : 0, pageSize);
     return userRepository
         .findAllByUsernameAndOrganisationIds(name, organisationIds, pageRequest)
-        .map(UserDao::toApiModel)
         .getContent();
   }
 

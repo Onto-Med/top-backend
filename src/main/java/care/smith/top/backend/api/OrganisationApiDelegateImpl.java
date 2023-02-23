@@ -1,8 +1,7 @@
 package care.smith.top.backend.api;
 
-import care.smith.top.backend.service.UserService;
-import care.smith.top.model.Organisation;
 import care.smith.top.backend.service.OrganisationService;
+import care.smith.top.model.Organisation;
 import care.smith.top.model.OrganisationMembership;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -58,5 +57,17 @@ public class OrganisationApiDelegateImpl implements OrganisationApiDelegate {
   public ResponseEntity<Void> deleteOrganisationById(String organisationId, List<String> include) {
     organisationService.deleteOrganisationById(organisationId);
     return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+  }
+
+  @Override
+  public ResponseEntity<Void> createOrganisationMembership(String organisationId, OrganisationMembership organisationMembership) {
+    organisationService.createOrganisationMembership(organisationId, organisationMembership);
+    return ResponseEntity.noContent().build();
+  }
+
+  @Override
+  public ResponseEntity<Void> deleteOrganisationMembership(String organisationId, OrganisationMembership organisationMembership) {
+    organisationService.deleteOrganisationMembership(organisationId, organisationMembership);
+    return ResponseEntity.noContent().build();
   }
 }

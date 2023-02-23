@@ -120,4 +120,45 @@ public class OrganisationService implements ContentService {
         .map(OrganisationMembershipDao::toApiModel)
         .collect(Collectors.toList());
   }
+
+  @PreAuthorize(
+      "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'MANAGE')")
+  @Transactional
+  public void createOrganisationMembership(
+      String organisationId, OrganisationMembership organisationMembership) {
+    OrganisationDao organisation =
+        organisationRepository
+            .findById(organisationId)
+            .orElseThrow(
+                () ->
+                    new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Organisation does not exist."));
+    UserDao user =
+        userService
+            .getUserById(organisationMembership.getUser().getId())
+            .orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User does not exist."));
+    userService.grantMembership(
+        organisation, user, Permission.fromApiModel(organisationMembership.getPermission()));
+  }
+
+  @PreAuthorize(
+      "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'MANAGE')")
+  @Transactional
+  public void deleteOrganisationMembership(
+      String organisationId, OrganisationMembership organisationMembership) {
+    OrganisationDao organisation =
+        organisationRepository
+            .findById(organisationId)
+            .orElseThrow(
+                () ->
+                    new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Organisation does not exist."));
+    UserDao user =
+        userService
+            .getUserById(organisationMembership.getUser().getId())
+            .orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User does not exist."));
+    userService.revokeMembership(organisation, user);
+  }
 }
