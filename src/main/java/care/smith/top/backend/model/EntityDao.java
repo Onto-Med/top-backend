@@ -120,6 +120,7 @@ public class EntityDao {
             new Repository()
                 .id(entityDao.getRepository().getId())
                 .name(entityDao.getRepository().getName())
+                .primary(entityDao.getRepository().getPrimary())
                 .organisation(
                     new Organisation().id(entityDao.getRepository().getOrganisation().getId())));
 

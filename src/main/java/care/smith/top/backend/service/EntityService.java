@@ -448,6 +448,7 @@ public class EntityService implements ContentService {
       forkingStats.origin(
           new Entity()
               .id(origin.getId())
+              .repository(origin.getRepository().toApiModel())
               .titles(
                   origin.getCurrentVersion().getTitles().stream()
                       .map(LocalisableTextDao::toApiModel)
@@ -459,7 +460,9 @@ public class EntityService implements ContentService {
                 RepositoryDao repository = f.getRepository();
                 return new Entity()
                     .id(f.getId())
-                    .repository(new Repository().id(repository.getId()).name(repository.getName()));
+                    .author(f.getCurrentVersion().getAuthor())
+                    .createdAt(f.getCurrentVersion().getCreatedAt())
+                    .repository(repository.toApiModel());
               })
           .forEach(forkingStats::addForksItem);
     return forkingStats;
