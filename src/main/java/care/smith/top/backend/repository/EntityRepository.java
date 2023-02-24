@@ -49,6 +49,21 @@ public interface EntityRepository
     };
   }
 
+  static Specification<EntityDao> byUser(UserDao user) {
+    return (root, query, cb) -> {
+      if (user == null || user.getRole().equals(Role.ADMIN)) return cb.and();
+      return cb.or(
+        cb.isTrue(root.join(EntityDao_.REPOSITORY).get(RepositoryDao_.PRIMARY)),
+        cb.equal(
+          root.join(EntityDao_.REPOSITORY)
+            .join(RepositoryDao_.ORGANISATION)
+            .join(OrganisationDao_.MEMBERS, JoinType.LEFT)
+            .join(OrganisationMembershipDao_.USER, JoinType.LEFT)
+            .get(UserDao_.ID),
+          user.getId()));
+    };
+  }
+
   static Specification<EntityDao> byEntityType(@Nullable List<EntityType> entityTypes) {
     return (root, query, cb) -> {
       if (entityTypes == null || entityTypes.isEmpty()) return cb.and();

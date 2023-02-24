@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 import javax.annotation.Nullable;
+import javax.persistence.criteria.JoinType;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -73,8 +74,8 @@ public interface RepositoryRepository
           cb.isTrue(root.get(RepositoryDao_.PRIMARY)),
           cb.equal(
               root.join(RepositoryDao_.ORGANISATION)
-                  .join(OrganisationDao_.MEMBERS)
-                  .join(OrganisationMembershipDao_.USER)
+                  .join(OrganisationDao_.MEMBERS, JoinType.LEFT)
+                  .join(OrganisationMembershipDao_.USER, JoinType.LEFT)
                   .get(UserDao_.ID),
               user.getId()));
     };

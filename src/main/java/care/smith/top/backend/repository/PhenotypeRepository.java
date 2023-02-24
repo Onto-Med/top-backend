@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
 import javax.annotation.Nullable;
+import javax.persistence.criteria.JoinType;
 import java.util.Collections;
 import java.util.List;
 
@@ -34,21 +35,6 @@ public interface PhenotypeRepository extends EntityRepository {
 
   static Specification<EntityDao> byItemType(@Nullable ItemType itemType) {
     return byItemType(itemType == null ? null : Collections.singletonList(itemType));
-  }
-
-  static Specification<EntityDao> byUser(UserDao user) {
-    return (root, query, cb) -> {
-      if (user == null || user.getRole().equals(Role.ADMIN)) return cb.and();
-      return cb.or(
-          cb.isTrue(root.join(EntityDao_.REPOSITORY).get(RepositoryDao_.PRIMARY)),
-          cb.equal(
-              root.join(EntityDao_.REPOSITORY)
-                  .join(RepositoryDao_.ORGANISATION)
-                  .join(OrganisationDao_.MEMBERS)
-                  .join(OrganisationMembershipDao_.USER)
-                  .get(UserDao_.ID),
-              user.getId()));
-    };
   }
 
   default Page<EntityDao> findAllByRepositoryIdAndTitleAndEntityTypeAndDataTypeAndItemType(
@@ -83,7 +69,7 @@ public interface PhenotypeRepository extends EntityRepository {
             .and(EntityRepository.byEntityType(entityTypes))
             .and(byDataType(dataType))
             .and(byItemType(itemType))
-            .and(byUser(user)),
+            .and(EntityRepository.byUser(user)),
         pageable);
   }
 }
