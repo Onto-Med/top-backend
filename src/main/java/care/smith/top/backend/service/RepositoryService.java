@@ -13,12 +13,12 @@ import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class RepositoryService implements ContentService {
@@ -27,6 +27,7 @@ public class RepositoryService implements ContentService {
 
   @Autowired private RepositoryRepository repositoryRepository;
   @Autowired private OrganisationRepository organisationRepository;
+  @Autowired private UserService userService;
 
   @Override
   public long count() {
@@ -34,6 +35,8 @@ public class RepositoryService implements ContentService {
   }
 
   @Transactional
+  @PreAuthorize(
+      "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
   public Repository createRepository(String organisationId, Repository data, List<String> include) {
     if (repositoryRepository.existsById(data.getId()))
       throw new ResponseStatusException(HttpStatus.CONFLICT);
@@ -47,7 +50,6 @@ public class RepositoryService implements ContentService {
                         HttpStatus.NOT_FOUND,
                         String.format("Organisation '%s' does not exist!", organisationId)));
 
-    // TODO: if (user is admin) ...
     RepositoryDao repository = new RepositoryDao(data).organisation(organisation);
     return repositoryRepository.save(repository).toApiModel();
   }
@@ -55,9 +57,12 @@ public class RepositoryService implements ContentService {
   @Transactional
   @Caching(
       evict = {@CacheEvict("entityCount"), @CacheEvict(value = "entities", key = "#repositoryId")})
+  @PreAuthorize(
+      "hasRole('ADMIN') or hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'WRITE')")
   public void deleteRepository(String repositoryId, String organisationId, List<String> include) {
     repositoryRepository.delete(
-        getRepository(organisationId, repositoryId)
+        repositoryRepository
+            .findByIdAndOrganisationId(repositoryId, organisationId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND)));
   }
 
@@ -67,12 +72,11 @@ public class RepositoryService implements ContentService {
       Boolean primary,
       RepositoryType repositoryType,
       Integer page) {
-    // TODO: check if user has read permission
     PageRequest pageRequest =
         PageRequest.of(page == null ? 0 : page - 1, pageSize, Sort.by("name"));
     return repositoryRepository
         .findByOrganisationIdAndNameAndPrimaryAndRepositoryType(
-            null, name, primary, repositoryType, pageRequest)
+            null, name, primary, repositoryType, userService.getCurrentUser(), pageRequest)
         .map(RepositoryDao::toApiModel)
         .getContent();
   }
@@ -87,30 +91,24 @@ public class RepositoryService implements ContentService {
         PageRequest.of(page == null ? 0 : page - 1, pageSize, Sort.by("name"));
     return repositoryRepository
         .findByOrganisationIdAndNameAndPrimaryAndRepositoryType(
-            organisationId, name, null, repositoryType, pageRequest)
+            organisationId, name, null, repositoryType, userService.getCurrentUser(), pageRequest)
         .map(RepositoryDao::toApiModel)
         .getContent();
   }
 
+  @PreAuthorize(
+      "hasRole('ADMIN') or hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'READ')")
   public Repository getRepository(
       String organisationId, String repositoryId, List<String> include) {
-    // TODO: include organisation if requested
-    return getRepository(organisationId, repositoryId)
+    return repositoryRepository
+        .findByIdAndOrganisationId(repositoryId, organisationId)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND))
         .toApiModel();
   }
 
-  public Optional<RepositoryDao> getRepository(String organisationId, String repositoryId) {
-    return repositoryRepository
-        .findById(repositoryId)
-        .filter(r -> organisationId.equals(r.getOrganisation().getId()));
-  }
-
-  public boolean repositoryExists(String organisationId, String repositoryId) {
-    return getRepository(organisationId, repositoryId).isPresent();
-  }
-
   @Transactional
+  @PreAuthorize(
+      "hasRole('ADMIN') or hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'Write')")
   public Repository updateRepository(
       String organisationId, String repositoryId, Repository data, List<String> include) {
     RepositoryDao repository =

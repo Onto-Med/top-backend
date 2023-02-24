@@ -4,10 +4,7 @@ import care.smith.top.backend.model.EntityDao;
 import care.smith.top.backend.model.EntityVersionDao;
 import care.smith.top.backend.model.LocalisableTextDao;
 import care.smith.top.backend.model.RepositoryDao;
-import care.smith.top.backend.repository.CategoryRepository;
-import care.smith.top.backend.repository.EntityRepository;
-import care.smith.top.backend.repository.EntityVersionRepository;
-import care.smith.top.backend.repository.PhenotypeRepository;
+import care.smith.top.backend.repository.*;
 import care.smith.top.backend.util.ApiModelMapper;
 import care.smith.top.model.*;
 import care.smith.top.top_phenotypic_query.converter.PhenotypeExporter;
@@ -21,6 +18,7 @@ import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -42,7 +40,8 @@ public class EntityService implements ContentService {
   @Autowired private EntityVersionRepository entityVersionRepository;
   @Autowired private CategoryRepository categoryRepository;
   @Autowired private PhenotypeRepository phenotypeRepository;
-  @Autowired private RepositoryService repositoryService;
+  @Autowired private RepositoryRepository repositoryRepository;
+  @Autowired private UserService userService;
 
   @Override
   @Cacheable("entityCount")
@@ -57,6 +56,8 @@ public class EntityService implements ContentService {
 
   @Caching(
       evict = {@CacheEvict("entityCount"), @CacheEvict(value = "entities", key = "#repositoryId")})
+  @PreAuthorize(
+      "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
   public int createEntities(
       String organisationId, String repositoryId, List<Entity> entities, List<String> include) {
     Map<String, String> ids = new HashMap<>();
@@ -187,12 +188,17 @@ public class EntityService implements ContentService {
 
   @Caching(
       evict = {@CacheEvict("entityCount"), @CacheEvict(value = "entities", key = "#repositoryId")})
+  @PreAuthorize(
+      "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
   public Entity createEntity(String organisationId, String repositoryId, Entity data) {
     return createEntity(organisationId, repositoryId, data, false);
   }
 
   @Caching(
       evict = {@CacheEvict("entityCount"), @CacheEvict(value = "entities", key = "#repositoryId")})
+  @PreAuthorize(
+      "hasRole('ADMIN') or hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'READ') "
+          + "and hasPermission(#forkingInstruction.organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
   public List<Entity> createFork(
       String organisationId,
       String repositoryId,
@@ -316,6 +322,8 @@ public class EntityService implements ContentService {
 
   @Caching(
       evict = {@CacheEvict("entityCount"), @CacheEvict(value = "entities", key = "#repositoryId")})
+  @PreAuthorize(
+      "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
   public void deleteEntity(String organisationId, String repositoryId, String id) {
     getRepository(organisationId, repositoryId);
 
@@ -349,6 +357,8 @@ public class EntityService implements ContentService {
     entityRepository.delete(entity);
   }
 
+  @PreAuthorize(
+      "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
   public void deleteVersion(
       String organisationId, String repositoryId, String id, Integer version) {
     getRepository(organisationId, repositoryId);
@@ -389,11 +399,20 @@ public class EntityService implements ContentService {
     PageRequest pageRequest = PageRequest.of(page != null ? page - 1 : 0, pageSize);
     return phenotypeRepository
         .findAllByRepositoryIdsAndRepository_PrimaryAndTitleAndEntityTypeAndDataTypeAndItemType(
-            repositoryIds, includePrimary, name, type, dataType, itemType, pageRequest)
+            repositoryIds,
+            includePrimary,
+            name,
+            type,
+            dataType,
+            itemType,
+            userService.getCurrentUser(),
+            pageRequest)
         .map(EntityDao::toApiModel)
         .toList();
   }
 
+  @PreAuthorize(
+      "hasRole('ADMIN') or hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'READ')")
   public List<Entity> getEntitiesByRepositoryId(
       String organisationId,
       String repositoryId,
@@ -413,6 +432,8 @@ public class EntityService implements ContentService {
         .toList();
   }
 
+  @PreAuthorize(
+      "hasRole('ADMIN') or hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'READ')")
   public ForkingStats getForkingStats(
       String organisationId, String repositoryId, String id, List<String> include) {
     getRepository(organisationId, repositoryId);
@@ -427,6 +448,7 @@ public class EntityService implements ContentService {
       forkingStats.origin(
           new Entity()
               .id(origin.getId())
+              .repository(origin.getRepository().toApiModel())
               .titles(
                   origin.getCurrentVersion().getTitles().stream()
                       .map(LocalisableTextDao::toApiModel)
@@ -438,7 +460,9 @@ public class EntityService implements ContentService {
                 RepositoryDao repository = f.getRepository();
                 return new Entity()
                     .id(f.getId())
-                    .repository(new Repository().id(repository.getId()).name(repository.getName()));
+                    .author(f.getCurrentVersion().getAuthor())
+                    .createdAt(f.getCurrentVersion().getCreatedAt())
+                    .repository(repository.toApiModel());
               })
           .forEach(forkingStats::addForksItem);
     return forkingStats;
@@ -448,6 +472,8 @@ public class EntityService implements ContentService {
       value = "entities",
       key = "#repositoryId",
       condition = "#name == null && #type == null && #dataType == null")
+  @PreAuthorize(
+      "hasRole('ADMIN') or hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'READ')")
   public List<Entity> getRootEntitiesByRepositoryId(
       String organisationId,
       String repositoryId,
@@ -465,6 +491,8 @@ public class EntityService implements ContentService {
         .getContent();
   }
 
+  @PreAuthorize(
+      "hasRole('ADMIN') or hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'READ')")
   public List<Entity> getSubclasses(
       String organisationId, String repositoryId, String id, List<String> include) {
     getRepository(organisationId, repositoryId);
@@ -473,6 +501,8 @@ public class EntityService implements ContentService {
         .collect(Collectors.toList());
   }
 
+  @PreAuthorize(
+      "hasRole('ADMIN') or hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'READ')")
   public List<Entity> getVersions(
       String organisationId, String repositoryId, String id, List<String> include) {
     getRepository(organisationId, repositoryId);
@@ -483,6 +513,8 @@ public class EntityService implements ContentService {
         .collect(Collectors.toList());
   }
 
+  @PreAuthorize(
+      "hasRole('ADMIN') or hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'READ')")
   public Entity loadEntity(String organisationId, String repositoryId, String id, Integer version) {
     getRepository(organisationId, repositoryId);
     if (version == null)
@@ -498,6 +530,8 @@ public class EntityService implements ContentService {
   }
 
   @CacheEvict(value = "entities", key = "#repositoryId")
+  @PreAuthorize(
+      "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
   public Entity setCurrentEntityVersion(
       String organisationId,
       String repositoryId,
@@ -519,6 +553,8 @@ public class EntityService implements ContentService {
   }
 
   @CacheEvict(value = "entities", key = "#repositoryId")
+  @PreAuthorize(
+      "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
   public Entity updateEntityById(
       String organisationId, String repositoryId, String id, Entity data, List<String> include) {
     getRepository(organisationId, repositoryId);
@@ -553,6 +589,8 @@ public class EntityService implements ContentService {
     return entityRepository.save(entity.currentVersion(newVersion)).toApiModel();
   }
 
+  @PreAuthorize(
+      "hasRole('ADMIN') or hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'READ')")
   public ByteArrayOutputStream exportRepository(
       String organisationId, String repositoryId, String converter) {
     RepositoryDao repository = getRepository(organisationId, repositoryId);
@@ -571,8 +609,7 @@ public class EntityService implements ContentService {
 
     if (optional.isEmpty())
       throw new ResponseStatusException(
-          HttpStatus.NOT_ACCEPTABLE,
-          String.format("No converter '%s' available.", converter));
+          HttpStatus.NOT_ACCEPTABLE, String.format("No converter '%s' available.", converter));
 
     ByteArrayOutputStream stream = new ByteArrayOutputStream();
     try {
@@ -590,6 +627,8 @@ public class EntityService implements ContentService {
 
   @Caching(
       evict = {@CacheEvict("entityCount"), @CacheEvict(value = "entities", key = "#repositoryId")})
+  @PreAuthorize(
+      "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
   public void importRepository(
       String organisationId, String repositoryId, String converter, InputStream stream) {
     Reflections reflections = new Reflections("care.smith.top");
@@ -600,8 +639,7 @@ public class EntityService implements ContentService {
 
     if (optional.isEmpty())
       throw new ResponseStatusException(
-          HttpStatus.NOT_ACCEPTABLE,
-          String.format("No converter '%s' available.", converter));
+          HttpStatus.NOT_ACCEPTABLE, String.format("No converter '%s' available.", converter));
 
     try {
       PhenotypeImporter importer =
@@ -623,8 +661,8 @@ public class EntityService implements ContentService {
    * @return The matching repository, if it exists.
    */
   private RepositoryDao getRepository(String organisationId, String repositoryId) {
-    return repositoryService
-        .getRepository(organisationId, repositoryId)
+    return repositoryRepository
+        .findByIdAndOrganisationId(repositoryId, organisationId)
         .orElseThrow(
             () ->
                 new ResponseStatusException(

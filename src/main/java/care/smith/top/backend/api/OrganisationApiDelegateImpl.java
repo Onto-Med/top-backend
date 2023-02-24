@@ -1,7 +1,8 @@
 package care.smith.top.backend.api;
 
-import care.smith.top.model.Organisation;
 import care.smith.top.backend.service.OrganisationService;
+import care.smith.top.model.Organisation;
+import care.smith.top.model.OrganisationMembership;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +25,11 @@ public class OrganisationApiDelegateImpl implements OrganisationApiDelegate {
           HttpStatus.BAD_REQUEST, "The provided organisation ID was invalid.");
     return new ResponseEntity<>(
         organisationService.createOrganisation(organisation), HttpStatus.CREATED);
+  }
+
+  @Override
+  public ResponseEntity<List<OrganisationMembership>> getOrganisationMemberships(String organisationId) {
+    return ResponseEntity.ok(organisationService.getMemberships(organisationId));
   }
 
   @Override
@@ -51,5 +57,17 @@ public class OrganisationApiDelegateImpl implements OrganisationApiDelegate {
   public ResponseEntity<Void> deleteOrganisationById(String organisationId, List<String> include) {
     organisationService.deleteOrganisationById(organisationId);
     return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+  }
+
+  @Override
+  public ResponseEntity<Void> createOrganisationMembership(String organisationId, OrganisationMembership organisationMembership) {
+    organisationService.createOrganisationMembership(organisationId, organisationMembership);
+    return ResponseEntity.noContent().build();
+  }
+
+  @Override
+  public ResponseEntity<Void> deleteOrganisationMembership(String organisationId, OrganisationMembership organisationMembership) {
+    organisationService.deleteOrganisationMembership(organisationId, organisationMembership);
+    return ResponseEntity.noContent().build();
   }
 }

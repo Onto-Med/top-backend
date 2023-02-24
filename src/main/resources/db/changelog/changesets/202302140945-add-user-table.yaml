@@ -1,0 +1,88 @@
+databaseChangeLog:
+- changeSet:
+    id: 1676364352747-8
+    author: ChristophB (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+            name: permission
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: user_id
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: organisation_id
+            type: VARCHAR(255)
+        tableName: organisation_membership
+- changeSet:
+    id: 1676364352747-9
+    author: ChristophB (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: userPK
+            name: id
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: enabled
+            type: BOOLEAN
+        - column:
+            name: expiration_date
+            type: TIMESTAMP
+        - column:
+            constraints:
+              nullable: false
+            name: locked
+            type: BOOLEAN
+        - column:
+            name: username
+            type: VARCHAR(255)
+        tableName: user_table
+- changeSet:
+    id: 1676364352747-10
+    author: ChristophB (generated)
+    changes:
+    - addPrimaryKey:
+        columnNames: organisation_id, user_id
+        constraintName: organisation_membershipPK
+        tableName: organisation_membership
+- changeSet:
+    id: 1676364352747-11
+    author: ChristophB (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: user_id
+        baseTableName: organisation_membership
+        constraintName: FK966p61agnundt4125qlkxp4nx
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: id
+        referencedTableName: user_table
+        validate: true
+- changeSet:
+    id: 1676364352747-12
+    author: ChristophB (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: organisation_id
+        baseTableName: organisation_membership
+        constraintName: FKmpda07ckvatqvylgrgcv17rfu
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: id
+        referencedTableName: organisation
+        validate: true
+
