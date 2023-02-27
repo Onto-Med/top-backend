@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -20,12 +21,20 @@ public class SecurityConfiguration {
   @Value("${spring.security.cors.allowed-origins}")
   private String[] allowedOrigins;
 
-  @Autowired
-  private JwtAuthenticationProvider customAuthenticationProvider;
+  @Autowired private JwtAuthenticationProvider customAuthenticationProvider;
 
   @Bean
   SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-    http.cors().and().csrf().disable().authorizeRequests().anyRequest().permitAll();
+    http.sessionManagement()
+        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+        .and()
+        .cors()
+        .and()
+        .csrf()
+        .disable()
+        .authorizeRequests()
+        .anyRequest()
+        .permitAll();
 
     http.oauth2ResourceServer()
         .jwt(new JwtResourceServerCustomizer(this.customAuthenticationProvider));
