@@ -1,26 +1,21 @@
 package care.smith.top.backend.service.nlp;
 
-import care.smith.top.backend.model.nlp.ConceptEntity;
-import care.smith.top.backend.model.nlp.PhraseEntity;
-import care.smith.top.backend.repository.nlp.ConceptRepository;
+import care.smith.top.backend.model.nlp.ConceptNodeEntity;
+import care.smith.top.backend.model.nlp.PhraseNodeEntity;
 import care.smith.top.model.Concept;
 import org.junit.jupiter.api.*;
-import org.springframework.test.context.event.annotation.BeforeTestClass;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class ConceptServiceTest extends AbstractNLPTest {
 
-    List<ConceptEntity> conceptList = new ArrayList<>();
+    List<ConceptNodeEntity> conceptList = new ArrayList<>();
 
     void populateNeo4j(int conceptCount) {
         conceptList.clear();
@@ -32,11 +27,11 @@ class ConceptServiceTest extends AbstractNLPTest {
                     String.format("c%s-phrase2", i),
                     String.format("c%s-phrase3", i));
 
-            List<PhraseEntity> phraseEntityList = new ArrayList<>();
+            List<PhraseNodeEntity> phraseEntityList = new ArrayList<>();
             for (String phrase : phraseList) {
                 String[] substrings = phrase.split("-");
                 String phraseName = substrings[1];
-                PhraseEntity phraseEntity = new PhraseEntity(
+                PhraseNodeEntity phraseEntity = new PhraseNodeEntity(
                         List.of(),
                         !phraseName.substring("phrase".length()).equals("3"),
                         phraseName,
@@ -45,9 +40,9 @@ class ConceptServiceTest extends AbstractNLPTest {
                 phraseRepository.save(phraseEntity);
             }
 
-            ConceptEntity concept = new ConceptEntity(
+            ConceptNodeEntity concept = new ConceptNodeEntity(
                     String.format("c%s", i), // id that is retrieved by Concept::getId()
-                    phraseList,              // list of labels that is retrieved by Concept::getLabels()
+                    phraseList      ,        // list of labels that is retrieved by Concept::getLabels()
                     new HashSet<>(phraseEntityList)
             );
             conceptList.add(concept);
@@ -66,8 +61,8 @@ class ConceptServiceTest extends AbstractNLPTest {
 
         // check if all concepts have the proper labels
         for (Concept concept : conceptService.concepts()) {
-            ConceptEntity conceptEntity = conceptList.get(Integer.parseInt(concept.getId().substring(1)));
-            assertEquals(String.join(", ", conceptEntity.lables()), concept.getLabels());
+            ConceptNodeEntity conceptNodeEntity = conceptList.get(Integer.parseInt(concept.getId().substring(1)));
+            assertEquals(String.join(", ", conceptNodeEntity.lables()), concept.getLabels());
         }
     }
 

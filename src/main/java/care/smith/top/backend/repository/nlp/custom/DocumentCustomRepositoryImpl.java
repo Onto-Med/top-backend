@@ -23,8 +23,9 @@ public class DocumentCustomRepositoryImpl implements DocumentCustomRepository{
 
     @Override
     public List<DocumentEntity> getDocumentsByTerms(String[] terms, String[] fields) {
+        //ToDo: "hover" argument not hard coded
         ArrayList<DocumentEntity> documentEntities = new ArrayList<>();
-        getSearchHitsByTerms(terms, fields)
+        getSearchHitsByTerms(terms, fields, "Searched Term")
             .stream()
             .forEach(sh -> {
                 DocumentEntity de = sh.getContent();
@@ -34,7 +35,7 @@ public class DocumentCustomRepositoryImpl implements DocumentCustomRepository{
         return documentEntities;
     }
 
-    private SearchHits<DocumentEntity> getSearchHitsByTerms(String[] terms, String[] fields) {
+    private SearchHits<DocumentEntity> getSearchHitsByTerms(String[] terms, String[] fields, String hover) {
         String queryString = Arrays.stream(terms)
                 .filter(Objects::nonNull)
                 .filter(t -> t.length() > 0)
@@ -53,7 +54,8 @@ public class DocumentCustomRepositoryImpl implements DocumentCustomRepository{
         );
 
 //        String spanTag = "<span style=\"border-width:3px; border-style:solid; border-color:#FF0000; padding:1px\">";
-        String spanTag = "<span style=\"background-color:#FF000080; border-radius:3px; padding:2px\">";
+        String addString = (hover != null) ? String.format("title=\"%s\"", hover) : "";
+        String spanTag = String.format("<span style=\"background-color:#FF000080; border-radius:3px; padding:2px\" %s>", addString);
         Highlight highlight = new Highlight(
                 Arrays.stream(fields)
                         .map(s -> new HighlightField(s,
@@ -65,6 +67,7 @@ public class DocumentCustomRepositoryImpl implements DocumentCustomRepository{
                                         .build())
                         ).collect(Collectors.toList())
         );
+        System.out.println(Arrays.toString(Arrays.stream(terms).toArray()));
         searchQuery.setHighlightQuery(new HighlightQuery(highlight, DocumentEntity.class));
         return operations.search(searchQuery, DocumentEntity.class);
     }

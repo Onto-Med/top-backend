@@ -16,8 +16,8 @@ public class ConceptApiDelegateImpl implements ConceptApiDelegate {
     @Autowired ConceptService conceptService;
 
     @Override
-    public ResponseEntity<List<Concept>> getConceptByDocumentId(String documentId, List<String> include, String name, Integer page) {
-        return ConceptApiDelegate.super.getConceptByDocumentId(documentId, include, name, page);
+    public ResponseEntity<List<Concept>> getConceptsByDocumentId(String documentId, List<String> include, String name, Integer page) {
+        return ConceptApiDelegate.super.getConceptsByDocumentId(documentId, include, name, page);
     }
 
     @Override
@@ -26,8 +26,8 @@ public class ConceptApiDelegateImpl implements ConceptApiDelegate {
     }
 
     @Override
-    public ResponseEntity<List<Concept>> getConceptByPhraseId(String phraseId, List<String> include, String name, Integer page) {
-        return ConceptApiDelegate.super.getConceptByPhraseId(phraseId, include, name, page);
+    public ResponseEntity<List<Concept>> getConceptsByPhraseId(String phraseId, List<String> include, String name, Integer page) {
+        return ConceptApiDelegate.super.getConceptsByPhraseId(phraseId, include, name, page);
     }
 
     @Override

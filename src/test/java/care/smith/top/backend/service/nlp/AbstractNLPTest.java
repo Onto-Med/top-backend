@@ -1,9 +1,9 @@
 package care.smith.top.backend.service.nlp;
 
-import care.smith.top.backend.repository.nlp.ConceptRepository;
+import care.smith.top.backend.repository.nlp.ConceptNodeRepository;
 import care.smith.top.backend.repository.nlp.DocumentNodeRepository;
 import care.smith.top.backend.repository.nlp.DocumentRepository;
-import care.smith.top.backend.repository.nlp.PhraseRepository;
+import care.smith.top.backend.repository.nlp.PhraseNodeRepository;
 import care.smith.top.backend.service.AbstractTest;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -21,7 +21,7 @@ public abstract class AbstractNLPTest extends AbstractTest {
     @Autowired
     ConceptService conceptService;
     @Autowired
-    ConceptRepository conceptRepository;
+    ConceptNodeRepository conceptRepository;
     @Autowired
     DocumentService documentService;
     @Autowired
@@ -31,7 +31,7 @@ public abstract class AbstractNLPTest extends AbstractTest {
     @Autowired
     PhraseService phraseService;
     @Autowired
-    PhraseRepository phraseRepository;
+    PhraseNodeRepository phraseRepository;
 
     private static Neo4j embeddedNeo4j;
     private static final int ELASTIC_PORT = 9200;

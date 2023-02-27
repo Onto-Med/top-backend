@@ -1,6 +1,6 @@
 package care.smith.top.backend.service.nlp;
 
-import care.smith.top.backend.repository.nlp.PhraseRepository;
+import care.smith.top.backend.repository.nlp.PhraseNodeRepository;
 import care.smith.top.backend.service.ContentService;
 import care.smith.top.model.Phrase;
 import org.neo4j.cypherdsl.core.Cypher;
@@ -17,10 +17,10 @@ import java.util.stream.Collectors;
 @Service
 public class PhraseService implements ContentService {
 
-    private final PhraseRepository phraseRepository;
+    private final PhraseNodeRepository phraseRepository;
 
     @Autowired
-    public PhraseService(PhraseRepository phraseRepository) {
+    public PhraseService(PhraseNodeRepository phraseRepository) {
         this.phraseRepository = phraseRepository;
     }
 
@@ -50,7 +50,8 @@ public class PhraseService implements ContentService {
     }
 
     public List<Phrase> getPhrasesForDocument(String documentId, Boolean mostImportantOnly) {
-        return phraseRepository.findAll(phraseInDocument(documentId, mostImportantOnly))
+//        return phraseRepository.findAll(phraseInDocument(documentId, mostImportantOnly))
+        return phraseRepository.getPhrasesForDocument(documentId, mostImportantOnly)
                 .stream()
                 .map(phraseEntity -> new Phrase()
                         .id(phraseEntity.phraseId())

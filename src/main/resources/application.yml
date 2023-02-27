@@ -14,6 +14,9 @@ logging:
     root: INFO
 
 spring:
+#  data:
+#    neo4j:
+#      database: ${DB_NEO4J_DATABASE} # statically select a specific database
   neo4j:
     uri: bolt://${DB_NEO4J_HOST:localhost}:${DB_NEO4J_PORT:7687}
     authentication:
