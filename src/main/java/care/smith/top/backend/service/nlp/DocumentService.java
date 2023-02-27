@@ -57,7 +57,13 @@ public class DocumentService implements ContentService {
     }
 
     public List<Document> getDocumentsByTermsBoolean(String[] mustTerms, String[] shouldTerms, String[] notTerms, String[] fields) {
-        String mustString = (mustTerms != null) ? String.format("+( %s )", String.join(" ", mustTerms)) : "";
+        List<String> mustTermsList = new ArrayList<>();
+        for (String s: mustTerms ) {
+            mustTermsList.add(String.format("(%s)", s));
+        }
+        String mustString = (mustTermsList != null) ? String.format("+( %s )",
+                String.join(" ", mustTermsList)
+        ) : "";
         String shouldString = (shouldTerms != null) ? String.join(" ", shouldTerms) : "";
         String notString = (notTerms != null) ? String.format("-( %s )", String.join(" ", notTerms)) : "";
         return getDocumentsByTerms(new String[]{
@@ -67,18 +73,28 @@ public class DocumentService implements ContentService {
         }, fields);
     }
 
-    @Cacheable("conceptDocumentIds")
     public List<Document> getDocumentsForConcepts(Set<String> conceptIds, Boolean exemplarOnly) {
         if (conceptIds.size() == 0) {
             return List.of();
         }
-        HashMap<String, Document> docMap = documentNodeRepository
-                .findAll(documentsForConceptsUnion(conceptIds, exemplarOnly))
+//        HashMap<String, Document> docMap = documentNodeRepository
+//                .findAll(documentsForConceptsUnion(conceptIds, exemplarOnly))
+//                .stream()
+//                .map(documentNodeEntityMapper)
+//                .collect(Collectors.toMap(Document::getId, Function.identity(), (prev, next) -> next, HashMap::new));
+//
+//        return new ArrayList<>(docMap.values());
+        return documentNodeRepository.getDocumentsForConcepts(List.copyOf(conceptIds), exemplarOnly)
                 .stream()
                 .map(documentNodeEntityMapper)
-                .collect(Collectors.toMap(Document::getId, Function.identity(), (prev, next) -> next, HashMap::new));
+                .collect(Collectors.toList());
+        // I added DISTINCT to neo4j query, so this shouldn't be necessary anymore
+//                .collect(Collectors.toMap(Document::getId, Function.identity(), (prev, next) -> next, HashMap::new));
+//        return new ArrayList<>(docMap.values());
+    }
 
-        return new ArrayList<>(docMap.values());
+    private String parentheses(String s) {
+        return String.format("(%s)", s);
     }
 
     static Statement documentsForConceptsUnion(Set<String> conceptIds, Boolean exemplarOnly) {
@@ -122,5 +138,6 @@ public class DocumentService implements ContentService {
             );
 
     private final Function<DocumentNodeEntity, Document> documentNodeEntityMapper = documentNodeEntity -> new Document()
-            .id(documentNodeEntity.documentId());
+            .id(documentNodeEntity.documentId())
+            .name(documentNodeEntity.documentName());
 }

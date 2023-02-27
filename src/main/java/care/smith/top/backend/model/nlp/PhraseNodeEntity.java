@@ -5,7 +5,7 @@ import org.springframework.data.neo4j.core.schema.*;
 import java.util.List;
 
 @Node("Phrase")
-public class PhraseEntity {
+public class PhraseNodeEntity {
 
     @Id
     @GeneratedValue
@@ -23,10 +23,10 @@ public class PhraseEntity {
     @Property("phraseId")
     private final String phraseId;
 
-    @Relationship(type = "PARENT_OF")
-    private List<PhraseEntity> phrases;
+//    @Relationship(type = "PARENT_OF")
+    private List<PhraseNodeEntity> phrases;
 
-    public PhraseEntity(List<String> phraseAttributes, Boolean isExemplar, String phraseText, String phraseId) {
+    public PhraseNodeEntity(List<String> phraseAttributes, Boolean isExemplar, String phraseText, String phraseId) {
         this.id = null;
         this.phraseAttributes = phraseAttributes;
         this.isExemplar = isExemplar;
@@ -34,11 +34,11 @@ public class PhraseEntity {
         this.phraseId = phraseId;
     }
 
-    public PhraseEntity withId(Long id) {
+    public PhraseNodeEntity withId(Long id) {
         if (this.id.equals(id)) {
             return this;
         } else {
-            PhraseEntity newObj = new PhraseEntity(this.phraseAttributes, this.isExemplar, this.phraseText, this.phraseId);
+            PhraseNodeEntity newObj = new PhraseNodeEntity(this.phraseAttributes, this.isExemplar, this.phraseText, this.phraseId);
             newObj.id = id;
             return newObj;
         }

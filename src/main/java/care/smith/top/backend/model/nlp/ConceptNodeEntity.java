@@ -2,13 +2,11 @@ package care.smith.top.backend.model.nlp;
 
 import org.springframework.data.neo4j.core.schema.*;
 
-import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 @Node("Concept")
-public class ConceptEntity {
+public class ConceptNodeEntity {
 
     @Id
     @GeneratedValue
@@ -22,19 +20,19 @@ public class ConceptEntity {
 
     //    ToDo: this takes a long time to load; maybe it's not necessary bc I get the Phrases later with a Cypher query when needed
 //    @Relationship(type = "IN_CONCEPT", direction = Relationship.Direction.INCOMING)
-//    private Set<PhraseEntity> conceptPhrases;
+    private Set<PhraseNodeEntity> conceptPhrases;
 
-    public ConceptEntity(String conceptId, List<String> labels){//, Set<PhraseEntity> conceptPhrases) {
+    public ConceptNodeEntity(String conceptId, List<String> labels, Set<PhraseNodeEntity> conceptPhrases) {
         this.conceptId = conceptId;
         this.labels = labels;
-//        this.conceptPhrases = conceptPhrases;
+        this.conceptPhrases = conceptPhrases;
     }
 
-    public ConceptEntity withId(Long id) {
+    public ConceptNodeEntity withId(Long id) {
         if (this.id.equals(id)) {
             return this;
         } else {
-            ConceptEntity newObj = new ConceptEntity(this.conceptId, this.labels);//, this.conceptPhrases);
+            ConceptNodeEntity newObj = new ConceptNodeEntity(this.conceptId, this.labels, this.conceptPhrases);
             newObj.id = id;
             return newObj;
         }
@@ -48,7 +46,7 @@ public class ConceptEntity {
         return this.labels;
     }
 
-//    public Set<PhraseEntity> conceptPhrases() {
-//        return this.conceptPhrases;
-//    }
+    public Set<PhraseNodeEntity> conceptPhrases() {
+        return this.conceptPhrases;
+    }
 }

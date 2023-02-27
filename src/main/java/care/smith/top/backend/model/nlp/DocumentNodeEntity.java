@@ -12,11 +12,15 @@ public class DocumentNodeEntity {
     @Property("docId")
     private final String documentId;
 
-    @Relationship(type = "HAS_PHRASE", direction = Relationship.Direction.OUTGOING)
-    private List<PhraseEntity> documentPhrases;
+    @Property("name")
+    private final String documentName;
 
-    public DocumentNodeEntity(String documentId) {
+//    @Relationship(type = "HAS_PHRASE", direction = Relationship.Direction.OUTGOING)
+    private List<PhraseNodeEntity> documentPhrases;
+
+    public DocumentNodeEntity(String documentId, String documentName) {
         this.id = null;
+        this.documentName = documentName;
         this.documentId = documentId;
     }
 
@@ -24,7 +28,7 @@ public class DocumentNodeEntity {
         if (this.id.equals(id)) {
             return this;
         } else {
-            DocumentNodeEntity newObj = new DocumentNodeEntity(this.documentId);
+            DocumentNodeEntity newObj = new DocumentNodeEntity(this.documentId, this.documentName);
             newObj.id = id;
             return newObj;
         }
@@ -34,5 +38,9 @@ public class DocumentNodeEntity {
         return documentId;
     }
 
-    public List<PhraseEntity> documentPhrases() { return documentPhrases; }
+    public String documentName() {
+        return documentName;
+    }
+
+    public List<PhraseNodeEntity> documentPhrases() { return documentPhrases; }
 }

@@ -1,10 +1,13 @@
 package care.smith.top.backend.api.nlp;
 
 import care.smith.top.backend.api.DocumentApiDelegate;
+import care.smith.top.backend.model.nlp.DocumentEntity;
+import care.smith.top.backend.service.nlp.ConceptService;
 import care.smith.top.backend.service.nlp.DocumentService;
 import care.smith.top.backend.service.nlp.PhraseService;
 import care.smith.top.model.Document;
 import care.smith.top.model.Phrase;
+import org.checkerframework.checker.units.qual.s;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,9 +21,11 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
 
     @Autowired DocumentService documentService;
     @Autowired PhraseService phraseService;
+    @Autowired ConceptService conceptService;
 
     @Override
-    public ResponseEntity<List<Document>> getDocumentIdsByConceptIds(List<String> conceptId, String gatheringMode, String name, Boolean exemplarOnly) {
+    public ResponseEntity<List<Document>> getDocumentsByConceptIds(List<String> conceptId, String gatheringMode, String name, Boolean exemplarOnly) {
+        //ToDo: filter by 'name' not implemented
         if (!Objects.equals(gatheringMode, "intersection")) {
             return new ResponseEntity<>(documentService.getDocumentsForConcepts(Set.copyOf(conceptId), exemplarOnly), HttpStatus.OK);
         } else {
@@ -54,28 +59,36 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
     }
 
     @Override
-    public ResponseEntity<Document> getDocumentById(String documentId, List<String> include) {
+    public ResponseEntity<Document> getDocumentById(String documentId, List<String> conceptIds, List<String> include) {
         // Todo: just testing
-        List<Document> documents = documentService.getDocumentsByTermsBoolean(
-                phraseService.getPhrasesForDocument(documentId, true)
-                        .stream()
-                        .map(Phrase::getText)
-                        .filter(s -> s.matches("[a-zA-Z]+"))
-                        .toArray(String[]::new)
-                ,
-                null, null,
-                new String[]{"text"}
-        );
-        return new ResponseEntity<>(documents.stream().filter(d -> d.getName().equals(documentId)).findFirst().get(), HttpStatus.OK);
+        System.out.println(documentId);
+        if (conceptIds != null) {
+            String[] conceptPhrases = conceptIds.stream()
+                    .map(cid -> phraseService.getPhrasesForConcept(cid).stream()
+                            .map(Phrase::getText)
+                            .collect(Collectors.joining("|")))
+                    .collect(Collectors.joining("|")).split("\\|");
 
-        // ToDo: change this. right now, the document name is taken as id, because neo4j node id (short string that is just a simple number
-        //  and elasticsearch document id (uuid) don't match
-//        return new ResponseEntity<>(documentService.getDocumentByName(documentId), HttpStatus.OK);
+            List<Document> documents = documentService.getDocumentsByTermsBoolean(
+                    phraseService.getPhrasesForDocument(documentId, false)
+                            .stream()
+                            .map(Phrase::getText)
+                            .filter(s -> Arrays.asList(conceptPhrases).contains(s))
+//                            .filter(s -> s.matches("[a-zA-Z]+"))
+                            .toArray(String[]::new)
+                    ,
+                    null, null,
+                    new String[]{"text"});
+            Optional<Document> document = documents.stream().filter(d -> d.getId().equals(documentId)).findFirst();
+            return document.map(value -> new ResponseEntity<>(value, HttpStatus.OK))
+                    .orElseGet(() -> new ResponseEntity<>(documentService.getDocumentById(documentId), HttpStatus.OK));
+        }
+        return new ResponseEntity<>(documentService.getDocumentById(documentId), HttpStatus.OK);
     }
 
     @Override
-    public ResponseEntity<List<Document>> getDocumentByPhraseId(String phraseId, List<String> include, String name, Integer page) {
-        return DocumentApiDelegate.super.getDocumentByPhraseId(phraseId, include, name, page);
+    public ResponseEntity<List<Document>> getDocumentsByPhraseIds(String phraseId, List<String> include, String name, Integer page) {
+        return DocumentApiDelegate.super.getDocumentsByPhraseIds(phraseId, include, name, page);
     }
 
     @Override
