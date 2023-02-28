@@ -45,8 +45,6 @@ org:
   jobrunr:
     background-job-server:
       enabled: true
-    dashboard:
-      enabled: true
 
 top:
   phenotyping:
