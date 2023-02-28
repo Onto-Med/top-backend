@@ -14,4 +14,6 @@ public interface DocumentCustomRepository {
      * @return List of DocumentEntity
      */
     List<DocumentEntity> getDocumentsByTerms(String[] terms, String[] fields);
+
+    List<DocumentEntity> getDocumentsByQuery(String query);
 }

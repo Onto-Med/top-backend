@@ -17,6 +17,11 @@ public class DocumentCustomRepositoryImpl implements DocumentCustomRepository{
 
     private final ElasticsearchOperations operations;
 
+    private final String spanTagStart = "<span" +
+//            " onclick=\"$emit('choose-phrase')\"" +
+            " style=\"background-color:#FF000080; border-radius:3px; padding:2px\"" +
+            " %s>";
+
     public DocumentCustomRepositoryImpl(ElasticsearchOperations operations) {
         this.operations = operations;
     }
@@ -35,6 +40,19 @@ public class DocumentCustomRepositoryImpl implements DocumentCustomRepository{
         return documentEntities;
     }
 
+    @Override
+    public List<DocumentEntity> getDocumentsByQuery(String query) {
+        ArrayList<DocumentEntity> documentEntities = new ArrayList<>();
+        getSearchHitsByCustomQuery(query, "Searched Phrase")
+                .stream()
+                .forEach(sh -> {
+                    DocumentEntity de = sh.getContent();
+                    de.setHighlights(sh.getHighlightFields());
+                    documentEntities.add(de);
+                });
+        return documentEntities;
+    }
+
     private SearchHits<DocumentEntity> getSearchHitsByTerms(String[] terms, String[] fields, String hover) {
         String queryString = Arrays.stream(terms)
                 .filter(Objects::nonNull)
@@ -44,18 +62,18 @@ public class DocumentCustomRepositoryImpl implements DocumentCustomRepository{
                 .map(field -> "\"" + field + "\"")
                 .collect(Collectors.joining(", "));
 
+        String finalQueryString = queryString.substring(queryString.indexOf("(")).trim();
         Query searchQuery = new StringQuery(
                 "{" +
                             "\"query_string\": {" +
                                 "\"fields\": [" + fieldsString + "]," +
-                                "\"query\": \"" + queryString + "\"" +
+                                "\"query\": \"" + finalQueryString + "\"" +
                             "}" +
                         "}"
         );
 
-//        String spanTag = "<span style=\"border-width:3px; border-style:solid; border-color:#FF0000; padding:1px\">";
         String addString = (hover != null) ? String.format("title=\"%s\"", hover) : "";
-        String spanTag = String.format("<span style=\"background-color:#FF000080; border-radius:3px; padding:2px\" %s>", addString);
+        String spanTag = String.format(spanTagStart, addString);
         Highlight highlight = new Highlight(
                 Arrays.stream(fields)
                         .map(s -> new HighlightField(s,
@@ -67,7 +85,28 @@ public class DocumentCustomRepositoryImpl implements DocumentCustomRepository{
                                         .build())
                         ).collect(Collectors.toList())
         );
-        System.out.println(Arrays.toString(Arrays.stream(terms).toArray()));
+        System.out.println("\"query\": \"" + finalQueryString + "\"");
+        searchQuery.setHighlightQuery(new HighlightQuery(highlight, DocumentEntity.class));
+        return operations.search(searchQuery, DocumentEntity.class);
+    }
+
+    private SearchHits<DocumentEntity> getSearchHitsByCustomQuery(String query, String hover) {
+        Query searchQuery = new StringQuery(String.format("{ %s }", query));
+
+        String addString = (hover != null) ? String.format("title=\"%s\"", hover) : "";
+        String spanTag = String.format(spanTagStart, addString);
+        Highlight highlight = new Highlight(
+                Arrays.stream(new String[]{"text"})
+                        .map(s -> new HighlightField(s,
+                                // makes it so, that not only fragments (which contain the phrase) are returned but the whole field
+                                HighlightFieldParameters.builder()
+                                        .withNumberOfFragments(0)
+                                        .withPreTags(new String[]{spanTag})
+                                        .withPostTags(new String[]{"</span>"})
+                                        .build())
+                        ).collect(Collectors.toList())
+        );
+        System.out.println("{\"query\": {" + query + "}}");
         searchQuery.setHighlightQuery(new HighlightQuery(highlight, DocumentEntity.class));
         return operations.search(searchQuery, DocumentEntity.class);
     }
