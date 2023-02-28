@@ -69,8 +69,8 @@ public class UserService implements ContentService, UserDetailsService {
 
     String username =
         StringUtils.defaultIfBlank(
-            jwt.getClaimAsString("preferred_username"),
-            StringUtils.defaultIfBlank(jwt.getClaimAsString("username"), jwt.getSubject()));
+            jwt.getClaimAsString("name"),
+            StringUtils.defaultIfBlank(jwt.getClaimAsString("preferred_username"), jwt.getSubject()));
 
     if (existingUser.isPresent()) {
       UserDao user = existingUser.get();
