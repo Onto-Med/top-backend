@@ -44,7 +44,10 @@ public class EntityVersionDao {
   @ManyToMany(mappedBy = "equivalentEntityVersions")
   private Set<EntityVersionDao> equivalentEntityVersionOf = null;
 
-  @CreatedBy private String author;
+  @ManyToOne
+  @JoinColumn(name = "user_id")
+  @CreatedBy
+  private UserDao author;
 
   private DataType dataType;
 
@@ -62,6 +65,10 @@ public class EntityVersionDao {
   @Column(updatable = false)
   private OffsetDateTime createdAt;
 
+  public void setAuthor(UserDao author) {
+    this.author = author;
+  }
+
   public EntityVersionDao() {}
 
   public EntityVersionDao(
@@ -71,7 +78,6 @@ public class EntityVersionDao {
       List<LocalisableTextDao> synonyms,
       List<LocalisableTextDao> descriptions,
       List<CodeDao> codes,
-      String author,
       DataType dataType,
       ItemType itemType,
       RestrictionDao restriction,
@@ -83,7 +89,6 @@ public class EntityVersionDao {
     this.synonyms = synonyms;
     this.descriptions = descriptions;
     this.codes = codes;
-    this.author = author;
     this.dataType = dataType;
     this.itemType = itemType;
     this.restriction = restriction;
@@ -219,7 +224,7 @@ public class EntityVersionDao {
     return this;
   }
 
-  public EntityVersionDao author(String author) {
+  public EntityVersionDao author(UserDao author) {
     this.author = author;
     return this;
   }
@@ -289,7 +294,7 @@ public class EntityVersionDao {
     return equivalentEntityVersions;
   }
 
-  public String getAuthor() {
+  public UserDao getAuthor() {
     return author;
   }
 

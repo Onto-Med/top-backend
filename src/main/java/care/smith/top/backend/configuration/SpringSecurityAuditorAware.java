@@ -11,12 +11,12 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import java.util.Optional;
 
 @Configuration
-public class SpringSecurityAuditorAware implements AuditorAware<String> {
+public class SpringSecurityAuditorAware implements AuditorAware<UserDao> {
   @Value("${spring.security.oauth2.enabled}")
   private Boolean oauth2Enabled;
 
   @Override
-  public Optional<String> getCurrentAuditor() {
+  public Optional<UserDao> getCurrentAuditor() {
     if (!oauth2Enabled) return Optional.empty();
 
     return Optional.ofNullable(SecurityContextHolder.getContext())
@@ -24,7 +24,6 @@ public class SpringSecurityAuditorAware implements AuditorAware<String> {
         .filter(Authentication::isAuthenticated)
         .map(Authentication::getPrincipal)
         .filter(p -> p instanceof UserDao)
-        .map(UserDao.class::cast)
-        .map(UserDao::getUsername);
+        .map(UserDao.class::cast);
   }
 }

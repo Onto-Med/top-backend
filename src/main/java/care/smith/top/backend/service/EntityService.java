@@ -460,7 +460,7 @@ public class EntityService implements ContentService {
                 RepositoryDao repository = f.getRepository();
                 return new Entity()
                     .id(f.getId())
-                    .author(f.getCurrentVersion().getAuthor())
+                    .author(f.getCurrentVersion().getAuthor() != null ? f.getCurrentVersion().getAuthor().getUsername() : null)
                     .createdAt(f.getCurrentVersion().getCreatedAt())
                     .repository(repository.toApiModel());
               })

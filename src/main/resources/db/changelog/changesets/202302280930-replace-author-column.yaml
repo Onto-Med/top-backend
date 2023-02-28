@@ -1,0 +1,32 @@
+databaseChangeLog:
+- changeSet:
+    id: 1677573038780-8
+    author: ChristophB (generated)
+    changes:
+    - addColumn:
+        columns:
+        - column:
+            name: user_id
+            type: varchar(255)
+        tableName: entity_version
+- changeSet:
+    id: 1677573038780-9
+    author: ChristophB (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: user_id
+        baseTableName: entity_version
+        constraintName: FKlsa5f51ws32j71elhfwxaqfhe
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: id
+        referencedTableName: user_table
+        validate: true
+- changeSet:
+    id: 1677573038780-10
+    author: ChristophB (generated)
+    changes:
+    - dropColumn:
+        columnName: AUTHOR
+        tableName: ENTITY_VERSION
+

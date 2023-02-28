@@ -125,7 +125,7 @@ public class EntityDao {
                     new Organisation().id(entityDao.getRepository().getOrganisation().getId())));
 
     entity
-        .author(entityVersionDao.getAuthor())
+        .author(entityVersionDao.getAuthor() != null ? entityVersionDao.getAuthor().getUsername() : null)
         .createdAt(entityVersionDao.getCreatedAt())
         .version(entityVersionDao.getVersion());
 
