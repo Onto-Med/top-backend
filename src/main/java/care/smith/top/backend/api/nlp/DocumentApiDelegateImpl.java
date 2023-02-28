@@ -61,7 +61,6 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
     @Override
     public ResponseEntity<Document> getDocumentById(String documentId, List<String> conceptIds, List<String> include) {
         // Todo: just testing
-        System.out.println(documentId);
         if (conceptIds != null) {
             String[] conceptPhrases = conceptIds.stream()
                     .map(cid -> phraseService.getPhrasesForConcept(cid).stream()
@@ -69,16 +68,19 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
                             .collect(Collectors.joining("|")))
                     .collect(Collectors.joining("|")).split("\\|");
 
-            List<Document> documents = documentService.getDocumentsByTermsBoolean(
-                    phraseService.getPhrasesForDocument(documentId, false)
-                            .stream()
-                            .map(Phrase::getText)
-                            .filter(s -> Arrays.asList(conceptPhrases).contains(s))
+            String[] shouldTerms = phraseService.getPhrasesForDocument(documentId, false)
+                    .stream()
+                    .map(Phrase::getText)
+                    .filter(s -> Arrays.asList(conceptPhrases).contains(s))
 //                            .filter(s -> s.matches("[a-zA-Z]+"))
-                            .toArray(String[]::new)
-                    ,
-                    null, null,
-                    new String[]{"text"});
+                    .toArray(String[]::new);
+
+            List<Document> documents = documentService.getDocumentsByPhrasesBoolean(null, shouldTerms, null, null);
+
+//            List<Document> documents = documentService.getDocumentsByTermsBoolean(
+//                    mustTerms,null, null, new String[]{"text"}
+//            );
+
             Optional<Document> document = documents.stream().filter(d -> d.getId().equals(documentId)).findFirst();
             return document.map(value -> new ResponseEntity<>(value, HttpStatus.OK))
                     .orElseGet(() -> new ResponseEntity<>(documentService.getDocumentById(documentId), HttpStatus.OK));

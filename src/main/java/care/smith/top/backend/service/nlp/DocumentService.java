@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -57,20 +58,32 @@ public class DocumentService implements ContentService {
     }
 
     public List<Document> getDocumentsByTermsBoolean(String[] mustTerms, String[] shouldTerms, String[] notTerms, String[] fields) {
-        List<String> mustTermsList = new ArrayList<>();
-        for (String s: mustTerms ) {
-            mustTermsList.add(String.format("(%s)", s));
-        }
-        String mustString = (mustTermsList != null) ? String.format("+( %s )",
-                String.join(" ", mustTermsList)
+        String mustString = (mustTerms != null) ? String.format("+( %s )",
+                String.join(" ", mustTerms)
         ) : "";
-        String shouldString = (shouldTerms != null) ? String.join(" ", shouldTerms) : "";
-        String notString = (notTerms != null) ? String.format("-( %s )", String.join(" ", notTerms)) : "";
+        String shouldString = (shouldTerms != null) ?
+                String.join(" ", shouldTerms
+                ) : "";
+        String notString = (notTerms != null) ? String.format("-( %s )",
+                String.join(" ", notTerms)
+        ) : "";
+
         return getDocumentsByTerms(new String[]{
                 shouldString,
                 !Objects.equals(mustString, "+(  )") ? mustString : null,
                 !Objects.equals(notString, "-(  )") ? notString : null
         }, fields);
+    }
+
+    public List<Document> getDocumentsByPhrasesBoolean(String[] mustPhrases, String[] shouldPhrases, String[] notPhrases, String[] fields) {
+        return documentRepository.getDocumentsByQuery(
+            String.format("\"bool\": { %s, %s, %s } ",
+//            String.format("\"bool\": { %s } ",
+                    boolQueryPart.apply("must", mustPhrases),
+                    boolQueryPart.apply("should", shouldPhrases),
+                    boolQueryPart.apply("must_not", notPhrases)
+            )
+        ).stream().map(documentEntityMapper).collect(Collectors.toList());
     }
 
     public List<Document> getDocumentsForConcepts(Set<String> conceptIds, Boolean exemplarOnly) {
@@ -140,4 +153,15 @@ public class DocumentService implements ContentService {
     private final Function<DocumentNodeEntity, Document> documentNodeEntityMapper = documentNodeEntity -> new Document()
             .id(documentNodeEntity.documentId())
             .name(documentNodeEntity.documentName());
+
+    BiFunction<String, String[], String> boolQueryPart = (bool, phrases) -> {
+        //ToDo: no hardcoded "slop" and field (? "text")
+        if (phrases == null) {
+            return "\n\"" + bool + "\": [ \n]";
+        }
+        String matchQuery = "\n{\"match_phrase\": { \"text\": { \"query\": \"%s\", \"slop\": 2 } } }";
+        return Arrays.stream(phrases)
+                .map(s -> String.format(matchQuery, s))
+                .collect(Collectors.joining(",", "\n\"" + bool + "\": [", "\n]"));
+    };
 }
