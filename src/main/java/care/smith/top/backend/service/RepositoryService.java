@@ -109,7 +109,7 @@ public class RepositoryService implements ContentService {
 
   @Transactional
   @PreAuthorize(
-      "hasRole('ADMIN') or hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'Write')")
+      "hasRole('ADMIN') or hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'WRITE')")
   public Repository updateRepository(
       String organisationId, String repositoryId, Repository data, List<String> include) {
     RepositoryDao repository =
