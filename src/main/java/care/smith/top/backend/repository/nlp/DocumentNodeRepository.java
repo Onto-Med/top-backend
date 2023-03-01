@@ -11,9 +11,14 @@ public interface DocumentNodeRepository extends
     Neo4jRepository<DocumentNodeEntity, Long>,
     CypherdslStatementExecutor<DocumentNodeEntity> {
 
-    @Query("MATCH (c:Concept)<-[r1:IN_CONCEPT]-(p:Phrase)<-[r2:HAS_PHRASE]-(d:Document)" +
-           "WHERE (c.conceptId IN $conceptIds)" +
-//           "AND NOT (p.exemplar XOR $exemplarOnly)" + //ToDo: implement check for whether all or only exemplars should be regarded
+    @Query("MATCH (c:Concept)<-[r1:IN_CONCEPT]-(p:Phrase)<-[r2:HAS_PHRASE]-(d:Document)\n" +
+           "WITH d, p,\n" +
+           "CASE $exemplarOnly\n" +
+           "  WHEN true  THEN (p.exemplar AND $exemplarOnly)\n" +
+           "  WHEN false THEN true\n" +
+           "END AS returnBool\n" +
+           "WHERE (c.conceptId IN $conceptIds)\n" +
+           "AND returnBool\n" +
            "RETURN DISTINCT d;")
     List<DocumentNodeEntity> getDocumentsForConcepts(List<String> conceptIds, Boolean exemplarOnly);
 }

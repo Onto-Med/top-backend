@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.Set;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -51,91 +50,44 @@ public class DocumentService implements ContentService {
 
     public List<Document> getDocumentsByTerms(String[] terms, String[] fields) {
         return documentRepository
-                .getDocumentsByTerms(terms, fields)
+                .getESDocumentsByTerms(terms, fields)
                 .stream()
                 .map(documentEntityMapper)
                 .collect(Collectors.toList());
     }
 
     public List<Document> getDocumentsByTermsBoolean(String[] mustTerms, String[] shouldTerms, String[] notTerms, String[] fields) {
-        String mustString = (mustTerms != null) ? String.format("+( %s )",
-                String.join(" ", mustTerms)
-        ) : "";
-        String shouldString = (shouldTerms != null) ?
-                String.join(" ", shouldTerms
-                ) : "";
-        String notString = (notTerms != null) ? String.format("-( %s )",
-                String.join(" ", notTerms)
-        ) : "";
+        return documentRepository
+                .getESDocumentsByTermsBoolean(shouldTerms, mustTerms, notTerms, fields)
+                .stream()
+                .map(documentEntityMapper)
+                .collect(Collectors.toList());
+    }
 
-        return getDocumentsByTerms(new String[]{
-                shouldString,
-                !Objects.equals(mustString, "+(  )") ? mustString : null,
-                !Objects.equals(notString, "-(  )") ? notString : null
-        }, fields);
+    public List<Document> getDocumentsByPhrases(String[] phrases, String[] fields) {
+        return documentRepository
+                .getESDocumentsByPhrases(phrases, fields)
+                .stream()
+                .map(documentEntityMapper)
+                .collect(Collectors.toList());
     }
 
     public List<Document> getDocumentsByPhrasesBoolean(String[] mustPhrases, String[] shouldPhrases, String[] notPhrases, String[] fields) {
-        return documentRepository.getDocumentsByQuery(
-            String.format("\"bool\": { %s, %s, %s } ",
-//            String.format("\"bool\": { %s } ",
-                    boolQueryPart.apply("must", mustPhrases),
-                    boolQueryPart.apply("should", shouldPhrases),
-                    boolQueryPart.apply("must_not", notPhrases)
-            )
-        ).stream().map(documentEntityMapper).collect(Collectors.toList());
+        return documentRepository
+                .getESDocumentsByPhrasesBoolean(shouldPhrases, mustPhrases, notPhrases, fields)
+                .stream()
+                .map(documentEntityMapper)
+                .collect(Collectors.toList());
     }
 
     public List<Document> getDocumentsForConcepts(Set<String> conceptIds, Boolean exemplarOnly) {
         if (conceptIds.size() == 0) {
             return List.of();
         }
-//        HashMap<String, Document> docMap = documentNodeRepository
-//                .findAll(documentsForConceptsUnion(conceptIds, exemplarOnly))
-//                .stream()
-//                .map(documentNodeEntityMapper)
-//                .collect(Collectors.toMap(Document::getId, Function.identity(), (prev, next) -> next, HashMap::new));
-//
-//        return new ArrayList<>(docMap.values());
         return documentNodeRepository.getDocumentsForConcepts(List.copyOf(conceptIds), exemplarOnly)
                 .stream()
                 .map(documentNodeEntityMapper)
                 .collect(Collectors.toList());
-        // I added DISTINCT to neo4j query, so this shouldn't be necessary anymore
-//                .collect(Collectors.toMap(Document::getId, Function.identity(), (prev, next) -> next, HashMap::new));
-//        return new ArrayList<>(docMap.values());
-    }
-
-    private String parentheses(String s) {
-        return String.format("(%s)", s);
-    }
-
-    static Statement documentsForConceptsUnion(Set<String> conceptIds, Boolean exemplarOnly) {
-        Node document = Cypher.node("Document").named("document");
-        Node phrase;
-        if (exemplarOnly) {
-            phrase = Cypher.node("Phrase").withProperties(Map.of("exemplar", true)).named("phrase");
-        } else {
-            phrase = Cypher.node("Phrase").named("phrase");
-        }
-        Node concept = Cypher.node("Concept").named("concept");
-
-        return Cypher
-                .match(
-                        concept.relationshipFrom(phrase, "IN_CONCEPT"),
-                        document.relationshipTo(phrase, "HAS_PHRASE")
-                )
-                .where(concept.property("conceptId").in(someIdList(conceptIds)))
-                .returning(document)
-                .build();
-    }
-
-    static Expression someIdList(Set<String> someIds) {
-        return Cypher.listOf(someIds
-                .stream()
-                .map(Cypher::literalOf)
-                .collect(Collectors.toList())
-        );
     }
 
     private final Function<DocumentEntity, Document> documentEntityMapper = documentEntity -> new Document()
@@ -153,15 +105,4 @@ public class DocumentService implements ContentService {
     private final Function<DocumentNodeEntity, Document> documentNodeEntityMapper = documentNodeEntity -> new Document()
             .id(documentNodeEntity.documentId())
             .name(documentNodeEntity.documentName());
-
-    BiFunction<String, String[], String> boolQueryPart = (bool, phrases) -> {
-        //ToDo: no hardcoded "slop" and field (? "text")
-        if (phrases == null) {
-            return "\n\"" + bool + "\": [ \n]";
-        }
-        String matchQuery = "\n{\"match_phrase\": { \"text\": { \"query\": \"%s\", \"slop\": 2 } } }";
-        return Arrays.stream(phrases)
-                .map(s -> String.format(matchQuery, s))
-                .collect(Collectors.joining(",", "\n\"" + bool + "\": [", "\n]"));
-    };
 }
