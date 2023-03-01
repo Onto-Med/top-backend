@@ -10,6 +10,7 @@ import care.smith.top.model.User;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -70,7 +71,8 @@ public class UserService implements ContentService, UserDetailsService {
     String username =
         StringUtils.defaultIfBlank(
             jwt.getClaimAsString("name"),
-            StringUtils.defaultIfBlank(jwt.getClaimAsString("preferred_username"), jwt.getSubject()));
+            StringUtils.defaultIfBlank(
+                jwt.getClaimAsString("preferred_username"), jwt.getSubject()));
 
     if (existingUser.isPresent()) {
       UserDao user = existingUser.get();
@@ -100,11 +102,9 @@ public class UserService implements ContentService, UserDetailsService {
     return userRepository.findById(userId);
   }
 
-  public List<UserDao> getUsers(String name, List<String> organisationIds, Integer page) {
+  public Page<UserDao> getUsers(String name, List<String> organisationIds, Integer page) {
     PageRequest pageRequest = PageRequest.of(page != null ? page - 1 : 0, pageSize);
-    return userRepository
-        .findAllByUsernameAndOrganisationIds(name, organisationIds, pageRequest)
-        .getContent();
+    return userRepository.findAllByUsernameAndOrganisationIds(name, organisationIds, pageRequest);
   }
 
   @Nullable

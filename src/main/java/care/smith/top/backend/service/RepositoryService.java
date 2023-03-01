@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Caching;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -67,7 +68,7 @@ public class RepositoryService implements ContentService {
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND)));
   }
 
-  public List<Repository> getRepositories(
+  public Page<Repository> getRepositories(
       List<String> include,
       String name,
       Boolean primary,
@@ -78,11 +79,10 @@ public class RepositoryService implements ContentService {
     return repositoryRepository
         .findByOrganisationIdAndNameAndPrimaryAndRepositoryType(
             null, name, primary, repositoryType, userService.getCurrentUser(), pageRequest)
-        .map(RepositoryDao::toApiModel)
-        .getContent();
+        .map(RepositoryDao::toApiModel);
   }
 
-  public List<Repository> getRepositoriesByOrganisationId(
+  public Page<Repository> getRepositoriesByOrganisationId(
       String organisationId,
       List<String> include,
       String name,
@@ -93,8 +93,7 @@ public class RepositoryService implements ContentService {
     return repositoryRepository
         .findByOrganisationIdAndNameAndPrimaryAndRepositoryType(
             organisationId, name, null, repositoryType, userService.getCurrentUser(), pageRequest)
-        .map(RepositoryDao::toApiModel)
-        .getContent();
+        .map(RepositoryDao::toApiModel);
   }
 
   @PreAuthorize(

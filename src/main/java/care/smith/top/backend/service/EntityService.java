@@ -1,9 +1,6 @@
 package care.smith.top.backend.service;
 
-import care.smith.top.backend.model.EntityDao;
-import care.smith.top.backend.model.EntityVersionDao;
-import care.smith.top.backend.model.LocalisableTextDao;
-import care.smith.top.backend.model.RepositoryDao;
+import care.smith.top.backend.model.*;
 import care.smith.top.backend.repository.*;
 import care.smith.top.backend.util.ApiModelMapper;
 import care.smith.top.model.*;
@@ -15,8 +12,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -387,7 +386,7 @@ public class EntityService implements ContentService {
     entityVersionRepository.delete(entityVersion);
   }
 
-  public List<Entity> getEntities(
+  public Page<Entity> getEntities(
       List<String> include,
       String name,
       List<EntityType> type,
@@ -407,13 +406,12 @@ public class EntityService implements ContentService {
             itemType,
             userService.getCurrentUser(),
             pageRequest)
-        .map(EntityDao::toApiModel)
-        .toList();
+        .map(EntityDao::toApiModel);
   }
 
   @PreAuthorize(
       "hasRole('ADMIN') or hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'READ')")
-  public List<Entity> getEntitiesByRepositoryId(
+  public Page<Entity> getEntitiesByRepositoryId(
       String organisationId,
       String repositoryId,
       List<String> include,
@@ -428,8 +426,7 @@ public class EntityService implements ContentService {
     return phenotypeRepository
         .findAllByRepositoryIdAndTitleAndEntityTypeAndDataTypeAndItemType(
             repositoryId, name, type, dataType, itemType, pageRequest)
-        .map(EntityDao::toApiModel)
-        .toList();
+        .map(EntityDao::toApiModel);
   }
 
   @PreAuthorize(
@@ -460,7 +457,10 @@ public class EntityService implements ContentService {
                 RepositoryDao repository = f.getRepository();
                 return new Entity()
                     .id(f.getId())
-                    .author(f.getCurrentVersion().getAuthor() != null ? f.getCurrentVersion().getAuthor().getUsername() : null)
+                    .author(
+                        f.getCurrentVersion().getAuthor() != null
+                            ? f.getCurrentVersion().getAuthor().getUsername()
+                            : null)
                     .createdAt(f.getCurrentVersion().getCreatedAt())
                     .repository(repository.toApiModel());
               })
@@ -484,9 +484,8 @@ public class EntityService implements ContentService {
       ItemType itemType) {
     // TODO: filter parameters are ignored
     getRepository(organisationId, repositoryId);
-    Pageable pageRequest = Pageable.unpaged();
     return entityRepository
-        .findAllByRepositoryIdAndSuperEntitiesEmpty(repositoryId, pageRequest)
+        .findAllByRepositoryIdAndSuperEntitiesEmpty(repositoryId, Sort.by(EntityDao_.ID))
         .map(EntityDao::toApiModel)
         .getContent();
   }

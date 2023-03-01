@@ -2,7 +2,9 @@ package care.smith.top.backend.api;
 
 import care.smith.top.backend.model.UserDao;
 import care.smith.top.backend.service.UserService;
+import care.smith.top.backend.util.ApiModelMapper;
 import care.smith.top.model.User;
+import care.smith.top.model.UserPage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -10,7 +12,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class UserApiDelegateImpl implements UserApiDelegate {
@@ -25,11 +26,10 @@ public class UserApiDelegateImpl implements UserApiDelegate {
 
   @Override
   @PreAuthorize("hasRole('USER')")
-  public ResponseEntity<List<User>> getUsers(
+  public ResponseEntity<UserPage> getUsers(
       String name, List<String> organisationIds, Integer page) {
     return ResponseEntity.ok(
-        userService.getUsers(name, organisationIds, page).stream()
-            .map(UserDao::toApiModel)
-            .collect(Collectors.toList()));
+        ApiModelMapper.toUserPage(
+            userService.getUsers(name, organisationIds, page).map(UserDao::toApiModel)));
   }
 }

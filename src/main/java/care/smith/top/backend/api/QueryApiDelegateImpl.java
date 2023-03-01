@@ -1,14 +1,15 @@
 package care.smith.top.backend.api;
 
-import care.smith.top.model.Query;
-import care.smith.top.model.QueryResult;
 import care.smith.top.backend.service.PhenotypeQueryService;
+import care.smith.top.backend.util.ApiModelMapper;
+import care.smith.top.model.Query;
+import care.smith.top.model.QueryPage;
+import care.smith.top.model.QueryResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -31,10 +32,11 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
   }
 
   @Override
-  public ResponseEntity<List<Query>> getQueries(
+  public ResponseEntity<QueryPage> getQueries(
       String organisationId, String repositoryId, Integer page) {
-    return new ResponseEntity<>(
-        phenotypeQueryService.getQueries(organisationId, repositoryId, page), HttpStatus.OK);
+    return ResponseEntity.ok(
+        ApiModelMapper.toQueryPage(
+            phenotypeQueryService.getQueries(organisationId, repositoryId, page)));
   }
 
   @Override
