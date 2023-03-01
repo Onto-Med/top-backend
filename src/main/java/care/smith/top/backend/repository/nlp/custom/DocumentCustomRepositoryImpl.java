@@ -13,37 +13,20 @@ import org.springframework.data.elasticsearch.core.query.highlight.HighlightFiel
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class DocumentCustomRepositoryImpl implements DocumentCustomRepository{
+public class DocumentCustomRepositoryImpl implements DocumentCustomRepository {
 
     private final ElasticsearchOperations operations;
-
-    private final String spanTagStart = "<span" +
-//            " onclick=\"$emit('choose-phrase')\"" +
-            " style=\"background-color:#FF000080; border-radius:3px; padding:2px\"" +
-            " %s>";
 
     public DocumentCustomRepositoryImpl(ElasticsearchOperations operations) {
         this.operations = operations;
     }
 
     @Override
-    public List<DocumentEntity> getDocumentsByTerms(String[] terms, String[] fields) {
+    public List<DocumentEntity> getESDocumentsByTerms(
+            String[] terms, String[] fields) {
         //ToDo: "hover" argument not hard coded
         ArrayList<DocumentEntity> documentEntities = new ArrayList<>();
         getSearchHitsByTerms(terms, fields, "Searched Term")
-            .stream()
-            .forEach(sh -> {
-                DocumentEntity de = sh.getContent();
-                de.setHighlights(sh.getHighlightFields());
-                documentEntities.add(de);
-            });
-        return documentEntities;
-    }
-
-    @Override
-    public List<DocumentEntity> getDocumentsByQuery(String query) {
-        ArrayList<DocumentEntity> documentEntities = new ArrayList<>();
-        getSearchHitsByCustomQuery(query, "Searched Phrase")
                 .stream()
                 .forEach(sh -> {
                     DocumentEntity de = sh.getContent();
@@ -53,7 +36,78 @@ public class DocumentCustomRepositoryImpl implements DocumentCustomRepository{
         return documentEntities;
     }
 
-    private SearchHits<DocumentEntity> getSearchHitsByTerms(String[] terms, String[] fields, String hover) {
+    @Override
+    public List<DocumentEntity> getESDocumentsByTermsBoolean(
+            String[] shouldTerms, String[] mustTerms, String[] notTerms, String[] fields) {
+        String mustString = (mustTerms != null) ? String.format("+( %s )",
+                String.join(" ", mustTerms)
+        ) : "";
+        String shouldString = (shouldTerms != null) ?
+                String.join(" ", shouldTerms
+                ) : "";
+        String notString = (notTerms != null) ? String.format("-( %s )",
+                String.join(" ", notTerms)
+        ) : "";
+
+        return getESDocumentsByTerms(new String[]{
+                shouldString,
+                !Objects.equals(mustString, "+(  )") ? mustString : null,
+                !Objects.equals(notString, "-(  )") ? notString : null
+        }, fields);
+    }
+
+    @Override
+    public List<DocumentEntity> getESDocumentsByPhrases(
+            String[] phrases, String[] fields) {
+        //ToDo: "hover" argument not hard coded
+        ArrayList<DocumentEntity> documentEntities = new ArrayList<>();
+        getSearchHitsByPhrases(phrases, fields[0], "Searched Phrase")
+                .stream()
+                .forEach(sh -> {
+                    DocumentEntity de = sh.getContent();
+                    de.setHighlights(sh.getHighlightFields());
+                    documentEntities.add(de);
+                });
+        return documentEntities;
+    }
+
+    @Override
+    public List<DocumentEntity> getESDocumentsByPhrasesBoolean(
+            String[] shouldPhrases, String[] mustPhrases, String[] notPhrases, String[] fields) {
+        ArrayList<DocumentEntity> documentEntities = new ArrayList<>();
+        getSearchHitsByPhrasesBoolean(shouldPhrases, mustPhrases, notPhrases, fields[0], "Searched Phrase")
+                .stream()
+                .forEach(sh -> {
+                    DocumentEntity de = sh.getContent();
+                    de.setHighlights(sh.getHighlightFields());
+                    documentEntities.add(de);
+                });
+        return documentEntities;
+    }
+
+    private SearchHits<DocumentEntity> getSearchHitsByPhrases(
+            String[] phrases, String field, String hover) {
+        //ToDo: no hardcoded "slop"
+        Query searchQuery = new StringQuery(
+                String.format("{\"bool\":\n { %s } \n}", boolQueryPart("should", phrases, field, 2))
+        );
+        return getSearchHitsByQuery(searchQuery, new String[]{field}, hover);
+    }
+
+    private SearchHits<DocumentEntity> getSearchHitsByPhrasesBoolean(
+            String[] shouldPhrases, String[] mustPhrases, String[] notPhrases, String field, String hover) {
+        Query searchQuery = new StringQuery(
+                String.format("{\"bool\":\n { %s, %s, %s } \n}",
+                        boolQueryPart("should", shouldPhrases, field, 2),
+                        boolQueryPart("must", mustPhrases, field, 2),
+                        boolQueryPart("must_not", notPhrases, field, 2)
+                        )
+        );
+        return getSearchHitsByQuery(searchQuery, new String[]{field}, hover);
+    }
+
+    private SearchHits<DocumentEntity> getSearchHitsByTerms(
+            String[] terms, String[] fields, String hover) {
         String queryString = Arrays.stream(terms)
                 .filter(Objects::nonNull)
                 .filter(t -> t.length() > 0)
@@ -65,49 +119,45 @@ public class DocumentCustomRepositoryImpl implements DocumentCustomRepository{
         String finalQueryString = queryString.substring(queryString.indexOf("(")).trim();
         Query searchQuery = new StringQuery(
                 "{" +
-                            "\"query_string\": {" +
-                                "\"fields\": [" + fieldsString + "]," +
-                                "\"query\": \"" + finalQueryString + "\"" +
-                            "}" +
-                        "}"
+                           "\"query_string\": {" +
+                               "\"fields\": [" + fieldsString + "]," +
+                               "\"query\": \"" + finalQueryString + "\"" +
+                           "}" +
+                       "}"
         );
+        return getSearchHitsByQuery(searchQuery, fields, hover);
+    }
 
+    private SearchHits<DocumentEntity> getSearchHitsByQuery(
+            Query query, String[] fields, String hover) {
         String addString = (hover != null) ? String.format("title=\"%s\"", hover) : "";
-        String spanTag = String.format(spanTagStart, addString);
+        String spanTagStart = "<span" +
+                " style=\"background-color:#FF000080; border-radius:3px; padding:2px\"" +
+                " %s>";
+
         Highlight highlight = new Highlight(
                 Arrays.stream(fields)
                         .map(s -> new HighlightField(s,
                                 // makes it so, that not only fragments (which contain the phrase) are returned but the whole field
                                 HighlightFieldParameters.builder()
                                         .withNumberOfFragments(0)
-                                        .withPreTags(new String[]{spanTag})
+                                        .withPreTags(new String[]{String.format(spanTagStart, addString)})
                                         .withPostTags(new String[]{"</span>"})
                                         .build())
                         ).collect(Collectors.toList())
         );
-        System.out.println("\"query\": \"" + finalQueryString + "\"");
-        searchQuery.setHighlightQuery(new HighlightQuery(highlight, DocumentEntity.class));
-        return operations.search(searchQuery, DocumentEntity.class);
+        query.setHighlightQuery(new HighlightQuery(highlight, DocumentEntity.class));
+        return operations.search(query, DocumentEntity.class);
     }
 
-    private SearchHits<DocumentEntity> getSearchHitsByCustomQuery(String query, String hover) {
-        Query searchQuery = new StringQuery(String.format("{ %s }", query));
-
-        String addString = (hover != null) ? String.format("title=\"%s\"", hover) : "";
-        String spanTag = String.format(spanTagStart, addString);
-        Highlight highlight = new Highlight(
-                Arrays.stream(new String[]{"text"})
-                        .map(s -> new HighlightField(s,
-                                // makes it so, that not only fragments (which contain the phrase) are returned but the whole field
-                                HighlightFieldParameters.builder()
-                                        .withNumberOfFragments(0)
-                                        .withPreTags(new String[]{spanTag})
-                                        .withPostTags(new String[]{"</span>"})
-                                        .build())
-                        ).collect(Collectors.toList())
-        );
-        System.out.println("{\"query\": {" + query + "}}");
-        searchQuery.setHighlightQuery(new HighlightQuery(highlight, DocumentEntity.class));
-        return operations.search(searchQuery, DocumentEntity.class);
-    }
+    private String boolQueryPart(
+            String bool, String[] phrases, String field, int slop) {
+        if (phrases == null) {
+            return "\n\"" + bool + "\": [ \n]";
+        }
+        String matchQuery = "\n{\"match_phrase\": { \"%s\": { \"query\": \"%s\", \"slop\": %s } } }";
+        return Arrays.stream(phrases)
+                .map(s -> String.format(matchQuery, field, s, slop))
+                .collect(Collectors.joining(",", "\n\"" + bool + "\": [", "\n]"));
+    };
 }

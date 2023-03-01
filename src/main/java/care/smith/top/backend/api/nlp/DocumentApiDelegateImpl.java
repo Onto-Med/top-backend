@@ -1,13 +1,11 @@
 package care.smith.top.backend.api.nlp;
 
 import care.smith.top.backend.api.DocumentApiDelegate;
-import care.smith.top.backend.model.nlp.DocumentEntity;
 import care.smith.top.backend.service.nlp.ConceptService;
 import care.smith.top.backend.service.nlp.DocumentService;
 import care.smith.top.backend.service.nlp.PhraseService;
 import care.smith.top.model.Document;
 import care.smith.top.model.Phrase;
-import org.checkerframework.checker.units.qual.s;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -75,11 +73,7 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
 //                            .filter(s -> s.matches("[a-zA-Z]+"))
                     .toArray(String[]::new);
 
-            List<Document> documents = documentService.getDocumentsByPhrasesBoolean(null, shouldTerms, null, null);
-
-//            List<Document> documents = documentService.getDocumentsByTermsBoolean(
-//                    mustTerms,null, null, new String[]{"text"}
-//            );
+            List<Document> documents = documentService.getDocumentsByPhrases(shouldTerms, new String[]{"text"});
 
             Optional<Document> document = documents.stream().filter(d -> d.getId().equals(documentId)).findFirst();
             return document.map(value -> new ResponseEntity<>(value, HttpStatus.OK))
