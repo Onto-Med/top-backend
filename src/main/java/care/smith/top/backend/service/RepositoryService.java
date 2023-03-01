@@ -2,6 +2,7 @@ package care.smith.top.backend.service;
 
 import care.smith.top.backend.model.OrganisationDao;
 import care.smith.top.backend.model.RepositoryDao;
+import care.smith.top.backend.model.RepositoryDao_;
 import care.smith.top.backend.repository.OrganisationRepository;
 import care.smith.top.backend.repository.RepositoryRepository;
 import care.smith.top.model.Repository;
@@ -73,7 +74,7 @@ public class RepositoryService implements ContentService {
       RepositoryType repositoryType,
       Integer page) {
     PageRequest pageRequest =
-        PageRequest.of(page == null ? 0 : page - 1, pageSize, Sort.by("name"));
+        PageRequest.of(page == null ? 0 : page - 1, pageSize, Sort.by(RepositoryDao_.NAME));
     return repositoryRepository
         .findByOrganisationIdAndNameAndPrimaryAndRepositoryType(
             null, name, primary, repositoryType, userService.getCurrentUser(), pageRequest)
@@ -88,7 +89,7 @@ public class RepositoryService implements ContentService {
       RepositoryType repositoryType,
       Integer page) {
     PageRequest pageRequest =
-        PageRequest.of(page == null ? 0 : page - 1, pageSize, Sort.by("name"));
+        PageRequest.of(page == null ? 0 : page - 1, pageSize, Sort.by(RepositoryDao_.NAME));
     return repositoryRepository
         .findByOrganisationIdAndNameAndPrimaryAndRepositoryType(
             organisationId, name, null, repositoryType, userService.getCurrentUser(), pageRequest)

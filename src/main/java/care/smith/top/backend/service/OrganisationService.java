@@ -1,9 +1,6 @@
 package care.smith.top.backend.service;
 
-import care.smith.top.backend.model.OrganisationDao;
-import care.smith.top.backend.model.OrganisationMembershipDao;
-import care.smith.top.backend.model.Permission;
-import care.smith.top.backend.model.UserDao;
+import care.smith.top.backend.model.*;
 import care.smith.top.backend.repository.OrganisationMembershipRepository;
 import care.smith.top.backend.repository.OrganisationRepository;
 import care.smith.top.model.Organisation;
@@ -11,6 +8,7 @@ import care.smith.top.model.OrganisationMembership;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -106,7 +104,8 @@ public class OrganisationService implements ContentService {
   }
 
   public List<Organisation> getOrganisations(String name, Integer page, List<String> include) {
-    PageRequest pageRequest = PageRequest.of(page == null ? 1 : page - 1, pageSize);
+    PageRequest pageRequest =
+        PageRequest.of(page == null ? 1 : page - 1, pageSize, Sort.by(OrganisationDao_.NAME));
     return organisationRepository
         .findAllByNameOrDescription(name, pageRequest)
         .map(OrganisationDao::toApiModel)
