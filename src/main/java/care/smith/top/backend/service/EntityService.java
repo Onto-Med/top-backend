@@ -7,6 +7,7 @@ import care.smith.top.model.*;
 import care.smith.top.top_phenotypic_query.converter.PhenotypeExporter;
 import care.smith.top.top_phenotypic_query.converter.PhenotypeImporter;
 import org.reflections.Reflections;
+import org.reflections.util.ConfigurationBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
@@ -600,9 +601,10 @@ public class EntityService implements ContentService {
             .stream()
             .toArray(Entity[]::new);
 
-    Reflections reflections = new Reflections("care.smith.top");
-    Optional<Class<?>> optional =
-        reflections.get(SubTypes.of(PhenotypeExporter.class).asClass()).stream()
+    Reflections reflections =
+        new Reflections(new ConfigurationBuilder().forPackage("care.smith.top"));
+    Optional<Class<? extends PhenotypeExporter>> optional =
+        reflections.getSubTypesOf(PhenotypeExporter.class).stream()
             .filter(c -> c.getSimpleName().equals(converter))
             .findFirst();
 
@@ -612,8 +614,7 @@ public class EntityService implements ContentService {
 
     ByteArrayOutputStream stream = new ByteArrayOutputStream();
     try {
-      PhenotypeExporter exporter =
-          (PhenotypeExporter) optional.get().getConstructor().newInstance();
+      PhenotypeExporter exporter = optional.get().getConstructor().newInstance();
       String uri = String.format("http://%s.org/%s", organisationId, repositoryId);
       exporter.write(entities, repository.toApiModel(), uri, stream);
     } catch (Exception e) {
@@ -630,9 +631,10 @@ public class EntityService implements ContentService {
       "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
   public void importRepository(
       String organisationId, String repositoryId, String converter, InputStream stream) {
-    Reflections reflections = new Reflections("care.smith.top");
-    Optional<Class<?>> optional =
-        reflections.get(SubTypes.of(PhenotypeImporter.class).asClass()).stream()
+    Reflections reflections =
+        new Reflections(new ConfigurationBuilder().forPackage("care.smith.top"));
+    Optional<Class<? extends PhenotypeImporter>> optional =
+        reflections.getSubTypesOf(PhenotypeImporter.class).stream()
             .filter(c -> c.getSimpleName().equals(converter))
             .findFirst();
 
@@ -641,8 +643,7 @@ public class EntityService implements ContentService {
           HttpStatus.NOT_ACCEPTABLE, String.format("No converter '%s' available.", converter));
 
     try {
-      PhenotypeImporter importer =
-          (PhenotypeImporter) optional.get().getConstructor().newInstance();
+      PhenotypeImporter importer = optional.get().getConstructor().newInstance();
       List<Entity> entities = List.of(importer.read(stream));
       createEntities(organisationId, repositoryId, entities, null);
     } catch (Exception e) {
