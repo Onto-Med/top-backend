@@ -2,6 +2,7 @@ package care.smith.top.backend.repository;
 
 import care.smith.top.backend.model.*;
 import care.smith.top.model.RepositoryType;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.domain.Specification;
@@ -81,7 +82,7 @@ public interface RepositoryRepository
     };
   }
 
-  default Slice<RepositoryDao> findByOrganisationIdAndNameAndPrimaryAndRepositoryType(
+  default Page<RepositoryDao> findByOrganisationIdAndNameAndPrimaryAndRepositoryType(
       String organisationId,
       String name,
       Boolean primary,

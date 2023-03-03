@@ -14,7 +14,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.7.4</version>
+        <version>2.7.6</version>
         <relativePath/>
     </parent>
 
@@ -41,7 +41,7 @@
         <dependency>
             <groupId>care.smith.top</groupId>
             <artifactId>top-api</artifactId>
-            <version>0.6.8</version>
+            <version>0.7.0</version>
         </dependency>
         <dependency>
             <groupId>care.smith.top</groupId>
@@ -172,12 +172,12 @@
                     <dependency>
                         <groupId>org.springframework.boot</groupId>
                         <artifactId>spring-boot-starter-validation</artifactId>
-                        <version>2.7.4</version>
+                        <version>2.7.6</version>
                     </dependency>
                     <dependency>
                         <groupId>org.springframework.boot</groupId>
                         <artifactId>spring-boot-starter-data-jpa</artifactId>
-                        <version>2.7.4</version>
+                        <version>2.7.6</version>
                     </dependency>
                 </dependencies>
             </plugin>

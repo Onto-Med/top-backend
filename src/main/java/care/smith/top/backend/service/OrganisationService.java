@@ -7,6 +7,7 @@ import care.smith.top.model.Organisation;
 import care.smith.top.model.OrganisationMembership;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -103,13 +104,12 @@ public class OrganisationService implements ContentService {
         .toApiModel();
   }
 
-  public List<Organisation> getOrganisations(String name, Integer page, List<String> include) {
+  public Page<Organisation> getOrganisations(String name, Integer page, List<String> include) {
     PageRequest pageRequest =
         PageRequest.of(page == null ? 1 : page - 1, pageSize, Sort.by(OrganisationDao_.NAME));
     return organisationRepository
         .findAllByNameOrDescription(name, pageRequest)
-        .map(OrganisationDao::toApiModel)
-        .getContent();
+        .map(OrganisationDao::toApiModel);
   }
 
   @PreAuthorize("hasRole('USER')")

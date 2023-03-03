@@ -5,6 +5,7 @@ import care.smith.top.model.EntityType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -127,7 +128,7 @@ public interface EntityRepository
   Page<EntityDao> findAllByRepositoryId(String repositoryId, Pageable pageable);
 
   Slice<EntityDao> findAllByRepositoryIdAndSuperEntitiesEmpty(
-      String repositoryId, Pageable pageable);
+      String repositoryId, Sort sort);
 
   Optional<EntityDao> findByRepositoryIdAndOriginId(String repositoryId, String originId);
 

@@ -2,7 +2,9 @@ package care.smith.top.backend.api;
 
 import care.smith.top.backend.service.EntityService;
 import care.smith.top.backend.service.RepositoryService;
+import care.smith.top.backend.util.ApiModelMapper;
 import care.smith.top.model.Repository;
+import care.smith.top.model.RepositoryPage;
 import care.smith.top.model.RepositoryType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
@@ -43,28 +45,28 @@ public class RepositoryApiDelegateImpl implements RepositoryApiDelegate {
   }
 
   @Override
-  public ResponseEntity<List<Repository>> getRepositories(
+  public ResponseEntity<RepositoryPage> getRepositories(
       List<String> include,
       String name,
       Boolean primary,
       RepositoryType repositoryType,
       Integer page) {
-    return new ResponseEntity<>(
-        repositoryService.getRepositories(include, name, primary, repositoryType, page),
-        HttpStatus.OK);
+    return ResponseEntity.ok(
+        ApiModelMapper.toRepositoryPage(
+            repositoryService.getRepositories(include, name, primary, repositoryType, page)));
   }
 
   @Override
-  public ResponseEntity<List<Repository>> getRepositoriesByOrganisationId(
+  public ResponseEntity<RepositoryPage> getRepositoriesByOrganisationId(
       String organisationId,
       List<String> include,
       String name,
       RepositoryType repositoryType,
       Integer page) {
-    return new ResponseEntity<>(
-        repositoryService.getRepositoriesByOrganisationId(
-            organisationId, include, name, repositoryType, page),
-        HttpStatus.OK);
+    return ResponseEntity.ok(
+        ApiModelMapper.toRepositoryPage(
+            repositoryService.getRepositoriesByOrganisationId(
+                organisationId, include, name, repositoryType, page)));
   }
 
   @Override
@@ -94,7 +96,8 @@ public class RepositoryApiDelegateImpl implements RepositoryApiDelegate {
   public ResponseEntity<Void> importRepository(
       String organisationId, String repositoryId, String converter, MultipartFile file) {
     try {
-      entityService.importRepository(organisationId, repositoryId, converter, file.getInputStream());
+      entityService.importRepository(
+          organisationId, repositoryId, converter, file.getInputStream());
     } catch (IOException e) {
       throw new ResponseStatusException(
           HttpStatus.INTERNAL_SERVER_ERROR,
