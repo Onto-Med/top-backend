@@ -1,6 +1,7 @@
 package care.smith.top.backend.util;
 
 import care.smith.top.model.*;
+import org.springframework.data.domain.Page;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -28,16 +29,68 @@ public abstract class ApiModelMapper {
     if (expression.getEntityId() != null) {
       String newEntityId = ids.get(expression.getEntityId());
       if (newEntityId != null) newExpression.entityId(newEntityId);
-    } else if (expression.getArguments() != null) {
+    }
+    if (expression.getArguments() != null) {
       newExpression.arguments(
           expression.getArguments().stream()
               .map(a -> replaceEntityIds(a, ids))
               .collect(Collectors.toList()));
-    } else if (expression.getValues() != null) {
+    }
+    if (expression.getValues() != null) {
       newExpression.values(
           expression.getValues().stream().map(ApiModelMapper::clone).collect(Collectors.toList()));
     }
     return newExpression;
+  }
+
+  public static EntityPage toEntityPage(Page<Entity> page) {
+    return (EntityPage)
+        new EntityPage()
+            .content(page.getContent())
+            .number(page.getNumber() + 1)
+            .size(page.getSize())
+            .totalElements(page.getTotalElements())
+            .totalPages(page.getTotalPages());
+  }
+
+  public static OrganisationPage toOrganisationPage(Page<Organisation> page) {
+    return (OrganisationPage)
+        new OrganisationPage()
+            .content(page.getContent())
+            .number(page.getNumber() + 1)
+            .size(page.getSize())
+            .totalElements(page.getTotalElements())
+            .totalPages(page.getTotalPages());
+  }
+
+  public static QueryPage toQueryPage(Page<Query> page) {
+    return (QueryPage)
+        new QueryPage()
+            .content(page.getContent())
+            .number(page.getNumber() + 1)
+            .size(page.getSize())
+            .totalElements(page.getTotalElements())
+            .totalPages(page.getTotalPages());
+  }
+
+  public static RepositoryPage toRepositoryPage(Page<Repository> page) {
+    return (RepositoryPage)
+        new RepositoryPage()
+            .content(page.getContent())
+            .number(page.getNumber() + 1)
+            .size(page.getSize())
+            .totalElements(page.getTotalElements())
+            .totalPages(page.getTotalPages());
+  }
+
+  public static UserPage toUserPage(Page<User> page) {
+    return (UserPage)
+        new UserPage()
+            .content(page.getContent())
+            .number(page.getNumber() + 1)
+            .size(page.getSize())
+            .totalElements(page.getTotalElements())
+            .totalPages(page.getTotalPages());
   }
 
   public static EntityType toRestrictedEntityType(EntityType entityType) {

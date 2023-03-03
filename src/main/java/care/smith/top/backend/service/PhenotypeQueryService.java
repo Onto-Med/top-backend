@@ -5,6 +5,7 @@ import care.smith.top.backend.model.QueryResultDao;
 import care.smith.top.backend.model.RepositoryDao;
 import care.smith.top.backend.repository.PhenotypeRepository;
 import care.smith.top.backend.repository.QueryRepository;
+import care.smith.top.backend.repository.RepositoryRepository;
 import care.smith.top.backend.util.ApiModelMapper;
 import care.smith.top.model.*;
 import care.smith.top.top_phenotypic_query.adapter.DataAdapter;
@@ -18,9 +19,11 @@ import org.jobrunr.scheduling.JobScheduler;
 import org.jobrunr.storage.StorageProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -50,12 +53,14 @@ public class PhenotypeQueryService {
 
   @Autowired private JobScheduler jobScheduler;
   @Autowired private StorageProvider storageProvider;
-  @Autowired private RepositoryService repositoryService;
   @Autowired private QueryRepository queryRepository;
   @Autowired private PhenotypeRepository phenotypeRepository;
+  @Autowired private RepositoryRepository repositoryRepository;
 
+  @PreAuthorize(
+      "hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
   public void deleteQuery(String organisationId, String repositoryId, UUID queryId) {
-    if (!repositoryService.repositoryExists(organisationId, repositoryId))
+    if (!repositoryRepository.existsByIdAndOrganisation_Id(repositoryId, organisationId))
       throw new ResponseStatusException(HttpStatus.NOT_FOUND);
 
     QueryDao query =
@@ -73,10 +78,12 @@ public class PhenotypeQueryService {
     }
   }
 
+  @PreAuthorize(
+      "hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
   public QueryResult enqueueQuery(String organisationId, String repositoryId, Query data) {
     RepositoryDao repository =
-        repositoryService
-            .getRepository(organisationId, repositoryId)
+        repositoryRepository
+            .findByIdAndOrganisationId(repositoryId, organisationId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
     if (data == null
@@ -162,8 +169,10 @@ public class PhenotypeQueryService {
     return getDataAdapterConfigs().stream().filter(a -> id.equals(a.getId())).findFirst();
   }
 
+  @PreAuthorize(
+      "hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
   public QueryResult getQueryResult(String organisationId, String repositoryId, UUID queryId) {
-    if (!repositoryService.repositoryExists(organisationId, repositoryId))
+    if (!repositoryRepository.existsByIdAndOrganisation_Id(repositoryId, organisationId))
       throw new ResponseStatusException(HttpStatus.NOT_FOUND);
 
     QueryDao query =
@@ -208,13 +217,14 @@ public class PhenotypeQueryService {
         .collect(Collectors.toList());
   }
 
-  public List<Query> getQueries(String organisationId, String repositoryId, Integer page) {
+  @PreAuthorize(
+      "hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
+  public Page<Query> getQueries(String organisationId, String repositoryId, Integer page) {
     PageRequest pageRequest = PageRequest.of(page == null ? 0 : page - 1, pageSize);
     return queryRepository
         .findAllByRepository_OrganisationIdAndRepositoryIdOrderByIdDesc(
             organisationId, repositoryId, pageRequest)
-        .map(QueryDao::toApiModel)
-        .getContent();
+        .map(QueryDao::toApiModel);
   }
 
   @NotNull

@@ -5,6 +5,7 @@ import care.smith.top.model.EntityType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Repository;
 
 import javax.annotation.Nullable;
 import javax.persistence.criteria.JoinType;
+import javax.persistence.criteria.Predicate;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -48,6 +50,21 @@ public interface EntityRepository
     };
   }
 
+  static Specification<EntityDao> byUser(UserDao user) {
+    return (root, query, cb) -> {
+      if (user == null || user.getRole().equals(Role.ADMIN)) return cb.and();
+      return cb.or(
+        cb.isTrue(root.join(EntityDao_.REPOSITORY).get(RepositoryDao_.PRIMARY)),
+        cb.equal(
+          root.join(EntityDao_.REPOSITORY)
+            .join(RepositoryDao_.ORGANISATION)
+            .join(OrganisationDao_.MEMBERS, JoinType.LEFT)
+            .join(OrganisationMembershipDao_.USER, JoinType.LEFT)
+            .get(UserDao_.ID),
+          user.getId()));
+    };
+  }
+
   static Specification<EntityDao> byEntityType(@Nullable List<EntityType> entityTypes) {
     return (root, query, cb) -> {
       if (entityTypes == null || entityTypes.isEmpty()) return cb.and();
@@ -63,6 +80,35 @@ public interface EntityRepository
     return (root, query, cb) -> {
       if (repositoryId == null) return cb.and();
       return cb.equal(root.join(EntityDao_.REPOSITORY).get(RepositoryDao_.ID), repositoryId);
+    };
+  }
+
+  /**
+   * This filter does the following:
+   *
+   * <ul>
+   *   <li>exclude entities that are not contained in one of the specified repositories
+   *   <li>if you set {@code includePrimary} to {@code true}, this filter will be relaxed and will
+   *       not exclude entities from primary repositories
+   *   <li>if {@code repositoryIds} is {@code null}, this filter does nothing
+   * </ul>
+   *
+   * @param repositoryIds List of repository IDs to folter for, or null to disable this filter.
+   * @param includePrimary Whether primary repositories shall be included in the result set. This
+   *     parameter has no effect, if {@code repositoryIds} is {@code null}.
+   * @return A specification for Domain Driven Design.
+   */
+  static Specification<EntityDao> byRepositoryIds(
+      List<String> repositoryIds, Boolean includePrimary) {
+    return (root, query, cb) -> {
+      if (repositoryIds == null) return cb.and();
+      Predicate repositoryPredicate =
+          root.join(EntityDao_.REPOSITORY).get(RepositoryDao_.ID).in(repositoryIds);
+      return cb.or(
+          repositoryPredicate,
+          (includePrimary != null && includePrimary)
+              ? cb.isTrue(root.join(EntityDao_.REPOSITORY).get(RepositoryDao_.PRIMARY))
+              : cb.or());
     };
   }
 
@@ -82,7 +128,7 @@ public interface EntityRepository
   Page<EntityDao> findAllByRepositoryId(String repositoryId, Pageable pageable);
 
   Slice<EntityDao> findAllByRepositoryIdAndSuperEntitiesEmpty(
-      String repositoryId, Pageable pageable);
+      String repositoryId, Sort sort);
 
   Optional<EntityDao> findByRepositoryIdAndOriginId(String repositoryId, String originId);
 

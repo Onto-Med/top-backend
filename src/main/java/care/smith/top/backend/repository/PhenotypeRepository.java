@@ -1,8 +1,6 @@
 package care.smith.top.backend.repository;
 
-import care.smith.top.backend.model.EntityDao;
-import care.smith.top.backend.model.EntityDao_;
-import care.smith.top.backend.model.EntityVersionDao_;
+import care.smith.top.backend.model.*;
 import care.smith.top.model.DataType;
 import care.smith.top.model.EntityType;
 import care.smith.top.model.ItemType;
@@ -11,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
 import javax.annotation.Nullable;
+import javax.persistence.criteria.JoinType;
 import java.util.Collections;
 import java.util.List;
 
@@ -51,6 +50,26 @@ public interface PhenotypeRepository extends EntityRepository {
             .and(EntityRepository.byEntityType(entityTypes))
             .and(byDataType(dataType))
             .and(byItemType(itemType)),
+        pageable);
+  }
+
+  default Page<EntityDao>
+      findAllByRepositoryIdsAndRepository_PrimaryAndTitleAndEntityTypeAndDataTypeAndItemType(
+          List<String> repositoryIds,
+          Boolean includePrimary,
+          String title,
+          List<EntityType> entityTypes,
+          DataType dataType,
+          ItemType itemType,
+          UserDao user,
+          Pageable pageable) {
+    return findAll(
+        EntityRepository.byRepositoryIds(repositoryIds, includePrimary)
+            .and(EntityRepository.byTitle(title))
+            .and(EntityRepository.byEntityType(entityTypes))
+            .and(byDataType(dataType))
+            .and(byItemType(itemType))
+            .and(EntityRepository.byUser(user)),
         pageable);
   }
 }

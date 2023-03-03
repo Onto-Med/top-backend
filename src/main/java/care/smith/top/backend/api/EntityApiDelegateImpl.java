@@ -1,18 +1,14 @@
 package care.smith.top.backend.api;
 
 import care.smith.top.backend.service.EntityService;
-import care.smith.top.model.DataType;
-import care.smith.top.model.Entity;
-import care.smith.top.model.EntityType;
-import care.smith.top.model.ItemType;
+import care.smith.top.backend.util.ApiModelMapper;
+import care.smith.top.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.io.IOException;
-import java.io.OutputStream;
 import java.util.List;
 
 import static care.smith.top.backend.configuration.RequestValidator.isValidId;
@@ -78,7 +74,7 @@ public class EntityApiDelegateImpl implements EntityApiDelegate {
   }
 
   @Override
-  public ResponseEntity<List<Entity>> getEntitiesByRepositoryId(
+  public ResponseEntity<EntityPage> getEntitiesByRepositoryId(
       String organisationId,
       String repositoryId,
       List<String> include,
@@ -87,22 +83,26 @@ public class EntityApiDelegateImpl implements EntityApiDelegate {
       DataType dataType,
       ItemType itemType,
       Integer page) {
-    return new ResponseEntity<>(
-        entityService.getEntitiesByRepositoryId(
-            organisationId, repositoryId, include, name, type, dataType, itemType, page),
-        HttpStatus.OK);
+    return ResponseEntity.ok(
+        ApiModelMapper.toEntityPage(
+            entityService.getEntitiesByRepositoryId(
+                organisationId, repositoryId, include, name, type, dataType, itemType, page)));
   }
 
   @Override
-  public ResponseEntity<List<Entity>> getEntities(
+  public ResponseEntity<EntityPage> getEntities(
       List<String> include,
       String name,
       List<EntityType> type,
       DataType dataType,
       ItemType itemType,
+      List<String> repositoryIds,
+      Boolean includePrimary,
       Integer page) {
-    return new ResponseEntity<>(
-        entityService.getEntities(include, name, type, dataType, itemType, page), HttpStatus.OK);
+    return ResponseEntity.ok(
+        ApiModelMapper.toEntityPage(
+            entityService.getEntities(
+                include, name, type, dataType, itemType, repositoryIds, includePrimary, page)));
   }
 
   @Override
@@ -113,13 +113,10 @@ public class EntityApiDelegateImpl implements EntityApiDelegate {
       String name,
       List<EntityType> type,
       DataType dataType,
-      ItemType itemType,
-      Integer page) {
-    // TODO: result is currently unpaged and 'page' parameter is ignored
-    return new ResponseEntity<>(
+      ItemType itemType) {
+    return ResponseEntity.ok(
         entityService.getRootEntitiesByRepositoryId(
-            organisationId, repositoryId, include, name, type, dataType, itemType),
-        HttpStatus.OK);
+            organisationId, repositoryId, include, name, type, dataType, itemType));
   }
 
   @Override

@@ -120,11 +120,12 @@ public class EntityDao {
             new Repository()
                 .id(entityDao.getRepository().getId())
                 .name(entityDao.getRepository().getName())
+                .primary(entityDao.getRepository().getPrimary())
                 .organisation(
                     new Organisation().id(entityDao.getRepository().getOrganisation().getId())));
 
     entity
-        .author(entityVersionDao.getAuthor())
+        .author(entityVersionDao.getAuthor() != null ? entityVersionDao.getAuthor().getUsername() : null)
         .createdAt(entityVersionDao.getCreatedAt())
         .version(entityVersionDao.getVersion());
 

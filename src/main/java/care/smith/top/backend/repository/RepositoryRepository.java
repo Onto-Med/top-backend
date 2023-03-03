@@ -1,9 +1,8 @@
 package care.smith.top.backend.repository;
 
-import care.smith.top.backend.model.OrganisationDao_;
-import care.smith.top.backend.model.RepositoryDao;
-import care.smith.top.backend.model.RepositoryDao_;
+import care.smith.top.backend.model.*;
 import care.smith.top.model.RepositoryType;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.domain.Specification;
@@ -12,6 +11,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 import javax.annotation.Nullable;
+import javax.persistence.criteria.JoinType;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -19,6 +19,8 @@ import java.util.Optional;
 @Repository
 public interface RepositoryRepository
     extends JpaRepository<RepositoryDao, String>, JpaSpecificationExecutor<RepositoryDao> {
+  boolean existsByIdAndOrganisation_Id(String id, String id1);
+
   static Specification<RepositoryDao> byPrimary(@Nullable Boolean primary) {
     return (root, query, cb) -> {
       if (primary == null) return cb.and();
@@ -53,17 +55,47 @@ public interface RepositoryRepository
     };
   }
 
-  default Slice<RepositoryDao> findByOrganisationIdAndNameAndPrimaryAndRepositoryType(
+  /**
+   * This filter does the following:
+   *
+   * <ul>
+   *   <li>evaluates to true, if user is {@code null} or has role {@code Role.ADMIN}
+   *   <li>evaluates to true, if the repository is primary
+   *   <li>checks if the user has an organisation membership relation to the organisation the
+   *       repository belongs to
+   * </ul>
+   *
+   * @param user The user to filter by.
+   * @return A specification for Domain Driven Design.
+   */
+  static Specification<RepositoryDao> byUser(UserDao user) {
+    return (root, query, cb) -> {
+      if (user == null || user.getRole().equals(Role.ADMIN)) return cb.and();
+      return cb.or(
+          cb.isTrue(root.get(RepositoryDao_.PRIMARY)),
+          cb.equal(
+              root.join(RepositoryDao_.ORGANISATION)
+                  .join(OrganisationDao_.MEMBERS, JoinType.LEFT)
+                  .join(OrganisationMembershipDao_.USER, JoinType.LEFT)
+                  .get(UserDao_.ID),
+              user.getId()));
+    };
+  }
+
+  default Page<RepositoryDao> findByOrganisationIdAndNameAndPrimaryAndRepositoryType(
       String organisationId,
       String name,
       Boolean primary,
       RepositoryType repositoryType,
+      UserDao user,
       Pageable pageable) {
+
     return findAll(
         byOrganisationId(organisationId)
             .and(byName(name))
             .and(byPrimary(primary))
-            .and(byRepositoryType(repositoryType)),
+            .and(byRepositoryType(repositoryType))
+            .and(byUser(user)),
         pageable);
   }
 
