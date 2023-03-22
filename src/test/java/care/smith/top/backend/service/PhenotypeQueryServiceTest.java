@@ -47,15 +47,17 @@ class PhenotypeQueryServiceTest extends AbstractTest {
             .id(UUID.randomUUID())
             .addDataSourcesItem(dataSources.get(0))
             .addCriteriaItem(
-                new QueryCriterion()
-                    .subjectId(phenotype1.getId())
-                    .dateTimeRestriction(
-                        (DateTimeRestriction)
-                            new DateTimeRestriction()
-                                .maxOperator(RestrictionOperator.LESS_THAN)
-                                .addValuesItem(null)
-                                .addValuesItem(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS))
-                                .type(DataType.DATE_TIME)));
+                (QueryCriterion)
+                    new QueryCriterion()
+                        .subjectId(phenotype1.getId())
+                        .dateTimeRestriction(
+                            (DateTimeRestriction)
+                                new DateTimeRestriction()
+                                    .maxOperator(RestrictionOperator.LESS_THAN)
+                                    .addValuesItem(null)
+                                    .addValuesItem(
+                                        LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS))
+                                    .type(DataType.DATE_TIME)));
 
     assertThatThrownBy(() -> queryService.enqueueQuery(orga.getId(), "invalid", query))
         .isInstanceOf(ResponseStatusException.class)

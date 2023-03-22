@@ -1,0 +1,49 @@
+databaseChangeLog:
+- changeSet:
+    id: 1679500200016-8
+    author: ChristophB (generated)
+    changes:
+    - addColumn:
+        columns:
+        - column:
+            name: date_time_restriction_id
+            type: bigint
+        tableName: query_projection
+- changeSet:
+    id: 1679500200016-9
+    author: ChristophB (generated)
+    changes:
+    - addColumn:
+        columns:
+        - column:
+            name: default_aggregation_function_id
+            type: varchar(255)
+        tableName: query_projection
+- changeSet:
+    id: 1679500200016-10
+    author: ChristophB (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: date_time_restriction_id
+        baseTableName: query_projection
+        constraintName: FK7ah98c5mfnu2w5rrjt5oo38kb
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: id
+        referencedTableName: restriction
+        validate: true
+- changeSet:
+    id: 1679500200016-11
+    author: ChristophB (generated)
+    changes:
+    - dropColumn:
+        columnName: DATE_TIME_RESTRICTION
+        tableName: QUERY_PROJECTION
+- changeSet:
+    id: 1679500200016-12
+    author: ChristophB (generated)
+    changes:
+    - dropColumn:
+        columnName: SORTING
+        tableName: QUERY_PROJECTION
+
