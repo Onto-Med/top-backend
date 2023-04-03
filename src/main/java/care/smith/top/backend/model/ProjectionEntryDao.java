@@ -30,6 +30,7 @@ public class ProjectionEntryDao {
 
   public ProjectionEntryDao(@NotNull ProjectionEntry projectionEntry) {
     subjectId = projectionEntry.getSubjectId();
+    this.defaultAggregationFunctionId = projectionEntry.getDefaultAggregationFunctionId();
     if (projectionEntry.getDateTimeRestriction() != null)
       dateTimeRestriction = new RestrictionDao(projectionEntry.getDateTimeRestriction());
   }
@@ -62,7 +63,10 @@ public class ProjectionEntryDao {
   }
 
   public ProjectionEntry toApiModel() {
-    ProjectionEntry entry = new ProjectionEntry().subjectId(getSubjectId());
+    ProjectionEntry entry =
+        new ProjectionEntry()
+            .subjectId(getSubjectId())
+            .defaultAggregationFunctionId(getDefaultAggregationFunctionId());
     if (getDateTimeRestriction() != null)
       entry.dateTimeRestriction((DateTimeRestriction) getDateTimeRestriction().toApiModel());
     return entry;
