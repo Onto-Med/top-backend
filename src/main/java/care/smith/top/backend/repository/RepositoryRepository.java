@@ -4,7 +4,6 @@ import care.smith.top.backend.model.*;
 import care.smith.top.model.RepositoryType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -71,6 +70,7 @@ public interface RepositoryRepository
   static Specification<RepositoryDao> byUser(UserDao user) {
     return (root, query, cb) -> {
       if (user == null || user.getRole().equals(Role.ADMIN)) return cb.and();
+      query.distinct(true); // This may cause side effects!
       return cb.or(
           cb.isTrue(root.get(RepositoryDao_.PRIMARY)),
           cb.equal(
