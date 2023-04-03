@@ -1,15 +1,12 @@
 package care.smith.top.backend.model;
 
 import care.smith.top.model.*;
-
-import javax.persistence.Entity;
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import javax.persistence.*;
+import javax.persistence.Entity;
+import javax.validation.constraints.NotNull;
 
 @Entity(name = "expression")
 public class ExpressionDao {
@@ -35,7 +32,9 @@ public class ExpressionDao {
       values = expression.getValues().stream().map(ValueDao::new).collect(Collectors.toList());
     if (expression.getArguments() != null)
       arguments =
-          expression.getArguments().stream().map(ExpressionDao::new).collect(Collectors.toList());
+          expression.getArguments().stream()
+              .map(a -> a == null ? null : new ExpressionDao(a))
+              .collect(Collectors.toList());
   }
 
   public ExpressionDao(
@@ -56,7 +55,9 @@ public class ExpressionDao {
         new Expression().functionId(functionId).entityId(entityId).constantId(constantId);
     if (arguments != null)
       expression.setArguments(
-          arguments.stream().map(ExpressionDao::toApiModel).collect(Collectors.toList()));
+          arguments.stream()
+              .map(a -> a == null ? null : a.toApiModel())
+              .collect(Collectors.toList()));
     if (values != null)
       expression.setValues(values.stream().map(ValueDao::toApiModel).collect(Collectors.toList()));
     return expression;
