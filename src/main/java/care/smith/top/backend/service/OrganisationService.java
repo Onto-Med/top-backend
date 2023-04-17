@@ -16,7 +16,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /**
@@ -32,11 +37,16 @@ import java.util.stream.Collectors;
  */
 @Service
 public class OrganisationService implements ContentService {
+  private static final Logger LOGGER = Logger.getLogger(OrganisationService.class.getName());
+
   @Autowired OrganisationRepository organisationRepository;
   @Autowired UserService userService;
 
   @Value("${spring.paging.page-size:10}")
   private int pageSize = 10;
+
+  @Value("${top.phenotyping.result.dir:config/query_results}")
+  private String resultDir;
 
   @Autowired private OrganisationMembershipRepository organisationMembershipRepository;
 
@@ -95,6 +105,20 @@ public class OrganisationService implements ContentService {
       organisationRepository.save(subOrganisation);
     }
     organisationRepository.delete(organisation);
+
+    Path organisationPath = Paths.get(resultDir, organisationId);
+    if (!organisationPath.startsWith(Paths.get(resultDir)))
+      LOGGER.severe(
+          String.format(
+              "Organisation directory '%s' is invalid and cannot be deleted!", organisationPath));
+    try {
+      Files.deleteIfExists(organisationPath);
+    } catch (IOException e) {
+      LOGGER.severe(
+          String.format(
+              "Could not delete organisation directory '%s'! Cause: %s",
+              organisationPath, e.getMessage()));
+    }
   }
 
   public Organisation getOrganisation(String organisationId, List<String> include) {

@@ -40,7 +40,10 @@ class PhenotypeQueryServiceTest extends AbstractTest {
             entityService.createEntity(
                 orga.getId(),
                 repo1.getId(),
-                new Entity().id("entity_1").entityType(EntityType.SINGLE_PHENOTYPE));
+                new Phenotype()
+                    .dataType(DataType.NUMBER)
+                    .id("entity_1")
+                    .entityType(EntityType.SINGLE_PHENOTYPE));
 
     Query query =
         new Query()

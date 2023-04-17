@@ -43,12 +43,12 @@
         <dependency>
             <groupId>care.smith.top</groupId>
             <artifactId>top-api</artifactId>
-            <version>0.7.3</version>
+            <version>0.7.4</version>
         </dependency>
         <dependency>
             <groupId>care.smith.top</groupId>
             <artifactId>top-phenotypic-query</artifactId>
-            <version>0.5.0</version>
+            <version>0.5.1</version>
             <exclusions>
                 <exclusion>
                     <groupId>care.smith.top</groupId>
