@@ -261,12 +261,12 @@ public class PhenotypeQueryService {
 
   private void clearResult(String organisationId, String repositoryId, String queryId)
       throws IOException {
-    Path resultPath =
+    Path queryPath =
         Paths.get(resultDir, organisationId, repositoryId, String.format("%s.zip", queryId));
-    if (!resultPath.startsWith(Paths.get(resultDir)))
+    if (!queryPath.startsWith(Paths.get(resultDir)))
       LOGGER.severe(
-          String.format("Could not delete query results of %s from file system.", queryId));
-    Files.deleteIfExists(resultPath);
+          String.format("Query file '%s' is invalid and cannot be deleted!", queryPath));
+    Files.deleteIfExists(queryPath);
   }
 
   @NotNull

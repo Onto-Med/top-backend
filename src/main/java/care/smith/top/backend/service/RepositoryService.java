@@ -20,12 +20,22 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
+import java.util.logging.Logger;
 
 @Service
 public class RepositoryService implements ContentService {
+  private static final Logger LOGGER = Logger.getLogger(RepositoryService.class.getName());
+
   @Value("${spring.paging.page-size:10}")
   private int pageSize;
+
+  @Value("${top.phenotyping.result-dir:config/query_results}")
+  private String resultDir;
 
   @Autowired private RepositoryRepository repositoryRepository;
   @Autowired private OrganisationRepository organisationRepository;
@@ -66,6 +76,20 @@ public class RepositoryService implements ContentService {
         repositoryRepository
             .findByIdAndOrganisationId(repositoryId, organisationId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND)));
+
+    Path repositoryPath = Paths.get(resultDir, organisationId, repositoryId);
+    if (!repositoryPath.startsWith(Paths.get(resultDir)))
+      LOGGER.severe(
+          String.format(
+              "Repository directory '%s' is invalid and cannot be deleted!", repositoryPath));
+    try {
+      Files.deleteIfExists(repositoryPath);
+    } catch (IOException e) {
+      LOGGER.severe(
+          String.format(
+              "Could not delete repository directory '%s'! Cause: %s",
+              repositoryPath, e.getMessage()));
+    }
   }
 
   public Page<Repository> getRepositories(
