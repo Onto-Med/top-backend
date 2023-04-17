@@ -116,16 +116,18 @@ public class PhenotypeQueryService {
         || data.getDataSources().isEmpty())
       throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE);
 
-    if (queryRepository.existsById(data.getId().toString()))
+    UUID queryId = data.getId();
+
+    if (queryRepository.existsById(queryId.toString()))
       throw new ResponseStatusException(HttpStatus.CONFLICT);
 
     if (getConfigs(data.getDataSources()).isEmpty())
       throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE);
 
-    jobScheduler.enqueue(data.getId(), () -> this.executeQuery(data.getId()));
+    jobScheduler.enqueue(queryId, () -> this.executeQuery(queryId));
     queryRepository.save(new QueryDao(data).repository(repository));
 
-    return getQueryResult(organisationId, repositoryId, data.getId());
+    return getQueryResult(organisationId, repositoryId, queryId);
   }
 
   @org.jobrunr.jobs.annotations.Job(name = "Phenotypic query", retries = 0)
