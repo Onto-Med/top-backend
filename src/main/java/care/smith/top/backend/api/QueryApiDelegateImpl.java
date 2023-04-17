@@ -5,12 +5,18 @@ import care.smith.top.backend.util.ApiModelMapper;
 import care.smith.top.model.Query;
 import care.smith.top.model.QueryPage;
 import care.smith.top.model.QueryResult;
+import java.io.File;
+import java.nio.file.FileSystemException;
+import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-
-import java.util.UUID;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class QueryApiDelegateImpl implements QueryApiDelegate {
@@ -21,6 +27,23 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
       String organisationId, String repositoryId, UUID queryId) {
     phenotypeQueryService.deleteQuery(organisationId, repositoryId, queryId);
     return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+  }
+
+  @Override
+  public ResponseEntity<Resource> downloadQueryResult(
+      String organisationId, String repositoryId, UUID queryId) {
+    try {
+      File file =
+          phenotypeQueryService.getQueryResultPath(organisationId, repositoryId, queryId).toFile();
+      ContentDisposition contentDisposition =
+          ContentDisposition.builder("inline").filename(file.getName()).build();
+      HttpHeaders headers = new HttpHeaders();
+      headers.setContentDisposition(contentDisposition);
+      return new ResponseEntity<>(new FileSystemResource(file), headers, HttpStatus.OK);
+    } catch (FileSystemException e) {
+      throw new ResponseStatusException(
+          HttpStatus.INTERNAL_SERVER_ERROR, "Query result is not accessible.", e);
+    }
   }
 
   @Override

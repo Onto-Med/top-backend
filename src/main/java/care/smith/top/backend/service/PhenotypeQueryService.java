@@ -62,8 +62,11 @@ public class PhenotypeQueryService {
   @Value("${top.phenotyping.execute-queries:true}")
   private boolean executeQueries;
 
-  @Value("${top.phenotyping.result-dir:config/query_results}")
+  @Value("${top.phenotyping.result.dir:config/query_results}")
   private String resultDir;
+
+  @Value("${top.phenotyping.result.download-enabled:true}")
+  private boolean queryResultDownloadEnabled;
 
   @Autowired private JobScheduler jobScheduler;
   @Autowired private StorageProvider storageProvider;
@@ -230,6 +233,33 @@ public class PhenotypeQueryService {
     return queryResult;
   }
 
+  @PreAuthorize(
+      "hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
+  public Path getQueryResultPath(String organisationId, String repositoryId, UUID queryId)
+      throws FileSystemException {
+    if (!queryResultDownloadEnabled)
+      throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Query result download is disabled.");
+    if (!repositoryRepository.existsByIdAndOrganisation_Id(repositoryId, organisationId))
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Repository does not exist.");
+
+    QueryDao query =
+        queryRepository
+            .findByRepository_OrganisationIdAndRepositoryIdAndId(
+                organisationId, repositoryId, queryId.toString())
+            .orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Query does not exist."));
+
+    if (query.getResult() == null)
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Query has no result.");
+
+    Path queryPath =
+        Paths.get(resultDir, organisationId, repositoryId, String.format("%s.zip", queryId));
+    if (!queryPath.startsWith(Paths.get(resultDir)))
+      throw new FileSystemException("Repository directory isn't a child of the results directory.");
+
+    return queryPath;
+  }
+
   public List<DataAdapterConfig> getDataAdapterConfigs() {
     try (Stream<Path> paths = Files.list(Path.of(dataSourceConfigDir))) {
       return paths
@@ -266,8 +296,7 @@ public class PhenotypeQueryService {
     Path queryPath =
         Paths.get(resultDir, organisationId, repositoryId, String.format("%s.zip", queryId));
     if (!queryPath.startsWith(Paths.get(resultDir)))
-      LOGGER.severe(
-          String.format("Query file '%s' is invalid and cannot be deleted!", queryPath));
+      LOGGER.severe(String.format("Query file '%s' is invalid and cannot be deleted!", queryPath));
     Files.deleteIfExists(queryPath);
   }
 

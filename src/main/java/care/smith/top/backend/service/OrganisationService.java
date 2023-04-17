@@ -45,7 +45,7 @@ public class OrganisationService implements ContentService {
   @Value("${spring.paging.page-size:10}")
   private int pageSize = 10;
 
-  @Value("${top.phenotyping.result-dir:config/query_results}")
+  @Value("${top.phenotyping.result.dir:config/query_results}")
   private String resultDir;
 
   @Autowired private OrganisationMembershipRepository organisationMembershipRepository;
