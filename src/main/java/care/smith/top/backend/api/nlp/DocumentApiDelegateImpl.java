@@ -84,8 +84,8 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
     }
 
     @Override
-    public ResponseEntity<DocumentPage> getDocumentByPhraseIds(String phraseId, List<String> include, String name, Integer page) {
-        return DocumentApiDelegate.super.getDocumentByPhraseIds(phraseId, include, name, page);
+    public ResponseEntity<DocumentPage> getDocumentsByPhraseIds(String phraseId, List<String> include, String name, Integer page) {
+        return DocumentApiDelegate.super.getDocumentsByPhraseIds(phraseId, include, name, page);
     }
 
     @Override

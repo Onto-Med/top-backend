@@ -17,23 +17,27 @@ public class ConceptApiDelegateImpl implements ConceptApiDelegate {
     @Autowired ConceptService conceptService;
 
     @Override
-    public ResponseEntity<ConceptPage> getConceptByDocumentId(String documentId, List<String> include, String name, Integer page) {
-        return ConceptApiDelegate.super.getConceptByDocumentId(documentId, include, name, page);
+    public ResponseEntity<ConceptPage> getConceptsByDocumentId(
+            String documentId, List<String> include, String name, Integer page) {
+        return ConceptApiDelegate.super.getConceptsByDocumentId(documentId, include, name, page);
     }
 
     @Override
-    public ResponseEntity<Concept> getConceptById(String conceptId, List<String> include) {
+    public ResponseEntity<Concept> getConceptById(
+            String conceptId, List<String> include) {
         return ConceptApiDelegate.super.getConceptById(conceptId, include);
     }
 
     @Override
-    public ResponseEntity<ConceptPage> getConceptByPhraseId(String phraseId, List<String> include, String name, Integer page) {
-        return ConceptApiDelegate.super.getConceptByPhraseId(phraseId, include, name, page);
+    public ResponseEntity<ConceptPage> getConceptsByPhraseId(
+            String phraseId, List<String> include, String name, Integer page) {
+        return ConceptApiDelegate.super.getConceptsByPhraseId(phraseId, include, name, page);
     }
 
     @Override
-    public ResponseEntity<List<Concept>> getConcepts(String phraseText) {
+    public ResponseEntity<List<Concept>> getConcepts(
+            String phraseText) {
         //ToDo: filter by phraseText
-        return new ResponseEntity<>(conceptService.concepts(), HttpStatus.OK);
+        return ResponseEntity.ok(conceptService.concepts());
     }
 }

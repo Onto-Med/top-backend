@@ -27,3 +27,4 @@ target
 .flattened-pom.xml
 
 /config
+/.idea/

@@ -19,7 +19,7 @@ public class PhraseApiDelegateImpl implements PhraseApiDelegate {
     @Override
     public ResponseEntity<PhrasePage> getPhrasesByConceptIds(String conceptId, List<String> include, String name, Integer page) {
         //ToDo: add filtering by phraseText --> name
-        List<Phrase> result = phraseService.getPhrasesByConcept(conceptId);
+        List<Phrase> result = phraseService.getPhrasesForConcept(conceptId);
         return ResponseEntity.ok(
                 (PhrasePage)
                         new PhrasePage()
