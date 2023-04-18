@@ -6,6 +6,7 @@ import care.smith.top.backend.service.nlp.DocumentService;
 import care.smith.top.backend.service.nlp.PhraseService;
 import care.smith.top.model.Document;
 import care.smith.top.model.Phrase;
+import care.smith.top.model.DocumentPage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -83,7 +84,7 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
     }
 
     @Override
-    public ResponseEntity<List<Document>> getDocumentsByPhraseIds(String phraseId, List<String> include, String name, Integer page) {
+    public ResponseEntity<DocumentPage> getDocumentsByPhraseIds(String phraseId, List<String> include, String name, Integer page) {
         return DocumentApiDelegate.super.getDocumentsByPhraseIds(phraseId, include, name, page);
     }
 
