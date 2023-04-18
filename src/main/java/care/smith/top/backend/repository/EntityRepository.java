@@ -29,7 +29,7 @@ public interface EntityRepository
     return (root, query, cb) -> {
       if (title == null) return cb.and();
       String pattern = "%" + title.toLowerCase() + "%";
-      query.distinct(true);
+      query.distinct(true); // This may cause side effects!
       return cb.or(
           cb.like(
               cb.lower(
@@ -53,6 +53,7 @@ public interface EntityRepository
   static Specification<EntityDao> byUser(UserDao user) {
     return (root, query, cb) -> {
       if (user == null || user.getRole().equals(Role.ADMIN)) return cb.and();
+      query.distinct(true); // This may cause side effects!
       return cb.or(
         cb.isTrue(root.join(EntityDao_.REPOSITORY).get(RepositoryDao_.PRIMARY)),
         cb.equal(

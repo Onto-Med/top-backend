@@ -8,6 +8,7 @@ import care.smith.top.model.*;
 import care.smith.top.top_phenotypic_query.converter.PhenotypeExporter;
 import care.smith.top.top_phenotypic_query.converter.PhenotypeImporter;
 import org.reflections.Reflections;
+import org.reflections.util.ConfigurationBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,7 +34,8 @@ public class DefaultApiDelegateImpl implements DefaultApiDelegate {
 
   @Override
   public ResponseEntity<List<Converter>> getConverters(Purpose purpose) {
-    Reflections reflections = new Reflections("care.smith.top");
+    Reflections reflections =
+        new Reflections(new ConfigurationBuilder().forPackage("care.smith.top"));
     List<Converter> formats = new ArrayList<>();
 
     if (purpose == null || purpose.equals(Purpose.IMPORT)) {

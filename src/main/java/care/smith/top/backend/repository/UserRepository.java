@@ -35,6 +35,7 @@ public interface UserRepository
   static Specification<UserDao> byOrganisationIds(List<String> organisationIds) {
     return (root, query, cb) -> {
       if (organisationIds == null || organisationIds.isEmpty()) return cb.and();
+      query.distinct(true); // This may cause side effects!
       return root.join(UserDao_.MEMBERSHIPS)
           .join(OrganisationMembershipDao_.ORGANISATION)
           .get(OrganisationDao_.ID)

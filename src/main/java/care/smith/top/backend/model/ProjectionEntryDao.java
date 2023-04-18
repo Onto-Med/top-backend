@@ -2,33 +2,37 @@ package care.smith.top.backend.model;
 
 import care.smith.top.model.DateTimeRestriction;
 import care.smith.top.model.ProjectionEntry;
-import care.smith.top.model.Sorting;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Embeddable;
-import javax.persistence.Lob;
+import javax.persistence.OneToOne;
 import javax.validation.constraints.NotNull;
 import java.util.Objects;
 
 @Embeddable
 public class ProjectionEntryDao {
   private String subjectId;
-  private Sorting sorting;
-  @Lob
-  private DateTimeRestriction dateTimeRestriction = null;
+  private String defaultAggregationFunctionId;
+
+  @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+  private RestrictionDao dateTimeRestriction;
 
   public ProjectionEntryDao() {}
 
   public ProjectionEntryDao(
-      String subjectId, Sorting sorting, DateTimeRestriction dateTimeRestriction) {
+      String subjectId,
+      String defaultAggregationFunctionId,
+      DateTimeRestriction dateTimeRestriction) {
     this.subjectId = subjectId;
-    this.sorting = sorting;
-    this.dateTimeRestriction = dateTimeRestriction;
+    this.defaultAggregationFunctionId = defaultAggregationFunctionId;
+    this.dateTimeRestriction = new RestrictionDao(dateTimeRestriction);
   }
 
   public ProjectionEntryDao(@NotNull ProjectionEntry projectionEntry) {
     subjectId = projectionEntry.getSubjectId();
-    sorting = projectionEntry.getSorting();
-    dateTimeRestriction = projectionEntry.getDateTimeRestriction();
+    this.defaultAggregationFunctionId = projectionEntry.getDefaultAggregationFunctionId();
+    if (projectionEntry.getDateTimeRestriction() != null)
+      dateTimeRestriction = new RestrictionDao(projectionEntry.getDateTimeRestriction());
   }
 
   public String getSubjectId() {
@@ -40,29 +44,33 @@ public class ProjectionEntryDao {
     return this;
   }
 
-  public Sorting getSorting() {
-    return sorting;
-  }
-
-  public ProjectionEntryDao sorting(Sorting sorting) {
-    this.sorting = sorting;
-    return this;
-  }
-
-  public DateTimeRestriction getDateTimeRestriction() {
+  public RestrictionDao getDateTimeRestriction() {
     return dateTimeRestriction;
   }
 
-  public ProjectionEntryDao dateTimeRestriction(DateTimeRestriction dateTimeRestriction) {
+  public ProjectionEntryDao dateTimeRestriction(RestrictionDao dateTimeRestriction) {
     this.dateTimeRestriction = dateTimeRestriction;
     return this;
   }
 
+  public String getDefaultAggregationFunctionId() {
+    return defaultAggregationFunctionId;
+  }
+
+  public ProjectionEntryDao defaultAggregationFunctionId(String defaultAggregationFunctionId) {
+    this.defaultAggregationFunctionId = defaultAggregationFunctionId;
+    return this;
+  }
+
   public ProjectionEntry toApiModel() {
-    return new ProjectionEntry()
-        .subjectId(getSubjectId())
-        .sorting(getSorting())
-        .dateTimeRestriction(getDateTimeRestriction());
+    ProjectionEntry entry =
+        new ProjectionEntry()
+            .subjectId(getSubjectId())
+            .defaultAggregationFunctionId(getDefaultAggregationFunctionId())
+            .type(ProjectionEntry.TypeEnum.PROJECTIONENTRY);
+    if (getDateTimeRestriction() != null)
+      entry.dateTimeRestriction((DateTimeRestriction) getDateTimeRestriction().toApiModel());
+    return entry;
   }
 
   @Override
@@ -71,12 +79,11 @@ public class ProjectionEntryDao {
     if (o == null || getClass() != o.getClass()) return false;
     ProjectionEntryDao that = (ProjectionEntryDao) o;
     return getSubjectId().equals(that.getSubjectId())
-        && getSorting() == that.getSorting()
         && Objects.equals(getDateTimeRestriction(), that.getDateTimeRestriction());
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(getSubjectId(), getSorting(), getDateTimeRestriction());
+    return Objects.hash(getSubjectId(), getDateTimeRestriction());
   }
 }

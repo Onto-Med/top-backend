@@ -40,22 +40,27 @@ class PhenotypeQueryServiceTest extends AbstractTest {
             entityService.createEntity(
                 orga.getId(),
                 repo1.getId(),
-                new Entity().id("entity_1").entityType(EntityType.SINGLE_PHENOTYPE));
+                new Phenotype()
+                    .dataType(DataType.NUMBER)
+                    .id("entity_1")
+                    .entityType(EntityType.SINGLE_PHENOTYPE));
 
     Query query =
         new Query()
             .id(UUID.randomUUID())
             .addDataSourcesItem(dataSources.get(0))
             .addCriteriaItem(
-                new QueryCriterion()
-                    .subjectId(phenotype1.getId())
-                    .dateTimeRestriction(
-                        (DateTimeRestriction)
-                            new DateTimeRestriction()
-                                .maxOperator(RestrictionOperator.LESS_THAN)
-                                .addValuesItem(null)
-                                .addValuesItem(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS))
-                                .type(DataType.DATE_TIME)));
+                (QueryCriterion)
+                    new QueryCriterion()
+                        .subjectId(phenotype1.getId())
+                        .dateTimeRestriction(
+                            (DateTimeRestriction)
+                                new DateTimeRestriction()
+                                    .maxOperator(RestrictionOperator.LESS_THAN)
+                                    .addValuesItem(null)
+                                    .addValuesItem(
+                                        LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS))
+                                    .type(DataType.DATE_TIME)));
 
     assertThatThrownBy(() -> queryService.enqueueQuery(orga.getId(), "invalid", query))
         .isInstanceOf(ResponseStatusException.class)

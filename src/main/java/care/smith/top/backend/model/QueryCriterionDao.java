@@ -1,6 +1,7 @@
 package care.smith.top.backend.model;
 
 import care.smith.top.model.DateTimeRestriction;
+import care.smith.top.model.ProjectionEntry;
 import care.smith.top.model.QueryCriterion;
 
 import javax.persistence.CascadeType;
@@ -77,10 +78,12 @@ public class QueryCriterionDao {
 
   public QueryCriterion toApiModel() {
     QueryCriterion queryCriterion =
-        new QueryCriterion()
-            .subjectId(getSubjectId())
-            .inclusion(isInclusion())
-            .defaultAggregationFunctionId(getDefaultAggregationFunctionId());
+        (QueryCriterion)
+            new QueryCriterion()
+                .inclusion(isInclusion())
+                .subjectId(getSubjectId())
+                .defaultAggregationFunctionId(getDefaultAggregationFunctionId())
+                .type(ProjectionEntry.TypeEnum.QUERYCRITERION);
     if (getDateTimeRestriction() != null)
       queryCriterion.dateTimeRestriction(
           (DateTimeRestriction) getDateTimeRestriction().toApiModel());
