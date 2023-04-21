@@ -6,6 +6,12 @@ import care.smith.top.backend.util.ApiModelMapper;
 import care.smith.top.model.*;
 import care.smith.top.top_phenotypic_query.converter.PhenotypeExporter;
 import care.smith.top.top_phenotypic_query.converter.PhenotypeImporter;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import javax.validation.constraints.NotNull;
 import org.reflections.Reflections;
 import org.reflections.util.ConfigurationBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,13 +28,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
-import java.util.*;
-import java.util.stream.Collectors;
-
-import static org.reflections.scanners.Scanners.SubTypes;
 
 @Service
 @Transactional
@@ -183,7 +182,7 @@ public class EntityService implements ContentService {
         entityVersionRepository.save(new EntityVersionDao(data).version(1).entity(entity));
     entity.currentVersion(entityVersion);
 
-    return entityRepository.save(entity).toApiModel();
+    return populateSubEntities().apply(entityRepository.save(entity).toApiModel());
   }
 
   @Caching(
@@ -407,7 +406,8 @@ public class EntityService implements ContentService {
             itemType,
             userService.getCurrentUser(),
             pageRequest)
-        .map(EntityDao::toApiModel);
+        .map(EntityDao::toApiModel)
+        .map(populateSubEntities());
   }
 
   @PreAuthorize(
@@ -427,7 +427,8 @@ public class EntityService implements ContentService {
     return phenotypeRepository
         .findAllByRepositoryIdAndTitleAndEntityTypeAndDataTypeAndItemType(
             repositoryId, name, type, dataType, itemType, pageRequest)
-        .map(EntityDao::toApiModel);
+        .map(EntityDao::toApiModel)
+        .map(populateSubEntities());
   }
 
   @PreAuthorize(
@@ -488,6 +489,7 @@ public class EntityService implements ContentService {
     return entityRepository
         .findAllByRepositoryIdAndSuperEntitiesEmpty(repositoryId, Sort.by(EntityDao_.ID))
         .map(EntityDao::toApiModel)
+        .map(populateSubEntities())
         .getContent();
   }
 
@@ -496,9 +498,11 @@ public class EntityService implements ContentService {
   public List<Entity> getSubclasses(
       String organisationId, String repositoryId, String id, List<String> include) {
     getRepository(organisationId, repositoryId);
-    return categoryRepository.findAllByRepositoryIdAndSuperEntities_Id(repositoryId, id).stream()
+    return categoryRepository
+        .findAllByRepositoryIdAndSuperEntities_Id(repositoryId, id, Sort.by(EntityDao_.ID))
         .map(EntityDao::toApiModel)
-        .collect(Collectors.toList());
+        .map(populateSubEntities())
+        .getContent();
   }
 
   @PreAuthorize(
@@ -526,6 +530,7 @@ public class EntityService implements ContentService {
     return entityVersionRepository
         .findByEntity_RepositoryIdAndEntityIdAndVersion(repositoryId, id, version)
         .map(EntityVersionDao::toApiModel)
+        .map(populateSubEntities())
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
   }
 
@@ -549,7 +554,8 @@ public class EntityService implements ContentService {
             .findByEntity_RepositoryIdAndEntityIdAndVersion(repositoryId, id, version)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-    return entityRepository.save(entity.currentVersion(entityVersion)).toApiModel();
+    return populateSubEntities()
+        .apply(entityRepository.save(entity.currentVersion(entityVersion)).toApiModel());
   }
 
   @CacheEvict(value = "entities", key = "#repositoryId")
@@ -586,7 +592,8 @@ public class EntityService implements ContentService {
               .ifPresent(entity::addSuperEntitiesItem);
     }
 
-    return entityRepository.save(entity.currentVersion(newVersion)).toApiModel();
+    return populateSubEntities()
+        .apply(entityRepository.save(entity.currentVersion(newVersion)).toApiModel());
   }
 
   @PreAuthorize(
@@ -668,5 +675,52 @@ public class EntityService implements ContentService {
                 new ResponseStatusException(
                     HttpStatus.NOT_FOUND,
                     String.format("Repository '%s' does not exist!", repositoryId)));
+  }
+
+  /**
+   * Checks if the entity has sub categories.
+   *
+   * @param entity The entity to be checked.
+   * @return true, if provided entity has sub categories.
+   */
+  private boolean hasSubCategories(@NotNull Entity entity) {
+    return hasSubEntities(entity, Collections.singletonList(EntityType.CATEGORY));
+  }
+
+  /**
+   * Checks if the entity has sub phenotypes.
+   *
+   * @param entity The entity to be checked.
+   * @return true, if provided entity has sub phenotypes.
+   */
+  private boolean hasSubPhenotypes(@NotNull Entity entity) {
+    return hasSubEntities(entity, ApiModelMapper.phenotypeTypes());
+  }
+
+  /**
+   * Checks if the entity has sub entities of the provided entity types
+   *
+   * @param entity The entity to be checked.
+   * @param entityTypes The entity types to check for.
+   * @return true, if provided entity has sub entities.
+   */
+  private boolean hasSubEntities(@NotNull Entity entity, Collection<EntityType> entityTypes) {
+    return entityRepository.existsByIdAndSubEntities_EntityTypeIn(entity.getId(), entityTypes);
+  }
+
+  /**
+   * Checks if the provided entity has sub categories or phenotypes. If this is not the case, the
+   * respective fields are initialised with empty arrays to indicate absence of sub entities.
+   *
+   * @return The provided entity instance with modified fields.
+   */
+  private Function<Entity, Entity> populateSubEntities() {
+    return e -> {
+      if (e instanceof Category) {
+        if (!hasSubCategories(e)) ((Category) e).setSubCategories(new ArrayList<>());
+        if (!hasSubPhenotypes(e)) ((Category) e).setPhenotypes(new ArrayList<>());
+      }
+      return e;
+    };
   }
 }
