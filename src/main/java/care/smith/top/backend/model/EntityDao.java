@@ -272,4 +272,9 @@ public class EntityDao {
     result = 31 * result + (getRepository() != null ? getRepository().hashCode() : 0);
     return result;
   }
+
+  @PreRemove
+  private void preRemove() {
+    forks.forEach(f -> f.origin(null));
+  }
 }

@@ -355,4 +355,9 @@ public class EntityVersionDao {
     result = 31 * result + (getCreatedAt() != null ? getCreatedAt().hashCode() : 0);
     return result;
   }
+
+  @PreRemove
+  private void preRemove() {
+    equivalentEntityVersionOf.forEach(e -> e.getEquivalentEntityVersions().remove(this));
+  }
 }
