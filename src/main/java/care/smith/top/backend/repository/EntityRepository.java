@@ -14,6 +14,7 @@ import org.springframework.stereotype.Repository;
 import javax.annotation.Nullable;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -24,6 +25,8 @@ public interface EntityRepository
   long count();
 
   long countByEntityTypeIn(EntityType[] entityType);
+
+  boolean existsByIdAndSubEntities_EntityTypeIn(String id, Collection<EntityType> entityTypes);
 
   static Specification<EntityDao> byTitle(@Nullable String title) {
     return (root, query, cb) -> {
@@ -55,14 +58,14 @@ public interface EntityRepository
       if (user == null || user.getRole().equals(Role.ADMIN)) return cb.and();
       query.distinct(true); // This may cause side effects!
       return cb.or(
-        cb.isTrue(root.join(EntityDao_.REPOSITORY).get(RepositoryDao_.PRIMARY)),
-        cb.equal(
-          root.join(EntityDao_.REPOSITORY)
-            .join(RepositoryDao_.ORGANISATION)
-            .join(OrganisationDao_.MEMBERS, JoinType.LEFT)
-            .join(OrganisationMembershipDao_.USER, JoinType.LEFT)
-            .get(UserDao_.ID),
-          user.getId()));
+          cb.isTrue(root.join(EntityDao_.REPOSITORY).get(RepositoryDao_.PRIMARY)),
+          cb.equal(
+              root.join(EntityDao_.REPOSITORY)
+                  .join(RepositoryDao_.ORGANISATION)
+                  .join(OrganisationDao_.MEMBERS, JoinType.LEFT)
+                  .join(OrganisationMembershipDao_.USER, JoinType.LEFT)
+                  .get(UserDao_.ID),
+              user.getId()));
     };
   }
 
@@ -113,8 +116,8 @@ public interface EntityRepository
     };
   }
 
-  List<EntityDao> findAllByRepositoryIdAndSuperEntities_Id(
-      String repositoryId, String superCategoryId);
+  Slice<EntityDao> findAllByRepositoryIdAndSuperEntities_Id(
+      String repositoryId, String superCategoryId, Sort sort);
 
   default Optional<EntityDao> getFork(EntityDao origin, RepositoryDao repository) {
     return findByOriginAndRepository(origin, repository);
@@ -128,8 +131,7 @@ public interface EntityRepository
 
   Page<EntityDao> findAllByRepositoryId(String repositoryId, Pageable pageable);
 
-  Slice<EntityDao> findAllByRepositoryIdAndSuperEntitiesEmpty(
-      String repositoryId, Sort sort);
+  Slice<EntityDao> findAllByRepositoryIdAndSuperEntitiesEmpty(String repositoryId, Sort sort);
 
   Optional<EntityDao> findByRepositoryIdAndOriginId(String repositoryId, String originId);
 

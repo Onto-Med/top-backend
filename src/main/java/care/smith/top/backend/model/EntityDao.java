@@ -101,14 +101,6 @@ public class EntityDao {
 
     if (ApiModelMapper.isCategory(entityType)) {
       entity = new Category();
-      if (entityDao.getSubEntities() == null
-          || entityDao.getSubEntities().stream()
-              .noneMatch(e -> ApiModelMapper.isCategory(e.getEntityType())))
-        entity.subCategories(new ArrayList<>());
-      if (entityDao.getSubEntities() == null
-          || entityDao.getSubEntities().stream()
-              .noneMatch(e -> ApiModelMapper.isPhenotype(e.getEntityType())))
-        entity.phenotypes(new ArrayList<>());
     } else {
       entity = new Phenotype();
     }
