@@ -289,17 +289,23 @@ public class EntityService implements ContentService {
       }
 
       if (origin.getVersion() == 1) {
-        results.add(
-            createEntity(forkingInstruction.getOrganisationId(), destinationRepo.getId(), origin));
+        Entity curFork =
+            createEntity(forkingInstruction.getOrganisationId(), destinationRepo.getId(), origin);
+        curFork.addEquivalentEntitiesItem(
+            new Entity().id(oldId).entityType(origin.getEntityType()).version(origin.getVersion()));
+        results.add(curFork);
         entityRepository.setFork(origin.getId(), oldId);
       } else {
-        results.add(
+        Entity curFork =
             updateEntityById(
                 forkingInstruction.getOrganisationId(),
                 destinationRepo.getId(),
                 origin.getId(),
                 origin,
-                null));
+                null);
+        curFork.addEquivalentEntitiesItem(
+            new Entity().id(oldId).entityType(origin.getEntityType()).version(origin.getVersion()));
+        results.add(curFork);
       }
 
       EntityDao createdFork =
