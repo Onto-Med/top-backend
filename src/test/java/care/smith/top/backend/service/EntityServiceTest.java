@@ -231,7 +231,7 @@ class EntityServiceTest extends AbstractTest {
     assertThatCode(
             () ->
                 entityService.deleteEntity(
-                    organisation.getId(), repository2.getId(), fork1.get().getId()))
+                    organisation.getId(), repository2.getId(), fork1.get().getId(), null))
         .doesNotThrowAnyException();
 
     assertThat(
@@ -243,7 +243,7 @@ class EntityServiceTest extends AbstractTest {
     assertThatCode(
             () ->
                 entityService.deleteEntity(
-                    organisation.getId(), repository1.getId(), origin.getId()))
+                    organisation.getId(), repository1.getId(), origin.getId(), null))
         .doesNotThrowAnyException();
     assertThat(entityRepository.existsById(origin.getId())).isEqualTo(false);
     assertThat(entityRepository.findAll())
@@ -566,14 +566,14 @@ class EntityServiceTest extends AbstractTest {
 
     assertThatThrownBy(
             () ->
-                entityService.deleteEntity(organisation.getId(), repository.getId(), "invalid id"))
+                entityService.deleteEntity(organisation.getId(), repository.getId(), "invalid id", null))
         .isInstanceOf(ResponseStatusException.class)
         .hasFieldOrPropertyWithValue("status", HttpStatus.NOT_FOUND);
 
     assertThatCode(
             () ->
                 entityService.deleteEntity(
-                    organisation.getId(), repository.getId(), phenotype.getId()))
+                    organisation.getId(), repository.getId(), phenotype.getId(), null))
         .doesNotThrowAnyException();
 
     assertThatThrownBy(

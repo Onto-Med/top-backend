@@ -329,7 +329,7 @@ public class EntityService implements ContentService {
       evict = {@CacheEvict("entityCount"), @CacheEvict(value = "entities", key = "#repositoryId")})
   @PreAuthorize(
       "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
-  public void deleteEntity(String organisationId, String repositoryId, String id) {
+  public void deleteEntity(String organisationId, String repositoryId, String id, Boolean cascade) {
     getRepository(organisationId, repositoryId);
 
     EntityDao entity =
@@ -341,11 +341,17 @@ public class EntityService implements ContentService {
       if (ApiModelMapper.isAbstract(entity.getEntityType())) {
         entityRepository.deleteAll(entity.getSubEntities());
       } else if (ApiModelMapper.isCategory(entity.getEntityType())) {
-        for (EntityDao subEntity : entity.getSubEntities()) {
-          subEntity
-              .removeSuperEntitiesItem(entity)
-              .addAllSuperEntitiesItems(entity.getSuperEntities());
-          entityRepository.save(subEntity);
+        if (cascade != null && cascade) {
+          entity
+              .getSubEntities()
+              .forEach(e -> deleteEntity(organisationId, repositoryId, e.getId(), true));
+        } else {
+          for (EntityDao subEntity : entity.getSubEntities()) {
+            subEntity
+                    .removeSuperEntitiesItem(entity)
+                    .addAllSuperEntitiesItems(entity.getSuperEntities());
+            entityRepository.save(subEntity);
+          }
         }
       }
     }

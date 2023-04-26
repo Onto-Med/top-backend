@@ -51,11 +51,16 @@ public class EntityApiDelegateImpl implements EntityApiDelegate {
       String repositoryId,
       String id,
       Integer version,
-      List<String> include) {
+      List<String> include,
+      EntityDeleteOptions entityDeleteOptions) {
     if (version != null) {
       entityService.deleteVersion(organisationId, repositoryId, id, version);
     } else {
-      entityService.deleteEntity(organisationId, repositoryId, id);
+      entityService.deleteEntity(
+          organisationId,
+          repositoryId,
+          id,
+          entityDeleteOptions != null ? entityDeleteOptions.isCascade() : false);
     }
     return new ResponseEntity<>(HttpStatus.NO_CONTENT);
   }
