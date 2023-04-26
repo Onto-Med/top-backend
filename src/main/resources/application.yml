@@ -14,6 +14,7 @@ logging:
     root: INFO
 
 spring:
+  max-batch-size: 100
   neo4j:
     uri: bolt://${DB_NEO4J_HOST:localhost}:${DB_NEO4J_PORT:7687}
     authentication:

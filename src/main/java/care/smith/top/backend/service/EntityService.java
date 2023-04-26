@@ -35,6 +35,9 @@ public class EntityService implements ContentService {
   @Value("${spring.paging.page-size:10}")
   private int pageSize;
 
+  @Value("${spring.max-batch-size:100}")
+  private int maxBatchSize;
+
   @Autowired private EntityRepository entityRepository;
   @Autowired private EntityVersionRepository entityVersionRepository;
   @Autowired private CategoryRepository categoryRepository;
@@ -60,6 +63,11 @@ public class EntityService implements ContentService {
   public int createEntities(
       String organisationId, String repositoryId, List<Entity> entities, List<String> include) {
     Map<String, String> ids = new HashMap<>();
+
+    if (entities.size() > maxBatchSize)
+      throw new ResponseStatusException(
+          HttpStatus.NOT_ACCEPTABLE,
+          String.format("Batch size %d exceeds maximum %d.", entities.size(), maxBatchSize));
 
     for (Entity entity :
         entities.stream()
