@@ -2,6 +2,7 @@ package care.smith.top.backend.model;
 
 import care.smith.top.model.Query;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
@@ -13,6 +14,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Entity(name = "query")
+@EntityListeners(AuditingEntityListener.class)
 public class QueryDao {
   @Id private String id;
   private String name;
