@@ -202,7 +202,7 @@ public class EntityService implements ContentService {
   }
 
   @Caching(
-      evict = {@CacheEvict("entityCount"), @CacheEvict(value = "entities", key = "#repositoryId")})
+      evict = {@CacheEvict("entityCount"), @CacheEvict(value = "entities", key = "#forkingInstruction.repositoryId")})
   @PreAuthorize(
       "hasRole('ADMIN') or hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'READ') "
           + "and hasPermission(#forkingInstruction.organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
