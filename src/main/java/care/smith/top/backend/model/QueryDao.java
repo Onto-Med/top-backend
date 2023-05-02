@@ -1,9 +1,12 @@
 package care.smith.top.backend.model;
 
 import care.smith.top.model.Query;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -11,6 +14,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Entity(name = "query")
+@EntityListeners(AuditingEntityListener.class)
 public class QueryDao {
   @Id private String id;
   private String name;
@@ -22,6 +26,10 @@ public class QueryDao {
   private QueryResultDao result = null;
 
   @ManyToOne private RepositoryDao repository;
+
+  @CreatedDate
+  @Column(updatable = false)
+  private OffsetDateTime createdAt;
 
   public QueryDao() {}
 
@@ -79,6 +87,15 @@ public class QueryDao {
     return this;
   }
 
+  public OffsetDateTime getCreatedAt() {
+    return createdAt;
+  }
+
+  public QueryDao createdAt(OffsetDateTime createdAt) {
+    this.createdAt = createdAt;
+    return this;
+  }
+
   public List<QueryCriterionDao> getCriteria() {
     return criteria;
   }
@@ -117,7 +134,10 @@ public class QueryDao {
 
   public Query toApiModel() {
     Query query =
-        new Query().id(UUID.fromString(getId())).name(getName()).dataSources(new ArrayList<>(getDataSources()));
+        new Query()
+            .id(UUID.fromString(getId()))
+            .name(getName())
+            .dataSources(new ArrayList<>(getDataSources()));
     if (getCriteria() != null)
       query.criteria(
           getCriteria().stream().map(QueryCriterionDao::toApiModel).collect(Collectors.toList()));

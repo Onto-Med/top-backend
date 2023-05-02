@@ -37,6 +37,9 @@ public class RepositoryDao {
   @OneToMany(mappedBy = "repository", cascade = CascadeType.REMOVE)
   private List<EntityDao> entities = null;
 
+  @OneToMany(mappedBy = "repository", cascade = CascadeType.REMOVE)
+  private List<QueryDao> queries = null;
+
   public RepositoryDao() {}
 
   public RepositoryDao(String id, String name, String description, Boolean primary, RepositoryType repositoryType) {
@@ -97,6 +100,11 @@ public class RepositoryDao {
 
   public RepositoryDao entities(List<EntityDao> entities) {
     this.entities = entities;
+    return this;
+  }
+
+  public RepositoryDao queries(List<QueryDao> queries) {
+    this.queries = queries;
     return this;
   }
 
@@ -189,6 +197,10 @@ public class RepositoryDao {
 
   public List<EntityDao> getEntities() {
     return entities;
+  }
+
+  public List<QueryDao> getQueries() {
+    return queries;
   }
 
   public String getDisplayName() {

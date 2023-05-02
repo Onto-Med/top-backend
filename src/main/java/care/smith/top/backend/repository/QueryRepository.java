@@ -7,12 +7,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
-import java.util.UUID;
 
 @Repository
 public interface QueryRepository extends JpaRepository<QueryDao, String> {
-  Page<QueryDao> findAllByRepository_OrganisationIdAndRepositoryIdOrderByIdDesc(
-      String organisationId, String repositoryId, Pageable pagea);
+  Page<QueryDao> findAllByRepository_OrganisationIdAndRepositoryIdOrderByCreatedAtDesc(
+      String organisationId, String repositoryId, Pageable pageable);
 
   Optional<QueryDao> findByRepository_OrganisationIdAndRepositoryIdAndId(
       String organisationId, String repositoryId, String id);

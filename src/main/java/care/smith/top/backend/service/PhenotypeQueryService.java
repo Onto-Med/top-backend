@@ -286,7 +286,7 @@ public class PhenotypeQueryService {
   public Page<Query> getQueries(String organisationId, String repositoryId, Integer page) {
     PageRequest pageRequest = PageRequest.of(page == null ? 0 : page - 1, pageSize);
     return queryRepository
-        .findAllByRepository_OrganisationIdAndRepositoryIdOrderByIdDesc(
+        .findAllByRepository_OrganisationIdAndRepositoryIdOrderByCreatedAtDesc(
             organisationId, repositoryId, pageRequest)
         .map(QueryDao::toApiModel);
   }
