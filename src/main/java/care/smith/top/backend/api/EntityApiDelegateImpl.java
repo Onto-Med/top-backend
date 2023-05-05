@@ -3,19 +3,31 @@ package care.smith.top.backend.api;
 import care.smith.top.backend.service.EntityService;
 import care.smith.top.backend.util.ApiModelMapper;
 import care.smith.top.model.*;
+import care.smith.top.top_phenotypic_query.c2reasoner.C2R;
+import care.smith.top.top_phenotypic_query.c2reasoner.constants.ConstantEntity;
+import care.smith.top.top_phenotypic_query.c2reasoner.functions.FunctionEntity;
+import care.smith.top.top_phenotypic_query.converter.PhenotypeExporter;
+import care.smith.top.top_phenotypic_query.converter.PhenotypeImporter;
+import org.apache.commons.lang3.StringUtils;
+import org.reflections.Reflections;
+import org.reflections.util.ConfigurationBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static care.smith.top.backend.configuration.RequestValidator.isValidId;
 
 @Service
 public class EntityApiDelegateImpl implements EntityApiDelegate {
   @Autowired EntityService entityService;
+  private final C2R calculator = new C2R();
 
   @Override
   public ResponseEntity<Entity> createEntity(
@@ -148,5 +160,91 @@ public class EntityApiDelegateImpl implements EntityApiDelegate {
     return new ResponseEntity<>(
         entityService.setCurrentEntityVersion(organisationId, repositoryId, id, version, include),
         HttpStatus.OK);
+  }
+
+  @Override
+  public ResponseEntity<List<Entity>> createFork(
+    String organisationId,
+    String repositoryId,
+    String id,
+    ForkingInstruction forkingInstruction,
+    List<String> include,
+    Integer version) {
+    return new ResponseEntity<>(
+      entityService.createFork(
+        organisationId, repositoryId, id, forkingInstruction, version, include),
+      HttpStatus.CREATED);
+  }
+
+  @Override
+  public ResponseEntity<ForkingStats> getForks(
+    String organisationId, String repositoryId, String id, List<String> include) {
+    return new ResponseEntity<>(
+      entityService.getForkingStats(organisationId, repositoryId, id, include), HttpStatus.OK);
+  }
+
+  @Override
+  public ResponseEntity<List<Constant>> getExpressionConstants() {
+    return new ResponseEntity<>(
+      calculator.getConstants().stream()
+        .map(ConstantEntity::getConstant)
+        .sorted(Comparator.comparing(Constant::getTitle))
+        .collect(Collectors.toList()),
+      HttpStatus.OK);
+  }
+
+  @Override
+  public ResponseEntity<List<ExpressionFunction>> getExpressionFunctions(String type) {
+    return new ResponseEntity<>(
+      calculator.getFunctions().stream()
+        .filter(f -> StringUtils.isBlank(type) || type.equals(f.getType()))
+        .map(FunctionEntity::getFunction)
+        .sorted(Comparator.comparing(ExpressionFunction::getTitle))
+        .collect(Collectors.toList()),
+      HttpStatus.OK);
+  }
+
+  @Override
+  public ResponseEntity<List<Converter>> getConverters(Purpose purpose) {
+    Reflections reflections =
+      new Reflections(new ConfigurationBuilder().forPackage("care.smith.top"));
+    List<Converter> formats = new ArrayList<>();
+
+    if (purpose == null || purpose.equals(Purpose.IMPORT)) {
+      formats.addAll(
+        reflections.getSubTypesOf(PhenotypeImporter.class).stream()
+          .map(
+            c -> {
+              Converter format =
+                new Converter().id(c.getSimpleName()).purpose(Purpose.IMPORT);
+              try {
+                PhenotypeImporter instance = c.getConstructor().newInstance();
+                format.setFileExtension(instance.getFileExtension());
+              } catch (Exception ignored) {
+              }
+              return format;
+            })
+          .collect(Collectors.toList()));
+    }
+
+    if (purpose == null || purpose.equals(Purpose.EXPORT)) {
+      formats.addAll(
+        reflections.getSubTypesOf(PhenotypeExporter.class).stream()
+          .map(
+            c -> {
+              Converter format =
+                new Converter().id(c.getSimpleName()).purpose(Purpose.EXPORT);
+              try {
+                PhenotypeExporter instance = c.getConstructor().newInstance();
+                format.setFileExtension(instance.getFileExtension());
+              } catch (Exception ignored) {
+              }
+              return format;
+            })
+          .collect(Collectors.toList()));
+    }
+
+    formats.sort(Comparator.comparing(Converter::getId));
+    return new ResponseEntity<>(formats, HttpStatus.OK);
   }
 }

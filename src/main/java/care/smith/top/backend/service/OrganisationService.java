@@ -70,7 +70,7 @@ public class OrganisationService implements ContentService {
     UserDao user = userService.getCurrentUser();
     if (user != null) organisation.setMemberPermission(user, Permission.MANAGE);
 
-    return organisationRepository.save(organisation).toApiModel();
+    return organisationRepository.save(organisation).toApiModel(user);
   }
 
   @PreAuthorize(
@@ -88,7 +88,9 @@ public class OrganisationService implements ContentService {
           .findById(data.getSuperOrganisation().getId())
           .ifPresent(organisation::superOrganisation);
 
-    return organisationRepository.saveAndFlush(organisation.update(data)).toApiModel();
+    return organisationRepository
+        .saveAndFlush(organisation.update(data))
+        .toApiModel(userService.getCurrentUser());
   }
 
   @PreAuthorize(
@@ -125,7 +127,7 @@ public class OrganisationService implements ContentService {
     return organisationRepository
         .findById(organisationId)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND))
-        .toApiModel();
+        .toApiModel(userService.getCurrentUser());
   }
 
   public Page<Organisation> getOrganisations(String name, Integer page, List<String> include) {
@@ -133,7 +135,7 @@ public class OrganisationService implements ContentService {
         PageRequest.of(page == null ? 1 : page - 1, pageSize, Sort.by(OrganisationDao_.NAME));
     return organisationRepository
         .findAllByNameOrDescription(name, pageRequest)
-        .map(OrganisationDao::toApiModel);
+        .map(o -> o.toApiModel(userService.getCurrentUser()));
   }
 
   @PreAuthorize("hasRole('USER')")

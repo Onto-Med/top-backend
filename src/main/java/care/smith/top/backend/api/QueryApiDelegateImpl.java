@@ -2,11 +2,13 @@ package care.smith.top.backend.api;
 
 import care.smith.top.backend.service.PhenotypeQueryService;
 import care.smith.top.backend.util.ApiModelMapper;
+import care.smith.top.model.DataSource;
 import care.smith.top.model.Query;
 import care.smith.top.model.QueryPage;
 import care.smith.top.model.QueryResult;
 import java.io.File;
 import java.nio.file.FileSystemException;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
@@ -52,6 +54,11 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
     return new ResponseEntity<>(
         phenotypeQueryService.enqueueQuery(organisationId, repositoryId, query),
         HttpStatus.CREATED);
+  }
+
+  @Override
+  public ResponseEntity<List<DataSource>> getDataSources() {
+    return new ResponseEntity<>(phenotypeQueryService.getDataSources(), HttpStatus.OK);
   }
 
   @Override
