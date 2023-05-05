@@ -18,4 +18,9 @@ public enum Permission {
   public static Permission fromApiModel(care.smith.top.model.Permission permission) {
     return Permission.valueOf(permission.getValue());
   }
+
+  public static care.smith.top.model.Permission toApiModel(
+      Permission permission) {
+    return care.smith.top.model.Permission.valueOf(permission.name());
+  }
 }

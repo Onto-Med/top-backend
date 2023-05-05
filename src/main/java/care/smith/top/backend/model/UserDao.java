@@ -99,6 +99,7 @@ public class UserDao implements UserDetails {
     return new User()
         .id(getId())
         .username(getUsername())
+        .role(getRole().toApiModel())
         .organisations(
             getMemberships().stream()
                 .map(m -> m.getOrganisation().toApiModel())

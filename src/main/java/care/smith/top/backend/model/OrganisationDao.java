@@ -121,6 +121,21 @@ public class OrganisationDao {
     return this;
   }
 
+  public Organisation toApiModel(UserDao user) {
+    Organisation organisation = toApiModel();
+    if (user == null || user.isAdmin()) {
+      organisation.setPermission(care.smith.top.model.Permission.MANAGE);
+    } else {
+      Optional<OrganisationMembershipDao> membership =
+          getMembers().stream().filter(m -> m.getUser().getId().equals(user.getId())).findFirst();
+      membership.ifPresent(
+          organisationMembershipDao ->
+              organisation.setPermission(
+                  Permission.toApiModel(organisationMembershipDao.getPermission())));
+    }
+    return organisation;
+  }
+
   public Organisation toApiModel() {
     Organisation organisation =
         new Organisation()
