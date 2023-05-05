@@ -42,6 +42,10 @@ public enum Role {
         .collect(Collectors.toList());
   }
 
+  public care.smith.top.model.Role toApiModel() {
+    return care.smith.top.model.Role.valueOf(name());
+  }
+
   public List<Role> getIncludingHigher() {
     return this.getIncluding(true);
   }

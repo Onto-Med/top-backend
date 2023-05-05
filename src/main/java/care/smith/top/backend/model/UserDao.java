@@ -105,6 +105,10 @@ public class UserDao implements UserDetails {
                 .collect(Collectors.toList()));
   }
 
+  public boolean isAdmin() {
+    return Role.ADMIN.equals(getRole());
+  }
+
   public String getId() {
     return id;
   }
