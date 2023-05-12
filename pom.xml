@@ -48,7 +48,7 @@
         <dependency>
             <groupId>care.smith.top</groupId>
             <artifactId>top-phenotypic-query</artifactId>
-            <version>0.5.2</version>
+            <version>0.5.3</version>
             <exclusions>
                 <exclusion>
                     <groupId>care.smith.top</groupId>
