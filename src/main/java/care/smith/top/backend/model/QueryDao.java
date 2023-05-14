@@ -1,6 +1,8 @@
 package care.smith.top.backend.model;
 
+import care.smith.top.model.PhenotypeQuery;
 import care.smith.top.model.Query;
+import care.smith.top.top_phenotypic_query.util.builder.Phe;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -48,7 +50,7 @@ public class QueryDao {
     this.repository = repository;
   }
 
-  public QueryDao(@NotNull Query query) {
+  public QueryDao(@NotNull PhenotypeQuery query) {
     this.id = query.getId().toString();
     this.name = query.getName();
     this.dataSources = query.getDataSources();
@@ -132,9 +134,9 @@ public class QueryDao {
     return this;
   }
 
-  public Query toApiModel() {
-    Query query =
-        new Query()
+  public PhenotypeQuery toApiModel() {
+    PhenotypeQuery query = (PhenotypeQuery)
+            new PhenotypeQuery()
             .id(UUID.fromString(getId()))
             .name(getName())
             .dataSources(new ArrayList<>(getDataSources()));
