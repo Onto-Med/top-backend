@@ -23,7 +23,7 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
     @Autowired ConceptService conceptService;
 
     @Override
-    public ResponseEntity<List<Document>> getDocumentIdsByConceptIds(List<String> conceptId, String gatheringMode, String name, Boolean exemplarOnly) {
+    public ResponseEntity<List<Document>> getDocumentIdsByConceptClusterIds(List<String> conceptId, String gatheringMode, String name, Boolean exemplarOnly) {
         //ToDo: filter by 'name' not implemented
         if (!Objects.equals(gatheringMode, "intersection")) {
             return new ResponseEntity<>(documentService.getDocumentsForConcepts(Set.copyOf(conceptId), exemplarOnly), HttpStatus.OK);
