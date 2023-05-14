@@ -4,6 +4,7 @@ import care.smith.top.backend.model.nlp.ConceptNodeEntity;
 import care.smith.top.backend.repository.nlp.ConceptNodeRepository;
 import care.smith.top.backend.service.ContentService;
 import care.smith.top.model.Concept;
+import care.smith.top.model.ConceptCluster;
 import org.neo4j.cypherdsl.core.Cypher;
 import org.neo4j.cypherdsl.core.Node;
 import org.neo4j.cypherdsl.core.Statement;
@@ -32,7 +33,7 @@ public class ConceptService implements ContentService {
     }
 
     @Cacheable("concepts")
-    public List<Concept> concepts() {
+    public List<ConceptCluster> concepts() {
         return conceptRepository
                 .findAll()
                 .stream()
@@ -40,7 +41,7 @@ public class ConceptService implements ContentService {
                 .collect(Collectors.toList());
     }
 
-    public Concept conceptById(String conceptId) {
+    public ConceptCluster conceptById(String conceptId) {
         return conceptEntityMapper.apply(
                 conceptRepository
                         .findOne(conceptWithId(conceptId))
@@ -48,7 +49,7 @@ public class ConceptService implements ContentService {
         );
     }
 
-    private final Function<ConceptNodeEntity, Concept> conceptEntityMapper = conceptEntity -> new Concept()
+    private final Function<ConceptNodeEntity, ConceptCluster> conceptEntityMapper = conceptEntity -> new ConceptCluster()
             .id(conceptEntity.conceptId())
             .labels(String.join(", ", conceptEntity.lables()));
 

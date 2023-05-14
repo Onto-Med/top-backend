@@ -17,7 +17,7 @@ public class PhraseApiDelegateImpl implements PhraseApiDelegate {
     @Autowired PhraseService phraseService;
 
     @Override
-    public ResponseEntity<PhrasePage> getPhrasesByConceptIds(String conceptId, List<String> include, String name, Integer page) {
+    public ResponseEntity<PhrasePage> getPhrasesByConceptClusterIds(String conceptId, List<String> include, String name, Integer page) {
         //ToDo: add filtering by phraseText --> name
         List<Phrase> result = phraseService.getPhrasesForConcept(conceptId);
         return ResponseEntity.ok(

@@ -3,6 +3,7 @@ package care.smith.top.backend.service.nlp;
 import care.smith.top.backend.model.nlp.ConceptNodeEntity;
 import care.smith.top.backend.model.nlp.PhraseNodeEntity;
 import care.smith.top.model.Concept;
+import care.smith.top.model.ConceptCluster;
 import org.junit.jupiter.api.*;
 
 import java.util.ArrayList;
@@ -60,7 +61,7 @@ class ConceptServiceTest extends AbstractNLPTest {
         assertEquals(conceptCount, conceptService.concepts().size());
 
         // check if all concepts have the proper labels
-        for (Concept concept : conceptService.concepts()) {
+        for (ConceptCluster concept : conceptService.concepts()) {
             ConceptNodeEntity conceptNodeEntity = conceptList.get(Integer.parseInt(concept.getId().substring(1)));
             assertEquals(String.join(", ", conceptNodeEntity.lables()), concept.getLabels());
         }
@@ -72,7 +73,7 @@ class ConceptServiceTest extends AbstractNLPTest {
         populateNeo4j(conceptCount);
 
         String testConceptId = String.format("c%s", ThreadLocalRandom.current().nextInt(0, conceptCount));
-        Concept concept = conceptService.conceptById(testConceptId);
+        ConceptCluster concept = conceptService.conceptById(testConceptId);
         assertEquals(testConceptId, concept.getId());
     }
 }
