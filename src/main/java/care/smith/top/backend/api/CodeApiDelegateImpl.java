@@ -1,10 +1,10 @@
 package care.smith.top.backend.api;
 
 import care.smith.top.backend.service.OLSCodeService;
-import care.smith.top.model.Code;
+import care.smith.top.model.CodePage;
 import care.smith.top.model.CodeSystem;
+import care.smith.top.model.CodeSystemPage;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -20,23 +20,20 @@ public class CodeApiDelegateImpl implements CodeApiDelegate {
   @Autowired private OLSCodeService codeService;
 
   @Override
-  public ResponseEntity<List<Code>> getCode(
+  public ResponseEntity<CodePage> getCode(
       List<String> include, String term, CodeSystem codeSystems, Integer page) {
-    return new ResponseEntity<>(
-        codeService.getCode(include, term, codeSystems, page), HttpStatus.OK);
+    return ResponseEntity.ok(codeService.getCode(include, term, codeSystems, page));
   }
 
   @Override
-  public ResponseEntity<List<Code>> getCodeSuggestions(
+  public ResponseEntity<CodePage> getCodeSuggestions(
       List<String> include, String term, List<String> codeSystems, Integer page) {
-    return new ResponseEntity<>(
-        codeService.getCodeSuggestions(include, term, codeSystems, page), HttpStatus.OK);
+    return ResponseEntity.ok(codeService.getCodeSuggestions(include, term, codeSystems, page));
   }
 
   @Override
-  public ResponseEntity<List<CodeSystem>> getCodeSystems(
+  public ResponseEntity<CodeSystemPage> getCodeSystems(
       List<String> include, URI uri, String name, Integer page) {
-    return new ResponseEntity<>(
-        codeService.getCodeSystems(include, uri, name, page), HttpStatus.OK);
+    return ResponseEntity.ok(codeService.getCodeSystems(include, uri, name, page));
   }
 }
