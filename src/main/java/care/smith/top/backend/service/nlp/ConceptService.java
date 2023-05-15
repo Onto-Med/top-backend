@@ -3,7 +3,6 @@ package care.smith.top.backend.service.nlp;
 import care.smith.top.backend.model.nlp.ConceptNodeEntity;
 import care.smith.top.backend.repository.nlp.ConceptNodeRepository;
 import care.smith.top.backend.service.ContentService;
-import care.smith.top.model.Concept;
 import care.smith.top.model.ConceptCluster;
 import org.neo4j.cypherdsl.core.Cypher;
 import org.neo4j.cypherdsl.core.Node;

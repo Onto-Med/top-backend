@@ -2,7 +2,6 @@ package care.smith.top.backend.service.nlp;
 
 import care.smith.top.backend.model.nlp.ConceptNodeEntity;
 import care.smith.top.backend.model.nlp.PhraseNodeEntity;
-import care.smith.top.model.Concept;
 import care.smith.top.model.ConceptCluster;
 import org.junit.jupiter.api.*;
 
