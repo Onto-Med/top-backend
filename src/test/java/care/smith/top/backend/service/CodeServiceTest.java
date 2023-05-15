@@ -13,13 +13,11 @@ import static org.assertj.core.api.Assertions.*;
  */
 @SpringBootTest
 public class CodeServiceTest extends AbstractTest {
-    @Autowired OLSCodeService codeService;
+  @Autowired OLSCodeService codeService;
 
-    @Test
-    void getSuggestions() {
-        var suggestions = codeService.getCodeSuggestions(null, "cancer", Collections.emptyList(), 0);
-        assertThat(suggestions)
-                .isNotNull()
-                .isNotEmpty();
-    }
+  @Test
+  void getSuggestions() {
+    var suggestions = codeService.getCodeSuggestions(null, "cancer", Collections.emptyList(), 0);
+    assertThat(suggestions).isNotNull().isNotEmpty();
+  }
 }

@@ -17,20 +17,26 @@ import java.util.List;
 @Service
 public class CodeApiDelegateImpl implements CodeApiDelegate {
 
-    @Autowired private OLSCodeService codeService;
+  @Autowired private OLSCodeService codeService;
 
-    @Override
-    public ResponseEntity<List<Code>> getCode(List<String> include, String term, CodeSystem codeSystems, Integer page) {
-        return new ResponseEntity<>(codeService.getCode(include, term, codeSystems, page), HttpStatus.OK);
-    }
+  @Override
+  public ResponseEntity<List<Code>> getCode(
+      List<String> include, String term, CodeSystem codeSystems, Integer page) {
+    return new ResponseEntity<>(
+        codeService.getCode(include, term, codeSystems, page), HttpStatus.OK);
+  }
 
-    @Override
-    public ResponseEntity<List<Code>> getCodeSuggestions(List<String> include, String term, List<String> codeSystems, Integer page) {
-        return new ResponseEntity<>(codeService.getCodeSuggestions(include, term, codeSystems, page), HttpStatus.OK);
-    }
+  @Override
+  public ResponseEntity<List<Code>> getCodeSuggestions(
+      List<String> include, String term, List<String> codeSystems, Integer page) {
+    return new ResponseEntity<>(
+        codeService.getCodeSuggestions(include, term, codeSystems, page), HttpStatus.OK);
+  }
 
-    @Override
-    public ResponseEntity<List<CodeSystem>> getCodeSystems(List<String> include, URI uri, String name, Integer page) {
-        return new ResponseEntity<>(codeService.getCodeSystems(include, uri, name, page), HttpStatus.OK);
-    }
+  @Override
+  public ResponseEntity<List<CodeSystem>> getCodeSystems(
+      List<String> include, URI uri, String name, Integer page) {
+    return new ResponseEntity<>(
+        codeService.getCodeSystems(include, uri, name, page), HttpStatus.OK);
+  }
 }
