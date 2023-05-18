@@ -26,14 +26,14 @@ public class CodeApiDelegateImpl implements CodeApiDelegate {
   }
 
   @Override
-  public ResponseEntity<CodePage> getCodes(List<String> include, String label, String codeSystemId, Integer page) {
-    return ResponseEntity.ok(codeService.getCodes(include, label, codeSystemId, page));
+  public ResponseEntity<CodePage> getCodes(List<String> include, String label, List<String> codeSystemIds, Integer page) {
+    return ResponseEntity.ok(codeService.getCodes(include, label, codeSystemIds, page));
   }
 
   @Override
   public ResponseEntity<CodePage> getCodeSuggestions(
-      List<String> include, String term, List<String> codeSystems, Integer page) {
-    return ResponseEntity.ok(codeService.getCodeSuggestions(include, term, codeSystems, page));
+      List<String> include, String term, List<String> codeSystemIds, Integer page) {
+    return ResponseEntity.ok(codeService.getCodeSuggestions(include, term, codeSystemIds, page));
   }
 
   @Override

@@ -11,16 +11,13 @@ import care.smith.top.model.CodeSystemPage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URI;
 import java.net.URLEncoder;
 import java.util.*;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -30,6 +27,16 @@ import java.util.stream.Collectors;
 public class OLSCodeService {
 
   private WebClient terminologyService;
+
+  private enum SEARCH_METHOD {
+      SEARCH("/search"),
+      SUGGEST("/select");
+
+      private String endpoint;
+      SEARCH_METHOD(String endpoint) {this.endpoint = endpoint;}
+      public String getEndpoint() {return endpoint;}
+      public void setEndpoint(String endpoint) {this.endpoint = endpoint;}
+  }
 
   @Autowired
   public void setTerminologyServiceEndpoint(
@@ -72,55 +79,73 @@ public class OLSCodeService {
       return result;
   }
 
-  public CodePage getCodes(List<String> include, String label, String codeSystemId, Integer page) {
-    // TODO: do implementation
-    throw new ResponseStatusException(HttpStatus.NOT_IMPLEMENTED);
+  public CodePage getCodes(List<String> include, String label, List<String> codeSystemIds, Integer page) {
+      return getCodes(include, label, codeSystemIds, page, SEARCH_METHOD.SEARCH);
   }
 
-  public CodePage getCodeSuggestions(
-      List<String> include, String term, List<String> codeSystems, Integer page) {
-    OLSSuggestResponseBody response =
-        Objects.requireNonNull(
-                terminologyService
-                    .get()
-                    .uri(
-                        uriBuilder ->
-                            uriBuilder
-                                .path("/select")
-                                .queryParam("q", term)
-                                .queryParam("start", page == null ? 0 : page - 1)
-                                .queryParam("rows", suggestionsPageSize)
-                                .queryParam(
-                                    "ontology",
-                                    codeSystems == null ? "" : String.join(",", codeSystems))
-                                .build())
-                    .retrieve()
-                    .bodyToMono(OLSSuggestResponse.class)
-                    .block())
-            .getResponse();
-
-    int totalPages = (int) Math.ceil((double) response.getNumFound() / suggestionsPageSize);
-    List<Code> content =
-        Arrays.stream(response.getDocs())
-            .map(
-                responseItem -> {
-                  Code code = new Code();
-                  code.setCode(responseItem.getLabel());
-                  code.setUri(responseItem.getIri());
-                  return code;
-                })
-            .collect(Collectors.toList());
-
-    return (CodePage)
-        new CodePage()
-            .content(content)
-            .size(suggestionsPageSize)
-            .totalElements((long) response.getNumFound())
-            .number(page)
-            .totalPages(totalPages);
+  public CodePage getCodeSuggestions(List<String> include, String label, List<String> codeSystemIds, Integer page) {
+    return getCodes(include, label, codeSystemIds, page, SEARCH_METHOD.SUGGEST);
   }
 
-  public CodeSystemPage getCodeSystems(List<String> include, URI uri, String name, Integer page) {
+  private CodePage getCodes(
+          List<String> include, String term, List<String> codeSystemIds, Integer page, SEARCH_METHOD searchMethod) {
+      OLSSuggestResponseBody response =
+              Objects.requireNonNull(
+                              terminologyService
+                                      .get()
+                                      .uri(
+                                              uriBuilder ->
+                                                      uriBuilder
+                                                              .path(searchMethod.getEndpoint())
+                                                              .queryParam("q", term)
+                                                              .queryParam("start", page == null ? 0 : page - 1) // OLS page count starts from 0, we start from 1
+                                                              .queryParam("rows", suggestionsPageSize)
+                                                              .queryParam(
+                                                                      "ontology",
+                                                                      codeSystemIds == null ? "" : String.join(",", codeSystemIds))
+                                                              .build())
+                                      .retrieve()
+                                      .bodyToMono(OLSSuggestResponse.class)
+                                      .block())
+                      .getResponse();
+
+      int totalPages = (int) Math.ceil((double) response.getNumFound() / suggestionsPageSize);
+      List<Code> content =
+              Arrays.stream(response.getDocs())
+                      .map(
+                              responseItem -> {
+                                  Code code = new Code();
+                                  code.setCode(responseItem.getLabel());
+                                  code.setUri(responseItem.getIri());
+                                  code.setCode(responseItem.getLabel());
+                                  code.setUri(responseItem.getIri());
+                                  var uniqueLabels = new HashSet<String>();
+                                  switch (searchMethod) {
+                                      case SEARCH:
+                                          uniqueLabels.addAll(Optional.ofNullable(responseItem.getAutoSuggestion().getLabel()).orElse(Collections.emptyList()));
+                                          uniqueLabels.addAll(Optional.ofNullable(responseItem.getAutoSuggestion().getSynonym()).orElse(Collections.emptyList()));
+                                          break;
+                                      case SUGGEST:
+                                          uniqueLabels.addAll(Optional.ofNullable(responseItem.getAutoSuggestion().getLabel_autosuggest()).orElse(Collections.emptyList()));
+                                          uniqueLabels.addAll(Optional.ofNullable(responseItem.getAutoSuggestion().getSynonym_autosuggest()).orElse(Collections.emptyList()));
+                                          break;
+                                  }
+                                  code.setSynonyms(new ArrayList<>(uniqueLabels));
+                                  return code;
+                              })
+                      .collect(Collectors.toList());
+
+      return (CodePage)
+              new CodePage()
+                      .content(content)
+                      .size(suggestionsPageSize)
+                      .totalElements((long) response.getNumFound())
+                      .number(page)
+                      .totalPages(totalPages);
+  }
+
+
+      public CodeSystemPage getCodeSystems(List<String> include, URI uri, String name, Integer page) {
     OLSOntologiesResponse response =
         terminologyService
             .get()
@@ -137,17 +162,19 @@ public class OLSCodeService {
     // OLS has no filtering option in its ontologies endpoint, so we have to filter here.
     List<CodeSystem> content =
         Arrays.stream(Objects.requireNonNull(response).get_embedded().getOntologies())
-            .filter(ontology -> uri != null && ontology.getConfig().getId().equals(uri))
-            .filter(ontology -> name != null && ontology.getConfig().getTitle().equals(name))
+            .filter(ontology -> uri == null || ontology.getConfig().getId().equals(uri))
+            .filter(ontology -> name == null || ontology.getConfig().getTitle().equals(name))
             .map(
                 ontology -> {
                   CodeSystem codeSystem = new CodeSystem();
-                  codeSystem.setName(ontology.getOntologyId());
+                  codeSystem.setExternalId(ontology.getOntologyId());
                   codeSystem.setUri(ontology.getConfig().getId());
+                  codeSystem.setName(ontology.getConfig().getTitle());
                   return codeSystem;
                 })
             .collect(Collectors.toList());
 
+    // TODO: page size, totalElements and page number are wrong because we filtered afterwards. Actually, there is no way of finding out the total number of filtered elements.
     return (CodeSystemPage)
         new CodeSystemPage()
             .content(content)
