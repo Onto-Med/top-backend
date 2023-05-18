@@ -1,5 +1,7 @@
 package care.smith.top.backend.service;
 
+import care.smith.top.backend.service.ols.OLSSuggestResponse;
+import care.smith.top.backend.service.ols.OLSTerm;
 import care.smith.top.model.Code;
 import care.smith.top.model.CodePage;
 import care.smith.top.model.CodeSystem;
@@ -14,8 +16,8 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URI;
-import java.util.Arrays;
-import java.util.List;
+import java.net.URLEncoder;
+import java.util.*;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -43,75 +45,8 @@ public class OLSCodeService {
   @Value("10")
   private int ontologyPageSize;
 
-  static class OLSSuggestResponse {
-    public ResponseBody getResponse() {
-      return response;
-    }
-
-    public void setResponse(ResponseBody response) {
-      this.response = response;
-    }
-
-    private ResponseBody response;
-  }
-
-  static class ResponseBody {
-    int numFound;
-    int start;
-
-    public ResponseItem[] getDocs() {
-      return docs;
-    }
-
-    public void setDocs(ResponseItem[] docs) {
-      this.docs = docs;
-    }
-
-    public int getNumFound() {
-      return numFound;
-    }
-
-    public void setNumFound(int numFound) {
-      this.numFound = numFound;
-    }
-
-    ResponseItem[] docs;
-  }
-
-  static class ResponseItem {
-    String id;
-    URI iri;
-
-    public URI getIri() {
-      return iri;
-    }
-
-    public void setIri(URI iri) {
-      this.iri = iri;
-    }
-
-    public String getLabel() {
-      return label;
-    }
-
-    public void setLabel(String label) {
-      this.label = label;
-    }
-
-    String label;
-
-    public String getId() {
-      return id;
-    }
-
-    public void setId(String id) {
-      this.id = id;
-    }
-  }
-
-  static class OLSOntologiesResponse {
-    Embedded _embedded;
-    Page page;
+    static class OLSOntologiesResponse {
+        Embedded _embedded;
 
     public Embedded get_embedded() {
       return _embedded;
