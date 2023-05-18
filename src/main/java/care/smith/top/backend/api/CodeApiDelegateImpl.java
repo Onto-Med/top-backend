@@ -1,6 +1,7 @@
 package care.smith.top.backend.api;
 
 import care.smith.top.backend.service.OLSCodeService;
+import care.smith.top.model.Code;
 import care.smith.top.model.CodePage;
 import care.smith.top.model.CodeSystem;
 import care.smith.top.model.CodeSystemPage;
@@ -20,9 +21,13 @@ public class CodeApiDelegateImpl implements CodeApiDelegate {
   @Autowired private OLSCodeService codeService;
 
   @Override
-  public ResponseEntity<CodePage> getCode(
-      List<String> include, String term, CodeSystem codeSystems, Integer page) {
-    return ResponseEntity.ok(codeService.getCode(include, term, codeSystems, page));
+  public ResponseEntity<Code> getCode(URI uri, String codeSystemId, List<String> include, Integer page) {
+    return ResponseEntity.ok(codeService.getCode(uri, codeSystemId, include, page));
+  }
+
+  @Override
+  public ResponseEntity<CodePage> getCodes(List<String> include, String label, String codeSystemId, Integer page) {
+    return ResponseEntity.ok(codeService.getCodes(include, label, codeSystemId, page));
   }
 
   @Override

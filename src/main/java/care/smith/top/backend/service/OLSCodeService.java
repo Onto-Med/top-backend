@@ -1,6 +1,8 @@
 package care.smith.top.backend.service;
 
+import care.smith.top.backend.service.ols.OLSOntologiesResponse;
 import care.smith.top.backend.service.ols.OLSSuggestResponse;
+import care.smith.top.backend.service.ols.OLSSuggestResponseBody;
 import care.smith.top.backend.service.ols.OLSTerm;
 import care.smith.top.model.Code;
 import care.smith.top.model.CodePage;
@@ -45,118 +47,39 @@ public class OLSCodeService {
   @Value("10")
   private int ontologyPageSize;
 
-    static class OLSOntologiesResponse {
-        Embedded _embedded;
+  public Code getCode(URI uri, String codeSystemId, List<String> include, Integer page) {
+      OLSTerm term = terminologyService.get()
+              .uri(uriBuilder -> uriBuilder
+                      .path("/term").pathSegment(codeSystemId, URLEncoder.encode(uri.toString())) // OLS requires that uri is double URL encoded, so we encode it once and additionally rely on uriBuilder encoding it for a second time
+                      .build()
+              )
+              .retrieve()
+              .bodyToMono(OLSTerm.class)
+              .block();
 
-    public Embedded get_embedded() {
-      return _embedded;
-    }
+      Code result = new Code();
+      result.setCode(term.getLabel());
+      result.setUri(URI.create(term.getIri()));
 
-    public void set_embedded(Embedded _embedded) {
-      this._embedded = _embedded;
-    }
+      CodeSystem codeSystem = new CodeSystem();
+      codeSystem.setUri(URI.create(term.getOntology_iri()));
+      codeSystem.setName(term.getOntology_prefix());
+      codeSystem.setExternalId(term.getOntology_name());
+      result.setCodeSystem(codeSystem);
 
-    public Page getPage() {
-      return page;
-    }
+      result.setSynonyms(term.getSynonyms());
 
-    public void setPage(Page page) {
-      this.page = page;
-    }
+      return result;
   }
 
-  static class Embedded {
-    Ontology[] ontologies;
-
-    public Ontology[] getOntologies() {
-      return ontologies;
-    }
-
-    public void setOntologies(Ontology[] ontologies) {
-      this.ontologies = ontologies;
-    }
-  }
-
-  static class Ontology {
-    String ontologyId;
-    OntologyConfig config;
-
-    public String getOntologyId() {
-      return ontologyId;
-    }
-
-    public void setOntologyId(String ontologyId) {
-      this.ontologyId = ontologyId;
-    }
-
-    public OntologyConfig getConfig() {
-      return config;
-    }
-
-    public void setConfig(OntologyConfig config) {
-      this.config = config;
-    }
-  }
-
-  static class OntologyConfig {
-    URI id;
-
-    public URI getId() {
-      return id;
-    }
-
-    public void setId(URI id) {
-      this.id = id;
-    }
-  }
-
-  static class Page {
-    int number;
-    int size;
-    long totalElements;
-    int totalPages;
-
-    public int getNumber() {
-      return number;
-    }
-
-    public void setNumber(int number) {
-      this.number = number;
-    }
-
-    public int getSize() {
-      return size;
-    }
-
-    public void setSize(int size) {
-      this.size = size;
-    }
-
-    public long getTotalElements() {
-      return totalElements;
-    }
-
-    public void setTotalElements(long totalElements) {
-      this.totalElements = totalElements;
-    }
-
-    public int getTotalPages() {
-      return totalPages;
-    }
-
-    public void setTotalPages(int totalPages) {
-      this.totalPages = totalPages;
-    }
-  }
-
-  public CodePage getCode(List<String> include, String term, CodeSystem codeSystems, Integer page) {
+  public CodePage getCodes(List<String> include, String label, String codeSystemId, Integer page) {
     // TODO: do implementation
     throw new ResponseStatusException(HttpStatus.NOT_IMPLEMENTED);
   }
 
   public CodePage getCodeSuggestions(
       List<String> include, String term, List<String> codeSystems, Integer page) {
-    ResponseBody response =
+    OLSSuggestResponseBody response =
         Objects.requireNonNull(
                 terminologyService
                     .get()
@@ -176,7 +99,7 @@ public class OLSCodeService {
                     .block())
             .getResponse();
 
-    int totalPages = (int) Math.ceil((double) response.numFound / suggestionsPageSize);
+    int totalPages = (int) Math.ceil((double) response.getNumFound() / suggestionsPageSize);
     List<Code> content =
         Arrays.stream(response.getDocs())
             .map(
@@ -198,7 +121,6 @@ public class OLSCodeService {
   }
 
   public CodeSystemPage getCodeSystems(List<String> include, URI uri, String name, Integer page) {
-    // TODO: filter by name and/or URI
     OLSOntologiesResponse response =
         terminologyService
             .get()
@@ -212,9 +134,11 @@ public class OLSCodeService {
             .retrieve()
             .bodyToMono(OLSOntologiesResponse.class)
             .block();
-
+    // OLS has no filtering option in its ontologies endpoint, so we have to filter here.
     List<CodeSystem> content =
         Arrays.stream(Objects.requireNonNull(response).get_embedded().getOntologies())
+            .filter(ontology -> uri != null && ontology.getConfig().getId().equals(uri))
+            .filter(ontology -> name != null && ontology.getConfig().getTitle().equals(name))
             .map(
                 ontology -> {
                   CodeSystem codeSystem = new CodeSystem();
@@ -232,4 +156,5 @@ public class OLSCodeService {
             .number(response.getPage().getNumber())
             .totalPages(response.getPage().getTotalPages());
   }
+
 }
