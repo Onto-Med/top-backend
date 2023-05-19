@@ -116,12 +116,12 @@ public class DocumentCustomRepositoryImpl implements DocumentCustomRepository {
                 .map(field -> "\"" + field + "\"")
                 .collect(Collectors.joining(", "));
 
-        String finalQueryString = queryString.substring(queryString.indexOf("(")).trim();
+//        String finalQueryString = queryString.substring(Math.max(0, queryString.indexOf("("))).trim();
         Query searchQuery = new StringQuery(
                 "{" +
                            "\"query_string\": {" +
                                "\"fields\": [" + fieldsString + "]," +
-                               "\"query\": \"" + finalQueryString + "\"" +
+                               "\"query\": \"" + queryString + "\"" +
                            "}" +
                        "}"
         );
