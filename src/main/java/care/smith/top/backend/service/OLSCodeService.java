@@ -10,10 +10,12 @@ import care.smith.top.model.CodeSystem;
 import care.smith.top.model.CodeSystemPage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -53,17 +55,23 @@ public class OLSCodeService {
   @Autowired
   public void setTerminologyServiceEndpoint(
       @Value("${coding.terminology-service}") String terminologyServiceEndpoint) {
+    int size = 16 * 1024 * 1024;
+    ExchangeStrategies exchangeStrategies =
+        ExchangeStrategies.builder()
+            .codecs(codecs -> codecs.defaultCodecs().maxInMemorySize(size))
+            .build();
     terminologyService =
         WebClient.builder()
             .baseUrl(terminologyServiceEndpoint)
             .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            .exchangeStrategies(exchangeStrategies)
             .build();
   }
 
-  @Value("10")
+  @Value("${spring.paging.page-size:10}")
   private int suggestionsPageSize;
 
-  @Value("10")
+  @Value("${spring.paging.page-size:10}")
   private int ontologyPageSize;
 
   public Code getCode(URI uri, String codeSystemId, List<String> include, Integer page) {
@@ -181,7 +189,43 @@ public class OLSCodeService {
             .totalPages(totalPages);
   }
 
+  /**
+   * This method searches for code systems based on uri or name.
+   *
+   * <p>OLS3 has no parameter to filter ontologies. Thus, to no break paging, all ontologies are
+   * loaded at once and filtered locally.
+   *
+   * @param include unused
+   * @param uri Code system URI to filter for
+   * @param name Code system name to filter for
+   * @param page Requested page
+   * @return A {@link CodeSystemPage} containing matching code systems.
+   */
   public CodeSystemPage getCodeSystems(List<String> include, URI uri, String name, Integer page) {
+    int requestedPage = page == null ? 1 : page;
+    int skipCount = (requestedPage - 1) * ontologyPageSize;
+
+    List<CodeSystem> allCodeSystems = getAllCodeSystems();
+
+    List<CodeSystem> content =
+        allCodeSystems.stream()
+            .filter(cs -> uri == null || cs.getUri().equals(uri))
+            .filter(cs -> name == null || cs.getName().equals(name))
+            .skip(skipCount)
+            .limit(ontologyPageSize)
+            .collect(Collectors.toList());
+
+    return (CodeSystemPage)
+        new CodeSystemPage()
+            .content(content)
+            .size(ontologyPageSize)
+            .totalElements((long) allCodeSystems.size())
+            .number(requestedPage)
+            .totalPages(allCodeSystems.size() / ontologyPageSize);
+  }
+
+  @Cacheable("olsOntologies")
+  public List<CodeSystem> getAllCodeSystems() {
     OLSOntologiesResponse response =
         terminologyService
             .get()
@@ -189,36 +233,22 @@ public class OLSCodeService {
                 uriBuilder ->
                     uriBuilder
                         .path("/ontologies")
-                        .queryParam("page", toOlsPage(page))
-                        .queryParam("size", ontologyPageSize)
+                        .queryParam("page", 0)
+                        .queryParam("size", 1000)
                         .build())
             .retrieve()
             .bodyToMono(OLSOntologiesResponse.class)
             .block();
 
-    // OLS has no filtering option in its ontologies endpoint, so we have to filter here.
-    List<CodeSystem> content =
-        Arrays.stream(Objects.requireNonNull(response).get_embedded().getOntologies())
-            .filter(ontology -> uri == null || ontology.getConfig().getId().equals(uri))
-            .filter(ontology -> name == null || ontology.getConfig().getTitle().equals(name))
-            .map(
-                ontology ->
-                    new CodeSystem()
-                        .externalId(ontology.getOntologyId())
-                        .uri(ontology.getConfig().getId())
-                        .name(ontology.getConfig().getTitle()))
-            .sorted((a, b) -> a.getName().compareToIgnoreCase(b.getName()))
-            .collect(Collectors.toList());
-
-    // TODO: page size, totalElements and page number are wrong because we filtered afterwards.
-    // Actually, there is no way of finding out the total number of filtered elements.
-    return (CodeSystemPage)
-        new CodeSystemPage()
-            .content(content)
-            .size(response.getPage().getSize())
-            .totalElements(response.getPage().getTotalElements())
-            .number(response.getPage().getNumber())
-            .totalPages(response.getPage().getTotalPages());
+    return Arrays.stream(Objects.requireNonNull(response).get_embedded().getOntologies())
+        .map(
+            ontology ->
+                new CodeSystem()
+                    .externalId(ontology.getOntologyId())
+                    .uri(ontology.getConfig().getId())
+                    .name(ontology.getConfig().getTitle()))
+        .sorted((a, b) -> a.getExternalId().compareToIgnoreCase(b.getExternalId()))
+        .collect(Collectors.toList());
   }
 
   /**
