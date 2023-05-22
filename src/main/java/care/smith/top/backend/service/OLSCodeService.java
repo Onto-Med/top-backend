@@ -24,6 +24,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author ralph
@@ -206,11 +207,13 @@ public class OLSCodeService {
     int skipCount = (requestedPage - 1) * ontologyPageSize;
 
     List<CodeSystem> allCodeSystems = getAllCodeSystems();
-
-    List<CodeSystem> content =
+    List<CodeSystem> filteredCodeSystems =
         allCodeSystems.stream()
             .filter(cs -> uri == null || cs.getUri().equals(uri))
-            .filter(cs -> name == null || cs.getName().equals(name))
+            .filter(cs -> name == null || cs.getName() != null && cs.getName().equals(name))
+            .collect(Collectors.toList());
+    List<CodeSystem> content =
+        filteredCodeSystems.stream()
             .skip(skipCount)
             .limit(ontologyPageSize)
             .collect(Collectors.toList());
@@ -219,9 +222,9 @@ public class OLSCodeService {
         new CodeSystemPage()
             .content(content)
             .size(ontologyPageSize)
-            .totalElements((long) allCodeSystems.size())
+            .totalElements((long) filteredCodeSystems.size())
             .number(requestedPage)
-            .totalPages(allCodeSystems.size() / ontologyPageSize);
+            .totalPages(filteredCodeSystems.size() / ontologyPageSize + 1);
   }
 
   @Cacheable("olsOntologies")
