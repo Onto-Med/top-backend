@@ -152,30 +152,8 @@ public class OLSCodeService {
         Arrays.stream(response.getDocs())
             .map(
                 responseItem -> {
-                  var uniqueLabels = new HashSet<String>();
-                  switch (searchMethod) {
-                    case SEARCH:
-                      uniqueLabels.addAll(
-                          Optional.ofNullable(responseItem.getAutoSuggestion().getLabel())
-                              .orElse(Collections.emptyList()));
-                      uniqueLabels.addAll(
-                          Optional.ofNullable(responseItem.getAutoSuggestion().getSynonym())
-                              .orElse(Collections.emptyList()));
-                      break;
-                    case SUGGEST:
-                      uniqueLabels.addAll(
-                          Optional.ofNullable(
-                                  responseItem.getAutoSuggestion().getLabel_autosuggest())
-                              .orElse(Collections.emptyList()));
-                      uniqueLabels.addAll(
-                          Optional.ofNullable(
-                                  responseItem.getAutoSuggestion().getSynonym_autosuggest())
-                              .orElse(Collections.emptyList()));
-                      break;
-                  }
-
-                  String primaryLabel = responseItem.getSynonym() != null
-                          && responseItem.getSynonym().size() != 0
+                  String primaryLabel =
+                      responseItem.getSynonym() != null && responseItem.getSynonym().size() != 0
                           ? responseItem.getSynonym().get(0)
                           : null;
 
@@ -185,20 +163,28 @@ public class OLSCodeService {
                       .uri(responseItem.getIri())
                       .code(responseItem.getLabel())
                       .uri(responseItem.getIri())
-                      .synonyms(responseItem.getSynonym() != null
-                        ? Set.copyOf(responseItem.getSynonym()).stream().distinct().filter(synonym ->
-                          !synonym.equals(primaryLabel)).collect(Collectors.toList())
-                        : null)
-                      .highlightLabel(responseItem.getAutoSuggestion().getLabel_autosuggest() != null
-                        && responseItem.getAutoSuggestion().getLabel_autosuggest().size() != 0
-                        ? responseItem.getAutoSuggestion().getLabel_autosuggest().get(0)
-                        : null
-                      )
-                      .highlightSynonym(responseItem.getAutoSuggestion().getSynonym_autosuggest() != null
-                        && responseItem.getAutoSuggestion().getSynonym_autosuggest().size() != 0
-                        ? responseItem.getAutoSuggestion().getSynonym_autosuggest().get(0)
-                        : null
-                      )
+                      .synonyms(
+                          responseItem.getSynonym() != null
+                              ? Set.copyOf(responseItem.getSynonym()).stream()
+                                  .distinct()
+                                  .filter(synonym -> !synonym.equals(primaryLabel))
+                                  .collect(Collectors.toList())
+                              : null)
+                      .highlightLabel(
+                          responseItem.getAutoSuggestion().getLabel_autosuggest() != null
+                                  && responseItem.getAutoSuggestion().getLabel_autosuggest().size()
+                                      != 0
+                              ? responseItem.getAutoSuggestion().getLabel_autosuggest().get(0)
+                              : null)
+                      .highlightSynonym(
+                          responseItem.getAutoSuggestion().getSynonym_autosuggest() != null
+                                  && responseItem
+                                          .getAutoSuggestion()
+                                          .getSynonym_autosuggest()
+                                          .size()
+                                      != 0
+                              ? responseItem.getAutoSuggestion().getSynonym_autosuggest().get(0)
+                              : null)
                       .codeSystemShortName(responseItem.getOntology_prefix());
                 })
             .collect(Collectors.toList());
@@ -215,7 +201,7 @@ public class OLSCodeService {
   /**
    * This method searches for code systems based on uri or name.
    *
-   * <p>OLS3 has no parameter to filter ontologies. Thus, to no break paging, all ontologies are
+   * <p>OLS3 has no parameter to filter ontologies. Thus, to not break paging, all ontologies are
    * loaded at once and filtered locally.
    *
    * @param include unused
