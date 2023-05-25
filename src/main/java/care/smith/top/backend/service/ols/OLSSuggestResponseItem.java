@@ -1,6 +1,7 @@
 package care.smith.top.backend.service.ols;
 
 import java.net.URI;
+import java.util.List;
 
 /**
  * @author ralph
@@ -8,8 +9,11 @@ import java.net.URI;
 public class OLSSuggestResponseItem {
   private String id;
   private URI iri;
-
   private String label;
+  private String ontology_prefix;
+
+  // although it's an array, OLS uses the singular form
+  private List<String> synonym;
 
   private OLSAutoSuggestion autoSuggestion;
 
@@ -35,6 +39,22 @@ public class OLSSuggestResponseItem {
 
   public void setId(String id) {
     this.id = id;
+  }
+
+  public String getOntology_prefix() {
+    return ontology_prefix;
+  }
+
+  public void setOntology_prefix(String ontology_prefix) {
+    this.ontology_prefix = ontology_prefix;
+  }
+
+  public List<String> getSynonym() {
+    return synonym;
+  }
+
+  public void setSynonym(List<String> synonym) {
+    this.synonym = synonym;
   }
 
   public OLSAutoSuggestion getAutoSuggestion() {

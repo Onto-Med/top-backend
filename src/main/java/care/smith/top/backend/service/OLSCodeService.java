@@ -135,6 +135,7 @@ public class OLSCodeService {
                             uriBuilder
                                 .path(searchMethod.getEndpoint())
                                 .queryParam("q", term)
+                                .queryParam("fieldList", "id,iri,ontology_prefix,label,synonym")
                                 .queryParam("start", toOlsPage(page))
                                 .queryParam("rows", suggestionsPageSize)
                                 .queryParam(
@@ -172,12 +173,33 @@ public class OLSCodeService {
                               .orElse(Collections.emptyList()));
                       break;
                   }
+
+                  String primaryLabel = responseItem.getSynonym() != null
+                          && responseItem.getSynonym().size() != 0
+                          ? responseItem.getSynonym().get(0)
+                          : null;
+
                   return new Code()
                       .code(responseItem.getLabel())
+                      .name(primaryLabel)
                       .uri(responseItem.getIri())
                       .code(responseItem.getLabel())
                       .uri(responseItem.getIri())
-                      .synonyms(new ArrayList<>(uniqueLabels));
+                      .synonyms(responseItem.getSynonym() != null
+                        ? Set.copyOf(responseItem.getSynonym()).stream().distinct().filter(synonym ->
+                          !synonym.equals(primaryLabel)).collect(Collectors.toList())
+                        : null)
+                      .highlightLabel(responseItem.getAutoSuggestion().getLabel_autosuggest() != null
+                        && responseItem.getAutoSuggestion().getLabel_autosuggest().size() != 0
+                        ? responseItem.getAutoSuggestion().getLabel_autosuggest().get(0)
+                        : null
+                      )
+                      .highlightSynonym(responseItem.getAutoSuggestion().getSynonym_autosuggest() != null
+                        && responseItem.getAutoSuggestion().getSynonym_autosuggest().size() != 0
+                        ? responseItem.getAutoSuggestion().getSynonym_autosuggest().get(0)
+                        : null
+                      )
+                      .codeSystemShortName(responseItem.getOntology_prefix());
                 })
             .collect(Collectors.toList());
 
@@ -249,7 +271,8 @@ public class OLSCodeService {
                 new CodeSystem()
                     .externalId(ontology.getOntologyId())
                     .uri(ontology.getConfig().getId())
-                    .name(ontology.getConfig().getTitle()))
+                    .name(ontology.getConfig().getTitle())
+                    .shortName(ontology.getConfig().getPreferredPrefix()))
         .sorted((a, b) -> a.getExternalId().compareToIgnoreCase(b.getExternalId()))
         .collect(Collectors.toList());
   }
