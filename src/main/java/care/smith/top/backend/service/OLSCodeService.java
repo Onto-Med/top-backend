@@ -17,14 +17,15 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.springframework.web.server.ResponseStatusException;
+import reactor.core.publisher.Mono;
 
 import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @author ralph
@@ -90,6 +91,12 @@ public class OLSCodeService {
                         .build())
             .retrieve()
             .bodyToMono(OLSTerm.class)
+            .onErrorResume(
+                WebClientResponseException.class,
+                e ->
+                    e.getRawStatusCode() == HttpStatus.NOT_FOUND.value()
+                        ? Mono.empty()
+                        : Mono.error(e))
             .block();
 
     if (term == null)
