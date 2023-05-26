@@ -1,0 +1,19 @@
+databaseChangeLog:
+- changeSet:
+    id: 1685102649304-8
+    author: Christoph (generated)
+    changes:
+    - addColumn:
+        columns:
+        - column:
+            name: uri
+            type: varchar(255)
+        tableName: entity_version_codes
+- changeSet:
+    id: 1685102649304-9
+    author: Christoph (generated)
+    changes:
+    - dropColumn:
+        columnName: CODE_SYSTEM_NAME
+        tableName: ENTITY_VERSION_CODES
+
