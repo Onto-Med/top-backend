@@ -675,7 +675,7 @@ public class EntityService implements ContentService {
 
   public Set<Class<? extends PhenotypeImporter>> getPhenotypeImporterImplementations() {
     Reflections reflections =
-      new Reflections(new ConfigurationBuilder().forPackage("care.smith.top"));
+        new Reflections(new ConfigurationBuilder().forPackage("care.smith.top"));
     return new HashSet<>(reflections.getSubTypesOf(PhenotypeImporter.class));
   }
 
@@ -775,10 +775,11 @@ public class EntityService implements ContentService {
       if (e.getCodes() == null) return e;
       return e.codes(
           e.getCodes().stream()
-              .map(
+              .peek(
                   c ->
-                      c.codeSystem(
-                          codeRepository.getCodeSystem(c.getCodeSystem().getUri()).orElse(null)))
+                      codeRepository
+                          .getCodeSystem(c.getCodeSystem().getUri())
+                          .ifPresent(c::codeSystem))
               .collect(Collectors.toList()));
     };
   }
