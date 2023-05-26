@@ -155,9 +155,16 @@ public class CodeRepository extends OlsRepository {
             .totalPages(totalPages);
   }
 
-  private Optional<CodeSystem> getCodeSystem(String externalId) {
-    if (codeSystemRepository.getAllCodeSystems().containsKey(externalId))
-      return Optional.of(codeSystemRepository.getAllCodeSystems().get(externalId));
+  public Optional<CodeSystem> getCodeSystem(String externalId) {
+    if (externalId == null) return Optional.empty();
+    return codeSystemRepository.getAllCodeSystems().values().stream()
+      .filter(cs -> externalId.equals(cs.getExternalId()))
+      .findFirst();
+  }
+
+  public Optional<CodeSystem> getCodeSystem(URI codeSystemUri) {
+    if (codeSystemRepository.getAllCodeSystems().containsKey(codeSystemUri))
+      return Optional.of(codeSystemRepository.getAllCodeSystems().get(codeSystemUri));
     return Optional.empty();
   }
 }

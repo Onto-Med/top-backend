@@ -2,6 +2,7 @@ package care.smith.top.backend.service;
 
 import care.smith.top.backend.model.*;
 import care.smith.top.backend.repository.*;
+import care.smith.top.backend.repository.ols.CodeRepository;
 import care.smith.top.backend.util.ApiModelMapper;
 import care.smith.top.model.*;
 import care.smith.top.top_phenotypic_query.converter.PhenotypeExporter;
@@ -44,6 +45,7 @@ public class EntityService implements ContentService {
   @Autowired private PhenotypeRepository phenotypeRepository;
   @Autowired private RepositoryRepository repositoryRepository;
   @Autowired private UserService userService;
+  @Autowired private CodeRepository codeRepository;
 
   @Override
   @Cacheable("entityCount")
@@ -190,7 +192,9 @@ public class EntityService implements ContentService {
         entityVersionRepository.save(new EntityVersionDao(data).version(1).entity(entity));
     entity.currentVersion(entityVersion);
 
-    return populateSubEntities().apply(entityRepository.save(entity).toApiModel());
+    return populateWithCodeSystems()
+        .andThen(populateSubEntities())
+        .apply(entityRepository.save(entity).toApiModel());
   }
 
   @Caching(
@@ -202,7 +206,10 @@ public class EntityService implements ContentService {
   }
 
   @Caching(
-      evict = {@CacheEvict("entityCount"), @CacheEvict(value = "entities", key = "#forkingInstruction.repositoryId")})
+      evict = {
+        @CacheEvict("entityCount"),
+        @CacheEvict(value = "entities", key = "#forkingInstruction.repositoryId")
+      })
   @PreAuthorize(
       "hasRole('ADMIN') or hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'READ') "
           + "and hasPermission(#forkingInstruction.organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
@@ -356,8 +363,8 @@ public class EntityService implements ContentService {
         } else {
           for (EntityDao subEntity : entity.getSubEntities()) {
             subEntity
-                    .removeSuperEntitiesItem(entity)
-                    .addAllSuperEntitiesItems(entity.getSuperEntities());
+                .removeSuperEntitiesItem(entity)
+                .addAllSuperEntitiesItems(entity.getSuperEntities());
             entityRepository.save(subEntity);
           }
         }
@@ -427,7 +434,8 @@ public class EntityService implements ContentService {
             userService.getCurrentUser(),
             pageRequest)
         .map(EntityDao::toApiModel)
-        .map(populateSubEntities());
+        .map(populateSubEntities())
+        .map(populateWithCodeSystems());
   }
 
   @PreAuthorize(
@@ -448,7 +456,8 @@ public class EntityService implements ContentService {
         .findAllByRepositoryIdAndTitleAndEntityTypeAndDataTypeAndItemType(
             repositoryId, name, type, dataType, itemType, pageRequest)
         .map(EntityDao::toApiModel)
-        .map(populateSubEntities());
+        .map(populateSubEntities())
+        .map(populateWithCodeSystems());
   }
 
   @PreAuthorize(
@@ -510,6 +519,7 @@ public class EntityService implements ContentService {
         .findAllByRepositoryIdAndSuperEntitiesEmpty(repositoryId, Sort.by(EntityDao_.ID))
         .map(EntityDao::toApiModel)
         .map(populateSubEntities())
+        .map(populateWithCodeSystems())
         .getContent();
   }
 
@@ -522,6 +532,7 @@ public class EntityService implements ContentService {
         .findAllByRepositoryIdAndSuperEntities_Id(repositoryId, id, Sort.by(EntityDao_.ID))
         .map(EntityDao::toApiModel)
         .map(populateSubEntities())
+        .map(populateWithCodeSystems())
         .getContent();
   }
 
@@ -534,6 +545,7 @@ public class EntityService implements ContentService {
         .findAllByEntity_RepositoryIdAndEntityIdOrderByVersionDesc(repositoryId, id)
         .stream()
         .map(EntityVersionDao::toApiModel)
+        .map(populateWithCodeSystems())
         .collect(Collectors.toList());
   }
 
@@ -545,12 +557,14 @@ public class EntityService implements ContentService {
       return entityRepository
           .findByIdAndRepositoryId(id, repositoryId)
           .map(EntityDao::toApiModel)
+          .map(populateWithCodeSystems())
           .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
     return entityVersionRepository
         .findByEntity_RepositoryIdAndEntityIdAndVersion(repositoryId, id, version)
         .map(EntityVersionDao::toApiModel)
         .map(populateSubEntities())
+        .map(populateWithCodeSystems())
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
   }
 
@@ -574,7 +588,8 @@ public class EntityService implements ContentService {
             .findByEntity_RepositoryIdAndEntityIdAndVersion(repositoryId, id, version)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-    return populateSubEntities()
+    return populateWithCodeSystems()
+        .andThen(populateSubEntities())
         .apply(entityRepository.save(entity.currentVersion(entityVersion)).toApiModel());
   }
 
@@ -612,7 +627,8 @@ public class EntityService implements ContentService {
               .ifPresent(entity::addSuperEntitiesItem);
     }
 
-    return populateSubEntities()
+    return populateWithCodeSystems()
+        .andThen(populateSubEntities())
         .apply(entityRepository.save(entity.currentVersion(newVersion)).toApiModel());
   }
 
@@ -625,6 +641,7 @@ public class EntityService implements ContentService {
         entityRepository
             .findAllByRepositoryId(repositoryId, Pageable.unpaged())
             .map(EntityDao::toApiModel)
+            .map(populateWithCodeSystems())
             .stream()
             .toArray(Entity[]::new);
 
@@ -741,6 +758,19 @@ public class EntityService implements ContentService {
         if (!hasSubPhenotypes(e)) ((Category) e).setPhenotypes(new ArrayList<>());
       }
       return e;
+    };
+  }
+
+  private Function<Entity, Entity> populateWithCodeSystems() {
+    return e -> {
+      if (e.getCodes() == null) return e;
+      return e.codes(
+          e.getCodes().stream()
+              .map(
+                  c ->
+                      c.codeSystem(
+                          codeRepository.getCodeSystem(c.getCodeSystem().getUri()).orElse(null)))
+              .collect(Collectors.toList()));
     };
   }
 }

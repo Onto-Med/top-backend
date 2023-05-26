@@ -2,6 +2,8 @@ package care.smith.top.backend.repository.ols;
 
 import care.smith.top.backend.service.ols.OLSOntologiesResponse;
 import care.smith.top.model.CodeSystem;
+
+import java.net.URI;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
@@ -13,7 +15,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class CodeSystemRepository extends OlsRepository {
   @Cacheable("olsOntologies")
-  public Map<String, CodeSystem> getAllCodeSystems() {
+  public Map<URI, CodeSystem> getAllCodeSystems() {
     OLSOntologiesResponse response =
         terminologyService
             .get()
@@ -36,6 +38,8 @@ public class CodeSystemRepository extends OlsRepository {
                     .uri(ontology.getConfig().getId())
                     .name(ontology.getConfig().getTitle())
                     .shortName(ontology.getConfig().getPreferredPrefix()))
-        .collect(Collectors.toMap(CodeSystem::getExternalId, Function.identity()));
+        .collect(
+            Collectors.toMap(
+                CodeSystem::getUri, Function.identity(), (existing, replacement) -> existing));
   }
 }
