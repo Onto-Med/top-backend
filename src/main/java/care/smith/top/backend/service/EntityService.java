@@ -645,10 +645,8 @@ public class EntityService implements ContentService {
             .stream()
             .toArray(Entity[]::new);
 
-    Reflections reflections =
-        new Reflections(new ConfigurationBuilder().forPackage("care.smith.top"));
     Optional<Class<? extends PhenotypeExporter>> optional =
-        reflections.getSubTypesOf(PhenotypeExporter.class).stream()
+        getPhenotypeExporterImplementations().stream()
             .filter(c -> c.getSimpleName().equals(converter))
             .findFirst();
 
@@ -669,16 +667,27 @@ public class EntityService implements ContentService {
     return stream;
   }
 
+  public Set<Class<? extends PhenotypeExporter>> getPhenotypeExporterImplementations() {
+    Reflections reflections =
+        new Reflections(new ConfigurationBuilder().forPackage("care.smith.top"));
+    return new HashSet<>(reflections.getSubTypesOf(PhenotypeExporter.class));
+  }
+
+  public Set<Class<? extends PhenotypeImporter>> getPhenotypeImporterImplementations() {
+    Reflections reflections =
+      new Reflections(new ConfigurationBuilder().forPackage("care.smith.top"));
+    return new HashSet<>(reflections.getSubTypesOf(PhenotypeImporter.class));
+  }
+
   @Caching(
       evict = {@CacheEvict("entityCount"), @CacheEvict(value = "entities", key = "#repositoryId")})
   @PreAuthorize(
       "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
   public void importRepository(
       String organisationId, String repositoryId, String converter, InputStream stream) {
-    Reflections reflections =
-        new Reflections(new ConfigurationBuilder().forPackage("care.smith.top"));
+
     Optional<Class<? extends PhenotypeImporter>> optional =
-        reflections.getSubTypesOf(PhenotypeImporter.class).stream()
+        getPhenotypeImporterImplementations().stream()
             .filter(c -> c.getSimpleName().equals(converter))
             .findFirst();
 
