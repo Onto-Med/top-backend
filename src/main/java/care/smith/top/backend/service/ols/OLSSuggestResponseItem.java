@@ -10,7 +10,7 @@ public class OLSSuggestResponseItem {
   private String id;
   private URI iri;
   private String label;
-  private String ontology_prefix;
+  private String ontology_name;
 
   // although it's an array, OLS uses the singular form
   private List<String> synonym;
@@ -41,12 +41,12 @@ public class OLSSuggestResponseItem {
     this.id = id;
   }
 
-  public String getOntology_prefix() {
-    return ontology_prefix;
+  public String getOntology_name() {
+    return ontology_name;
   }
 
-  public void setOntology_prefix(String ontology_prefix) {
-    this.ontology_prefix = ontology_prefix;
+  public void setOntology_name(String ontology_name) {
+    this.ontology_name = ontology_name;
   }
 
   public List<String> getSynonym() {

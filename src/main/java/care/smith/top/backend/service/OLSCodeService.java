@@ -80,6 +80,14 @@ public class OLSCodeService {
   }
 
   public Code getCode(URI uri, String codeSystemId, List<String> include, Integer page) {
+    CodeSystem codeSystem =
+        getCodeSystem(codeSystemId)
+            .orElseThrow(
+                () ->
+                    new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        String.format("Code system '%s' does not exist", codeSystemId)));
+
     OLSTerm term =
         terminologyService
             .get()
@@ -106,12 +114,6 @@ public class OLSCodeService {
       throw new ResponseStatusException(
           HttpStatus.NOT_FOUND,
           String.format("Code could not be found in terminology '%s'.", codeSystemId));
-
-    CodeSystem codeSystem =
-        new CodeSystem()
-            .uri(URI.create(term.getOntology_iri()))
-            .name(term.getOntology_prefix())
-            .externalId(term.getOntology_name());
 
     return new Code()
         .code(term.getLabel())
@@ -210,7 +212,7 @@ public class OLSCodeService {
                             uriBuilder
                                 .path(searchMethod.getEndpoint())
                                 .queryParam("q", term)
-                                .queryParam("fieldList", "id,iri,ontology_prefix,label,synonym")
+                                .queryParam("fieldList", "id,iri,ontology_name,label,synonym")
                                 .queryParam("start", toOlsPage(page))
                                 .queryParam("rows", suggestionsPageSize)
                                 .queryParam(
@@ -260,7 +262,7 @@ public class OLSCodeService {
                                       != 0
                               ? responseItem.getAutoSuggestion().getSynonym_autosuggest().get(0)
                               : null)
-                      .codeSystemShortName(responseItem.getOntology_prefix());
+                      .codeSystem(getCodeSystem(responseItem.getOntology_name()).orElse(null));
                 })
             .collect(Collectors.toList());
 
@@ -271,6 +273,12 @@ public class OLSCodeService {
             .totalElements((long) response.getNumFound())
             .number(page)
             .totalPages(totalPages);
+  }
+
+  private Optional<CodeSystem> getCodeSystem(String externalId) {
+    return getAllCodeSystems().stream()
+        .filter(cs -> cs.getExternalId().equals(externalId))
+        .findFirst();
   }
 
   private enum SEARCH_METHOD {
