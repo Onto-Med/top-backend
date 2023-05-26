@@ -21,8 +21,8 @@ public class CodeApiDelegateImpl implements CodeApiDelegate {
   @Autowired private OLSCodeService codeService;
 
   @Override
-  public ResponseEntity<Code> getCode(URI uri, String codeSystemId, List<String> include, Integer page) {
-    return ResponseEntity.ok(codeService.getCode(uri, codeSystemId, include, page));
+  public ResponseEntity<Code> getCode(URI uri, String codeSystemId, List<String> include) {
+    return ResponseEntity.ok(codeService.getCode(uri, codeSystemId, include));
   }
 
   @Override
