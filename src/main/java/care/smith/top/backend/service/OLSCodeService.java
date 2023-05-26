@@ -38,23 +38,29 @@ public class OLSCodeService {
 
   private WebClient terminologyService;
 
-  private enum SEARCH_METHOD {
-    SEARCH("/search"),
-    SUGGEST("/select");
+  @Value("${spring.paging.page-size:10}")
+  private int suggestionsPageSize;
 
-    private String endpoint;
+  @Value("${spring.paging.page-size:10}")
+  private int ontologyPageSize;
 
-    SEARCH_METHOD(String endpoint) {
-      this.endpoint = endpoint;
-    }
+  @NotNull
+  private static Predicate<CodeSystem> filterByName(String name) {
+    return cs ->
+        name == null
+            || cs.getName() != null && StringUtils.containsIgnoreCase(cs.getName(), name)
+            || cs.getShortName() != null && StringUtils.containsIgnoreCase(cs.getShortName(), name);
+  }
 
-    public String getEndpoint() {
-      return endpoint;
-    }
-
-    public void setEndpoint(String endpoint) {
-      this.endpoint = endpoint;
-    }
+  /**
+   * This method converts a TOP page number to OLS page number. OLS page count starts from 0, we
+   * start from 1.
+   *
+   * @param page TOP page number to be converted to OLS page number.
+   * @return OLS page number
+   */
+  private static int toOlsPage(Integer page) {
+    return page == null ? 0 : page - 1;
   }
 
   @Autowired
@@ -72,12 +78,6 @@ public class OLSCodeService {
             .exchangeStrategies(exchangeStrategies)
             .build();
   }
-
-  @Value("${spring.paging.page-size:10}")
-  private int suggestionsPageSize;
-
-  @Value("${spring.paging.page-size:10}")
-  private int ontologyPageSize;
 
   public Code getCode(URI uri, String codeSystemId, List<String> include, Integer page) {
     OLSTerm term =
@@ -128,6 +128,71 @@ public class OLSCodeService {
   public CodePage getCodeSuggestions(
       List<String> include, String label, List<String> codeSystemIds, Integer page) {
     return getCodes(include, label, codeSystemIds, page, SEARCH_METHOD.SUGGEST);
+  }
+
+  /**
+   * This method searches for code systems based on uri or name.
+   *
+   * <p>OLS3 has no parameter to filter ontologies. Thus, to not break paging, all ontologies are
+   * loaded at once and filtered locally.
+   *
+   * @param include unused
+   * @param uri Code system URI to filter for
+   * @param name Code system name to filter for
+   * @param page Requested page
+   * @return A {@link CodeSystemPage} containing matching code systems.
+   */
+  public CodeSystemPage getCodeSystems(List<String> include, URI uri, String name, Integer page) {
+    int requestedPage = page == null ? 1 : page;
+    int skipCount = (requestedPage - 1) * ontologyPageSize;
+
+    List<CodeSystem> allCodeSystems = getAllCodeSystems();
+    List<CodeSystem> filteredCodeSystems =
+        allCodeSystems.stream()
+            .filter(cs -> uri == null || uri.equals(cs.getUri()))
+            .filter(filterByName(name))
+            .collect(Collectors.toList());
+    List<CodeSystem> content =
+        filteredCodeSystems.stream()
+            .skip(skipCount)
+            .limit(ontologyPageSize)
+            .collect(Collectors.toList());
+
+    return (CodeSystemPage)
+        new CodeSystemPage()
+            .content(content)
+            .size(ontologyPageSize)
+            .totalElements((long) filteredCodeSystems.size())
+            .number(requestedPage)
+            .totalPages(filteredCodeSystems.size() / ontologyPageSize + 1);
+  }
+
+  @Cacheable("olsOntologies")
+  public List<CodeSystem> getAllCodeSystems() {
+    OLSOntologiesResponse response =
+        terminologyService
+            .get()
+            .uri(
+                uriBuilder ->
+                    uriBuilder
+                        .path("/ontologies")
+                        .queryParam("page", 0)
+                        .queryParam("size", 1000)
+                        .build())
+            .retrieve()
+            .bodyToMono(OLSOntologiesResponse.class)
+            .block();
+
+    return Arrays.stream(Objects.requireNonNull(response).get_embedded().getOntologies())
+        .map(
+            ontology ->
+                new CodeSystem()
+                    .externalId(ontology.getOntologyId())
+                    .uri(ontology.getConfig().getId())
+                    .name(ontology.getConfig().getTitle())
+                    .shortName(ontology.getConfig().getPreferredPrefix()))
+        .sorted((a, b) -> a.getExternalId().compareToIgnoreCase(b.getExternalId()))
+        .collect(Collectors.toList());
   }
 
   private CodePage getCodes(
@@ -208,90 +273,22 @@ public class OLSCodeService {
             .totalPages(totalPages);
   }
 
-  /**
-   * This method searches for code systems based on uri or name.
-   *
-   * <p>OLS3 has no parameter to filter ontologies. Thus, to not break paging, all ontologies are
-   * loaded at once and filtered locally.
-   *
-   * @param include unused
-   * @param uri Code system URI to filter for
-   * @param name Code system name to filter for
-   * @param page Requested page
-   * @return A {@link CodeSystemPage} containing matching code systems.
-   */
-  public CodeSystemPage getCodeSystems(List<String> include, URI uri, String name, Integer page) {
-    int requestedPage = page == null ? 1 : page;
-    int skipCount = (requestedPage - 1) * ontologyPageSize;
+  private enum SEARCH_METHOD {
+    SEARCH("/search"),
+    SUGGEST("/select");
 
-    List<CodeSystem> allCodeSystems = getAllCodeSystems();
-    List<CodeSystem> filteredCodeSystems =
-        allCodeSystems.stream()
-            .filter(cs -> uri == null || uri.equals(cs.getUri()))
-            .filter(
-              filterByName(name))
-            .collect(Collectors.toList());
-    List<CodeSystem> content =
-        filteredCodeSystems.stream()
-            .skip(skipCount)
-            .limit(ontologyPageSize)
-            .collect(Collectors.toList());
+    private String endpoint;
 
-    return (CodeSystemPage)
-        new CodeSystemPage()
-            .content(content)
-            .size(ontologyPageSize)
-            .totalElements((long) filteredCodeSystems.size())
-            .number(requestedPage)
-            .totalPages(filteredCodeSystems.size() / ontologyPageSize + 1);
-  }
+    SEARCH_METHOD(String endpoint) {
+      this.endpoint = endpoint;
+    }
 
-  @NotNull
-  private static Predicate<CodeSystem> filterByName(String name) {
-    return cs ->
-      name == null
-        || cs.getName() != null
-        && StringUtils.containsIgnoreCase(cs.getName(), name)
-        || cs.getShortName() != null
-        && StringUtils.containsIgnoreCase(cs.getShortName(), name);
-  }
+    public String getEndpoint() {
+      return endpoint;
+    }
 
-  @Cacheable("olsOntologies")
-  public List<CodeSystem> getAllCodeSystems() {
-    OLSOntologiesResponse response =
-        terminologyService
-            .get()
-            .uri(
-                uriBuilder ->
-                    uriBuilder
-                        .path("/ontologies")
-                        .queryParam("page", 0)
-                        .queryParam("size", 1000)
-                        .build())
-            .retrieve()
-            .bodyToMono(OLSOntologiesResponse.class)
-            .block();
-
-    return Arrays.stream(Objects.requireNonNull(response).get_embedded().getOntologies())
-        .map(
-            ontology ->
-                new CodeSystem()
-                    .externalId(ontology.getOntologyId())
-                    .uri(ontology.getConfig().getId())
-                    .name(ontology.getConfig().getTitle())
-                    .shortName(ontology.getConfig().getPreferredPrefix()))
-        .sorted((a, b) -> a.getExternalId().compareToIgnoreCase(b.getExternalId()))
-        .collect(Collectors.toList());
-  }
-
-  /**
-   * This method converts a TOP page number to OLS page number. OLS page count starts from 0, we
-   * start from 1.
-   *
-   * @param page TOP page number to be converted to OLS page number.
-   * @return OLS page number
-   */
-  private int toOlsPage(Integer page) {
-    return page == null ? 0 : page - 1;
+    public void setEndpoint(String endpoint) {
+      this.endpoint = endpoint;
+    }
   }
 }
