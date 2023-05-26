@@ -8,6 +8,8 @@ import care.smith.top.model.Code;
 import care.smith.top.model.CodePage;
 import care.smith.top.model.CodeSystem;
 import care.smith.top.model.CodeSystemPage;
+import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
@@ -25,6 +27,7 @@ import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
@@ -224,8 +227,9 @@ public class OLSCodeService {
     List<CodeSystem> allCodeSystems = getAllCodeSystems();
     List<CodeSystem> filteredCodeSystems =
         allCodeSystems.stream()
-            .filter(cs -> uri == null || cs.getUri().equals(uri))
-            .filter(cs -> name == null || cs.getName() != null && cs.getName().equals(name))
+            .filter(cs -> uri == null || uri.equals(cs.getUri()))
+            .filter(
+              filterByName(name))
             .collect(Collectors.toList());
     List<CodeSystem> content =
         filteredCodeSystems.stream()
@@ -240,6 +244,16 @@ public class OLSCodeService {
             .totalElements((long) filteredCodeSystems.size())
             .number(requestedPage)
             .totalPages(filteredCodeSystems.size() / ontologyPageSize + 1);
+  }
+
+  @NotNull
+  private static Predicate<CodeSystem> filterByName(String name) {
+    return cs ->
+      name == null
+        || cs.getName() != null
+        && StringUtils.containsIgnoreCase(cs.getName(), name)
+        || cs.getShortName() != null
+        && StringUtils.containsIgnoreCase(cs.getShortName(), name);
   }
 
   @Cacheable("olsOntologies")
