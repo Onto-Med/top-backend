@@ -15,40 +15,39 @@ public class CodeDao {
 
   private String name;
 
+  private String uri;
+
   @Column(nullable = false)
   private String codeSystemUri;
 
-  private String codeSystemName;
-
   public CodeDao() {}
 
-  public CodeDao(@NotNull String code, @NotNull String codeSystemUri) {
+  public CodeDao(@NotNull String code, String uri, @NotNull String codeSystemUri) {
     this.code = code;
+    this.uri = uri;
     this.codeSystemUri = codeSystemUri;
   }
 
-  public CodeDao(
-      @NotNull String code, String name, @NotNull String codeSystemUri, String codeSystemName) {
+  public CodeDao(@NotNull String code, String name, String uri, @NotNull String codeSystemUri) {
     this.code = code;
     this.name = name;
+    this.uri = uri;
     this.codeSystemUri = codeSystemUri;
-    this.codeSystemName = codeSystemName;
   }
 
   public CodeDao(@NotNull Code code) {
     this.code = code.getCode();
     name = code.getName();
-    if (code.getCodeSystem() != null) {
-      codeSystemUri = code.getCodeSystem().getUri().toString();
-      codeSystemName = code.getCodeSystem().getName();
-    }
+    if (code.getUri() != null) uri = code.getUri().toString();
+    if (code.getCodeSystem() != null) codeSystemUri = code.getCodeSystem().getUri().toString();
   }
 
   public Code toApiModel() {
     return new Code()
         .code(code)
+        .uri(uri != null ? URI.create(uri) : null)
         .name(name)
-        .codeSystem(new CodeSystem().uri(URI.create(codeSystemUri)).name(codeSystemName));
+        .codeSystem(new CodeSystem().uri(URI.create(codeSystemUri)));
   }
 
   public String getCode() {
@@ -69,21 +68,21 @@ public class CodeDao {
     return this;
   }
 
+  public String getUri() {
+    return uri;
+  }
+
+  public CodeDao uri(String uri) {
+    this.uri = uri;
+    return this;
+  }
+
   public String getCodeSystemUri() {
     return codeSystemUri;
   }
 
   public CodeDao codeSystemUri(@NotNull String codeSystemUri) {
     this.codeSystemUri = codeSystemUri;
-    return this;
-  }
-
-  public String getCodeSystemName() {
-    return codeSystemName;
-  }
-
-  public CodeDao codeSystemName(String codeSystemName) {
-    this.codeSystemName = codeSystemName;
     return this;
   }
 
@@ -97,18 +96,17 @@ public class CodeDao {
     if (!getCode().equals(codeDao.getCode())) return false;
     if (getName() != null ? !getName().equals(codeDao.getName()) : codeDao.getName() != null)
       return false;
-    if (!getCodeSystemUri().equals(codeDao.getCodeSystemUri())) return false;
-    return getCodeSystemName() != null
-        ? getCodeSystemName().equals(codeDao.getCodeSystemName())
-        : codeDao.getCodeSystemName() == null;
+    if (getUri() != null ? !getUri().equals(codeDao.getUri()) : codeDao.getUri() != null)
+      return false;
+    return getCodeSystemUri().equals(codeDao.getCodeSystemUri());
   }
 
   @Override
   public int hashCode() {
     int result = getCode().hashCode();
     result = 31 * result + (getName() != null ? getName().hashCode() : 0);
+    result = 31 * result + (getUri() != null ? getUri().hashCode() : 0);
     result = 31 * result + getCodeSystemUri().hashCode();
-    result = 31 * result + (getCodeSystemName() != null ? getCodeSystemName().hashCode() : 0);
     return result;
   }
 }

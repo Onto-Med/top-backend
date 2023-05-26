@@ -9,6 +9,7 @@ public class OLSOntologyConfig {
   private URI id;
   private String title;
   private String description;
+  private String preferredPrefix;
 
   public URI getId() {
     return id;
@@ -32,5 +33,13 @@ public class OLSOntologyConfig {
 
   public void setDescription(String description) {
     this.description = description;
+  }
+
+  public String getPreferredPrefix() {
+    return preferredPrefix;
+  }
+
+  public void setPreferredPrefix(String preferredPrefix) {
+    this.preferredPrefix = preferredPrefix;
   }
 }

@@ -7,6 +7,7 @@ import java.util.List;
  */
 public class OLSTerm {
   private String iri;
+  private String short_form;
   private String label;
   private String description;
   private String ontology_name;
@@ -20,6 +21,14 @@ public class OLSTerm {
 
   public void setIri(String iri) {
     this.iri = iri;
+  }
+
+  public String getShort_form() {
+    return short_form;
+  }
+
+  public void setShort_form(String short_form) {
+    this.short_form = short_form;
   }
 
   public String getLabel() {

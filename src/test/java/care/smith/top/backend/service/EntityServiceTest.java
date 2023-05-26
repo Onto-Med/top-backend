@@ -270,7 +270,11 @@ class EntityServiceTest extends AbstractTest {
         .addTitlesItem(new LocalisableText().text("Category").lang("en"))
         .addDescriptionsItem(new LocalisableText().text("Some description").lang("en"))
         .addSynonymsItem(new LocalisableText().text("Some synonym").lang("en"))
-        .addCodesItem(new Code().code("1234").codeSystem(codeSystem));
+        .addCodesItem(
+            new Code()
+                .code("1234")
+                .uri(URI.create("http://loing.org/1234"))
+                .codeSystem(codeSystem));
 
     assertThatThrownBy(
             () -> entityService.createEntity("does not exist", repository.getId(), category))
@@ -292,7 +296,10 @@ class EntityServiceTest extends AbstractTest {
               assertThat(c.getDescriptions()).size().isEqualTo(1);
               assertThat(c.getEquivalentEntities()).isNullOrEmpty();
               assertThat(c.getCodes()).size().isEqualTo(1);
-              assertThat(c.getCodes().get(0)).isEqualTo(category.getCodes().get(0));
+              assertThat(c.getCodes().get(0).getCode())
+                  .isEqualTo(category.getCodes().get(0).getCode());
+              assertThat(c.getCodes().get(0).getUri())
+                  .isEqualTo(category.getCodes().get(0).getUri());
               assertThat(c.getCreatedAt()).isNotNull();
               assertThat(c.getSynonyms()).size().isEqualTo(1);
               assertThat(c.getSynonyms().get(0)).isEqualTo(category.getSynonyms().get(0));
@@ -566,7 +573,8 @@ class EntityServiceTest extends AbstractTest {
 
     assertThatThrownBy(
             () ->
-                entityService.deleteEntity(organisation.getId(), repository.getId(), "invalid id", null))
+                entityService.deleteEntity(
+                    organisation.getId(), repository.getId(), "invalid id", null))
         .isInstanceOf(ResponseStatusException.class)
         .hasFieldOrPropertyWithValue("status", HttpStatus.NOT_FOUND);
 
