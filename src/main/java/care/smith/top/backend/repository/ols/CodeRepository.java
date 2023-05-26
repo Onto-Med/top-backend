@@ -75,7 +75,8 @@ public class CodeRepository extends OlsRepository {
           String.format("Code could not be found in terminology '%s'.", codeSystemId));
 
     return new Code()
-        .code(term.getLabel())
+        .code(term.getShort_form())
+        .name(term.getLabel())
         .uri(URI.create(term.getIri()))
         .codeSystem(codeSystem)
         .synonyms(term.getSynonyms());
@@ -92,7 +93,8 @@ public class CodeRepository extends OlsRepository {
                             uriBuilder
                                 .path(searchMethod.getEndpoint())
                                 .queryParam("q", term)
-                                .queryParam("fieldList", "id,iri,ontology_name,label,synonym")
+                                .queryParam(
+                                    "fieldList", "id,iri,short_form,ontology_name,label,synonym")
                                 .queryParam("start", toOlsPage(page, suggestionsPageSize))
                                 .queryParam("rows", suggestionsPageSize)
                                 .queryParam(
@@ -112,13 +114,11 @@ public class CodeRepository extends OlsRepository {
                   String primaryLabel =
                       responseItem.getSynonym() != null && responseItem.getSynonym().size() != 0
                           ? responseItem.getSynonym().get(0)
-                          : null;
+                          : responseItem.getLabel();
 
                   return new Code()
-                      .code(responseItem.getLabel())
                       .name(primaryLabel)
-                      .uri(responseItem.getIri())
-                      .code(responseItem.getLabel())
+                      .code(responseItem.getShort_form())
                       .uri(responseItem.getIri())
                       .synonyms(
                           responseItem.getSynonym() != null
@@ -158,8 +158,8 @@ public class CodeRepository extends OlsRepository {
   public Optional<CodeSystem> getCodeSystem(String externalId) {
     if (externalId == null) return Optional.empty();
     return codeSystemRepository.getAllCodeSystems().values().stream()
-      .filter(cs -> externalId.equals(cs.getExternalId()))
-      .findFirst();
+        .filter(cs -> externalId.equals(cs.getExternalId()))
+        .findFirst();
   }
 
   public Optional<CodeSystem> getCodeSystem(URI codeSystemUri) {

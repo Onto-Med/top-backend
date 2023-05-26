@@ -9,6 +9,7 @@ import java.util.List;
 public class OLSSuggestResponseItem {
   private String id;
   private URI iri;
+  private String short_form;
   private String label;
   private String ontology_name;
 
@@ -39,6 +40,14 @@ public class OLSSuggestResponseItem {
 
   public void setId(String id) {
     this.id = id;
+  }
+
+  public String getShort_form() {
+    return short_form;
+  }
+
+  public void setShort_form(String short_form) {
+    this.short_form = short_form;
   }
 
   public String getOntology_name() {
