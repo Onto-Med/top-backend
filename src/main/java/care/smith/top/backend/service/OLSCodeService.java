@@ -54,13 +54,13 @@ public class OLSCodeService {
 
   /**
    * This method converts a TOP page number to OLS page number. OLS page count starts from 0, we
-   * start from 1.
+   * start from 1. Also, OLS page numbers are indices of items, where the page starts.
    *
    * @param page TOP page number to be converted to OLS page number.
    * @return OLS page number
    */
-  private static int toOlsPage(Integer page) {
-    return page == null ? 0 : page - 1;
+  private static int toOlsPage(Integer page, int pageSize) {
+    return page == null ? 0 : (page - 1) * pageSize;
   }
 
   @Autowired
@@ -213,7 +213,7 @@ public class OLSCodeService {
                                 .path(searchMethod.getEndpoint())
                                 .queryParam("q", term)
                                 .queryParam("fieldList", "id,iri,ontology_name,label,synonym")
-                                .queryParam("start", toOlsPage(page))
+                                .queryParam("start", toOlsPage(page, suggestionsPageSize))
                                 .queryParam("rows", suggestionsPageSize)
                                 .queryParam(
                                     "ontology",
