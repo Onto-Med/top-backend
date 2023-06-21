@@ -1,6 +1,7 @@
 # TOP Backend
 
-Spring Boot based backend of the TOP framework
+Spring Boot based backend of the TOP framework. Please see [top-deployment](https://onto-med.github.io/top-deployment)
+for additional documentation.
 
 ## Running the Spring Server
 
@@ -95,4 +96,4 @@ You should manually remove these changes from the generated changelog file.*
 
 ## License
 
-The code in this repository and the package `care.smith.top:top-backend` are licensed under [GPL-3.0](LICENSE).
+The code in this repository and the package `care.smith.top:top-backend` are licensed under [MIT](LICENSE).
