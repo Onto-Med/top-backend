@@ -9,9 +9,8 @@ import care.smith.top.top_phenotypic_query.c2reasoner.functions.FunctionEntity;
 import care.smith.top.top_phenotypic_query.converter.PhenotypeExporter;
 import care.smith.top.top_phenotypic_query.converter.PhenotypeImporter;
 import org.apache.commons.lang3.StringUtils;
-import org.reflections.Reflections;
-import org.reflections.util.ConfigurationBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -164,84 +163,85 @@ public class EntityApiDelegateImpl implements EntityApiDelegate {
 
   @Override
   public ResponseEntity<List<Entity>> createFork(
-    String organisationId,
-    String repositoryId,
-    String id,
-    ForkingInstruction forkingInstruction,
-    List<String> include,
-    Integer version) {
+      String organisationId,
+      String repositoryId,
+      String id,
+      ForkingInstruction forkingInstruction,
+      List<String> include,
+      Integer version) {
     return new ResponseEntity<>(
-      entityService.createFork(
-        organisationId, repositoryId, id, forkingInstruction, version, include),
-      HttpStatus.CREATED);
+        entityService.createFork(
+            organisationId, repositoryId, id, forkingInstruction, version, include),
+        HttpStatus.CREATED);
   }
 
   @Override
   public ResponseEntity<ForkingStats> getForks(
-    String organisationId, String repositoryId, String id, List<String> include) {
+      String organisationId, String repositoryId, String id, List<String> include) {
     return new ResponseEntity<>(
-      entityService.getForkingStats(organisationId, repositoryId, id, include), HttpStatus.OK);
+        entityService.getForkingStats(organisationId, repositoryId, id, include), HttpStatus.OK);
   }
 
   @Override
+  @Cacheable("expressionConstants")
   public ResponseEntity<List<Constant>> getExpressionConstants() {
     return new ResponseEntity<>(
-      calculator.getConstants().stream()
-        .map(ConstantEntity::getConstant)
-        .sorted(Comparator.comparing(Constant::getTitle))
-        .collect(Collectors.toList()),
-      HttpStatus.OK);
+        calculator.getConstants().stream()
+            .map(ConstantEntity::getConstant)
+            .sorted(Comparator.comparing(Constant::getTitle))
+            .collect(Collectors.toList()),
+        HttpStatus.OK);
   }
 
   @Override
+  @Cacheable("expressionFunctions")
   public ResponseEntity<List<ExpressionFunction>> getExpressionFunctions(String type) {
     return new ResponseEntity<>(
-      calculator.getFunctions().stream()
-        .filter(f -> StringUtils.isBlank(type) || type.equals(f.getType()))
-        .map(FunctionEntity::getFunction)
-        .sorted(Comparator.comparing(ExpressionFunction::getTitle))
-        .collect(Collectors.toList()),
-      HttpStatus.OK);
+        calculator.getFunctions().stream()
+            .filter(f -> StringUtils.isBlank(type) || type.equals(f.getType()))
+            .map(FunctionEntity::getFunction)
+            .sorted(Comparator.comparing(ExpressionFunction::getTitle))
+            .collect(Collectors.toList()),
+        HttpStatus.OK);
   }
 
   @Override
+  @Cacheable("converters")
   public ResponseEntity<List<Converter>> getConverters(Purpose purpose) {
-    Reflections reflections =
-      new Reflections(new ConfigurationBuilder().forPackage("care.smith.top"));
     List<Converter> formats = new ArrayList<>();
 
     if (purpose == null || purpose.equals(Purpose.IMPORT)) {
       formats.addAll(
-        reflections.getSubTypesOf(PhenotypeImporter.class).stream()
-          .map(
-            c -> {
-              Converter format =
-                new Converter().id(c.getSimpleName()).purpose(Purpose.IMPORT);
-              try {
-                PhenotypeImporter instance = c.getConstructor().newInstance();
-                format.setFileExtension(instance.getFileExtension());
-              } catch (Exception ignored) {
-              }
-              return format;
-            })
-          .collect(Collectors.toList()));
+          entityService.getPhenotypeImporterImplementations().stream()
+              .map(
+                  c -> {
+                    Converter format =
+                        new Converter().id(c.getSimpleName()).purpose(Purpose.IMPORT);
+                    try {
+                      PhenotypeImporter instance = c.getConstructor().newInstance();
+                      format.setFileExtension(instance.getFileExtension());
+                    } catch (Exception ignored) {
+                    }
+                    return format;
+                  })
+              .collect(Collectors.toList()));
     }
 
     if (purpose == null || purpose.equals(Purpose.EXPORT)) {
       formats.addAll(
-        reflections.getSubTypesOf(PhenotypeExporter.class).stream()
-          .map(
-            c -> {
-              Converter format =
-                new Converter().id(c.getSimpleName()).purpose(Purpose.EXPORT);
-              try {
-                PhenotypeExporter instance = c.getConstructor().newInstance();
-                format.setFileExtension(instance.getFileExtension());
-              } catch (Exception ignored) {
-              }
-              return format;
-            })
-          .collect(Collectors.toList()));
+          entityService.getPhenotypeExporterImplementations().stream()
+              .map(
+                  c -> {
+                    Converter format =
+                        new Converter().id(c.getSimpleName()).purpose(Purpose.EXPORT);
+                    try {
+                      PhenotypeExporter instance = c.getConstructor().newInstance();
+                      format.setFileExtension(instance.getFileExtension());
+                    } catch (Exception ignored) {
+                    }
+                    return format;
+                  })
+              .collect(Collectors.toList()));
     }
 
     formats.sort(Comparator.comparing(Converter::getId));
