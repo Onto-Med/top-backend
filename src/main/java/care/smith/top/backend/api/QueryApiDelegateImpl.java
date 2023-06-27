@@ -60,7 +60,7 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
       case CONCEPT:
         throw  new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Concept Query is not yet implemented."); // ToDo: needs to be implemented
       default:
-        throw  new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Query type is neither Phenotype nor Concept.");
+        throw  new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Query type is neither Phenotype nor Concept.");
     }
   }
 
