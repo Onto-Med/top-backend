@@ -101,8 +101,8 @@ You should manually remove these changes from the generated changelog file.*
 
 ### NLP related Tests
 
-Tests need to be run with the following arguments:  
-`--add-opens java.base/java.nio=ALL-UNNAMED`  
+On newer JDK versions, you might need the following arguments to run Neo4j tests:  
+`--add-opens java.base/java.nio=ALL-UNNAMED`
 `--add-opens java.base/java.lang=ALL-UNNAMED`
 
 ## License
