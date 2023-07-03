@@ -34,9 +34,6 @@ public abstract class AbstractNLPTest extends AbstractTest {
     PhraseNodeRepository phraseRepository;
 
     private static Neo4j embeddedNeo4j;
-    private static final int ELASTIC_PORT = 9200;
-    private static final String ELASTIC_VERSION = "8.6.1";
-    private static final String ELASTIC_TEST_INDEX = "test_documents";
 
     @BeforeAll
     static void initializeDBs() {
@@ -52,9 +49,6 @@ public abstract class AbstractNLPTest extends AbstractTest {
         registry.add("spring.neo4j.uri", embeddedNeo4j::boltURI);
         registry.add("spring.neo4j.authentication.username", () -> "neo4j");
         registry.add("spring.neo4j.authentication.password", () -> null);
-
-        registry.add("spring.elasticsearch.uris", () -> String.format("http://localhost:%s", ELASTIC_PORT));
-        registry.add("spring.elasticsearch.index.name", () -> ELASTIC_TEST_INDEX);
     }
 
     @AfterAll
