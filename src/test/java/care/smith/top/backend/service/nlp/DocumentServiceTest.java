@@ -1,14 +1,49 @@
 package care.smith.top.backend.service.nlp;
 
+import care.smith.top.backend.model.nlp.DocumentEntity;
 import care.smith.top.model.Document;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.elasticsearch.client.elc.ElasticsearchTemplate;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.testcontainers.elasticsearch.ElasticsearchContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@Testcontainers
+@ExtendWith(SpringExtension.class)
 class DocumentServiceTest extends AbstractNLPTest {
+    @Container
+    private static final ElasticsearchContainer elasticsearchContainer = new DocumentElasticsearchContainer();
 
+//    @Autowired
+//    private ElasticsearchTemplate template;
+
+    @BeforeAll
+    static void setUp() {
+        elasticsearchContainer.start();
+    }
+
+    @AfterAll
+    static void destroy() {
+        elasticsearchContainer.stop();
+    }
+
+    @BeforeEach
+    void testIsContainerRunning() {
+        assertTrue(elasticsearchContainer.isRunning());
+//        recreateIndex();
+    }
+
+    // TODO: provide this example data via elasticsearch testcontainers
     // Since indexing from within Spring Apps did not work on creation time of Test Cases,
     // there are these three documents prepared on a test index within the proper ES instance:
     //      {"id": "01", "name": "test01", "text": "What do we have here? A test document. With an entity. Nice."},
@@ -65,4 +100,11 @@ class DocumentServiceTest extends AbstractNLPTest {
     @Test
     void getDocumentsForConcepts() {
     }
+
+//    private void recreateIndex() {
+//        if (template.indexOps(DocumentEntity.class).exists()) {
+//            template.indexOps(DocumentEntity.class).delete();
+//            template.indexOps(DocumentEntity.class).create();
+//        }
+//    }
 }
