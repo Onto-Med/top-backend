@@ -1,6 +1,6 @@
 package care.smith.top.backend.service.nlp;
 
-import care.smith.top.backend.repository.nlp.PhraseRepository;
+import care.smith.top.backend.repository.nlp.PhraseNodeRepository;
 import care.smith.top.backend.service.ContentService;
 import care.smith.top.model.Phrase;
 import org.neo4j.cypherdsl.core.Cypher;
@@ -17,14 +17,19 @@ import java.util.stream.Collectors;
 @Service
 public class PhraseService implements ContentService {
 
-    @Autowired PhraseRepository phraseRepository;
+    private final PhraseNodeRepository phraseRepository;
+
+    @Autowired
+    public PhraseService(PhraseNodeRepository phraseRepository) {
+        this.phraseRepository = phraseRepository;
+    }
 
     @Override
     @Cacheable("phraseCount")
     public long count() { return phraseRepository.count(); }
 
     @Cacheable("phraseByConcept")
-    public List<Phrase> getPhrasesByConcept(String conceptId) {
+    public List<Phrase> getPhrasesForConcept(String conceptId) {
         return phraseRepository.findAll(phraseInConcept(conceptId))
                 .stream()
                 .map(phraseEntity -> new Phrase()
@@ -42,6 +47,27 @@ public class PhraseService implements ContentService {
                         .text(phraseEntity.phraseText())
                         .attributes(phraseEntity.phraseAttributes()))
                 .collect(Collectors.toList());
+    }
+
+    public List<Phrase> getPhrasesForDocument(String documentId, Boolean mostImportantOnly) {
+//        return phraseRepository.findAll(phraseInDocument(documentId, mostImportantOnly))
+        return phraseRepository.getPhrasesForDocument(documentId, mostImportantOnly)
+                .stream()
+                .map(phraseEntity -> new Phrase()
+                        .id(phraseEntity.phraseId())
+                        .text(phraseEntity.phraseText())
+                        .attributes(phraseEntity.phraseAttributes()))
+                .collect(Collectors.toList());
+    }
+
+    static Statement phraseInDocument(String documentId, Boolean mostImportantOnly) {
+        Node phrase = Cypher.node("Phrase")
+                .withProperties("exemplar", Cypher.literalOf(mostImportantOnly)).named("phrase");
+        Node document = Cypher.node("Document")
+                .withProperties("docId", Cypher.literalOf(documentId)).named("document");
+        return Cypher
+                .match(phrase.relationshipFrom(document, "HAS_PHRASE"))
+                .returning(phrase).build();
     }
 
     static Statement phraseInConcept(String conceptId) {

@@ -14,28 +14,26 @@ import java.util.List;
 @Service
 public class PhraseApiDelegateImpl implements PhraseApiDelegate {
 
-  @Autowired PhraseService phraseService;
+    @Autowired PhraseService phraseService;
 
-  @Override
-  public ResponseEntity<PhrasePage> getPhraseByConceptId(
-      String conceptId, List<String> include, String name, Integer page) {
-    // ToDo: add filtering by phraseText --> name
-    List<Phrase> result = phraseService.getPhrasesByConcept(conceptId);
-    return ResponseEntity.ok(
-        (PhrasePage)
-            new PhrasePage()
-                .content(result)
-                .number(1)
-                .size(result.size())
-                .totalElements((long) result.size())
-                .totalPages(1));
-  }
+    @Override
+    public ResponseEntity<PhrasePage> getPhrasesByConceptClusterIds(String conceptId, List<String> include, String name, Integer page) {
+        //ToDo: add filtering by phraseText --> name
+        List<Phrase> result = phraseService.getPhrasesForConcept(conceptId);
+        return ResponseEntity.ok(
+                (PhrasePage)
+                        new PhrasePage()
+                                .content(result)
+                                .number(1)
+                                .size(result.size())
+                                .totalElements((long) result.size())
+                                .totalPages(1));
+    }
 
-  @Override
-  public ResponseEntity<PhrasePage> getPhraseByDocumentId(
-      String documentId, List<String> include, String name, Integer page) {
-    return PhraseApiDelegate.super.getPhraseByDocumentId(documentId, include, name, page);
-  }
+    @Override
+    public ResponseEntity<PhrasePage> getPhrasesByDocumentId(String documentId, List<String> include, String name, Integer page) {
+        return PhraseApiDelegate.super.getPhrasesByDocumentId(documentId, include, name, page);
+    }
 
   @Override
   public ResponseEntity<Phrase> getPhraseById(String phraseId, List<String> include) {

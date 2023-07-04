@@ -32,6 +32,8 @@ public class EnumTest {
         .isEqualTo(
             new EntityType[] {
               EntityType.CATEGORY,
+              EntityType.SINGLE_CONCEPT,
+              EntityType.COMPOSITE_CONCEPT,
               EntityType.SINGLE_PHENOTYPE,
               EntityType.COMPOSITE_PHENOTYPE,
               EntityType.SINGLE_RESTRICTION,
@@ -44,6 +46,7 @@ public class EnumTest {
               ItemType.ALLERGY_INTOLERANCE,
               ItemType.CLINICAL_IMPRESSION,
               ItemType.CONDITION,
+              ItemType.ENCOUNTER,
               ItemType.MEDICATION,
               ItemType.MEDICATION_ADMINISTRATION,
               ItemType.MEDICATION_REQUEST,

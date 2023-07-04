@@ -22,10 +22,15 @@ for additional documentation.
       to http://localhost:9000/api (OLS3 is currently supported)
 
    Document related:
-    * `DB_NEO4J_HOST`: host running the neo4j database server, defaults to neo4j
+    * `DB_NEO4J_HOST`: host running the neo4j database server, defaults to localhost
     * `DB_NEO4J_PORT`: port of the neo4j database, defaults to 7687
     * `DB_NEO4J_USER`: username for neo4j database, defaults to neo4j
     * `DB_NEO4J_PASS`: password for neo4j database
+    * `DB_ELASTIC_HOST`: host running the Elasticsearch document storage, defaults to localhost
+    * `DB_ELASTIC_PORT`: port of the Elasticsearch document storage, defaults to 9200
+    * `DB_ELASTIC_CONNECTION_TIMEOUT`: timeout in seconds, defaults to 1s
+    * `DB_ELASTIC_SOCKET_TIMEOUT` timeout in seconds, defaults to 30s
+    * `DB_ELASTIC_INDEX` name of the document index, defaults to 'documents'
 
    OAuth2 related:
     * `OAUTH2_ENABLED`: enable or disable oauth2, defaults to `false`
@@ -93,6 +98,12 @@ To generate new changelogs, a local HSQL database is used to reflect the state p
 *There is a bug in `liquibase-maven-plugin` that results in recreation of some constraints and of the hibernate
 sequence.
 You should manually remove these changes from the generated changelog file.*
+
+### NLP related Tests
+
+On newer JDK versions, you might need the following arguments to run Neo4j tests:  
+`--add-opens java.base/java.nio=ALL-UNNAMED`
+`--add-opens java.base/java.lang=ALL-UNNAMED`
 
 ## License
 

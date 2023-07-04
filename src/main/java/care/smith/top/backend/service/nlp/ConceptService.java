@@ -1,9 +1,12 @@
 package care.smith.top.backend.service.nlp;
 
-import care.smith.top.backend.model.nlp.ConceptEntity;
-import care.smith.top.backend.repository.nlp.ConceptRepository;
+import care.smith.top.backend.model.nlp.ConceptNodeEntity;
+import care.smith.top.backend.repository.nlp.ConceptNodeRepository;
 import care.smith.top.backend.service.ContentService;
-import care.smith.top.model.Concept;
+import care.smith.top.model.ConceptCluster;
+import org.neo4j.cypherdsl.core.Cypher;
+import org.neo4j.cypherdsl.core.Node;
+import org.neo4j.cypherdsl.core.Statement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -14,11 +17,13 @@ import java.util.stream.Collectors;
 
 @Service
 public class ConceptService implements ContentService {
-    //ToDo: maybe it's better to restructure the db so that the Concepts are not a label but rather nodes themselves
-    // --> done, check performance
 
-//    @Autowired PhraseRepository phraseRepository;
-    @Autowired ConceptRepository conceptRepository;
+    private final ConceptNodeRepository conceptRepository;
+
+    @Autowired
+    public ConceptService(ConceptNodeRepository conceptRepository) {
+        this.conceptRepository = conceptRepository;
+    }
 
     @Override
     @Cacheable("conceptCount")
@@ -27,16 +32,7 @@ public class ConceptService implements ContentService {
     }
 
     @Cacheable("concepts")
-    public List<Concept> concepts() {
-//        List<Concept> concepts = new ArrayList<>();
-//        ((Optional<ListValue>) phraseRepository.getConceptCollection())
-//                .ifPresent(strings -> concepts.addAll(
-//                        strings.asList(Value::asString)
-//                                .stream()
-//                                .filter(concept -> !Objects.equals(concept, "Phrase"))
-//                                .map(concept -> new Concept().text(concept.substring("Concept_".length())))
-//                                .collect(Collectors.toList())
-//                ));
+    public List<ConceptCluster> concepts() {
         return conceptRepository
                 .findAll()
                 .stream()
@@ -44,7 +40,22 @@ public class ConceptService implements ContentService {
                 .collect(Collectors.toList());
     }
 
-    private final Function<ConceptEntity, Concept> conceptEntityMapper = conceptEntity -> new Concept()
+    public ConceptCluster conceptById(String conceptId) {
+        return conceptEntityMapper.apply(
+                conceptRepository
+                        .findOne(conceptWithId(conceptId))
+                        .orElse(null)
+        );
+    }
+
+    private final Function<ConceptNodeEntity, ConceptCluster> conceptEntityMapper = conceptEntity -> new ConceptCluster()
             .id(conceptEntity.conceptId())
             .labels(String.join(", ", conceptEntity.lables()));
+
+    static Statement conceptWithId(String id) {
+        Node concept = Cypher.node("Concept").named("concept")
+                .withProperties("conceptId", Cypher.literalOf(id));
+        return Cypher.match(concept).returning(concept).build();
+    }
+
 }

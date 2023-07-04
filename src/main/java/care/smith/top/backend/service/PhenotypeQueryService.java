@@ -107,7 +107,7 @@ public class PhenotypeQueryService {
 
   @PreAuthorize(
       "hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
-  public QueryResult enqueueQuery(String organisationId, String repositoryId, Query data) {
+  public QueryResult enqueueQuery(String organisationId, String repositoryId, PhenotypeQuery data) {
     RepositoryDao repository =
         repositoryRepository
             .findByIdAndOrganisationId(repositoryId, organisationId)
@@ -158,7 +158,7 @@ public class PhenotypeQueryService {
             .map(e -> (Phenotype) e.toApiModel())
             .getContent()
             .toArray(new Phenotype[0]);
-    Query query = queryDao.toApiModel();
+    PhenotypeQuery query = queryDao.toApiModel();
     List<DataAdapterConfig> configs = getConfigs(query.getDataSources());
 
     // TODO: only one data source supported yet

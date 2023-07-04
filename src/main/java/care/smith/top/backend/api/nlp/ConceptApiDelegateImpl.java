@@ -1,9 +1,9 @@
 package care.smith.top.backend.api.nlp;
 
-import care.smith.top.backend.api.ConceptApiDelegate;
+import care.smith.top.backend.api.ConceptclusterApiDelegate;
 import care.smith.top.backend.service.nlp.ConceptService;
-import care.smith.top.model.Concept;
-import care.smith.top.model.ConceptPage;
+import care.smith.top.model.ConceptCluster;
+import care.smith.top.model.ConceptClusterPage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,28 +12,32 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
-public class ConceptApiDelegateImpl implements ConceptApiDelegate {
+public class ConceptApiDelegateImpl implements ConceptclusterApiDelegate {
 
     @Autowired ConceptService conceptService;
 
     @Override
-    public ResponseEntity<ConceptPage> getConceptByDocumentId(String documentId, List<String> include, String name, Integer page) {
-        return ConceptApiDelegate.super.getConceptByDocumentId(documentId, include, name, page);
+    public ResponseEntity<ConceptClusterPage> getConceptClustersByDocumentId(
+            String documentId, List<String> include, String name, Integer page) {
+        return ConceptclusterApiDelegate.super.getConceptClustersByDocumentId(documentId, include, name, page);
     }
 
     @Override
-    public ResponseEntity<Concept> getConceptById(String conceptId, List<String> include) {
-        return ConceptApiDelegate.super.getConceptById(conceptId, include);
+    public ResponseEntity<ConceptCluster> getConceptClusterById(
+            String conceptId, List<String> include) {
+        return ConceptclusterApiDelegate.super.getConceptClusterById(conceptId, include);
     }
 
     @Override
-    public ResponseEntity<ConceptPage> getConceptByPhraseId(String phraseId, List<String> include, String name, Integer page) {
-        return ConceptApiDelegate.super.getConceptByPhraseId(phraseId, include, name, page);
+    public ResponseEntity<ConceptClusterPage> getConceptClustersByPhraseId(
+            String phraseId, List<String> include, String name, Integer page) {
+        return ConceptclusterApiDelegate.super.getConceptClustersByPhraseId(phraseId, include, name, page);
     }
 
     @Override
-    public ResponseEntity<List<Concept>> getConcepts(String phraseText) {
+    public ResponseEntity<List<ConceptCluster>> getConceptClusters(
+            String phraseText) {
         //ToDo: filter by phraseText
-        return new ResponseEntity<>(conceptService.concepts(), HttpStatus.OK);
+        return ResponseEntity.ok(conceptService.concepts());
     }
 }
