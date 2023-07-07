@@ -2,6 +2,7 @@ package care.smith.top.backend.service;
 
 import care.smith.top.model.Organisation;
 import care.smith.top.model.Repository;
+import care.smith.top.model.RepositoryType;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
@@ -278,7 +279,11 @@ class OrganisationServiceTest extends AbstractTest {
   @Test
   void organisationContentShouldGetDeletedToo() {
     Organisation organisation = new Organisation().id("org");
-    Repository repository = new Repository().id("repo").organisation(organisation);
+    Repository repository =
+        new Repository()
+            .id("repo")
+            .organisation(organisation)
+            .repositoryType(RepositoryType.PHENOTYPE_REPOSITORY);
     organisationService.createOrganisation(organisation);
     repositoryService.createRepository(organisation.getId(), repository, null);
 

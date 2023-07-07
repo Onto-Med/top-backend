@@ -63,6 +63,10 @@ public class RepositoryService implements ContentService {
                         String.format("Organisation '%s' does not exist!", organisationId)));
 
     RepositoryDao repository = new RepositoryDao(data).organisation(organisation);
+
+    if (repository.getRepositoryType() == null)
+      throw new ResponseStatusException(
+          HttpStatus.NOT_ACCEPTABLE, "Repository requires a repositoryType!");
     return repositoryRepository.save(repository).toApiModel();
   }
 

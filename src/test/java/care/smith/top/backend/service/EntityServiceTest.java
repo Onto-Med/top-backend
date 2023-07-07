@@ -23,10 +23,20 @@ class EntityServiceTest extends AbstractTest {
         organisationService.createOrganisation(new Organisation().id("org"));
     Repository repository1 =
         repositoryService.createRepository(
-            organisation.getId(), new Repository().id("repo1").organisation(organisation), null);
+            organisation.getId(),
+            new Repository()
+                .id("repo1")
+                .organisation(organisation)
+                .repositoryType(RepositoryType.PHENOTYPE_REPOSITORY),
+            null);
     Repository repository2 =
         repositoryService.createRepository(
-            organisation.getId(), new Repository().id("repo2").organisation(organisation), null);
+            organisation.getId(),
+            new Repository()
+                .id("repo2")
+                .organisation(organisation)
+                .repositoryType(RepositoryType.PHENOTYPE_REPOSITORY),
+            null);
     Phenotype phenotype =
         (Phenotype)
             new Phenotype()
@@ -66,7 +76,12 @@ class EntityServiceTest extends AbstractTest {
         organisationService.createOrganisation(new Organisation().id("org"));
     Repository repository =
         repositoryService.createRepository(
-            organisation.getId(), new Repository().id("repo").organisation(organisation), null);
+            organisation.getId(),
+            new Repository()
+                .id("repo")
+                .organisation(organisation)
+                .repositoryType(RepositoryType.PHENOTYPE_REPOSITORY),
+            null);
     entityService.createEntity(
         organisation.getId(),
         repository.getId(),
@@ -154,13 +169,22 @@ class EntityServiceTest extends AbstractTest {
         organisationService.createOrganisation(new Organisation().id("org"));
     Repository repository1 =
         repositoryService.createRepository(
-            organisation.getId(), new Repository().id("repo1").primary(true), null);
+            organisation.getId(),
+            new Repository()
+                .id("repo1")
+                .primary(true)
+                .repositoryType(RepositoryType.PHENOTYPE_REPOSITORY),
+            null);
     Repository repository2 =
         repositoryService.createRepository(
-            organisation.getId(), new Repository().id("repo2"), null);
+            organisation.getId(),
+            new Repository().id("repo2").repositoryType(RepositoryType.PHENOTYPE_REPOSITORY),
+            null);
     Repository repository3 =
         repositoryService.createRepository(
-            organisation.getId(), new Repository().id("repo3"), null);
+            organisation.getId(),
+            new Repository().id("repo3").repositoryType(RepositoryType.PHENOTYPE_REPOSITORY),
+            null);
 
     Entity origin =
         entityService.createEntity(
@@ -259,7 +283,10 @@ class EntityServiceTest extends AbstractTest {
     Organisation organisation =
         organisationService.createOrganisation(new Organisation().id("org"));
     Repository repository =
-        repositoryService.createRepository(organisation.getId(), new Repository().id("repo"), null);
+        repositoryService.createRepository(
+            organisation.getId(),
+            new Repository().id("repo").repositoryType(RepositoryType.PHENOTYPE_REPOSITORY),
+            null);
     CodeSystem codeSystem = new CodeSystem().uri(URI.create("http://loinc.org"));
 
     /* Create category */
@@ -473,7 +500,10 @@ class EntityServiceTest extends AbstractTest {
     Organisation organisation =
         organisationService.createOrganisation(new Organisation().id("org"));
     Repository repository =
-        repositoryService.createRepository(organisation.getId(), new Repository().id("repo"), null);
+        repositoryService.createRepository(
+            organisation.getId(),
+            new Repository().id("repo").repositoryType(RepositoryType.PHENOTYPE_REPOSITORY),
+            null);
     Phenotype phenotype =
         (Phenotype)
             new Phenotype()
@@ -552,7 +582,10 @@ class EntityServiceTest extends AbstractTest {
     Organisation organisation =
         organisationService.createOrganisation(new Organisation().id("org"));
     Repository repository =
-        repositoryService.createRepository(organisation.getId(), new Repository().id("repo"), null);
+        repositoryService.createRepository(
+            organisation.getId(),
+            new Repository().id("repo").repositoryType(RepositoryType.PHENOTYPE_REPOSITORY),
+            null);
     Phenotype phenotype =
         (Phenotype)
             new Phenotype()
@@ -598,10 +631,20 @@ class EntityServiceTest extends AbstractTest {
         organisationService.createOrganisation(new Organisation().id("org"));
     Repository repository1 =
         repositoryService.createRepository(
-            organisation.getId(), new Repository().id("repo1").primary(true), null);
+            organisation.getId(),
+            new Repository()
+                .id("repo1")
+                .primary(true)
+                .repositoryType(RepositoryType.PHENOTYPE_REPOSITORY),
+            null);
     Repository repository2 =
         repositoryService.createRepository(
-            organisation.getId(), new Repository().id("repo2").primary(false), null);
+            organisation.getId(),
+            new Repository()
+                .id("repo2")
+                .primary(false)
+                .repositoryType(RepositoryType.PHENOTYPE_REPOSITORY),
+            null);
     Phenotype entity1 =
         (Phenotype)
             new Phenotype()
@@ -727,7 +770,10 @@ class EntityServiceTest extends AbstractTest {
     Organisation organisation =
         organisationService.createOrganisation(new Organisation().id("org"));
     Repository repository =
-        repositoryService.createRepository(organisation.getId(), new Repository().id("repo"), null);
+        repositoryService.createRepository(
+            organisation.getId(),
+            new Repository().id("repo").repositoryType(RepositoryType.PHENOTYPE_REPOSITORY),
+            null);
 
     Category superCat = (Category) new Category().entityType(EntityType.CATEGORY).id("super_cat");
     Category subCat1 =
@@ -790,7 +836,10 @@ class EntityServiceTest extends AbstractTest {
     Organisation organisation =
         organisationService.createOrganisation(new Organisation().id("org"));
     Repository repository =
-        repositoryService.createRepository(organisation.getId(), new Repository().id("repo"), null);
+        repositoryService.createRepository(
+            organisation.getId(),
+            new Repository().id("repo").repositoryType(RepositoryType.PHENOTYPE_REPOSITORY),
+            null);
     Category category =
         (Category)
             new Category()
@@ -825,7 +874,10 @@ class EntityServiceTest extends AbstractTest {
     Organisation organisation =
         organisationService.createOrganisation(new Organisation().id("org"));
     Repository repository =
-        repositoryService.createRepository(organisation.getId(), new Repository().id("repo"), null);
+        repositoryService.createRepository(
+            organisation.getId(),
+            new Repository().id("repo").repositoryType(RepositoryType.PHENOTYPE_REPOSITORY),
+            null);
     Category category =
         (Category) new Category().id(UUID.randomUUID().toString()).entityType(EntityType.CATEGORY);
 

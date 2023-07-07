@@ -14,16 +14,19 @@ class RepositoryServiceTest extends AbstractTest {
     Organisation organisation =
         organisationService.createOrganisation(new Organisation().id("org"));
     Repository repository =
-        new Repository()
-            .id("repo")
-            .name("Repository")
-            .description("Some description")
-            .repositoryType(RepositoryType.PHENOTYPE_REPOSITORY);
+        new Repository().id("repo").name("Repository").description("Some description");
 
     assertThatThrownBy(
             () -> repositoryService.createRepository("does not exists", repository, null))
         .isInstanceOf(ResponseStatusException.class)
         .hasFieldOrPropertyWithValue("status", HttpStatus.NOT_FOUND);
+
+    assertThatThrownBy(
+            () -> repositoryService.createRepository(organisation.getId(), repository, null))
+        .isInstanceOf(ResponseStatusException.class)
+        .hasFieldOrPropertyWithValue("status", HttpStatus.NOT_ACCEPTABLE);
+
+    repository.repositoryType(RepositoryType.PHENOTYPE_REPOSITORY);
 
     assertThat(repositoryService.createRepository(organisation.getId(), repository, null))
         .isNotNull()
@@ -74,9 +77,17 @@ class RepositoryServiceTest extends AbstractTest {
     Organisation organisation =
         organisationService.createOrganisation(new Organisation().id("org"));
     Repository repository1 =
-        new Repository().id("repo_1").name("Repository 1").description("Some description");
+        new Repository()
+            .id("repo_1")
+            .name("Repository 1")
+            .description("Some description")
+            .repositoryType(RepositoryType.PHENOTYPE_REPOSITORY);
     Repository repository2 =
-        new Repository().id("repo_2").name("Repository 2").description("Some description");
+        new Repository()
+            .id("repo_2")
+            .name("Repository 2")
+            .description("Some description")
+            .repositoryType(RepositoryType.PHENOTYPE_REPOSITORY);
 
     assertThat(repositoryService.createRepository(organisation.getId(), repository1, null))
         .isNotNull();
@@ -119,7 +130,11 @@ class RepositoryServiceTest extends AbstractTest {
     Organisation organisation =
         organisationService.createOrganisation(new Organisation().id("org"));
     Repository repository =
-        new Repository().id("repo").name("Repository").description("Some description");
+        new Repository()
+            .id("repo")
+            .name("Repository")
+            .description("Some description")
+            .repositoryType(RepositoryType.PHENOTYPE_REPOSITORY);
 
     assertThat(repositoryService.createRepository(organisation.getId(), repository, null))
         .isNotNull();
@@ -154,7 +169,10 @@ class RepositoryServiceTest extends AbstractTest {
     Organisation organisation =
         organisationService.createOrganisation(new Organisation().id("org"));
     Repository repository =
-        repositoryService.createRepository(organisation.getId(), new Repository().id("repo"), null);
+        repositoryService.createRepository(
+            organisation.getId(),
+            new Repository().id("repo").repositoryType(RepositoryType.PHENOTYPE_REPOSITORY),
+            null);
     assertThat(repository).isNotNull();
 
     Repository expected =
@@ -198,10 +216,19 @@ class RepositoryServiceTest extends AbstractTest {
         organisationService.createOrganisation(new Organisation().id("org_2"));
     repositoryService.createRepository(
         organisation1.getId(),
-        new Repository().id("repo_1").name("Repository").primary(true),
+        new Repository()
+            .id("repo_1")
+            .name("Repository")
+            .primary(true)
+            .repositoryType(RepositoryType.PHENOTYPE_REPOSITORY),
         null);
     repositoryService.createRepository(
-        organisation2.getId(), new Repository().id("repo_2").name("Another repository"), null);
+        organisation2.getId(),
+        new Repository()
+            .id("repo_2")
+            .name("Another repository")
+            .repositoryType(RepositoryType.PHENOTYPE_REPOSITORY),
+        null);
 
     assertThat(repositoryService.getRepositories(null, "another", null, null, 1))
         .isNotEmpty()
@@ -243,7 +270,10 @@ class RepositoryServiceTest extends AbstractTest {
     assertThat(
             repositoryService.createRepository(
                 organisation2.getId(),
-                new Repository().id("repo_2").name("Another repository"),
+                new Repository()
+                    .id("repo_2")
+                    .name("Another repository")
+                    .repositoryType(RepositoryType.PHENOTYPE_REPOSITORY),
                 null))
         .isNotNull();
 
