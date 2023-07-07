@@ -1,7 +1,7 @@
 package care.smith.top.backend.service.nlp;
 
 import care.smith.top.backend.model.nlp.ConceptNodeEntity;
-import care.smith.top.backend.repository.nlp.ConceptNodeRepository;
+import care.smith.top.backend.repository.nlp.ConceptClusterNodeRepository;
 import care.smith.top.backend.service.ContentService;
 import care.smith.top.model.ConceptCluster;
 import org.neo4j.cypherdsl.core.Cypher;
@@ -18,10 +18,10 @@ import java.util.stream.Collectors;
 @Service
 public class ConceptService implements ContentService {
 
-    private final ConceptNodeRepository conceptRepository;
+    private final ConceptClusterNodeRepository conceptRepository;
 
     @Autowired
-    public ConceptService(ConceptNodeRepository conceptRepository) {
+    public ConceptService(ConceptClusterNodeRepository conceptRepository) {
         this.conceptRepository = conceptRepository;
     }
 
