@@ -3,7 +3,7 @@ package care.smith.top.backend.service.nlp;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
 
-import care.smith.top.backend.repository.nlp.ConceptNodeRepository;
+import care.smith.top.backend.repository.nlp.ConceptClusterNodeRepository;
 import care.smith.top.backend.repository.nlp.DocumentNodeRepository;
 import care.smith.top.backend.repository.nlp.DocumentRepository;
 import care.smith.top.backend.repository.nlp.PhraseNodeRepository;
@@ -42,7 +42,8 @@ import org.testcontainers.shaded.org.yaml.snakeyaml.Yaml;
 public abstract class AbstractNLPTest { // extends AbstractTest {
 
   @Autowired ConceptService conceptService;
-  @Autowired ConceptNodeRepository conceptRepository;
+  @Autowired
+  ConceptClusterNodeRepository conceptRepository;
   @Autowired DocumentService documentService;
   @Autowired DocumentRepository documentRepository;
   @Autowired DocumentNodeRepository documentNodeRepository;

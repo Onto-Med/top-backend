@@ -43,6 +43,7 @@ public class EntityService implements ContentService {
   @Autowired private EntityVersionRepository entityVersionRepository;
   @Autowired private CategoryRepository categoryRepository;
   @Autowired private PhenotypeRepository phenotypeRepository;
+  @Autowired private ConceptRepository conceptRepository;
   @Autowired private RepositoryRepository repositoryRepository;
   @Autowired private UserService userService;
   @Autowired private CodeRepository codeRepository;
@@ -173,9 +174,9 @@ public class EntityService implements ContentService {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "entityType is missing");
 
     if (RepositoryType.CONCEPT_REPOSITORY.equals(repository.getRepositoryType())
-        && !EntityType.CATEGORY.equals(data.getEntityType()))
+        && !List.of(EntityType.SINGLE_CONCEPT, EntityType.COMPOSITE_CONCEPT).contains(data.getEntityType()))
       throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST, "entityType is invalid for concept repository");
+          HttpStatus.BAD_REQUEST, String.format("entityType '%s' is invalid for concept repository", data.getEntityType().getValue()));
 
     EntityDao entity = new EntityDao(data).id(id).repository(repository);
 
@@ -193,6 +194,12 @@ public class EntityService implements ContentService {
               () -> {
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND);
               });
+
+    if (data instanceof Concept && ((Concept) data).getSuperConcepts() != null)
+      for (Concept concept: ((Concept) data).getSuperConcepts())
+        conceptRepository
+            .findByIdAndRepositoryId(concept.getId(), repositoryId)
+            .ifPresent(entity::addSuperEntitiesItem);
 
     entity = entityRepository.save(entity);
     EntityVersionDao entityVersion =
@@ -247,9 +254,9 @@ public class EntityService implements ContentService {
     Entity entity = loadEntity(organisationId, repositoryId, id, null);
 
     if (RepositoryType.CONCEPT_REPOSITORY.equals(destinationRepo.getRepositoryType())
-        && !EntityType.CATEGORY.equals(entity.getEntityType()))
+            && !List.of(EntityType.SINGLE_CONCEPT, EntityType.COMPOSITE_CONCEPT).contains(entity.getEntityType()))
       throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST, "entityType is invalid for concept repository");
+              HttpStatus.BAD_REQUEST, String.format("entityType '%s' is invalid for concept repository", entity.getEntityType().getValue()));
 
     List<Entity> origins = new ArrayList<>(getDependencies(entity));
     origins.add(entity);
@@ -294,6 +301,7 @@ public class EntityService implements ContentService {
         origin.setVersion(1);
         if (origin instanceof Phenotype) ((Phenotype) origin).setSuperCategories(null);
         else if (origin instanceof Category) ((Category) origin).setSuperCategories(null);
+        else if (origin instanceof Concept) ((Concept) origin).setSuperConcepts(null);
       }
 
       ids.put(oldId, origin.getId());
@@ -633,11 +641,20 @@ public class EntityService implements ContentService {
 
     if (!ApiModelMapper.isRestricted(entity.getEntityType())) {
       entity.superEntities(null);
-      if (((Category) data).getSuperCategories() != null)
-        for (Category category : ((Category) data).getSuperCategories())
-          categoryRepository
-              .findByIdAndRepositoryId(category.getId(), repositoryId)
-              .ifPresent(entity::addSuperEntitiesItem);
+      if (data instanceof Concept) {
+        if (((Concept) data).getSuperConcepts() != null) {
+          for (Concept concept : ((Concept) data).getSuperConcepts())
+            conceptRepository
+                .findByIdAndRepositoryId(concept.getId(), repositoryId)
+                .ifPresent(entity::addSuperEntitiesItem);
+        }
+      } else {
+        if (((Category) data).getSuperCategories() != null)
+          for (Category category : ((Category) data).getSuperCategories())
+            categoryRepository
+                .findByIdAndRepositoryId(category.getId(), repositoryId)
+                .ifPresent(entity::addSuperEntitiesItem);
+      }
     }
 
     return populateWithCodeSystems()
