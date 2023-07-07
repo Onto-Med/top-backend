@@ -32,9 +32,15 @@ class PhenotypeQueryServiceTest extends AbstractTest {
   void executeQuery() {
     Organisation orga = organisationService.createOrganisation(new Organisation().id("orga_1"));
     Repository repo1 =
-        repositoryService.createRepository(orga.getId(), new Repository().id("repo_1"), null);
+        repositoryService.createRepository(
+            orga.getId(),
+            new Repository().id("repo_1").repositoryType(RepositoryType.PHENOTYPE_REPOSITORY),
+            null);
     Repository repo2 =
-        repositoryService.createRepository(orga.getId(), new Repository().id("repo_2"), null);
+        repositoryService.createRepository(
+            orga.getId(),
+            new Repository().id("repo_2").repositoryType(RepositoryType.PHENOTYPE_REPOSITORY),
+            null);
     Phenotype phenotype1 =
         (Phenotype)
             entityService.createEntity(
@@ -45,22 +51,23 @@ class PhenotypeQueryServiceTest extends AbstractTest {
                     .id("entity_1")
                     .entityType(EntityType.SINGLE_PHENOTYPE));
 
-    PhenotypeQuery query = (PhenotypeQuery)
-        new PhenotypeQuery()
-            .addCriteriaItem(
+    PhenotypeQuery query =
+        (PhenotypeQuery)
+            new PhenotypeQuery()
+                .addCriteriaItem(
                     (QueryCriterion)
-                            new QueryCriterion()
-                                    .subjectId(phenotype1.getId())
-                                    .dateTimeRestriction(
-                                            (DateTimeRestriction)
-                                                    new DateTimeRestriction()
-                                                            .maxOperator(RestrictionOperator.LESS_THAN)
-                                                            .addValuesItem(null)
-                                                            .addValuesItem(
-                                                                    LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS))
-                                                            .type(DataType.DATE_TIME)))
-            .id(UUID.randomUUID())
-            .addDataSourcesItem(dataSources.get(0));
+                        new QueryCriterion()
+                            .subjectId(phenotype1.getId())
+                            .dateTimeRestriction(
+                                (DateTimeRestriction)
+                                    new DateTimeRestriction()
+                                        .maxOperator(RestrictionOperator.LESS_THAN)
+                                        .addValuesItem(null)
+                                        .addValuesItem(
+                                            LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS))
+                                        .type(DataType.DATE_TIME)))
+                .id(UUID.randomUUID())
+                .addDataSourcesItem(dataSources.get(0));
 
     assertThatThrownBy(() -> queryService.enqueueQuery(orga.getId(), "invalid", query))
         .isInstanceOf(ResponseStatusException.class)
