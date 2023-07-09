@@ -141,6 +141,20 @@ public abstract class ApiModelMapper {
     return isPhenotype(entity.getEntityType());
   }
 
+  public static boolean isConcept(EntityType entityType) {
+    return List.of(EntityType.SINGLE_CONCEPT, EntityType.COMPOSITE_CONCEPT).contains(entityType);
+  }
+
+  public static boolean isConcept(Entity entity) { return isConcept(entity.getEntityType()); }
+
+  public static boolean isCompositeConcept(EntityType entityType) {
+    return EntityType.COMPOSITE_CONCEPT == entityType;
+  }
+
+  public static boolean isCompositeConcept(Entity entity) {
+    return isCompositeConcept(entity.getEntityType());
+  }
+
   public static boolean isRestricted(EntityType entityType) {
     return Arrays.asList(EntityType.SINGLE_RESTRICTION, EntityType.COMPOSITE_RESTRICTION)
         .contains(entityType);
