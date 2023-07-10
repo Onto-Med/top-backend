@@ -242,21 +242,15 @@ public class EntityService implements ContentService {
       throw new ResponseStatusException(
           HttpStatus.BAD_REQUEST, "entityType is invalid for concept repository");
 
-    List<Entity> origins = new ArrayList<>();
-    if (ApiModelMapper.isRestricted(entity)) {
-      Entity superPhenotype =
-          loadEntity(
-              organisationId, repositoryId, ((Phenotype) entity).getSuperPhenotype().getId(), null);
-      origins.add(superPhenotype);
-      origins.add(entity);
-    } else {
-      origins.add(entity);
-      if (forkingInstruction.isCascade())
-        origins.addAll(getSubclasses(organisationId, repositoryId, origins.get(0).getId(), null));
-    }
+    List<Entity> origins = new ArrayList<>(getDependencies(entity));
+    origins.add(entity);
+    if (forkingInstruction.isCascade() && ApiModelMapper.isAbstract(entity))
+      origins.addAll(getSubclasses(organisationId, repositoryId, origins.get(0).getId(), null));
 
     List<Entity> results = new ArrayList<>();
-    for (Entity origin : origins) {
+    Map<String, String> ids = new HashMap<>();
+    for (Entity origin :
+        origins.stream().sorted(ApiModelMapper::compare).collect(Collectors.toList())) {
       String oldId = origin.getId();
       Optional<EntityDao> fork =
           entityRepository.findByRepositoryIdAndOriginId(destinationRepo.getId(), origin.getId());
@@ -290,6 +284,8 @@ public class EntityService implements ContentService {
         else if (origin instanceof Category) ((Category) origin).setSuperCategories(null);
       }
 
+      ids.put(oldId, origin.getId());
+
       if (origin instanceof Phenotype) {
         Phenotype phenotype = (Phenotype) origin;
         if (phenotype.getSuperPhenotype() != null) {
@@ -298,6 +294,13 @@ public class EntityService implements ContentService {
                   destinationRepo.getId(), phenotype.getSuperPhenotype().getId());
           if (superClass.isEmpty()) continue;
           phenotype.setSuperPhenotype((Phenotype) new Phenotype().id(superClass.get().getId()));
+          ids.put(phenotype.getSuperPhenotype().getId(), superClass.get().getId());
+        }
+
+        if (ApiModelMapper.isAbstract(origin) && ((Phenotype) origin).getExpression() != null) {
+          ((Phenotype) origin)
+              .expression(
+                  ApiModelMapper.replaceEntityIds(((Phenotype) origin).getExpression(), ids));
         }
       }
 
