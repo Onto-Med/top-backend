@@ -706,6 +706,49 @@ public class EntityService implements ContentService {
   }
 
   /**
+   * This method collects all dependencies of an entity.
+   *
+   * <p>Dependencies can be:
+   *
+   * <ul>
+   *   <li>super phenotypes of restricted phenotypes
+   *   <li>entities referenced from expressions
+   * </ul>
+   *
+   * @param entity The entity to collect dependencies for.
+   * @return A set of {@link Entity} objects.
+   */
+  private Set<Entity> getDependencies(Entity entity) {
+    Set<Entity> dependencies = new HashSet<>();
+
+    if (ApiModelMapper.isRestricted(entity)) {
+      Entity superPhenotype =
+          loadEntity(
+              entity.getRepository().getOrganisation().getId(),
+              entity.getRepository().getId(),
+              ((Phenotype) entity).getSuperPhenotype().getId(),
+              null);
+      dependencies.add(superPhenotype);
+    }
+
+    if (ApiModelMapper.isAbstract(entity)) {
+      dependencies.addAll(
+          ApiModelMapper.getEntityIdsFromExpression(((Phenotype) entity).getExpression()).stream()
+              .distinct()
+              .map(e -> entityRepository.findById(e))
+              .flatMap(Optional::stream)
+              .map(EntityDao::toApiModel)
+              .collect(Collectors.toSet()));
+    }
+
+    Set<Entity> superDependencies = new HashSet<>();
+    dependencies.forEach(d -> superDependencies.addAll(getDependencies(d)));
+    dependencies.addAll(superDependencies);
+
+    return dependencies;
+  }
+
+  /**
    * Get {@link Repository} by repositoryId and directoryId. If the repository does not exist or is
    * not associated with the directory, this method will throw an exception.
    *
