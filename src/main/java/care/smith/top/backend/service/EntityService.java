@@ -72,9 +72,7 @@ public class EntityService implements ContentService {
           String.format("Batch size %d exceeds maximum %d.", entities.size(), maxBatchSize));
 
     for (Entity entity :
-        entities.stream()
-            .sorted(ApiModelMapper::compareByEntityType)
-            .collect(Collectors.toList())) {
+        entities.stream().sorted(ApiModelMapper::compare).collect(Collectors.toList())) {
       createEntity(organisationId, repositoryId, entity, ids, entities);
     }
 
@@ -92,7 +90,7 @@ public class EntityService implements ContentService {
    * </ul>
    *
    * If you are calling this method multiple times, you should sort the entities with the {@link
-   * ApiModelMapper#compareByEntityType(Entity, Entity)} comparator.
+   * ApiModelMapper#compare(Entity, Entity)} comparator.
    *
    * @param organisationId The organisation ID.
    * @param repositoryId The repository ID.
@@ -244,21 +242,15 @@ public class EntityService implements ContentService {
       throw new ResponseStatusException(
           HttpStatus.BAD_REQUEST, "entityType is invalid for concept repository");
 
-    List<Entity> origins = new ArrayList<>();
-    if (ApiModelMapper.isRestricted(entity)) {
-      Entity superPhenotype =
-          loadEntity(
-              organisationId, repositoryId, ((Phenotype) entity).getSuperPhenotype().getId(), null);
-      origins.add(superPhenotype);
-      origins.add(entity);
-    } else {
-      origins.add(entity);
-      if (forkingInstruction.isCascade())
-        origins.addAll(getSubclasses(organisationId, repositoryId, origins.get(0).getId(), null));
-    }
+    List<Entity> origins = new ArrayList<>(getDependencies(entity));
+    origins.add(entity);
+    if (forkingInstruction.isCascade() && ApiModelMapper.isAbstract(entity))
+      origins.addAll(getSubclasses(organisationId, repositoryId, origins.get(0).getId(), null));
 
     List<Entity> results = new ArrayList<>();
-    for (Entity origin : origins) {
+    Map<String, String> ids = new HashMap<>();
+    for (Entity origin :
+        origins.stream().sorted(ApiModelMapper::compare).collect(Collectors.toList())) {
       String oldId = origin.getId();
       Optional<EntityDao> fork =
           entityRepository.findByRepositoryIdAndOriginId(destinationRepo.getId(), origin.getId());
@@ -267,7 +259,10 @@ public class EntityService implements ContentService {
 
       if (forkingInstruction.isUpdate() && fork.isPresent()) {
         if (fork.get().getCurrentVersion().getEquivalentEntityVersions().stream()
-            .anyMatch(e -> e.getEntity().getId().equals(origin.getId()))) continue;
+            .anyMatch(
+                e ->
+                    e.getEntity().getId().equals(origin.getId())
+                        && e.getVersion().equals(origin.getVersion()))) continue;
         origin.setId(fork.get().getId());
         origin.setVersion(fork.get().getCurrentVersion().getVersion() + 1);
         if (origin instanceof Phenotype) {
@@ -292,6 +287,8 @@ public class EntityService implements ContentService {
         else if (origin instanceof Category) ((Category) origin).setSuperCategories(null);
       }
 
+      ids.put(oldId, origin.getId());
+
       if (origin instanceof Phenotype) {
         Phenotype phenotype = (Phenotype) origin;
         if (phenotype.getSuperPhenotype() != null) {
@@ -300,6 +297,13 @@ public class EntityService implements ContentService {
                   destinationRepo.getId(), phenotype.getSuperPhenotype().getId());
           if (superClass.isEmpty()) continue;
           phenotype.setSuperPhenotype((Phenotype) new Phenotype().id(superClass.get().getId()));
+          ids.put(phenotype.getSuperPhenotype().getId(), superClass.get().getId());
+        }
+
+        if (ApiModelMapper.isAbstract(origin) && ((Phenotype) origin).getExpression() != null) {
+          ((Phenotype) origin)
+              .expression(
+                  ApiModelMapper.replaceEntityIds(((Phenotype) origin).getExpression(), ids));
         }
       }
 
@@ -703,6 +707,49 @@ public class EntityService implements ContentService {
       throw new ResponseStatusException(
           HttpStatus.INTERNAL_SERVER_ERROR, "Import failed with error: " + e.getMessage());
     }
+  }
+
+  /**
+   * This method collects all dependencies of an entity.
+   *
+   * <p>Dependencies can be:
+   *
+   * <ul>
+   *   <li>super phenotypes of restricted phenotypes
+   *   <li>entities referenced from expressions
+   * </ul>
+   *
+   * @param entity The entity to collect dependencies for.
+   * @return A set of {@link Entity} objects.
+   */
+  private Set<Entity> getDependencies(Entity entity) {
+    Set<Entity> dependencies = new HashSet<>();
+
+    if (ApiModelMapper.isRestricted(entity)) {
+      Entity superPhenotype =
+          loadEntity(
+              entity.getRepository().getOrganisation().getId(),
+              entity.getRepository().getId(),
+              ((Phenotype) entity).getSuperPhenotype().getId(),
+              null);
+      dependencies.add(superPhenotype);
+    }
+
+    if (ApiModelMapper.isAbstract(entity)) {
+      dependencies.addAll(
+          ApiModelMapper.getEntityIdsFromExpression(((Phenotype) entity).getExpression()).stream()
+              .distinct()
+              .map(e -> entityRepository.findById(e))
+              .flatMap(Optional::stream)
+              .map(EntityDao::toApiModel)
+              .collect(Collectors.toSet()));
+    }
+
+    Set<Entity> superDependencies = new HashSet<>();
+    dependencies.forEach(d -> superDependencies.addAll(getDependencies(d)));
+    dependencies.addAll(superDependencies);
+
+    return dependencies;
   }
 
   /**

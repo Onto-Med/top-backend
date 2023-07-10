@@ -20,6 +20,18 @@ public abstract class ApiModelMapper {
         .collect(Collectors.toSet());
   }
 
+  /**
+   * This method builds a new expression from {@code expression} by mapping all entity IDs in the
+   * given expression to new IDs. New IDs should be provided as values in the {@code ids} {@link
+   * Map}.
+   *
+   * <p>If an entity ID in the expression is not contained in the keyset of {@code ids}, it is
+   * removed.
+   *
+   * @param expression The original expression.
+   * @param ids The {@link Map} containing old IDs as key and new IDs as values.
+   * @return The resulting expression.
+   */
   public static Expression replaceEntityIds(Expression expression, Map<String, String> ids) {
     if (expression == null) return null;
     Expression newExpression =
@@ -146,14 +158,44 @@ public abstract class ApiModelMapper {
     return isRestricted(entity.getEntityType());
   }
 
-  public static int compareByEntityType(Entity a, Entity b) {
+  public static boolean isComposite(Entity entity) {
+    return Arrays.asList(
+            EntityType.COMPOSITE_PHENOTYPE,
+            EntityType.COMPOSITE_RESTRICTION,
+            EntityType.COMPOSITE_CONCEPT)
+        .contains(entity.getEntityType());
+  }
+
+  public static int compare(Entity a, Entity b) {
     if ((a == null || a.getEntityType() == null))
       return b == null || b.getEntityType() == null ? 0 : -1;
     if (b == null || b.getEntityType() == null) return 1;
-    if (a.getEntityType().equals(b.getEntityType())) return 0;
-    if (isCategory(a)) return -1;
-    if (isCategory(b)) return 1;
-    return isAbstract(a) ? -1 : 1;
+
+    EntityType aType = a.getEntityType();
+    EntityType bType = b.getEntityType();
+
+    if (isCategory(a) && !isCategory(b)) return -1;
+    if (!isCategory(a) && isCategory(b)) return 1;
+
+    if (isPhenotype(a) && isPhenotype(b)) {
+      if (aType == EntityType.SINGLE_PHENOTYPE && isRestricted(b)) return -1;
+      if (isRestricted(a) && bType == EntityType.SINGLE_PHENOTYPE) return 1;
+
+      if (!isComposite(a) && isComposite(b)) return -1;
+      if (isComposite(a) && !isComposite(b)) return 1;
+
+      if (isComposite(a) && isComposite(b)) {
+        if (expressionContains(((Phenotype) a).getExpression(), b)
+            || expressionContains(
+                ((Phenotype) a).getExpression(), ((Phenotype) b).getSuperPhenotype())) return 1;
+        if (expressionContains(((Phenotype) b).getExpression(), a)
+            || expressionContains(
+                ((Phenotype) b).getExpression(), ((Phenotype) a).getSuperPhenotype())) return -1;
+        if (isAbstract(a) && !isAbstract(b)) return -1;
+        if (!isAbstract(a) && isAbstract(b)) return 1;
+      }
+    }
+    return a.getId().compareTo(b.getId());
   }
 
   public static Value clone(Value value) {
@@ -174,5 +216,10 @@ public abstract class ApiModelMapper {
           .value(((DateTimeValue) value).getValue())
           .dataType(value.getDataType());
     return null;
+  }
+
+  public static boolean expressionContains(Expression expression, Entity entity) {
+    if (expression == null || entity == null) return false;
+    return getEntityIdsFromExpression(expression).contains(entity.getId());
   }
 }
