@@ -72,9 +72,7 @@ public class EntityService implements ContentService {
           String.format("Batch size %d exceeds maximum %d.", entities.size(), maxBatchSize));
 
     for (Entity entity :
-        entities.stream()
-            .sorted(ApiModelMapper::compareByEntityType)
-            .collect(Collectors.toList())) {
+        entities.stream().sorted(ApiModelMapper::compare).collect(Collectors.toList())) {
       createEntity(organisationId, repositoryId, entity, ids, entities);
     }
 
@@ -92,7 +90,7 @@ public class EntityService implements ContentService {
    * </ul>
    *
    * If you are calling this method multiple times, you should sort the entities with the {@link
-   * ApiModelMapper#compareByEntityType(Entity, Entity)} comparator.
+   * ApiModelMapper#compare(Entity, Entity)} comparator.
    *
    * @param organisationId The organisation ID.
    * @param repositoryId The repository ID.
