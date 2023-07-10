@@ -177,6 +177,15 @@ public abstract class ApiModelMapper {
     if (isCategory(a) && !isCategory(b)) return -1;
     if (!isCategory(a) && isCategory(b)) return 1;
 
+    if (isCategory(a) && isCategory(b)) {
+      if (((Category) a).getSuperCategories() != null
+          && ((Category) a)
+              .getSuperCategories().stream().anyMatch(c -> c.getId().equals(b.getId()))) return 1;
+      if (((Category) b).getSuperCategories() != null
+          && ((Category) b)
+              .getSuperCategories().stream().anyMatch(c -> c.getId().equals(a.getId()))) return -1;
+    }
+
     if (isPhenotype(a) && isPhenotype(b)) {
       if (aType == EntityType.SINGLE_PHENOTYPE && isRestricted(b)) return -1;
       if (isRestricted(a) && bType == EntityType.SINGLE_PHENOTYPE) return 1;
