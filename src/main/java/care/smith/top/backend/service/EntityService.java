@@ -87,7 +87,7 @@ public class EntityService implements ContentService {
    * following will happen:
    *
    * <ul>
-   *   <li>category: super categories are created too
+   *   <li>category/concept: super categories/concepts are created too
    *   <li>abstract phenotype: entities referenced in expressions are created too
    *   <li>restriction: super phenotypes are created too
    * </ul>
@@ -118,6 +118,22 @@ public class EntityService implements ContentService {
                         .map(
                             e ->
                                 (Category)
+                                    createEntity(
+                                        organisationId,
+                                        repositoryId,
+                                        ApiModelMapper.getEntity(entities, e.getId()),
+                                        ids,
+                                        entities))
+                        .collect(Collectors.toList()));
+    } else if (ApiModelMapper.isConcept(data)) {
+      if (((Concept) data).getSuperConcepts() != null)
+        ((Concept) data)
+            .setSuperConcepts(
+                ((Concept) data)
+                    .getSuperConcepts().stream()
+                        .map(
+                            e ->
+                                (SingleConcept)
                                     createEntity(
                                         organisationId,
                                         repositoryId,
@@ -289,6 +305,12 @@ public class EntityService implements ContentService {
                   fork.get().getSuperEntities().stream()
                       .map(e -> ((Category) new Category().id(e.getId())))
                       .collect(Collectors.toList()));
+        } else if (origin instanceof Concept){
+          ((Concept) origin)
+                  .setSuperConcepts(
+                          fork.get().getSuperEntities().stream()
+                                  .map(e -> ((SingleConcept) new SingleConcept().id(e.getId())))
+                                  .collect(Collectors.toList()));
         }
       }
 
@@ -363,7 +385,7 @@ public class EntityService implements ContentService {
     if (entity.getSubEntities() != null) {
       if (ApiModelMapper.isAbstract(entity.getEntityType())) {
         entityRepository.deleteAll(entity.getSubEntities());
-      } else if (ApiModelMapper.isCategory(entity.getEntityType())) {
+      } else if (ApiModelMapper.canHaveSubs(entity.getEntityType())) {
         if (cascade != null && cascade) {
           entity
               .getSubEntities()
@@ -535,8 +557,12 @@ public class EntityService implements ContentService {
       "hasRole('ADMIN') or hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'READ')")
   public List<Entity> getSubclasses(
       String organisationId, String repositoryId, String id, List<String> include) {
-    getRepository(organisationId, repositoryId);
-    return categoryRepository
+    RepositoryDao repoDao = getRepository(organisationId, repositoryId);
+    EntityRepository repo = categoryRepository;
+    if (Objects.requireNonNull(repoDao.getRepositoryType()) == RepositoryType.CONCEPT_REPOSITORY) {
+      repo = conceptRepository;
+    }
+    return repo
         .findAllByRepositoryIdAndSuperEntities_Id(repositoryId, id, Sort.by(EntityDao_.ID))
         .map(EntityDao::toApiModel)
         .map(populateSubEntities())
@@ -761,6 +787,16 @@ public class EntityService implements ContentService {
   }
 
   /**
+   * Checks if the entity has sub concepts.
+   *
+   * @param entity The entity to be checked
+   * @return true, if provided entity has sub concepts
+   */
+  private boolean hasSubConcepts(@NotNull Entity entity){
+    return hasSubEntities(entity, ApiModelMapper.conceptTypes());
+  }
+
+  /**
    * Checks if the entity has sub entities of the provided entity types
    *
    * @param entity The entity to be checked.
@@ -772,7 +808,7 @@ public class EntityService implements ContentService {
   }
 
   /**
-   * Checks if the provided entity has sub categories or phenotypes. If this is not the case, the
+   * Checks if the provided entity has sub categories, phenotypes or concepts. If this is not the case, the
    * respective fields are initialised with empty arrays to indicate absence of sub entities.
    *
    * @return The provided entity instance with modified fields.
@@ -782,6 +818,8 @@ public class EntityService implements ContentService {
       if (e instanceof Category) {
         if (!hasSubCategories(e)) ((Category) e).setSubCategories(new ArrayList<>());
         if (!hasSubPhenotypes(e)) ((Category) e).setPhenotypes(new ArrayList<>());
+      } else if (e instanceof SingleConcept) {
+        if (!hasSubConcepts(e)) ((SingleConcept) e).setSubConcepts(new ArrayList<>());
       }
       return e;
     };

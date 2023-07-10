@@ -143,9 +143,21 @@ public abstract class ApiModelMapper {
     return isCompositeConcept(entity.getEntityType());
   }
 
+  public static boolean isSingleConcept(EntityType entityType) {
+    return EntityType.SINGLE_CONCEPT == entityType;
+  }
+
+  public static boolean isSingleConcept(Entity entity) {
+    return isSingleConcept(entity.getEntityType());
+  }
+
   public static boolean isRestricted(EntityType entityType) {
     return Arrays.asList(EntityType.SINGLE_RESTRICTION, EntityType.COMPOSITE_RESTRICTION)
         .contains(entityType);
+  }
+
+  public static boolean canHaveSubs(EntityType entityType) {
+    return isCategory(entityType) || isSingleConcept(entityType);
   }
 
   public static List<EntityType> phenotypeTypes() {
@@ -154,6 +166,12 @@ public abstract class ApiModelMapper {
         EntityType.COMPOSITE_RESTRICTION,
         EntityType.SINGLE_PHENOTYPE,
         EntityType.SINGLE_RESTRICTION);
+  }
+
+  public static List<EntityType> conceptTypes() {
+    return Arrays.asList(
+        EntityType.SINGLE_CONCEPT,
+        EntityType.COMPOSITE_CONCEPT);
   }
 
   public static boolean isRestricted(Entity entity) {
@@ -167,6 +185,8 @@ public abstract class ApiModelMapper {
     if (a.getEntityType().equals(b.getEntityType())) return 0;
     if (isCategory(a)) return -1;
     if (isCategory(b)) return 1;
+    if (isSingleConcept(a)) return -1;
+    if (isSingleConcept(b)) return 1;
     return isAbstract(a) ? -1 : 1;
   }
 

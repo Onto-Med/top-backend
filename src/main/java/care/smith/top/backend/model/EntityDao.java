@@ -108,7 +108,7 @@ public class EntityDao {
       if (ApiModelMapper.isCompositeConcept(entityType)) {
         entity = new CompositeConcept();
       } else {
-        entity = new Concept();
+        entity = new SingleConcept();
       }
     } else {
       throw new TypeMismatchException(String.format("Type '%s' is not recognized", entityType.toString()));
