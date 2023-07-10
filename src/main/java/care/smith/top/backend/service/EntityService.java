@@ -142,6 +142,15 @@ public class EntityService implements ContentService {
       ((Phenotype) data).getSuperPhenotype().setId(ids.get(oldId));
     }
 
+    if (data instanceof Category && ((Category) data).getSuperCategories() != null) {
+      ((Category) data)
+          .superCategories(
+              ((Category) data)
+                  .getSuperCategories().stream()
+                      .map(c -> (Category) c.id(ids.get(c.getId())))
+                      .collect(Collectors.toList()));
+    }
+
     Entity entity = null;
     try {
       entity = createEntity(organisationId, repositoryId, data, true);
@@ -704,6 +713,7 @@ public class EntityService implements ContentService {
       List<Entity> entities = List.of(importer.read(stream));
       createEntities(organisationId, repositoryId, entities, null);
     } catch (Exception e) {
+      e.printStackTrace();
       throw new ResponseStatusException(
           HttpStatus.INTERNAL_SERVER_ERROR, "Import failed with error: " + e.getMessage());
     }
