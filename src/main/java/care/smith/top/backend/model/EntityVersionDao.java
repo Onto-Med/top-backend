@@ -119,6 +119,11 @@ public class EntityVersionDao {
         expression = new ExpressionDao(((Phenotype) entity).getExpression());
       unit = ((Phenotype) entity).getUnit();
     }
+    if (entity instanceof CompositeConcept) {
+      if (((CompositeConcept) entity).getExpression() != null){
+        expression = new ExpressionDao(((CompositeConcept) entity).getExpression());
+      }
+    }
   }
 
   public EntityVersionDao dataType(DataType dataType) {
