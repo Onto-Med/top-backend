@@ -252,6 +252,32 @@ class EntityServiceTest extends AbstractTest {
             .findFirst();
     assertThat(fork1).isPresent();
 
+    origin.addTitlesItem(new LocalisableText().lang("de").text("Titel"));
+    assertThatCode(
+            () ->
+                entityService.updateEntityById(
+                    organisation.getId(), repository1.getId(), origin.getId(), origin, null))
+        .doesNotThrowAnyException();
+
+    assertThat(
+            entityService.createFork(
+                organisation.getId(),
+                repository1.getId(),
+                origin.getId(),
+                forkingInstruction.repositoryId(repository3.getId()).update(true),
+                null,
+                null))
+        .size()
+        .isEqualTo(1);
+
+    assertThat(
+            entityRepository.findByRepositoryIdAndOriginId(
+                forkingInstruction.getRepositoryId(), origin.getId()))
+        .isPresent()
+        .satisfies(f -> assertThat(f.get().getCurrentVersion().getVersion()).isEqualTo(2));
+
+    assertThat(entityVersionRepository.findAll()).isNotEmpty().size().isEqualTo(5);
+
     assertThatCode(
             () ->
                 entityService.deleteEntity(
@@ -275,7 +301,7 @@ class EntityServiceTest extends AbstractTest {
         .allMatch(e -> e.getOrigin() == null)
         .size()
         .isEqualTo(1);
-    assertThat(entityVersionRepository.findAll()).isNotEmpty().size().isEqualTo(1);
+    assertThat(entityVersionRepository.findAll()).isNotEmpty().size().isEqualTo(2);
   }
 
   @Test

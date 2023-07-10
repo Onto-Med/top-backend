@@ -259,7 +259,10 @@ public class EntityService implements ContentService {
 
       if (forkingInstruction.isUpdate() && fork.isPresent()) {
         if (fork.get().getCurrentVersion().getEquivalentEntityVersions().stream()
-            .anyMatch(e -> e.getEntity().getId().equals(origin.getId()))) continue;
+            .anyMatch(
+                e ->
+                    e.getEntity().getId().equals(origin.getId())
+                        && e.getVersion().equals(origin.getVersion()))) continue;
         origin.setId(fork.get().getId());
         origin.setVersion(fork.get().getCurrentVersion().getVersion() + 1);
         if (origin instanceof Phenotype) {
