@@ -142,7 +142,7 @@ public abstract class ApiModelMapper {
   }
 
   public static boolean isConcept(EntityType entityType) {
-    return List.of(EntityType.SINGLE_CONCEPT, EntityType.COMPOSITE_CONCEPT).contains(entityType);
+    return EntityType.SINGLE_CONCEPT.equals(entityType) || EntityType.COMPOSITE_CONCEPT.equals(entityType);
   }
 
   public static boolean isConcept(Entity entity) { return isConcept(entity.getEntityType()); }

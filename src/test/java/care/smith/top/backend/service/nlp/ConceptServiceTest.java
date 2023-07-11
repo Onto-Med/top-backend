@@ -18,7 +18,7 @@ class ConceptServiceTest extends AbstractNLPTest {
 
   void populateNeo4j(int conceptCount) {
     conceptList.clear();
-    conceptRepository.deleteAll();
+    conceptClusterNodeRepository.deleteAll();
     phraseRepository.deleteAll();
 
     for (int i = 0; i < conceptCount; i++) {
@@ -48,7 +48,7 @@ class ConceptServiceTest extends AbstractNLPTest {
               phraseList, // list of labels that is retrieved by Concept::getLabels()
               new HashSet<>(phraseEntityList));
       conceptList.add(concept);
-      conceptRepository.save(concept);
+      conceptClusterNodeRepository.save(concept);
     }
   }
 

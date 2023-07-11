@@ -41,9 +41,9 @@ import org.testcontainers.shaded.org.yaml.snakeyaml.Yaml;
 @Transactional(propagation = Propagation.NEVER)
 public abstract class AbstractNLPTest { // extends AbstractTest {
 
-  @Autowired ConceptService conceptService;
   @Autowired
-  ConceptClusterNodeRepository conceptRepository;
+  ConceptClusterService conceptService;
+  @Autowired ConceptClusterNodeRepository conceptClusterNodeRepository;
   @Autowired DocumentService documentService;
   @Autowired DocumentRepository documentRepository;
   @Autowired DocumentNodeRepository documentNodeRepository;

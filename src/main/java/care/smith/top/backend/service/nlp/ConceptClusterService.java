@@ -16,12 +16,12 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
-public class ConceptService implements ContentService {
+public class ConceptClusterService implements ContentService {
 
     private final ConceptClusterNodeRepository conceptRepository;
 
     @Autowired
-    public ConceptService(ConceptClusterNodeRepository conceptRepository) {
+    public ConceptClusterService(ConceptClusterNodeRepository conceptRepository) {
         this.conceptRepository = conceptRepository;
     }
 
