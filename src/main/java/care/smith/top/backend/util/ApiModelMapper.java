@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 
 public abstract class ApiModelMapper {
   public static Entity getEntity(List<Entity> entities, String id) {
-    return entities.stream().filter(e -> e.getId().equals(id)).findFirst().orElse(null);
+    return entities.stream().filter(e -> Objects.equals(e.getId(), id)).findFirst().orElse(null);
   }
 
   public static Set<String> getEntityIdsFromExpression(Expression expression) {
@@ -238,10 +238,14 @@ public abstract class ApiModelMapper {
     }
 
     if (isConcept(a) && isConcept(b)) {
-      if (isSingleConcept(a)) return -1;
-      if (isSingleConcept(b)) return 1;
+      if (((Concept) a).getSuperConcepts() != null
+              && ((Concept) a)
+              .getSuperConcepts().stream().anyMatch(c -> c.getId().equals(b.getId()))) return 1;
+      if (((Concept) b).getSuperConcepts() != null
+              && ((Concept) b)
+              .getSuperConcepts().stream().anyMatch(c -> c.getId().equals(a.getId()))) return -1;
     }
-    return a.getId().compareTo(b.getId());
+    return a.getId().compareTo( b.getId());
   }
 
   public static Value clone(Value value) {

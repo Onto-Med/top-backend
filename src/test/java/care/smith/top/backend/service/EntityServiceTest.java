@@ -132,19 +132,19 @@ class EntityServiceTest extends AbstractTest {
                     new SingleConcept()
                             .titles(List.of(new LocalisableText().text("Single Concept 1").lang("en")))
                             .entityType(EntityType.SINGLE_CONCEPT)
-                            .id("single_concept");
-    Concept subConcept =
-            (Concept)
-                    new Concept()
+                            .id("sing_con");
+    SingleConcept subConcept =
+            (SingleConcept)
+                    new SingleConcept()
                             .superConcepts(List.of(singleConcept))
                             .entityType(EntityType.SINGLE_CONCEPT)
-                            .id("sub_concept");
-    Concept compositeConcept =
-              (Concept)
+                            .id("sub_con");
+    CompositeConcept compositeConcept =
+              (CompositeConcept)
                       new CompositeConcept()
                               .expression(care.smith.top.top_document_query.functions.Not.of(singleConcept))
                               .entityType(EntityType.COMPOSITE_CONCEPT)
-                              .id("composite_concept");
+                              .id("comp_con");
 
     List<Entity> bulk =
         Arrays.asList(
