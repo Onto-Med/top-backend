@@ -1,20 +1,20 @@
 package care.smith.top.backend.api.nlp;
 
 import care.smith.top.backend.api.ConceptclusterApiDelegate;
-import care.smith.top.backend.service.nlp.ConceptService;
+import care.smith.top.backend.service.nlp.ConceptClusterService;
 import care.smith.top.model.ConceptCluster;
 import care.smith.top.model.ConceptClusterPage;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
-public class ConceptApiDelegateImpl implements ConceptclusterApiDelegate {
+public class ConceptClusterApiDelegateImpl implements ConceptclusterApiDelegate {
 
-    @Autowired ConceptService conceptService;
+    @Autowired
+    ConceptClusterService conceptService;
 
     @Override
     public ResponseEntity<ConceptClusterPage> getConceptClustersByDocumentId(

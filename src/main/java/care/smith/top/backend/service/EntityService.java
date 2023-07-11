@@ -559,7 +559,7 @@ public class EntityService implements ContentService {
       String organisationId, String repositoryId, String id, List<String> include) {
     RepositoryDao repoDao = getRepository(organisationId, repositoryId);
     EntityRepository repo = categoryRepository;
-    if (Objects.requireNonNull(repoDao.getRepositoryType()) == RepositoryType.CONCEPT_REPOSITORY) {
+    if (RepositoryType.CONCEPT_REPOSITORY.equals(repoDao.getRepositoryType())) {
       repo = conceptRepository;
     }
     return repo

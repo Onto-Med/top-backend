@@ -112,6 +112,25 @@ class EntityServiceTest extends AbstractTest {
                 .entityType(EntityType.COMPOSITE_RESTRICTION)
                 .id("res");
 
+    SingleConcept singleConcept =
+            (SingleConcept)
+                    new SingleConcept()
+                            .titles(List.of(new LocalisableText().text("Single Concept 1").lang("en")))
+                            .entityType(EntityType.SINGLE_CONCEPT)
+                            .id("single_concept");
+    Concept subConcept =
+            (Concept)
+                    new Concept()
+                            .superConcepts(List.of(singleConcept))
+                            .entityType(EntityType.SINGLE_CONCEPT)
+                            .id("sub_concept");
+    Concept compositeConcept =
+              (Concept)
+                      new CompositeConcept()
+                              .expression(care.smith.top.top_document_query.functions.Not.of(singleConcept))
+                              .entityType(EntityType.COMPOSITE_CONCEPT)
+                              .id("composite_concept");
+
     List<Entity> bulk =
         Arrays.asList(
             compositePhenotype,
@@ -121,13 +140,16 @@ class EntityServiceTest extends AbstractTest {
             subCategory,
             singlePhenotype,
             subCategory,
-            invalidCategory);
+            invalidCategory,
+            singleConcept,
+            subConcept,
+            compositeConcept);
 
     assertThatCode(
             () ->
                 entityService.createEntities(organisation.getId(), repository.getId(), bulk, null))
         .doesNotThrowAnyException();
-    assertThat(entityService.count()).isEqualTo(6);
+    assertThat(entityService.count()).isEqualTo(9);
     assertThatThrownBy(
             () ->
                 entityService.loadEntity(
@@ -464,8 +486,49 @@ class EntityServiceTest extends AbstractTest {
         .size()
         .isEqualTo(2);
 
+    /* Create single concept */
+    SingleConcept singleConcept =
+              (SingleConcept)
+                      new SingleConcept()
+                              .id(UUID.randomUUID().toString())
+                              .entityType(EntityType.SINGLE_CONCEPT);
+
+    assertThat(
+              entityService.createEntity(organisation.getId(), repository.getId(), singleConcept))
+              .isNotNull()
+              .isInstanceOf(Concept.class)
+              .satisfies(
+                      sc -> {
+                          assertThat(sc.getId()).isEqualTo(singleConcept.getId());
+                          assertThat(sc.getVersion()).isEqualTo(1);
+                          assertThat(sc.getEntityType()).isEqualTo(singleConcept.getEntityType());
+                          assertThat(((Concept) sc).getSuperConcepts()).isNull();
+                      });
+    /* Create single concept */
+    Concept compositeConcept =
+              (CompositeConcept)
+                      new CompositeConcept()
+                              .expression(care.smith.top.top_document_query.functions.Not.of(singleConcept.getId()))
+                              .superConcepts(List.of(singleConcept))
+                              .id(UUID.randomUUID().toString())
+                              .entityType(EntityType.COMPOSITE_CONCEPT);
+
+    assertThat(
+            entityService.createEntity(organisation.getId(), repository.getId(), compositeConcept))
+        .isNotNull()
+        .isInstanceOf(Concept.class)
+        .satisfies(
+            sc -> {
+              assertThat(sc.getId()).isEqualTo(compositeConcept.getId());
+              assertThat(sc.getVersion()).isEqualTo(1);
+              assertThat(sc.getEntityType()).isEqualTo(compositeConcept.getEntityType());
+              assertThat(((Concept) sc).getSuperConcepts()).isNotNull();
+              assertThat(((CompositeConcept) sc).getExpression()).isNotNull();
+            });
+
     assertThat(categoryRepository.count()).isEqualTo(1);
-    assertThat(entityRepository.count()).isEqualTo(4);
+    assertThat(entityRepository.count()).isEqualTo(6);
+    assertThat(conceptRepository.count()).isEqualTo(2);
   }
 
   @Test
