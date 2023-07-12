@@ -5,7 +5,8 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ConceptRepository extends EntityRepository {
-    default long count() {
-        return countByEntityTypeIn(new EntityType[] {EntityType.SINGLE_CONCEPT, EntityType.COMPOSITE_CONCEPT});
-    }
+  default long count() {
+    return countByEntityTypeIn(
+        new EntityType[] {EntityType.SINGLE_CONCEPT, EntityType.COMPOSITE_CONCEPT});
+  }
 }

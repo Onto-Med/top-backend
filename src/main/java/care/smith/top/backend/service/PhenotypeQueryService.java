@@ -13,7 +13,6 @@ import care.smith.top.top_phenotypic_query.adapter.config.DataAdapterConfig;
 import care.smith.top.top_phenotypic_query.converter.csv.CSV;
 import care.smith.top.top_phenotypic_query.result.ResultSet;
 import care.smith.top.top_phenotypic_query.search.PhenotypeFinder;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -29,7 +28,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
-
 import org.jetbrains.annotations.NotNull;
 import org.jobrunr.jobs.Job;
 import org.jobrunr.jobs.states.StateName;
@@ -238,7 +236,8 @@ public class PhenotypeQueryService {
   public Path getQueryResultPath(String organisationId, String repositoryId, UUID queryId)
       throws FileSystemException {
     if (!queryResultDownloadEnabled)
-      throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Query result download is disabled.");
+      throw new ResponseStatusException(
+          HttpStatus.NOT_ACCEPTABLE, "Query result download is disabled.");
     if (!repositoryRepository.existsByIdAndOrganisation_Id(repositoryId, organisationId))
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Repository does not exist.");
 

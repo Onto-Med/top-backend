@@ -1,7 +1,5 @@
 package care.smith.top.backend.service.ols;
 
-import care.smith.top.backend.service.OLSCodeService;
-
 /**
  * @author ralph
  */

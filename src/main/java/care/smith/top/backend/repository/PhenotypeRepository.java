@@ -4,14 +4,12 @@ import care.smith.top.backend.model.*;
 import care.smith.top.model.DataType;
 import care.smith.top.model.EntityType;
 import care.smith.top.model.ItemType;
+import java.util.Collections;
+import java.util.List;
+import javax.annotation.Nullable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-
-import javax.annotation.Nullable;
-import javax.persistence.criteria.JoinType;
-import java.util.Collections;
-import java.util.List;
 
 @org.springframework.stereotype.Repository
 public interface PhenotypeRepository extends EntityRepository {

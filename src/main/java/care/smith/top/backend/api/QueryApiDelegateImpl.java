@@ -2,8 +2,8 @@ package care.smith.top.backend.api;
 
 import care.smith.top.backend.service.PhenotypeQueryService;
 import care.smith.top.backend.util.ApiModelMapper;
-import care.smith.top.model.PhenotypeQuery;
 import care.smith.top.model.DataSource;
+import care.smith.top.model.PhenotypeQuery;
 import care.smith.top.model.Query;
 import care.smith.top.model.QueryPage;
 import care.smith.top.model.QueryResult;
@@ -55,12 +55,16 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
     switch (query.getType()) {
       case PHENOTYPE:
         return new ResponseEntity<>(
-              phenotypeQueryService.enqueueQuery(organisationId, repositoryId, (PhenotypeQuery) query),
-              HttpStatus.CREATED);
+            phenotypeQueryService.enqueueQuery(
+                organisationId, repositoryId, (PhenotypeQuery) query),
+            HttpStatus.CREATED);
       case CONCEPT:
-        throw  new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Concept Query is not yet implemented."); // ToDo: needs to be implemented
+        throw new ResponseStatusException(
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            "Concept Query is not yet implemented."); // ToDo: needs to be implemented
       default:
-        throw  new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Query type is neither Phenotype nor Concept.");
+        throw new ResponseStatusException(
+            HttpStatus.NOT_ACCEPTABLE, "Query type is neither Phenotype nor Concept.");
     }
   }
 

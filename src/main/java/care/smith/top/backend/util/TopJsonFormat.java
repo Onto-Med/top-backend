@@ -7,7 +7,6 @@ import care.smith.top.top_phenotypic_query.converter.PhenotypeImporter;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-
 import java.io.*;
 import java.util.logging.Logger;
 

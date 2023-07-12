@@ -1,9 +1,9 @@
 package care.smith.top.backend.util;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import care.smith.top.model.*;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 class ApiModelMapperTest {
 

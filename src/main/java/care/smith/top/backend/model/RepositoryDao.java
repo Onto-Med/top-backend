@@ -3,15 +3,14 @@ package care.smith.top.backend.model;
 import care.smith.top.model.Organisation;
 import care.smith.top.model.Repository;
 import care.smith.top.model.RepositoryType;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
+import javax.persistence.*;
+import javax.validation.constraints.NotNull;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity(name = "repository")
 @EntityListeners(AuditingEntityListener.class)
@@ -42,7 +41,8 @@ public class RepositoryDao {
 
   public RepositoryDao() {}
 
-  public RepositoryDao(String id, String name, String description, Boolean primary, RepositoryType repositoryType) {
+  public RepositoryDao(
+      String id, String name, String description, Boolean primary, RepositoryType repositoryType) {
     this.id = id == null ? UUID.randomUUID().toString() : id;
     this.name = name;
     this.description = description;

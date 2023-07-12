@@ -1,11 +1,16 @@
 package care.smith.top.backend.api;
 
+import static care.smith.top.backend.configuration.RequestValidator.isValidId;
+
 import care.smith.top.backend.service.EntityService;
 import care.smith.top.backend.service.RepositoryService;
 import care.smith.top.backend.util.ApiModelMapper;
 import care.smith.top.model.Repository;
 import care.smith.top.model.RepositoryPage;
 import care.smith.top.model.RepositoryType;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
@@ -14,12 +19,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.List;
-
-import static care.smith.top.backend.configuration.RequestValidator.isValidId;
 
 @Service
 public class RepositoryApiDelegateImpl implements RepositoryApiDelegate {

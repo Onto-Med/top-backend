@@ -1,12 +1,12 @@
 package care.smith.top.backend.service;
 
+import static org.assertj.core.api.Assertions.*;
+
 import care.smith.top.backend.model.RepositoryDao;
 import care.smith.top.model.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
-
-import static org.assertj.core.api.Assertions.*;
 
 class RepositoryServiceTest extends AbstractTest {
   @Test

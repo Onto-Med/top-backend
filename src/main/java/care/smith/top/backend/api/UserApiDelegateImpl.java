@@ -5,13 +5,12 @@ import care.smith.top.backend.service.UserService;
 import care.smith.top.backend.util.ApiModelMapper;
 import care.smith.top.model.User;
 import care.smith.top.model.UserPage;
+import java.util.List;
+import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.Optional;
 
 @Service
 public class UserApiDelegateImpl implements UserApiDelegate {

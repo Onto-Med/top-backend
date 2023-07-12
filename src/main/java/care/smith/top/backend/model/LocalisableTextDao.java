@@ -1,7 +1,6 @@
 package care.smith.top.backend.model;
 
 import care.smith.top.model.LocalisableText;
-
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.validation.constraints.NotNull;
@@ -20,6 +19,11 @@ public class LocalisableTextDao {
     this.text = text;
   }
 
+  public LocalisableTextDao(@NotNull LocalisableText localisableText) {
+    lang = localisableText.getLang();
+    text = localisableText.getText();
+  }
+
   public LocalisableTextDao lang(String lang) {
     this.lang = lang;
     return this;
@@ -28,11 +32,6 @@ public class LocalisableTextDao {
   public LocalisableTextDao text(String text) {
     this.text = text;
     return this;
-  }
-
-  public LocalisableTextDao(@NotNull LocalisableText localisableText) {
-    lang = localisableText.getLang();
-    text = localisableText.getText();
   }
 
   @Override

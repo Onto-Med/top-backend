@@ -1,8 +1,7 @@
 package care.smith.top.backend.configuration;
 
-import org.apache.commons.lang3.StringUtils;
-
 import java.util.Arrays;
+import org.apache.commons.lang3.StringUtils;
 
 public class RequestValidator {
   public static boolean isValidId(String id) {
