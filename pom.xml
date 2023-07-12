@@ -198,6 +198,7 @@
             <groupId>co.elastic.clients</groupId>
             <artifactId>elasticsearch-java</artifactId>
             <version>8.8.2</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>jakarta.json</groupId>
