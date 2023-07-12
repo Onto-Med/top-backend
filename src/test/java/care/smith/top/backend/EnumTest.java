@@ -1,9 +1,9 @@
 package care.smith.top.backend;
 
+import static org.assertj.core.api.AssertionsForClassTypes.*;
+
 import care.smith.top.model.*;
 import org.junit.jupiter.api.Test;
-
-import static org.assertj.core.api.AssertionsForClassTypes.*;
 
 public class EnumTest {
   /**

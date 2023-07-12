@@ -3,12 +3,11 @@ package care.smith.top.backend.model;
 import care.smith.top.model.DateTimeRestriction;
 import care.smith.top.model.ProjectionEntry;
 import care.smith.top.model.QueryCriterion;
-
+import java.util.Objects;
 import javax.persistence.CascadeType;
 import javax.persistence.Embeddable;
 import javax.persistence.OneToOne;
 import javax.validation.constraints.NotNull;
-import java.util.Objects;
 
 @Embeddable
 public class QueryCriterionDao {

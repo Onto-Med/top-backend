@@ -1,14 +1,13 @@
 package care.smith.top.backend.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import care.smith.top.backend.model.OrganisationDao;
 import care.smith.top.backend.model.Permission;
 import care.smith.top.backend.model.UserDao;
 import care.smith.top.backend.model.key.OrganisationMembershipKeyDao;
-import org.junit.jupiter.api.Test;
-
 import java.util.Collections;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.Test;
 
 class UserServiceTest extends AbstractTest {
   @Test

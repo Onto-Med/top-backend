@@ -1,19 +1,16 @@
 package care.smith.top.backend.model;
 
 import care.smith.top.model.PhenotypeQuery;
-import care.smith.top.model.Query;
-import care.smith.top.top_phenotypic_query.util.builder.Phe;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import javax.persistence.*;
+import javax.validation.constraints.NotNull;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity(name = "query")
 @EntityListeners(AuditingEntityListener.class)
@@ -135,11 +132,12 @@ public class QueryDao {
   }
 
   public PhenotypeQuery toApiModel() {
-    PhenotypeQuery query = (PhenotypeQuery)
+    PhenotypeQuery query =
+        (PhenotypeQuery)
             new PhenotypeQuery()
-            .id(UUID.fromString(getId()))
-            .name(getName())
-            .dataSources(new ArrayList<>(getDataSources()));
+                .id(UUID.fromString(getId()))
+                .name(getName())
+                .dataSources(new ArrayList<>(getDataSources()));
     if (getCriteria() != null)
       query.criteria(
           getCriteria().stream().map(QueryCriterionDao::toApiModel).collect(Collectors.toList()));

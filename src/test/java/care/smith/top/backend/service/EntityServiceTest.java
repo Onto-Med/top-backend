@@ -1,20 +1,19 @@
 package care.smith.top.backend.service;
 
+import static org.assertj.core.api.Assertions.*;
+
 import care.smith.top.backend.model.EntityDao;
 import care.smith.top.backend.util.TopJsonFormat;
 import care.smith.top.model.*;
 import care.smith.top.top_phenotypic_query.c2reasoner.functions.bool.Not;
-import org.junit.jupiter.api.Test;
-import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
-
 import java.io.ByteArrayInputStream;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.util.*;
-
-import static org.assertj.core.api.Assertions.*;
+import org.junit.jupiter.api.Test;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 class EntityServiceTest extends AbstractTest {
   @Test
@@ -128,23 +127,23 @@ class EntityServiceTest extends AbstractTest {
                 .id("res");
 
     SingleConcept singleConcept =
-            (SingleConcept)
-                    new SingleConcept()
-                            .titles(List.of(new LocalisableText().text("Single Concept 1").lang("en")))
-                            .entityType(EntityType.SINGLE_CONCEPT)
-                            .id("sing_con");
+        (SingleConcept)
+            new SingleConcept()
+                .titles(List.of(new LocalisableText().text("Single Concept 1").lang("en")))
+                .entityType(EntityType.SINGLE_CONCEPT)
+                .id("sing_con");
     SingleConcept subConcept =
-            (SingleConcept)
-                    new SingleConcept()
-                            .superConcepts(List.of(singleConcept))
-                            .entityType(EntityType.SINGLE_CONCEPT)
-                            .id("sub_con");
+        (SingleConcept)
+            new SingleConcept()
+                .superConcepts(List.of(singleConcept))
+                .entityType(EntityType.SINGLE_CONCEPT)
+                .id("sub_con");
     CompositeConcept compositeConcept =
-              (CompositeConcept)
-                      new CompositeConcept()
-                              .expression(care.smith.top.top_document_query.functions.Not.of(singleConcept))
-                              .entityType(EntityType.COMPOSITE_CONCEPT)
-                              .id("comp_con");
+        (CompositeConcept)
+            new CompositeConcept()
+                .expression(care.smith.top.top_document_query.functions.Not.of(singleConcept))
+                .entityType(EntityType.COMPOSITE_CONCEPT)
+                .id("comp_con");
 
     List<Entity> bulk =
         Arrays.asList(
@@ -541,30 +540,30 @@ class EntityServiceTest extends AbstractTest {
 
     /* Create single concept */
     SingleConcept singleConcept =
-              (SingleConcept)
-                      new SingleConcept()
-                              .id(UUID.randomUUID().toString())
-                              .entityType(EntityType.SINGLE_CONCEPT);
+        (SingleConcept)
+            new SingleConcept()
+                .id(UUID.randomUUID().toString())
+                .entityType(EntityType.SINGLE_CONCEPT);
 
-    assertThat(
-              entityService.createEntity(organisation.getId(), repository.getId(), singleConcept))
-              .isNotNull()
-              .isInstanceOf(Concept.class)
-              .satisfies(
-                      sc -> {
-                          assertThat(sc.getId()).isEqualTo(singleConcept.getId());
-                          assertThat(sc.getVersion()).isEqualTo(1);
-                          assertThat(sc.getEntityType()).isEqualTo(singleConcept.getEntityType());
-                          assertThat(((Concept) sc).getSuperConcepts()).isNull();
-                      });
+    assertThat(entityService.createEntity(organisation.getId(), repository.getId(), singleConcept))
+        .isNotNull()
+        .isInstanceOf(Concept.class)
+        .satisfies(
+            sc -> {
+              assertThat(sc.getId()).isEqualTo(singleConcept.getId());
+              assertThat(sc.getVersion()).isEqualTo(1);
+              assertThat(sc.getEntityType()).isEqualTo(singleConcept.getEntityType());
+              assertThat(((Concept) sc).getSuperConcepts()).isNull();
+            });
     /* Create single concept */
     Concept compositeConcept =
-              (CompositeConcept)
-                      new CompositeConcept()
-                              .expression(care.smith.top.top_document_query.functions.Not.of(singleConcept.getId()))
-                              .superConcepts(List.of(singleConcept))
-                              .id(UUID.randomUUID().toString())
-                              .entityType(EntityType.COMPOSITE_CONCEPT);
+        (CompositeConcept)
+            new CompositeConcept()
+                .expression(
+                    care.smith.top.top_document_query.functions.Not.of(singleConcept.getId()))
+                .superConcepts(List.of(singleConcept))
+                .id(UUID.randomUUID().toString())
+                .entityType(EntityType.COMPOSITE_CONCEPT);
 
     assertThat(
             entityService.createEntity(organisation.getId(), repository.getId(), compositeConcept))

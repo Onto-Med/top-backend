@@ -6,9 +6,8 @@ import org.springframework.data.elasticsearch.repository.ElasticsearchRepository
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface DocumentRepository extends
-        ElasticsearchRepository<DocumentEntity, String>,
-        DocumentCustomRepository {
+public interface DocumentRepository
+    extends ElasticsearchRepository<DocumentEntity, String>, DocumentCustomRepository {
 
-    DocumentEntity findDocumentEntityByDocumentName(String documentName);
+  DocumentEntity findDocumentEntityByDocumentName(String documentName);
 }

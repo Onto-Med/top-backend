@@ -2,12 +2,11 @@ package care.smith.top.backend.model;
 
 import care.smith.top.model.QueryResult;
 import care.smith.top.model.QueryState;
-
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
 import java.time.OffsetDateTime;
 import java.util.Objects;
 import java.util.UUID;
+import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 
 @Entity(name = "query_result")
 public class QueryResultDao {

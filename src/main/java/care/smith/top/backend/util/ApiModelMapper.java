@@ -1,10 +1,9 @@
 package care.smith.top.backend.util;
 
 import care.smith.top.model.*;
-import org.springframework.data.domain.Page;
-
 import java.util.*;
 import java.util.stream.Collectors;
+import org.springframework.data.domain.Page;
 
 public abstract class ApiModelMapper {
   public static Entity getEntity(List<Entity> entities, String id) {
@@ -142,10 +141,13 @@ public abstract class ApiModelMapper {
   }
 
   public static boolean isConcept(EntityType entityType) {
-    return EntityType.SINGLE_CONCEPT.equals(entityType) || EntityType.COMPOSITE_CONCEPT.equals(entityType);
+    return EntityType.SINGLE_CONCEPT.equals(entityType)
+        || EntityType.COMPOSITE_CONCEPT.equals(entityType);
   }
 
-  public static boolean isConcept(Entity entity) { return isConcept(entity.getEntityType()); }
+  public static boolean isConcept(Entity entity) {
+    return isConcept(entity.getEntityType());
+  }
 
   public static boolean isCompositeConcept(EntityType entityType) {
     return EntityType.COMPOSITE_CONCEPT == entityType;
@@ -181,9 +183,7 @@ public abstract class ApiModelMapper {
   }
 
   public static List<EntityType> conceptTypes() {
-    return Arrays.asList(
-        EntityType.SINGLE_CONCEPT,
-        EntityType.COMPOSITE_CONCEPT);
+    return Arrays.asList(EntityType.SINGLE_CONCEPT, EntityType.COMPOSITE_CONCEPT);
   }
 
   public static boolean isRestricted(Entity entity) {
@@ -239,13 +239,13 @@ public abstract class ApiModelMapper {
 
     if (isConcept(a) && isConcept(b)) {
       if (((Concept) a).getSuperConcepts() != null
-              && ((Concept) a)
-              .getSuperConcepts().stream().anyMatch(c -> c.getId().equals(b.getId()))) return 1;
+          && ((Concept) a).getSuperConcepts().stream().anyMatch(c -> c.getId().equals(b.getId())))
+        return 1;
       if (((Concept) b).getSuperConcepts() != null
-              && ((Concept) b)
-              .getSuperConcepts().stream().anyMatch(c -> c.getId().equals(a.getId()))) return -1;
+          && ((Concept) b).getSuperConcepts().stream().anyMatch(c -> c.getId().equals(a.getId())))
+        return -1;
     }
-    return a.getId().compareTo( b.getId());
+    return a.getId().compareTo(b.getId());
   }
 
   public static Value clone(Value value) {

@@ -1,18 +1,17 @@
 package care.smith.top.backend.model;
 
 import care.smith.top.model.*;
-import org.springframework.data.annotation.CreatedBy;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
-import javax.persistence.Entity;
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
 import java.time.OffsetDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import javax.persistence.*;
+import javax.persistence.Entity;
+import javax.validation.constraints.NotNull;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity(name = "entity_version")
 @EntityListeners(AuditingEntityListener.class)
@@ -65,10 +64,6 @@ public class EntityVersionDao {
   @Column(updatable = false)
   private OffsetDateTime createdAt;
 
-  public void setAuthor(UserDao author) {
-    this.author = author;
-  }
-
   public EntityVersionDao() {}
 
   public EntityVersionDao(
@@ -120,7 +115,7 @@ public class EntityVersionDao {
       unit = ((Phenotype) entity).getUnit();
     }
     if (entity instanceof CompositeConcept) {
-      if (((CompositeConcept) entity).getExpression() != null){
+      if (((CompositeConcept) entity).getExpression() != null) {
         expression = new ExpressionDao(((CompositeConcept) entity).getExpression());
       }
     }
@@ -301,6 +296,10 @@ public class EntityVersionDao {
 
   public UserDao getAuthor() {
     return author;
+  }
+
+  public void setAuthor(UserDao author) {
+    this.author = author;
   }
 
   public OffsetDateTime getCreatedAt() {
