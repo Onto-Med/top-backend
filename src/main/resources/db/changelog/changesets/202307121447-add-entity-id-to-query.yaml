@@ -1,0 +1,22 @@
+databaseChangeLog:
+- changeSet:
+    id: 1689167094191-8
+    author: ChristophB(generated)
+    changes:
+    - addColumn:
+        columns:
+        - column:
+            name: entity_id
+            type: varchar(255)
+        tableName: query
+- changeSet:
+    id: 1689167094191-9
+    author: ChristophB (generated)
+    changes:
+    - addColumn:
+        columns:
+        - column:
+            name: query_type
+            type: integer
+        tableName: query
+
