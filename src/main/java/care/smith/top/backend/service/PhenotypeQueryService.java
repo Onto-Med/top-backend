@@ -158,7 +158,7 @@ public class PhenotypeQueryService {
             .map(e -> (Phenotype) e.toApiModel())
             .getContent()
             .toArray(new Phenotype[0]);
-    PhenotypeQuery query = queryDao.toApiModel();
+    PhenotypeQuery query = (PhenotypeQuery) queryDao.toApiModel();
     List<DataAdapterConfig> configs = getConfigs(query.getDataSources());
 
     // TODO: only one data source supported yet
@@ -261,7 +261,7 @@ public class PhenotypeQueryService {
   }
 
   public List<DataAdapterConfig> getDataAdapterConfigs() {
-    try (Stream<Path> paths = Files.list(Path.of(dataSourceConfigDir))) {
+    try (Stream<Path> paths = Files.list(Path.of(dataSourceConfigDir)).filter(f -> !Files.isDirectory(f))) {
       return paths
           .map(this::toDataAdapterConfig)
           .filter(Objects::nonNull)

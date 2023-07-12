@@ -15,6 +15,7 @@ for additional documentation.
     * `DB_USER`: username for connecting to the database, defaults to postgres
     * `DB_PASS`: password for connecting to the database, required
     * `DATA_SOURCE_CONFIG_DIR`: location of data source configuration files, defaults to `config/data_sources`
+    * `DOCUMENT_DATA_SOURCE_CONFIG_DIR`: location of document data source configuration files, defaults to `config/data_sources/nlp`
     * `QUERY_RESULT_DIR`: location where query results are stored to, defaults to `config/query_results`
     * `QUERY_RESULT_DOWNLOAD_ENABLED`: whether users with write permission for a repository can download query results
       or not, defaults to true
