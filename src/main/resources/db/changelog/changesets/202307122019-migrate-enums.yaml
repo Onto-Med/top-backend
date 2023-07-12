@@ -1,0 +1,20 @@
+databaseChangeLog:
+- changeSet:
+    id: 1689185999871-1
+    author: ChristophB (generated)
+    changes:
+    - update:
+        columns:
+        - column:
+            name: top_entity_type
+            valueComputed: top_entity_type + 2
+        tableName: entity
+        where: top_entity_type > 0
+    - update:
+        columns:
+        - column:
+            name: item_type
+            valueComputed: item_type + 1
+        tableName: entity_version
+        where: item_type > 2
+
