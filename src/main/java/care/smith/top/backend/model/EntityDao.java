@@ -2,6 +2,7 @@ package care.smith.top.backend.model;
 
 import care.smith.top.backend.util.ApiModelMapper;
 import care.smith.top.model.*;
+import org.hibernate.TypeMismatchException;
 
 import javax.persistence.Entity;
 import javax.persistence.*;
@@ -97,12 +98,20 @@ public class EntityDao {
     if (entityVersionDao == null) return new care.smith.top.model.Entity();
     EntityDao entityDao = entityVersionDao.getEntity();
 
-    Category entity;
+    care.smith.top.model.Entity entity;
 
     if (ApiModelMapper.isCategory(entityType)) {
       entity = new Category();
-    } else {
+    } else if (ApiModelMapper.isPhenotype(entityType)) {
       entity = new Phenotype();
+    } else if (ApiModelMapper.isConcept(entityType)){
+      if (ApiModelMapper.isCompositeConcept(entityType)) {
+        entity = new CompositeConcept();
+      } else {
+        entity = new SingleConcept();
+      }
+    } else {
+      throw new TypeMismatchException(String.format("Type '%s' is not recognized", entityType.toString()));
     }
 
     entity
@@ -150,10 +159,15 @@ public class EntityDao {
       if (entityVersionDao.getExpression() != null)
         ((Phenotype) entity).expression(entityVersionDao.getExpression().toApiModel());
       if (entityDao.getSubEntities() == null || entityDao.getSubEntities().size() == 0)
-        entity.phenotypes(new ArrayList<>());
+        ((Phenotype) entity).phenotypes(new ArrayList<>());
     } else if (ApiModelMapper.isRestricted(entityDao.getEntityType())
         && entityVersionDao.getRestriction() != null)
       ((Phenotype) entity).restriction(entityVersionDao.getRestriction().toApiModel());
+
+    if (ApiModelMapper.isCompositeConcept(entityDao.getEntityType())){
+      if (entityVersionDao.getExpression() != null)
+        ((CompositeConcept) entity).expression(entityVersionDao.getExpression().toApiModel());
+    }
 
     if (entityDao.getSuperEntities() != null) {
       if (ApiModelMapper.isRestricted(entityDao.getEntityType())) {
@@ -175,8 +189,13 @@ public class EntityDao {
                           .titles(titles)))
               .dataType(superPhenotype.currentVersion.getDataType());
         }
+      } else if (ApiModelMapper.isConcept(entityDao.getEntityType())){
+        ((Concept) entity).setSuperConcepts(
+            entityDao.getSuperEntities().stream()
+                    .map(c -> ((SingleConcept) new SingleConcept().id(c.getId()).entityType(c.getEntityType())))
+                    .collect(Collectors.toList()));
       } else {
-        entity.setSuperCategories(
+        ((Category) entity).setSuperCategories(
             entityDao.getSuperEntities().stream()
                 .map(c -> ((Category) new Category().id(c.getId()).entityType(c.getEntityType())))
                 .collect(Collectors.toList()));

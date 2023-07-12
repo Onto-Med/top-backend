@@ -43,6 +43,7 @@ public class EntityService implements ContentService {
   @Autowired private EntityVersionRepository entityVersionRepository;
   @Autowired private CategoryRepository categoryRepository;
   @Autowired private PhenotypeRepository phenotypeRepository;
+  @Autowired private ConceptRepository conceptRepository;
   @Autowired private RepositoryRepository repositoryRepository;
   @Autowired private UserService userService;
   @Autowired private CodeRepository codeRepository;
@@ -84,7 +85,7 @@ public class EntityService implements ContentService {
    * following will happen:
    *
    * <ul>
-   *   <li>category: super categories are created too
+   *   <li>category/concept: super categories/concepts are created too
    *   <li>abstract phenotype: entities referenced in expressions are created too
    *   <li>restriction: super phenotypes are created too
    * </ul>
@@ -115,6 +116,22 @@ public class EntityService implements ContentService {
                         .map(
                             e ->
                                 (Category)
+                                    createEntity(
+                                        organisationId,
+                                        repositoryId,
+                                        ApiModelMapper.getEntity(entities, e.getId()),
+                                        ids,
+                                        entities))
+                        .collect(Collectors.toList()));
+    } else if (ApiModelMapper.isConcept(data)) {
+      if (((Concept) data).getSuperConcepts() != null)
+        ((Concept) data)
+            .setSuperConcepts(
+                ((Concept) data)
+                    .getSuperConcepts().stream()
+                        .map(
+                            e ->
+                                (SingleConcept)
                                     createEntity(
                                         organisationId,
                                         repositoryId,
@@ -173,9 +190,9 @@ public class EntityService implements ContentService {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "entityType is missing");
 
     if (RepositoryType.CONCEPT_REPOSITORY.equals(repository.getRepositoryType())
-        && !EntityType.CATEGORY.equals(data.getEntityType()))
+        && !List.of(EntityType.SINGLE_CONCEPT, EntityType.COMPOSITE_CONCEPT).contains(data.getEntityType()))
       throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST, "entityType is invalid for concept repository");
+          HttpStatus.BAD_REQUEST, String.format("entityType '%s' is invalid for concept repository", data.getEntityType().getValue()));
 
     EntityDao entity = new EntityDao(data).id(id).repository(repository);
 
@@ -193,6 +210,12 @@ public class EntityService implements ContentService {
               () -> {
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND);
               });
+
+    if (data instanceof Concept && ((Concept) data).getSuperConcepts() != null)
+      for (Concept concept: ((Concept) data).getSuperConcepts())
+        conceptRepository
+            .findByIdAndRepositoryId(concept.getId(), repositoryId)
+            .ifPresent(entity::addSuperEntitiesItem);
 
     entity = entityRepository.save(entity);
     EntityVersionDao entityVersion =
@@ -247,9 +270,9 @@ public class EntityService implements ContentService {
     Entity entity = loadEntity(organisationId, repositoryId, id, null);
 
     if (RepositoryType.CONCEPT_REPOSITORY.equals(destinationRepo.getRepositoryType())
-        && !EntityType.CATEGORY.equals(entity.getEntityType()))
+            && !List.of(EntityType.SINGLE_CONCEPT, EntityType.COMPOSITE_CONCEPT).contains(entity.getEntityType()))
       throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST, "entityType is invalid for concept repository");
+              HttpStatus.BAD_REQUEST, String.format("entityType '%s' is invalid for concept repository", entity.getEntityType().getValue()));
 
     List<Entity> origins = new ArrayList<>(getDependencies(entity));
     origins.add(entity);
@@ -286,6 +309,12 @@ public class EntityService implements ContentService {
                   fork.get().getSuperEntities().stream()
                       .map(e -> ((Category) new Category().id(e.getId())))
                       .collect(Collectors.toList()));
+        } else if (origin instanceof Concept){
+          ((Concept) origin)
+                  .setSuperConcepts(
+                          fork.get().getSuperEntities().stream()
+                                  .map(e -> ((SingleConcept) new SingleConcept().id(e.getId())))
+                                  .collect(Collectors.toList()));
         }
       }
 
@@ -294,6 +323,7 @@ public class EntityService implements ContentService {
         origin.setVersion(1);
         if (origin instanceof Phenotype) ((Phenotype) origin).setSuperCategories(null);
         else if (origin instanceof Category) ((Category) origin).setSuperCategories(null);
+        else if (origin instanceof Concept) ((Concept) origin).setSuperConcepts(null);
       }
 
       ids.put(oldId, origin.getId());
@@ -368,7 +398,7 @@ public class EntityService implements ContentService {
     if (entity.getSubEntities() != null) {
       if (ApiModelMapper.isAbstract(entity.getEntityType())) {
         entityRepository.deleteAll(entity.getSubEntities());
-      } else if (ApiModelMapper.isCategory(entity.getEntityType())) {
+      } else if (ApiModelMapper.canHaveSubs(entity.getEntityType())) {
         if (cascade != null && cascade) {
           entity
               .getSubEntities()
@@ -540,8 +570,12 @@ public class EntityService implements ContentService {
       "hasRole('ADMIN') or hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'READ')")
   public List<Entity> getSubclasses(
       String organisationId, String repositoryId, String id, List<String> include) {
-    getRepository(organisationId, repositoryId);
-    return categoryRepository
+    RepositoryDao repoDao = getRepository(organisationId, repositoryId);
+    EntityRepository repo = categoryRepository;
+    if (RepositoryType.CONCEPT_REPOSITORY.equals(repoDao.getRepositoryType())) {
+      repo = conceptRepository;
+    }
+    return repo
         .findAllByRepositoryIdAndSuperEntities_Id(repositoryId, id, Sort.by(EntityDao_.ID))
         .map(EntityDao::toApiModel)
         .map(populateSubEntities())
@@ -633,11 +667,20 @@ public class EntityService implements ContentService {
 
     if (!ApiModelMapper.isRestricted(entity.getEntityType())) {
       entity.superEntities(null);
-      if (((Category) data).getSuperCategories() != null)
-        for (Category category : ((Category) data).getSuperCategories())
-          categoryRepository
-              .findByIdAndRepositoryId(category.getId(), repositoryId)
-              .ifPresent(entity::addSuperEntitiesItem);
+      if (data instanceof Concept) {
+        if (((Concept) data).getSuperConcepts() != null) {
+          for (Concept concept : ((Concept) data).getSuperConcepts())
+            conceptRepository
+                .findByIdAndRepositoryId(concept.getId(), repositoryId)
+                .ifPresent(entity::addSuperEntitiesItem);
+        }
+      } else {
+        if (((Category) data).getSuperCategories() != null)
+          for (Category category : ((Category) data).getSuperCategories())
+            categoryRepository
+                .findByIdAndRepositoryId(category.getId(), repositoryId)
+                .ifPresent(entity::addSuperEntitiesItem);
+      }
     }
 
     return populateWithCodeSystems()
@@ -801,6 +844,16 @@ public class EntityService implements ContentService {
   }
 
   /**
+   * Checks if the entity has sub concepts.
+   *
+   * @param entity The entity to be checked
+   * @return true, if provided entity has sub concepts
+   */
+  private boolean hasSubConcepts(@NotNull Entity entity){
+    return hasSubEntities(entity, ApiModelMapper.conceptTypes());
+  }
+
+  /**
    * Checks if the entity has sub entities of the provided entity types
    *
    * @param entity The entity to be checked.
@@ -812,7 +865,7 @@ public class EntityService implements ContentService {
   }
 
   /**
-   * Checks if the provided entity has sub categories or phenotypes. If this is not the case, the
+   * Checks if the provided entity has sub categories, phenotypes or concepts. If this is not the case, the
    * respective fields are initialised with empty arrays to indicate absence of sub entities.
    *
    * @return The provided entity instance with modified fields.
@@ -822,6 +875,8 @@ public class EntityService implements ContentService {
       if (e instanceof Category) {
         if (!hasSubCategories(e)) ((Category) e).setSubCategories(new ArrayList<>());
         if (!hasSubPhenotypes(e)) ((Category) e).setPhenotypes(new ArrayList<>());
+      } else if (e instanceof SingleConcept) {
+        if (!hasSubConcepts(e)) ((SingleConcept) e).setSubConcepts(new ArrayList<>());
       }
       return e;
     };

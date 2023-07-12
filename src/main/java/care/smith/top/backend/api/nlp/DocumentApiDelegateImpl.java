@@ -1,7 +1,7 @@
 package care.smith.top.backend.api.nlp;
 
 import care.smith.top.backend.api.DocumentApiDelegate;
-import care.smith.top.backend.service.nlp.ConceptService;
+import care.smith.top.backend.service.nlp.ConceptClusterService;
 import care.smith.top.backend.service.nlp.DocumentService;
 import care.smith.top.backend.service.nlp.PhraseService;
 import care.smith.top.model.Document;
@@ -20,7 +20,8 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
 
     @Autowired DocumentService documentService;
     @Autowired PhraseService phraseService;
-    @Autowired ConceptService conceptService;
+    @Autowired
+    ConceptClusterService conceptService;
 
     @Override
     public ResponseEntity<List<Document>> getDocumentIdsByConceptClusterIds(List<String> conceptId, String gatheringMode, String name, Boolean exemplarOnly) {

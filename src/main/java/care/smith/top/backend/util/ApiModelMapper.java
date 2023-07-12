@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 
 public abstract class ApiModelMapper {
   public static Entity getEntity(List<Entity> entities, String id) {
-    return entities.stream().filter(e -> e.getId().equals(id)).findFirst().orElse(null);
+    return entities.stream().filter(e -> Objects.equals(e.getId(), id)).findFirst().orElse(null);
   }
 
   public static Set<String> getEntityIdsFromExpression(Expression expression) {
@@ -141,9 +141,35 @@ public abstract class ApiModelMapper {
     return isPhenotype(entity.getEntityType());
   }
 
+  public static boolean isConcept(EntityType entityType) {
+    return EntityType.SINGLE_CONCEPT.equals(entityType) || EntityType.COMPOSITE_CONCEPT.equals(entityType);
+  }
+
+  public static boolean isConcept(Entity entity) { return isConcept(entity.getEntityType()); }
+
+  public static boolean isCompositeConcept(EntityType entityType) {
+    return EntityType.COMPOSITE_CONCEPT == entityType;
+  }
+
+  public static boolean isCompositeConcept(Entity entity) {
+    return isCompositeConcept(entity.getEntityType());
+  }
+
+  public static boolean isSingleConcept(EntityType entityType) {
+    return EntityType.SINGLE_CONCEPT == entityType;
+  }
+
+  public static boolean isSingleConcept(Entity entity) {
+    return isSingleConcept(entity.getEntityType());
+  }
+
   public static boolean isRestricted(EntityType entityType) {
     return Arrays.asList(EntityType.SINGLE_RESTRICTION, EntityType.COMPOSITE_RESTRICTION)
         .contains(entityType);
+  }
+
+  public static boolean canHaveSubs(EntityType entityType) {
+    return isCategory(entityType) || isSingleConcept(entityType);
   }
 
   public static List<EntityType> phenotypeTypes() {
@@ -152,6 +178,12 @@ public abstract class ApiModelMapper {
         EntityType.COMPOSITE_RESTRICTION,
         EntityType.SINGLE_PHENOTYPE,
         EntityType.SINGLE_RESTRICTION);
+  }
+
+  public static List<EntityType> conceptTypes() {
+    return Arrays.asList(
+        EntityType.SINGLE_CONCEPT,
+        EntityType.COMPOSITE_CONCEPT);
   }
 
   public static boolean isRestricted(Entity entity) {
@@ -204,7 +236,16 @@ public abstract class ApiModelMapper {
         if (!isAbstract(a) && isAbstract(b)) return 1;
       }
     }
-    return a.getId().compareTo(b.getId());
+
+    if (isConcept(a) && isConcept(b)) {
+      if (((Concept) a).getSuperConcepts() != null
+              && ((Concept) a)
+              .getSuperConcepts().stream().anyMatch(c -> c.getId().equals(b.getId()))) return 1;
+      if (((Concept) b).getSuperConcepts() != null
+              && ((Concept) b)
+              .getSuperConcepts().stream().anyMatch(c -> c.getId().equals(a.getId()))) return -1;
+    }
+    return a.getId().compareTo( b.getId());
   }
 
   public static Value clone(Value value) {

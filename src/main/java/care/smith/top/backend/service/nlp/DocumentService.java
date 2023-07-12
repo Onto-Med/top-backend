@@ -6,7 +6,6 @@ import care.smith.top.backend.repository.nlp.DocumentNodeRepository;
 import care.smith.top.backend.repository.nlp.DocumentRepository;
 import care.smith.top.backend.service.ContentService;
 import care.smith.top.model.Document;
-import org.neo4j.cypherdsl.core.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
