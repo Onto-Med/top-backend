@@ -3,18 +3,16 @@ package care.smith.top.backend.model;
 import care.smith.top.model.ConceptQuery;
 import care.smith.top.model.PhenotypeQuery;
 import care.smith.top.model.Query;
-import care.smith.top.top_phenotypic_query.util.builder.Phe;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import javax.persistence.*;
+import javax.validation.constraints.NotNull;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity(name = "query")
 @EntityListeners(AuditingEntityListener.class)
@@ -53,6 +51,7 @@ public class QueryDao {
     this.repository = repository;
     this.queryType = Query.TypeEnum.PHENOTYPE;
   }
+
   public QueryDao(
       @NotNull String id,
       String name,
@@ -79,6 +78,7 @@ public class QueryDao {
       this.projection =
           query.getProjection().stream().map(ProjectionEntryDao::new).collect(Collectors.toList());
   }
+
   public QueryDao(@NotNull ConceptQuery query) {
     this.id = query.getId().toString();
     this.name = query.getName();
@@ -171,20 +171,26 @@ public class QueryDao {
   public Query toApiModel() {
     Query query = null;
     if (this.queryType.equals(Query.TypeEnum.PHENOTYPE)) {
-      query = new PhenotypeQuery()
-                  .id(UUID.fromString(getId()))
-                  .name(getName())
-                  .dataSources(new ArrayList<>(getDataSources()));
+      query =
+          new PhenotypeQuery()
+              .id(UUID.fromString(getId()))
+              .name(getName())
+              .dataSources(new ArrayList<>(getDataSources()));
       if (getCriteria() != null)
-        ((PhenotypeQuery) query).criteria(
-            getCriteria().stream().map(QueryCriterionDao::toApiModel).collect(Collectors.toList()));
+        ((PhenotypeQuery) query)
+            .criteria(
+                getCriteria().stream()
+                    .map(QueryCriterionDao::toApiModel)
+                    .collect(Collectors.toList()));
       if (getProjection() != null)
-        ((PhenotypeQuery) query).projection(
-            getProjection().stream()
-                .map(ProjectionEntryDao::toApiModel)
-                .collect(Collectors.toList()));
+        ((PhenotypeQuery) query)
+            .projection(
+                getProjection().stream()
+                    .map(ProjectionEntryDao::toApiModel)
+                    .collect(Collectors.toList()));
     } else if (this.queryType.equals(Query.TypeEnum.CONCEPT)) {
-      query = new ConceptQuery()
+      query =
+          new ConceptQuery()
               .id(UUID.fromString(getId()))
               .name(getName())
               .dataSources(new ArrayList<>(getDataSources()));
@@ -204,8 +210,7 @@ public class QueryDao {
           && Objects.equals(getDataSources(), queryDao.getDataSources())
           && Objects.equals(getCriteria(), queryDao.getCriteria())
           && Objects.equals(getProjection(), queryDao.getProjection());
-    }
-    else if (this.queryType.equals(Query.TypeEnum.CONCEPT)) {
+    } else if (this.queryType.equals(Query.TypeEnum.CONCEPT)) {
       return getId().equals(queryDao.getId())
           && Objects.equals(getName(), queryDao.getName())
           && Objects.equals(getDataSources(), queryDao.getDataSources())

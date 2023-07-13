@@ -2,15 +2,14 @@ package care.smith.top.backend.model;
 
 import care.smith.top.backend.util.ApiModelMapper;
 import care.smith.top.model.*;
-import org.hibernate.TypeMismatchException;
-
-import javax.persistence.Entity;
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import javax.persistence.*;
+import javax.persistence.Entity;
+import javax.validation.constraints.NotNull;
+import org.hibernate.TypeMismatchException;
 
 @Entity(name = "entity")
 public class EntityDao {
@@ -104,14 +103,15 @@ public class EntityDao {
       entity = new Category();
     } else if (ApiModelMapper.isPhenotype(entityType)) {
       entity = new Phenotype();
-    } else if (ApiModelMapper.isConcept(entityType)){
+    } else if (ApiModelMapper.isConcept(entityType)) {
       if (ApiModelMapper.isCompositeConcept(entityType)) {
         entity = new CompositeConcept();
       } else {
         entity = new SingleConcept();
       }
     } else {
-      throw new TypeMismatchException(String.format("Type '%s' is not recognized", entityType.toString()));
+      throw new TypeMismatchException(
+          String.format("Type '%s' is not recognized", entityType.toString()));
     }
 
     entity
@@ -126,7 +126,10 @@ public class EntityDao {
                     new Organisation().id(entityDao.getRepository().getOrganisation().getId())));
 
     entity
-        .author(entityVersionDao.getAuthor() != null ? entityVersionDao.getAuthor().getUsername() : null)
+        .author(
+            entityVersionDao.getAuthor() != null
+                ? entityVersionDao.getAuthor().getUsername()
+                : null)
         .createdAt(entityVersionDao.getCreatedAt())
         .version(entityVersionDao.getVersion());
 
@@ -164,7 +167,7 @@ public class EntityDao {
         && entityVersionDao.getRestriction() != null)
       ((Phenotype) entity).restriction(entityVersionDao.getRestriction().toApiModel());
 
-    if (ApiModelMapper.isCompositeConcept(entityDao.getEntityType())){
+    if (ApiModelMapper.isCompositeConcept(entityDao.getEntityType())) {
       if (entityVersionDao.getExpression() != null)
         ((CompositeConcept) entity).expression(entityVersionDao.getExpression().toApiModel());
     }
@@ -189,16 +192,23 @@ public class EntityDao {
                           .titles(titles)))
               .dataType(superPhenotype.currentVersion.getDataType());
         }
-      } else if (ApiModelMapper.isConcept(entityDao.getEntityType())){
-        ((Concept) entity).setSuperConcepts(
-            entityDao.getSuperEntities().stream()
-                    .map(c -> ((SingleConcept) new SingleConcept().id(c.getId()).entityType(c.getEntityType())))
+      } else if (ApiModelMapper.isConcept(entityDao.getEntityType())) {
+        ((Concept) entity)
+            .setSuperConcepts(
+                entityDao.getSuperEntities().stream()
+                    .map(
+                        c ->
+                            ((SingleConcept)
+                                new SingleConcept().id(c.getId()).entityType(c.getEntityType())))
                     .collect(Collectors.toList()));
       } else {
-        ((Category) entity).setSuperCategories(
-            entityDao.getSuperEntities().stream()
-                .map(c -> ((Category) new Category().id(c.getId()).entityType(c.getEntityType())))
-                .collect(Collectors.toList()));
+        ((Category) entity)
+            .setSuperCategories(
+                entityDao.getSuperEntities().stream()
+                    .map(
+                        c ->
+                            ((Category) new Category().id(c.getId()).entityType(c.getEntityType())))
+                    .collect(Collectors.toList()));
       }
     }
 

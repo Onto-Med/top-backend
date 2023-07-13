@@ -1,13 +1,13 @@
 package care.smith.top.backend.configuration;
 
 import care.smith.top.backend.model.UserDao;
+import java.util.Collection;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 
-import java.util.Collection;
-
 public class AuthenticatedUser implements Authentication {
   private final UserDao userDao;
+
   public AuthenticatedUser(UserDao userDao) {
     this.userDao = userDao;
   }
@@ -38,9 +38,7 @@ public class AuthenticatedUser implements Authentication {
   }
 
   @Override
-  public void setAuthenticated(boolean isAuthenticated) throws IllegalArgumentException {
-
-  }
+  public void setAuthenticated(boolean isAuthenticated) throws IllegalArgumentException {}
 
   @Override
   public String getName() {

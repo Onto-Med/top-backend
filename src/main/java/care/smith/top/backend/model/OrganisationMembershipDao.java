@@ -2,7 +2,6 @@ package care.smith.top.backend.model;
 
 import care.smith.top.backend.model.key.OrganisationMembershipKeyDao;
 import care.smith.top.model.OrganisationMembership;
-
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 

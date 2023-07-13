@@ -2,7 +2,6 @@ package care.smith.top.backend.repository.ols;
 
 import care.smith.top.backend.service.ols.OLSOntologiesResponse;
 import care.smith.top.model.CodeSystem;
-
 import java.net.URI;
 import java.util.Arrays;
 import java.util.HashMap;

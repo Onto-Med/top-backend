@@ -2,11 +2,10 @@ package care.smith.top.backend.model;
 
 import care.smith.top.model.Code;
 import care.smith.top.model.CodeSystem;
-
+import java.net.URI;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.validation.constraints.NotNull;
-import java.net.URI;
 
 @Embeddable
 public class CodeDao {

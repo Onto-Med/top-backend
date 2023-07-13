@@ -41,8 +41,20 @@ import org.testcontainers.shaded.org.yaml.snakeyaml.Yaml;
 @Transactional(propagation = Propagation.NEVER)
 public abstract class AbstractNLPTest { // extends AbstractTest {
 
-  @Autowired
-  ConceptClusterService conceptService;
+  protected static final String[] ELASTIC_INDEX = new String[] {"test_documents"};
+
+  @Container
+  protected static final ElasticsearchContainer elasticsearchContainer =
+      new DocumentElasticsearchContainer();
+
+  private static final Map<String, String> documents =
+      Map.of(
+          "test01", "What do we have here? A test document. With an entity. Nice.",
+          "test02", "Another document is here. It has two entities.",
+          "test03", "And a third document; but this one features nothing");
+  protected static Neo4j embeddedNeo4j;
+  protected static ElasticsearchClient esClient;
+  @Autowired ConceptClusterService conceptService;
   @Autowired ConceptClusterNodeRepository conceptClusterNodeRepository;
   @Autowired DocumentService documentService;
   @Autowired DocumentRepository documentRepository;
@@ -50,22 +62,8 @@ public abstract class AbstractNLPTest { // extends AbstractTest {
   @Autowired PhraseService phraseService;
   @Autowired PhraseNodeRepository phraseRepository;
 
-  protected static Neo4j embeddedNeo4j;
-  protected static ElasticsearchClient esClient;
-  protected static final String[] ELASTIC_INDEX = new String[] {"test_documents"};
-
-  @Container
-  protected static final ElasticsearchContainer elasticsearchContainer =
-      new DocumentElasticsearchContainer();
-
   @Value("spring.elasticsearch.index.name")
   String elasticIndex;
-
-  private static final Map<String, String> documents =
-      Map.of(
-          "test01", "What do we have here? A test document. With an entity. Nice.",
-          "test02", "Another document is here. It has two entities.",
-          "test03", "And a third document; but this one features nothing");
 
   @BeforeAll
   static void initializeDBs() {

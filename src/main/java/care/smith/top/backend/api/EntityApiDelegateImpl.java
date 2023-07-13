@@ -1,5 +1,7 @@
 package care.smith.top.backend.api;
 
+import static care.smith.top.backend.configuration.RequestValidator.isValidId;
+
 import care.smith.top.backend.service.EntityService;
 import care.smith.top.backend.util.ApiModelMapper;
 import care.smith.top.model.*;
@@ -8,6 +10,10 @@ import care.smith.top.top_phenotypic_query.c2reasoner.constants.ConstantEntity;
 import care.smith.top.top_phenotypic_query.c2reasoner.functions.FunctionEntity;
 import care.smith.top.top_phenotypic_query.converter.PhenotypeExporter;
 import care.smith.top.top_phenotypic_query.converter.PhenotypeImporter;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
@@ -16,17 +22,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import static care.smith.top.backend.configuration.RequestValidator.isValidId;
-
 @Service
 public class EntityApiDelegateImpl implements EntityApiDelegate {
-  @Autowired EntityService entityService;
   private final C2R calculator = new C2R();
+  @Autowired EntityService entityService;
 
   @Override
   public ResponseEntity<Entity> createEntity(

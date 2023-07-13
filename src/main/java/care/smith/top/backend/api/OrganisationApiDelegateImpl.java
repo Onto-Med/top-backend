@@ -1,19 +1,18 @@
 package care.smith.top.backend.api;
 
+import static care.smith.top.backend.configuration.RequestValidator.isValidId;
+
 import care.smith.top.backend.service.OrganisationService;
 import care.smith.top.backend.util.ApiModelMapper;
 import care.smith.top.model.Organisation;
 import care.smith.top.model.OrganisationMembership;
 import care.smith.top.model.OrganisationPage;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-
-import java.util.List;
-
-import static care.smith.top.backend.configuration.RequestValidator.isValidId;
 
 @Service
 public class OrganisationApiDelegateImpl implements OrganisationApiDelegate {
@@ -53,7 +52,8 @@ public class OrganisationApiDelegateImpl implements OrganisationApiDelegate {
   public ResponseEntity<OrganisationPage> getOrganisations(
       List<String> include, String name, Integer page) {
     return ResponseEntity.ok(
-        ApiModelMapper.toOrganisationPage(organisationService.getOrganisations(name, page, include)));
+        ApiModelMapper.toOrganisationPage(
+            organisationService.getOrganisations(name, page, include)));
   }
 
   @Override

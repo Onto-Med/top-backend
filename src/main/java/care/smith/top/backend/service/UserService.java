@@ -6,7 +6,11 @@ import care.smith.top.backend.repository.OrganisationMembershipRepository;
 import care.smith.top.backend.repository.OrganisationRepository;
 import care.smith.top.backend.repository.RepositoryRepository;
 import care.smith.top.backend.repository.UserRepository;
-import care.smith.top.model.User;
+import java.io.Serializable;
+import java.util.List;
+import java.util.Optional;
+import javax.annotation.Nullable;
+import javax.validation.constraints.NotNull;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,13 +24,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import javax.annotation.Nullable;
-import javax.security.auth.login.AccountException;
-import javax.validation.constraints.NotNull;
-import java.io.Serializable;
-import java.util.List;
-import java.util.Optional;
 
 @Service
 @Transactional

@@ -1,14 +1,13 @@
 package care.smith.top.backend.model;
 
 import care.smith.top.model.*;
-
-import javax.persistence.Entity;
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import javax.persistence.*;
+import javax.persistence.Entity;
+import javax.validation.constraints.NotNull;
 
 @Entity(name = "restriction")
 public class RestrictionDao {

@@ -6,7 +6,6 @@ import org.springframework.data.neo4j.repository.support.CypherdslStatementExecu
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface ConceptClusterNodeRepository extends
-        Neo4jRepository<ConceptNodeEntity, Long>,
-        CypherdslStatementExecutor<ConceptNodeEntity> {
-}
+public interface ConceptClusterNodeRepository
+    extends Neo4jRepository<ConceptNodeEntity, Long>,
+        CypherdslStatementExecutor<ConceptNodeEntity> {}
