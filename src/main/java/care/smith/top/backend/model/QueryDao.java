@@ -66,25 +66,25 @@ public class QueryDao {
     this.queryType = Query.TypeEnum.CONCEPT;
   }
 
-  public QueryDao(@NotNull PhenotypeQuery query) {
+  public QueryDao(@NotNull Query query) {
     this.id = query.getId().toString();
     this.name = query.getName();
     this.dataSources = query.getDataSources();
-    this.queryType = Query.TypeEnum.PHENOTYPE;
-    if (query.getCriteria() != null)
-      this.criteria =
-          query.getCriteria().stream().map(QueryCriterionDao::new).collect(Collectors.toList());
-    if (query.getProjection() != null)
-      this.projection =
-          query.getProjection().stream().map(ProjectionEntryDao::new).collect(Collectors.toList());
-  }
 
-  public QueryDao(@NotNull ConceptQuery query) {
-    this.id = query.getId().toString();
-    this.name = query.getName();
-    this.entityId = query.getEntityId();
-    this.dataSources = query.getDataSources();
-    this.queryType = Query.TypeEnum.CONCEPT;
+    if (query instanceof ConceptQuery) {
+      this.queryType = Query.TypeEnum.CONCEPT;
+      this.entityId = ((ConceptQuery) query).getEntityId();
+    } else if (query instanceof PhenotypeQuery) {
+      this.queryType = Query.TypeEnum.PHENOTYPE;
+      if (((PhenotypeQuery) query).getCriteria() != null)
+        this.criteria =
+            ((PhenotypeQuery) query)
+                .getCriteria().stream().map(QueryCriterionDao::new).collect(Collectors.toList());
+      if (((PhenotypeQuery) query).getProjection() != null)
+        this.projection =
+            ((PhenotypeQuery) query)
+                .getProjection().stream().map(ProjectionEntryDao::new).collect(Collectors.toList());
+    }
   }
 
   public String getId() {
