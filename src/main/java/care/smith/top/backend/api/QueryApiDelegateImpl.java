@@ -3,7 +3,6 @@ package care.smith.top.backend.api;
 import care.smith.top.backend.service.PhenotypeQueryService;
 import care.smith.top.backend.util.ApiModelMapper;
 import care.smith.top.model.DataSource;
-import care.smith.top.model.PhenotypeQuery;
 import care.smith.top.model.Query;
 import care.smith.top.model.QueryPage;
 import care.smith.top.model.QueryResult;
@@ -55,8 +54,7 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
     switch (query.getType()) {
       case PHENOTYPE:
         return new ResponseEntity<>(
-            phenotypeQueryService.enqueueQuery(
-                organisationId, repositoryId, (PhenotypeQuery) query),
+            phenotypeQueryService.enqueueQuery(organisationId, repositoryId, query),
             HttpStatus.CREATED);
       case CONCEPT:
         throw new ResponseStatusException(
