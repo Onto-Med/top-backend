@@ -4,8 +4,6 @@ import care.smith.top.backend.model.QueryDao;
 import care.smith.top.backend.model.QueryResultDao;
 import care.smith.top.backend.model.RepositoryDao;
 import care.smith.top.backend.repository.PhenotypeRepository;
-import care.smith.top.backend.repository.QueryRepository;
-import care.smith.top.backend.repository.RepositoryRepository;
 import care.smith.top.backend.util.ApiModelMapper;
 import care.smith.top.model.*;
 import care.smith.top.top_phenotypic_query.adapter.DataAdapter;
@@ -21,7 +19,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -29,30 +26,19 @@ import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import org.jetbrains.annotations.NotNull;
-import org.jobrunr.jobs.Job;
-import org.jobrunr.jobs.states.StateName;
-import org.jobrunr.scheduling.JobScheduler;
-import org.jobrunr.storage.StorageProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
-@Transactional
-public class PhenotypeQueryService {
-  private static final Logger LOGGER = Logger.getLogger(PhenotypeQueryService.class.getName());
+public class PhenotypeQueryService extends QueryService {
+  private final Logger LOGGER = Logger.getLogger(PhenotypeQueryService.class.getName());
 
   private final CSV csvConverter = new CSV();
-
-  @Value("${spring.paging.page-size:10}")
-  private int pageSize;
 
   @Value("${top.phenotyping.data-source-config-dir:config/data_sources}")
   private String dataSourceConfigDir;
@@ -66,71 +52,37 @@ public class PhenotypeQueryService {
   @Value("${top.phenotyping.result.download-enabled:true}")
   private boolean queryResultDownloadEnabled;
 
-  @Autowired private JobScheduler jobScheduler;
-  @Autowired private StorageProvider storageProvider;
-  @Autowired private QueryRepository queryRepository;
   @Autowired private PhenotypeRepository phenotypeRepository;
-  @Autowired private RepositoryRepository repositoryRepository;
 
-  @PreAuthorize(
-      "hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
-  public void deleteQuery(String organisationId, String repositoryId, UUID queryId) {
-    if (!repositoryRepository.existsByIdAndOrganisation_Id(repositoryId, organisationId))
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+  @Override
+  public QueryResult enqueueQuery(String organisationId, String repositoryId, Query query) {
+    if (!(query instanceof PhenotypeQuery))
+      throw new ResponseStatusException(
+          HttpStatus.NOT_ACCEPTABLE, "The provided query is not a phenotype query!");
 
-    QueryDao query =
-        queryRepository
-            .findByRepository_OrganisationIdAndRepositoryIdAndId(
-                organisationId, repositoryId, queryId.toString())
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-
-    try {
-      Job job = storageProvider.getJobById(queryId);
-      storageProvider.deletePermanently(job.getId());
-    } catch (Exception e) {
-      LOGGER.fine(e.getMessage());
-    }
-
-    try {
-      clearResult(
-          query.getRepository().getOrganisation().getId(),
-          query.getRepository().getId(),
-          queryId.toString());
-    } catch (IOException e) {
-      LOGGER.warning(e.getMessage());
-    }
-
-    queryRepository.delete(query);
-  }
-
-  @PreAuthorize(
-      "hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
-  public QueryResult enqueueQuery(String organisationId, String repositoryId, PhenotypeQuery data) {
     RepositoryDao repository =
         repositoryRepository
             .findByIdAndOrganisationId(repositoryId, organisationId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-    if (data == null
-        || data.getId() == null
-        || data.getDataSources() == null
-        || data.getDataSources().isEmpty())
+    if (query.getId() == null || query.getDataSources() == null || query.getDataSources().isEmpty())
       throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE);
 
-    UUID queryId = data.getId();
+    UUID queryId = query.getId();
 
     if (queryRepository.existsById(queryId.toString()))
       throw new ResponseStatusException(HttpStatus.CONFLICT);
 
-    if (getConfigs(data.getDataSources()).isEmpty())
+    if (getConfigs(query.getDataSources()).isEmpty())
       throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE);
 
+    queryRepository.save(new QueryDao(query).repository(repository));
     jobScheduler.enqueue(queryId, () -> this.executeQuery(queryId));
-    queryRepository.save(new QueryDao(data).repository(repository));
 
     return getQueryResult(organisationId, repositoryId, queryId);
   }
 
+  @Override
   @org.jobrunr.jobs.annotations.Job(name = "Phenotypic query", retries = 0)
   public void executeQuery(UUID queryId) {
     OffsetDateTime createdAt = OffsetDateTime.now();
@@ -144,8 +96,8 @@ public class PhenotypeQueryService {
 
     LOGGER.info(
         String.format(
-            "Running phenotypic query '%s' for repository '%s'...",
-            queryId, queryDao.getRepository().getDisplayName()));
+            "Running %s query '%s' for repository '%s'...",
+            getClass().getSimpleName(), queryId, queryDao.getRepository().getDisplayName()));
 
     Entity[] phenotypes =
         phenotypeRepository
@@ -206,33 +158,6 @@ public class PhenotypeQueryService {
 
   @PreAuthorize(
       "hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
-  public QueryResult getQueryResult(String organisationId, String repositoryId, UUID queryId) {
-    if (!repositoryRepository.existsByIdAndOrganisation_Id(repositoryId, organisationId))
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-
-    QueryDao query =
-        queryRepository
-            .findByRepository_OrganisationIdAndRepositoryIdAndId(
-                organisationId, repositoryId, queryId.toString())
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-
-    if (query.getResult() != null) return query.getResult().toApiModel();
-
-    Job job = storageProvider.getJobById(queryId);
-
-    QueryResult queryResult =
-        new QueryResult()
-            .id(queryId)
-            .createdAt(job.getCreatedAt().atOffset(ZoneOffset.UTC))
-            .state(getState(job));
-
-    if (QueryState.FAILED.equals(queryResult.getState()))
-      queryResult.finishedAt(job.getUpdatedAt().atOffset(ZoneOffset.UTC));
-    return queryResult;
-  }
-
-  @PreAuthorize(
-      "hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
   public Path getQueryResultPath(String organisationId, String repositoryId, UUID queryId)
       throws FileSystemException {
     if (!queryResultDownloadEnabled)
@@ -260,7 +185,8 @@ public class PhenotypeQueryService {
   }
 
   public List<DataAdapterConfig> getDataAdapterConfigs() {
-    try (Stream<Path> paths = Files.list(Path.of(dataSourceConfigDir)).filter(f -> !Files.isDirectory(f))) {
+    try (Stream<Path> paths =
+        Files.list(Path.of(dataSourceConfigDir)).filter(f -> !Files.isDirectory(f))) {
       return paths
           .map(this::toDataAdapterConfig)
           .filter(Objects::nonNull)
@@ -280,42 +206,12 @@ public class PhenotypeQueryService {
         .collect(Collectors.toList());
   }
 
-  @PreAuthorize(
-      "hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
-  public Page<Query> getQueries(String organisationId, String repositoryId, Integer page) {
-    PageRequest pageRequest = PageRequest.of(page == null ? 0 : page - 1, pageSize);
-    return queryRepository
-        .findAllByRepository_OrganisationIdAndRepositoryIdOrderByCreatedAtDesc(
-            organisationId, repositoryId, pageRequest)
-        .map(QueryDao::toApiModel);
-  }
-
-  private void clearResult(String organisationId, String repositoryId, String queryId)
-      throws IOException {
-    Path queryPath =
-        Paths.get(resultDir, organisationId, repositoryId, String.format("%s.zip", queryId));
-    if (!queryPath.startsWith(Paths.get(resultDir)))
-      LOGGER.severe(String.format("Query file '%s' is invalid and cannot be deleted!", queryPath));
-    Files.deleteIfExists(queryPath);
-  }
-
   @NotNull
   private List<DataAdapterConfig> getConfigs(List<String> dataSources) {
     return dataSources.stream()
         .map(s -> getDataAdapterConfig(s).orElse(null))
         .filter(Objects::nonNull)
         .collect(Collectors.toList());
-  }
-
-  private QueryState getState(Job job) {
-    if (job.hasState(StateName.FAILED) || job.hasState(StateName.DELETED)) {
-      return QueryState.FAILED;
-    } else if (job.hasState(StateName.SUCCEEDED)) {
-      return QueryState.FINISHED;
-    } else if (job.hasState(StateName.PROCESSING)) {
-      return QueryState.RUNNING;
-    }
-    return QueryState.QUEUED;
   }
 
   private void storeResult(
@@ -354,5 +250,14 @@ public class PhenotypeQueryService {
               path.toString(), e.getMessage()));
     }
     return null;
+  }
+
+  protected void clearResults(String organisationId, String repositoryId, String queryId)
+      throws IOException {
+    Path queryPath =
+        Paths.get(resultDir, organisationId, repositoryId, String.format("%s.zip", queryId));
+    if (!queryPath.startsWith(Paths.get(resultDir)))
+      LOGGER.severe(String.format("Query file '%s' is invalid and cannot be deleted!", queryPath));
+    Files.deleteIfExists(queryPath);
   }
 }
