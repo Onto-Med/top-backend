@@ -1,13 +1,15 @@
 package care.smith.top.backend.api;
 
+import care.smith.top.backend.repository.QueryRepository;
 import care.smith.top.backend.service.PhenotypeQueryService;
+import care.smith.top.backend.service.QueryService;
+import care.smith.top.backend.service.nlp.DocumentQueryService;
 import care.smith.top.backend.util.ApiModelMapper;
-import care.smith.top.model.DataSource;
-import care.smith.top.model.Query;
-import care.smith.top.model.QueryPage;
-import care.smith.top.model.QueryResult;
+import care.smith.top.model.*;
+
 import java.io.File;
 import java.nio.file.FileSystemException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,14 +22,18 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+
 @Service
 public class QueryApiDelegateImpl implements QueryApiDelegate {
   @Autowired private PhenotypeQueryService phenotypeQueryService;
+  @Autowired private DocumentQueryService documentQueryService;
+  @Autowired private QueryRepository queryRepository;
 
   @Override
   public ResponseEntity<Void> deleteQuery(
       String organisationId, String repositoryId, UUID queryId) {
-    phenotypeQueryService.deleteQuery(organisationId, repositoryId, queryId);
+    getQueryService(organisationId, repositoryId, queryId)
+            .deleteQuery(organisationId, repositoryId, queryId);
     return new ResponseEntity<>(HttpStatus.NO_CONTENT);
   }
 
@@ -67,8 +73,20 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
   }
 
   @Override
-  public ResponseEntity<List<DataSource>> getDataSources() {
-    return new ResponseEntity<>(phenotypeQueryService.getDataSources(), HttpStatus.OK);
+  public ResponseEntity<List<DataSource>> getDataSources(QueryType queryType) {
+    List<DataSource> dataSources = new ArrayList<>();
+    switch (queryType) {
+      case PHENOTYPE:
+        dataSources = phenotypeQueryService.getDataSources();
+        break;
+      case CONCEPT:
+        dataSources = documentQueryService.getDataSources();
+        break;
+      default:
+        phenotypeQueryService.getDataSources().addAll(documentQueryService.getDataSources());
+        break;
+    }
+    return new ResponseEntity<>(dataSources, HttpStatus.OK);
   }
 
   @Override
@@ -84,5 +102,19 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
       String organisationId, String repositoryId, UUID queryId) {
     return new ResponseEntity<>(
         phenotypeQueryService.getQueryResult(organisationId, repositoryId, queryId), HttpStatus.OK);
+  }
+
+  private QueryService getQueryService (String organisationId, String repositoryId, UUID queryId) {
+    QueryType queryType = queryRepository.findByRepository_OrganisationIdAndRepositoryIdAndId(
+            organisationId, repositoryId, String.valueOf(queryId)).orElseThrow().getQueryType();
+    switch (queryType) {
+      case PHENOTYPE:
+        return phenotypeQueryService;
+      case CONCEPT:
+        return documentQueryService;
+      default:
+        throw new ResponseStatusException(
+                HttpStatus.NOT_ACCEPTABLE, "No such query found.");
+    }
   }
 }
