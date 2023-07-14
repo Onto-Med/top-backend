@@ -11,6 +11,8 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
+
+import care.smith.top.model.QueryType;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -19,7 +21,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 public class QueryDao {
   @Id private String id;
   private String name;
-  private Query.TypeEnum queryType;
+  private QueryType queryType;
   private String entityId;
   @ElementCollection private List<String> dataSources = null;
   @ElementCollection private List<QueryCriterionDao> criteria = null;
@@ -49,7 +51,7 @@ public class QueryDao {
     this.criteria = criteria;
     this.projection = projection;
     this.repository = repository;
-    this.queryType = Query.TypeEnum.PHENOTYPE;
+    this.queryType = QueryType.PHENOTYPE;
   }
 
   public QueryDao(
@@ -63,7 +65,7 @@ public class QueryDao {
     this.entityId = entityId;
     this.dataSources = dataSources;
     this.repository = repository;
-    this.queryType = Query.TypeEnum.CONCEPT;
+    this.queryType = QueryType.CONCEPT;
   }
 
   public QueryDao(@NotNull Query query) {
@@ -72,10 +74,10 @@ public class QueryDao {
     this.dataSources = query.getDataSources();
 
     if (query instanceof ConceptQuery) {
-      this.queryType = Query.TypeEnum.CONCEPT;
+      this.queryType = QueryType.CONCEPT;
       this.entityId = ((ConceptQuery) query).getEntityId();
     } else if (query instanceof PhenotypeQuery) {
-      this.queryType = Query.TypeEnum.PHENOTYPE;
+      this.queryType = QueryType.PHENOTYPE;
       if (((PhenotypeQuery) query).getCriteria() != null)
         this.criteria =
             ((PhenotypeQuery) query)
@@ -103,6 +105,10 @@ public class QueryDao {
   public QueryDao name(String name) {
     this.name = name;
     return this;
+  }
+
+  public QueryType getQueryType() {
+    return queryType;
   }
 
   public List<String> getDataSources() {
@@ -170,7 +176,7 @@ public class QueryDao {
 
   public Query toApiModel() {
     Query query = null;
-    if (this.queryType.equals(Query.TypeEnum.PHENOTYPE)) {
+    if (this.queryType.equals(QueryType.PHENOTYPE)) {
       query =
           new PhenotypeQuery()
               .id(UUID.fromString(getId()))
@@ -188,7 +194,7 @@ public class QueryDao {
                 getProjection().stream()
                     .map(ProjectionEntryDao::toApiModel)
                     .collect(Collectors.toList()));
-    } else if (this.queryType.equals(Query.TypeEnum.CONCEPT)) {
+    } else if (this.queryType.equals(QueryType.CONCEPT)) {
       query =
           new ConceptQuery()
               .id(UUID.fromString(getId()))
@@ -204,13 +210,13 @@ public class QueryDao {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     QueryDao queryDao = (QueryDao) o;
-    if (this.queryType.equals(Query.TypeEnum.PHENOTYPE)) {
+    if (this.queryType.equals(QueryType.PHENOTYPE)) {
       return getId().equals(queryDao.getId())
           && Objects.equals(getName(), queryDao.getName())
           && Objects.equals(getDataSources(), queryDao.getDataSources())
           && Objects.equals(getCriteria(), queryDao.getCriteria())
           && Objects.equals(getProjection(), queryDao.getProjection());
-    } else if (this.queryType.equals(Query.TypeEnum.CONCEPT)) {
+    } else if (this.queryType.equals(QueryType.CONCEPT)) {
       return getId().equals(queryDao.getId())
           && Objects.equals(getName(), queryDao.getName())
           && Objects.equals(getDataSources(), queryDao.getDataSources())

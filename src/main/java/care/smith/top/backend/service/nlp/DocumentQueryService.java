@@ -6,9 +6,17 @@ import care.smith.top.backend.model.RepositoryDao;
 import care.smith.top.backend.repository.nlp.DocumentRepository;
 import care.smith.top.backend.service.QueryService;
 import care.smith.top.model.*;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import care.smith.top.top_document_query.adapter.TextAdapterConfig;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -72,11 +80,60 @@ public class DocumentQueryService extends QueryService {
       throw new ResponseStatusException(HttpStatus.CONFLICT);
 
     // TODO: create any prerequisites
+    if (getConfigs(query.getDataSources()).isEmpty())
+      throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE);
 
     queryRepository.save(new QueryDao(query).repository(repository));
     jobScheduler.enqueue(queryId, () -> this.executeQuery(queryId));
 
     return getQueryResult(organisationId, repositoryId, queryId);
+  }
+
+  public Optional<TextAdapterConfig> getTextAdapterConfig(String id) {
+    if (id == null) return Optional.empty();
+    return getTextAdapterConfigs().stream().filter(a -> id.equals(a.getId())).findFirst();
+  }
+
+  public List<TextAdapterConfig> getTextAdapterConfigs() {
+    try (Stream<Path> paths =
+                 Files.list(Path.of(dataSourceConfigDir)).filter(f -> !Files.isDirectory(f))) {
+      return paths
+              .map(this::toTextAdapterConfig)
+              .filter(Objects::nonNull)
+              .sorted(Comparator.comparing(TextAdapterConfig::getId))
+              .collect(Collectors.toList());
+    } catch (Exception e) {
+      LOGGER.warning(
+              String.format("Could not load text adapter configs from dir '%s'.", dataSourceConfigDir));
+    }
+    return Collections.emptyList();
+  }
+
+  public List<DataSource> getDataSources() {
+    return getTextAdapterConfigs().stream()
+            .map(a -> new DataSource().id(a.getId()).title(a.getId().replace('_', ' ')))
+            .sorted(Comparator.comparing(DataSource::getId))
+            .collect(Collectors.toList());
+  }
+
+  @NotNull
+  private List<TextAdapterConfig> getConfigs(List<String> dataSources) {
+    return dataSources.stream()
+            .map(s -> getTextAdapterConfig(s).orElse(null))
+            .filter(Objects::nonNull)
+            .collect(Collectors.toList());
+  }
+  private TextAdapterConfig toTextAdapterConfig(Path path) {
+    try {
+      TextAdapterConfig textAdapterConfig = TextAdapterConfig.getInstance(path.toString());
+      return textAdapterConfig.getId() == null ? null : textAdapterConfig;
+    } catch (Exception e) {
+      LOGGER.warning(
+              String.format(
+                      "Text adapter config could not be loaded from file '%s'. Error: %s",
+                      path.toString(), e.getMessage()));
+    }
+    return null;
   }
 
   @Override
