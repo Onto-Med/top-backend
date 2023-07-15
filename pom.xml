@@ -67,7 +67,7 @@
         <dependency>
             <groupId>care.smith.top</groupId>
             <artifactId>top-document-query</artifactId>
-            <version>0.7.1-SNAPSHOT</version>
+            <version>0.7.2</version>
             <exclusions>
                 <exclusion>
                     <groupId>care.smith.top</groupId>
@@ -140,6 +140,18 @@
             <artifactId>reflections</artifactId>
             <version>0.10.2</version>
         </dependency>
+        <dependency>
+            <groupId>co.elastic.clients</groupId>
+            <artifactId>elasticsearch-java</artifactId>
+            <version>8.8.2</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.json</groupId>
+            <artifactId>jakarta.json-api</artifactId>
+            <version>2.0.1</version>
+            <scope>compile</scope>
+        </dependency>
 
         <!-- Test dependencies -->
         <dependency>
@@ -187,18 +199,6 @@
             <groupId>org.testcontainers</groupId>
             <artifactId>elasticsearch</artifactId>
             <version>1.18.3</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>co.elastic.clients</groupId>
-            <artifactId>elasticsearch-java</artifactId>
-            <version>8.8.2</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>jakarta.json</groupId>
-            <artifactId>jakarta.json-api</artifactId>
-            <version>2.0.1</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
