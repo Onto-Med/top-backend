@@ -63,9 +63,9 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
             phenotypeQueryService.enqueueQuery(organisationId, repositoryId, query),
             HttpStatus.CREATED);
       case CONCEPT:
-        throw new ResponseStatusException(
-            HttpStatus.INTERNAL_SERVER_ERROR,
-            "Concept Query is not yet implemented."); // ToDo: needs to be implemented
+        return new ResponseEntity<>(
+            documentQueryService.enqueueQuery(organisationId, repositoryId, query),
+            HttpStatus.CREATED);
       default:
         throw new ResponseStatusException(
             HttpStatus.NOT_ACCEPTABLE, "Query type is neither Phenotype nor Concept.");
