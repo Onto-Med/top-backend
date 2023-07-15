@@ -23,6 +23,7 @@ public class QueryDao {
   private String name;
   private QueryType queryType;
   private String entityId;
+  private String language;
   @ElementCollection private List<String> dataSources = null;
   @ElementCollection private List<QueryCriterionDao> criteria = null;
   @ElementCollection private List<ProjectionEntryDao> projection = null;
@@ -58,6 +59,7 @@ public class QueryDao {
       @NotNull String id,
       String name,
       String entityId,
+      String language,
       List<String> dataSources,
       RepositoryDao repository) {
     this.id = id;
@@ -66,6 +68,7 @@ public class QueryDao {
     this.dataSources = dataSources;
     this.repository = repository;
     this.queryType = QueryType.CONCEPT;
+    this.language = language;
   }
 
   public QueryDao(@NotNull Query query) {
@@ -76,6 +79,7 @@ public class QueryDao {
     if (query instanceof ConceptQuery) {
       this.queryType = QueryType.CONCEPT;
       this.entityId = ((ConceptQuery) query).getEntityId();
+      this.language = ((ConceptQuery) query).getLanguage();
     } else if (query instanceof PhenotypeQuery) {
       this.queryType = QueryType.PHENOTYPE;
       if (((PhenotypeQuery) query).getCriteria() != null)
@@ -155,6 +159,14 @@ public class QueryDao {
     this.entityId = entityId;
     return this;
   }
+  public String getLanguage() {
+    return language;
+  }
+
+  public QueryDao language(String language) {
+    this.language = language;
+    return this;
+  }
 
   public RepositoryDao getRepository() {
     return repository;
@@ -201,6 +213,7 @@ public class QueryDao {
               .name(getName())
               .dataSources(new ArrayList<>(getDataSources()));
       ((ConceptQuery) query).entityId(getEntityId());
+      ((ConceptQuery) query).language(getLanguage());
     }
     return query;
   }

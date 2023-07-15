@@ -3,6 +3,7 @@ package care.smith.top.backend.service.nlp;
 import care.smith.top.backend.model.QueryDao;
 import care.smith.top.backend.model.QueryResultDao;
 import care.smith.top.backend.model.RepositoryDao;
+import care.smith.top.backend.repository.ConceptRepository;
 import care.smith.top.backend.repository.nlp.DocumentRepository;
 import care.smith.top.backend.service.QueryService;
 import care.smith.top.model.*;
@@ -15,10 +16,15 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import care.smith.top.top_document_query.adapter.Document;
+import care.smith.top.top_document_query.adapter.TextAdapter;
 import care.smith.top.top_document_query.adapter.TextAdapterConfig;
+import care.smith.top.top_document_query.adapter.TextFinder;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -31,6 +37,7 @@ public class DocumentQueryService extends QueryService {
   private String dataSourceConfigDir;
 
   @Autowired private DocumentRepository documentRepository;
+  @Autowired private ConceptRepository conceptRepository;
 
   @Override
   @org.jobrunr.jobs.annotations.Job(name = "Document query", retries = 0)
@@ -52,9 +59,32 @@ public class DocumentQueryService extends QueryService {
     ConceptQuery query = (ConceptQuery) queryDao.toApiModel();
 
     // TODO: implement query logic
+    Entity[] concepts =
+        conceptRepository
+            .findAllByRepositoryId(
+                queryDao.getRepository().getId(),
+                Pageable.unpaged())
+            .map(c -> (Concept) c.toApiModel())
+            .getContent()
+            .toArray(new Concept[0]);
+    List<TextAdapterConfig> configs = getConfigs(query.getDataSources());
 
-    QueryResultDao result =
-        new QueryResultDao(queryDao, createdAt, 0L, OffsetDateTime.now(), QueryState.FINISHED);
+    TextAdapterConfig config = configs.stream().findFirst().orElseThrow();
+    QueryResultDao result;
+    try {
+      TextAdapter adapter = TextAdapter.getInstance(config);
+      TextFinder finder = new TextFinder(query, concepts, adapter);
+      List<Document> documents = finder.execute();
+      result =
+              new QueryResultDao(
+                      queryDao, createdAt, (long) documents.size(),
+                      OffsetDateTime.now(), QueryState.FINISHED);
+    } catch (InstantiationException e) {
+      e.printStackTrace();
+      result =
+              new QueryResultDao(queryDao, createdAt, null, OffsetDateTime.now(), QueryState.FAILED)
+                      .message("Cause: " + (e.getMessage() != null ? e.getMessage() : e.toString()));
+    }
 
     queryDao.result(result);
     queryRepository.save(queryDao);
@@ -71,6 +101,7 @@ public class DocumentQueryService extends QueryService {
             .findByIdAndOrganisationId(repositoryId, organisationId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
+    //ToDo: why not checking here if entityId (in PhenotypeQuery: projection/eligibility) is set?
     if (query.getId() == null || query.getDataSources() == null || query.getDataSources().isEmpty())
       throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE);
 
@@ -79,7 +110,6 @@ public class DocumentQueryService extends QueryService {
     if (queryRepository.existsById(queryId.toString()))
       throw new ResponseStatusException(HttpStatus.CONFLICT);
 
-    // TODO: create any prerequisites
     if (getConfigs(query.getDataSources()).isEmpty())
       throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE);
 
