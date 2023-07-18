@@ -188,7 +188,7 @@ public class QueryDao {
 
   public Query toApiModel() {
     Query query = null;
-    if (this.queryType.equals(QueryType.PHENOTYPE)) {
+    if (QueryType.PHENOTYPE.equals(queryType)) {
       query =
           new PhenotypeQuery()
               .id(UUID.fromString(getId()))
@@ -206,7 +206,7 @@ public class QueryDao {
                 getProjection().stream()
                     .map(ProjectionEntryDao::toApiModel)
                     .collect(Collectors.toList()));
-    } else if (this.queryType.equals(QueryType.CONCEPT)) {
+    } else if (QueryType.CONCEPT.equals(queryType)) {
       query =
           new ConceptQuery()
               .id(UUID.fromString(getId()))
