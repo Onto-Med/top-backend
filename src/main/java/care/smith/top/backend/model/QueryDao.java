@@ -159,6 +159,7 @@ public class QueryDao {
     this.entityId = entityId;
     return this;
   }
+
   public String getLanguage() {
     return language;
   }
@@ -189,11 +190,7 @@ public class QueryDao {
   public Query toApiModel() {
     Query query = null;
     if (QueryType.PHENOTYPE.equals(queryType)) {
-      query =
-          new PhenotypeQuery()
-              .id(UUID.fromString(getId()))
-              .name(getName())
-              .dataSources(new ArrayList<>(getDataSources()));
+      query = new PhenotypeQuery();
       if (getCriteria() != null)
         ((PhenotypeQuery) query)
             .criteria(
@@ -207,15 +204,14 @@ public class QueryDao {
                     .map(ProjectionEntryDao::toApiModel)
                     .collect(Collectors.toList()));
     } else if (QueryType.CONCEPT.equals(queryType)) {
-      query =
-          new ConceptQuery()
-              .id(UUID.fromString(getId()))
-              .name(getName())
-              .dataSources(new ArrayList<>(getDataSources()));
-      ((ConceptQuery) query).entityId(getEntityId());
-      ((ConceptQuery) query).language(getLanguage());
+      query = new ConceptQuery().entityId(getEntityId()).language(getLanguage());
     }
-    return query;
+    if (query == null) return null;
+    return query
+        .id(UUID.fromString(getId()))
+        .name(getName())
+        .type(queryType)
+        .dataSources(new ArrayList<>(getDataSources()));
   }
 
   @Override
