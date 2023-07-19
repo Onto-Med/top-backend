@@ -25,6 +25,11 @@ public class DefaultApiDelegateImpl implements DefaultApiDelegate {
 
   @Override
   public ResponseEntity<Statistic> getStatistics() {
+    long documentCount = 0;
+    try {
+      documentCount = documentService.count();
+    } catch (Exception ignored) {
+    }
     Statistic statistic =
         new Statistic()
             .organisations(organisationService.count())
@@ -36,7 +41,7 @@ public class DefaultApiDelegateImpl implements DefaultApiDelegate {
                     EntityType.SINGLE_RESTRICTION,
                     EntityType.COMPOSITE_PHENOTYPE,
                     EntityType.COMPOSITE_RESTRICTION))
-            .documents(documentService.count());
+            .documents(documentCount);
     return new ResponseEntity<>(statistic, HttpStatus.OK);
   }
 }
