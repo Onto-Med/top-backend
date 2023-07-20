@@ -65,6 +65,7 @@ class PhenotypeQueryServiceTest extends AbstractTest {
                                         .addValuesItem(
                                             LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS))
                                         .type(DataType.DATE_TIME)))
+                .type(QueryType.PHENOTYPE)
                 .id(UUID.randomUUID())
                 .addDataSourcesItem(dataSources.get(0));
 

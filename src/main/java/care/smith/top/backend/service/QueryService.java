@@ -3,10 +3,9 @@ package care.smith.top.backend.service;
 import care.smith.top.backend.model.QueryDao;
 import care.smith.top.backend.repository.QueryRepository;
 import care.smith.top.backend.repository.RepositoryRepository;
-import care.smith.top.model.Query;
-import care.smith.top.model.QueryResult;
-import care.smith.top.model.QueryState;
+import care.smith.top.model.*;
 import java.time.ZoneOffset;
+import java.util.Collection;
 import java.util.UUID;
 import java.util.logging.Logger;
 import org.jobrunr.jobs.Job;
@@ -190,5 +189,20 @@ public abstract class QueryService {
       return QueryState.RUNNING;
     }
     return QueryState.QUEUED;
+  }
+
+  protected boolean isValid(Query query) {
+    return query != null
+        && query.getId() != null
+        && !isEmpty(query.getDataSources())
+        && (QueryType.CONCEPT.equals(query.getType())
+                && ((ConceptQuery) query).getEntityId() != null
+            || QueryType.PHENOTYPE.equals(query.getType())
+                && (!isEmpty(((PhenotypeQuery) query).getCriteria())
+                    || !isEmpty(((PhenotypeQuery) query).getProjection())));
+  }
+
+  private boolean isEmpty(Collection<?> list) {
+    return list == null || list.isEmpty();
   }
 }

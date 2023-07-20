@@ -100,9 +100,7 @@ public class DocumentQueryService extends QueryService {
             .findByIdAndOrganisationId(repositoryId, organisationId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-    // ToDo: why not checking here if entityId (in PhenotypeQuery: projection/eligibility) is set?
-    if (query.getId() == null || query.getDataSources() == null || query.getDataSources().isEmpty())
-      throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE);
+    if (!isValid(query)) throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE);
 
     UUID queryId = query.getId();
 
