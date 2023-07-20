@@ -7,6 +7,7 @@ import care.smith.top.backend.repository.nlp.ConceptClusterNodeRepository;
 import care.smith.top.backend.repository.nlp.DocumentNodeRepository;
 import care.smith.top.backend.repository.nlp.DocumentRepository;
 import care.smith.top.backend.repository.nlp.PhraseNodeRepository;
+import care.smith.top.backend.service.AbstractTest;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import co.elastic.clients.transport.ElasticsearchTransport;
@@ -27,7 +28,6 @@ import org.neo4j.harness.Neo4jBuilders;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.transaction.annotation.Propagation;
@@ -37,9 +37,8 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.shaded.org.yaml.snakeyaml.Yaml;
 
 @SpringBootTest
-@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 @Transactional(propagation = Propagation.NEVER)
-public abstract class AbstractNLPTest { // extends AbstractTest {
+public abstract class AbstractNLPTest extends AbstractTest {
 
   protected static final String[] ELASTIC_INDEX = new String[] {"test_documents"};
 
