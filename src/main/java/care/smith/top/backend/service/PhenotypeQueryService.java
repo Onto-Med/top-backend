@@ -1,10 +1,7 @@
 package care.smith.top.backend.service;
 
-import care.smith.top.backend.model.QueryDao;
-import care.smith.top.backend.model.QueryResultDao;
-import care.smith.top.backend.model.RepositoryDao;
+import care.smith.top.backend.model.*;
 import care.smith.top.backend.repository.PhenotypeRepository;
-import care.smith.top.backend.util.ApiModelMapper;
 import care.smith.top.model.*;
 import care.smith.top.top_phenotypic_query.adapter.DataAdapter;
 import care.smith.top.top_phenotypic_query.adapter.config.DataAdapterConfig;
@@ -28,7 +25,6 @@ import java.util.zip.ZipOutputStream;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -100,14 +96,20 @@ public class PhenotypeQueryService extends QueryService {
             getClass().getSimpleName(), queryId, queryDao.getRepository().getDisplayName()));
 
     Entity[] phenotypes =
-        phenotypeRepository
-            .findAllByRepositoryIdAndEntityTypeIn(
-                queryDao.getRepository().getId(),
-                ApiModelMapper.phenotypeTypes(),
-                Pageable.unpaged())
-            .map(e -> (Phenotype) e.toApiModel())
-            .getContent()
-            .toArray(new Phenotype[0]);
+        Stream.concat(
+                queryDao.getProjection().stream().map(ProjectionEntryDao::getSubjectId),
+                queryDao.getCriteria().stream().map(QueryCriterionDao::getSubjectId))
+            .distinct()
+            .flatMap(
+                id ->
+                    phenotypeRepository
+                        .findByIdAndRepositoryId(id, queryDao.getRepository().getId())
+                        .map(entityDao -> phenotypeRepository.getDependencies(entityDao).stream())
+                        .orElse(null))
+            .filter(Objects::nonNull)
+            .map(EntityDao::toApiModel)
+            .toArray(Entity[]::new);
+
     PhenotypeQuery query = (PhenotypeQuery) queryDao.toApiModel();
     List<DataAdapterConfig> configs = getConfigs(query.getDataSources());
 

@@ -271,7 +271,12 @@ public class EntityService implements ContentService {
     RepositoryDao destinationRepo =
         getRepository(forkingInstruction.getOrganisationId(), forkingInstruction.getRepositoryId());
 
-    Entity entity = loadEntity(organisationId, repositoryId, id, null);
+    EntityDao entityDao =
+        entityRepository
+            .findByIdAndRepositoryId(id, repositoryId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+    Entity entity = populateWithCodeSystems().apply(entityDao.toApiModel());
 
     if (RepositoryType.CONCEPT_REPOSITORY.equals(destinationRepo.getRepositoryType())
         && !List.of(EntityType.SINGLE_CONCEPT, EntityType.COMPOSITE_CONCEPT)
@@ -282,7 +287,11 @@ public class EntityService implements ContentService {
               "entityType '%s' is invalid for concept repository",
               entity.getEntityType().getValue()));
 
-    List<Entity> origins = new ArrayList<>(getDependencies(entity));
+    List<Entity> origins =
+        entityRepository.getDependencies(entityDao).stream()
+            .map(EntityDao::toApiModel)
+            .map(populateSubEntities())
+            .collect(Collectors.toList());
     origins.add(entity);
     if (forkingInstruction.isCascade() && ApiModelMapper.isAbstract(entity))
       origins.addAll(getSubclasses(organisationId, repositoryId, origins.get(0).getId(), null));
@@ -767,49 +776,6 @@ public class EntityService implements ContentService {
       throw new ResponseStatusException(
           HttpStatus.INTERNAL_SERVER_ERROR, "Import failed with error: " + e.getMessage());
     }
-  }
-
-  /**
-   * This method collects all dependencies of an entity.
-   *
-   * <p>Dependencies can be:
-   *
-   * <ul>
-   *   <li>super phenotypes of restricted phenotypes
-   *   <li>entities referenced from expressions
-   * </ul>
-   *
-   * @param entity The entity to collect dependencies for.
-   * @return A set of {@link Entity} objects.
-   */
-  private Set<Entity> getDependencies(Entity entity) {
-    Set<Entity> dependencies = new HashSet<>();
-
-    if (ApiModelMapper.isRestricted(entity)) {
-      Entity superPhenotype =
-          loadEntity(
-              entity.getRepository().getOrganisation().getId(),
-              entity.getRepository().getId(),
-              ((Phenotype) entity).getSuperPhenotype().getId(),
-              null);
-      dependencies.add(superPhenotype);
-    }
-
-    if (ApiModelMapper.isAbstract(entity)) {
-      dependencies.addAll(
-          ApiModelMapper.getEntityIdsFromExpression(((Phenotype) entity).getExpression()).stream()
-              .distinct()
-              .map(e -> entityRepository.findById(e))
-              .flatMap(Optional::stream)
-              .map(EntityDao::toApiModel)
-              .collect(Collectors.toSet()));
-    }
-
-    Set<Entity> superDependencies = new HashSet<>();
-    dependencies.forEach(d -> superDependencies.addAll(getDependencies(d)));
-    dependencies.addAll(superDependencies);
-
-    return dependencies;
   }
 
   /**

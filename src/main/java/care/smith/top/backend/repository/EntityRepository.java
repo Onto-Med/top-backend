@@ -1,11 +1,10 @@
 package care.smith.top.backend.repository;
 
 import care.smith.top.backend.model.*;
+import care.smith.top.backend.util.ApiModelMapper;
 import care.smith.top.model.EntityType;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
@@ -107,6 +106,47 @@ public interface EntityRepository
               ? cb.isTrue(root.join(EntityDao_.REPOSITORY).get(RepositoryDao_.PRIMARY))
               : cb.or());
     };
+  }
+
+  /**
+   * This method collects all dependencies of an entity.
+   *
+   * <p>Dependencies can be:
+   *
+   * <ul>
+   *   <li>super phenotypes of restricted phenotypes
+   *   <li>entities referenced from expressions
+   * </ul>
+   *
+   * @param entity The entity to collect dependencies for.
+   * @return A set of {@link EntityDao} objects.
+   */
+  default Set<EntityDao> getDependencies(EntityDao entity) {
+    Set<EntityDao> dependencies = new HashSet<>();
+
+    if (ApiModelMapper.isRestricted(entity.getEntityType())) {
+      entity.getSuperEntities().stream().findFirst().ifPresent(dependencies::add);
+    }
+
+    if (ApiModelMapper.isAbstract(entity.getEntityType())
+        || ApiModelMapper.isCompositeConcept(entity.getEntityType())) {
+      EntityVersionDao currentVersion = entity.getCurrentVersion();
+      if (currentVersion != null && currentVersion.getExpression() != null) {
+        ExpressionDao expression = entity.getCurrentVersion().getExpression();
+        dependencies.addAll(
+            ApiModelMapper.getEntityIdsFromExpression(expression.toApiModel()).stream()
+                .distinct()
+                .map(this::findById)
+                .flatMap(Optional::stream)
+                .collect(Collectors.toSet()));
+      }
+    }
+
+    Set<EntityDao> superDependencies = new HashSet<>();
+    dependencies.forEach(d -> superDependencies.addAll(getDependencies(d)));
+    dependencies.addAll(superDependencies);
+
+    return dependencies;
   }
 
   long count();

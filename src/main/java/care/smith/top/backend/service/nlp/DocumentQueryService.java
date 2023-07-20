@@ -1,5 +1,6 @@
 package care.smith.top.backend.service.nlp;
 
+import care.smith.top.backend.model.EntityDao;
 import care.smith.top.backend.model.QueryDao;
 import care.smith.top.backend.model.QueryResultDao;
 import care.smith.top.backend.model.RepositoryDao;
@@ -7,7 +8,10 @@ import care.smith.top.backend.repository.ConceptRepository;
 import care.smith.top.backend.repository.nlp.DocumentRepository;
 import care.smith.top.backend.service.QueryService;
 import care.smith.top.model.*;
-
+import care.smith.top.top_document_query.adapter.Document;
+import care.smith.top.top_document_query.adapter.TextAdapter;
+import care.smith.top.top_document_query.adapter.TextAdapterConfig;
+import care.smith.top.top_document_query.adapter.TextFinder;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.OffsetDateTime;
@@ -15,16 +19,9 @@ import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import care.smith.top.top_document_query.adapter.Document;
-import care.smith.top.top_document_query.adapter.TextAdapter;
-import care.smith.top.top_document_query.adapter.TextAdapterConfig;
-import care.smith.top.top_document_query.adapter.TextFinder;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -58,15 +55,14 @@ public class DocumentQueryService extends QueryService {
 
     ConceptQuery query = (ConceptQuery) queryDao.toApiModel();
 
-    // TODO: implement query logic
-    Entity[] concepts =
+    EntityDao entity =
         conceptRepository
-            .findAllByRepositoryId(
-                queryDao.getRepository().getId(),
-                Pageable.unpaged())
-            .map(c -> (Concept) c.toApiModel())
-            .getContent()
-            .toArray(new Concept[0]);
+            .findByIdAndRepositoryId(queryDao.getEntityId(), queryDao.getRepository().getId())
+            .orElseThrow();
+    Entity[] concepts =
+        conceptRepository.getDependencies(entity).stream()
+            .map(EntityDao::toApiModel)
+            .toArray(Entity[]::new);
     List<TextAdapterConfig> configs = getConfigs(query.getDataSources());
 
     TextAdapterConfig config = configs.stream().findFirst().orElseThrow();
@@ -76,14 +72,17 @@ public class DocumentQueryService extends QueryService {
       TextFinder finder = new TextFinder(query, concepts, adapter);
       List<Document> documents = finder.execute();
       result =
-              new QueryResultDao(
-                      queryDao, createdAt, (long) documents.size(),
-                      OffsetDateTime.now(), QueryState.FINISHED);
+          new QueryResultDao(
+              queryDao,
+              createdAt,
+              (long) documents.size(),
+              OffsetDateTime.now(),
+              QueryState.FINISHED);
     } catch (InstantiationException e) {
       e.printStackTrace();
       result =
-              new QueryResultDao(queryDao, createdAt, null, OffsetDateTime.now(), QueryState.FAILED)
-                      .message("Cause: " + (e.getMessage() != null ? e.getMessage() : e.toString()));
+          new QueryResultDao(queryDao, createdAt, null, OffsetDateTime.now(), QueryState.FAILED)
+              .message("Cause: " + (e.getMessage() != null ? e.getMessage() : e.toString()));
     }
 
     queryDao.result(result);
@@ -101,7 +100,7 @@ public class DocumentQueryService extends QueryService {
             .findByIdAndOrganisationId(repositoryId, organisationId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-    //ToDo: why not checking here if entityId (in PhenotypeQuery: projection/eligibility) is set?
+    // ToDo: why not checking here if entityId (in PhenotypeQuery: projection/eligibility) is set?
     if (query.getId() == null || query.getDataSources() == null || query.getDataSources().isEmpty())
       throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE);
 
@@ -126,42 +125,43 @@ public class DocumentQueryService extends QueryService {
 
   public List<TextAdapterConfig> getTextAdapterConfigs() {
     try (Stream<Path> paths =
-                 Files.list(Path.of(dataSourceConfigDir)).filter(f -> !Files.isDirectory(f))) {
+        Files.list(Path.of(dataSourceConfigDir)).filter(f -> !Files.isDirectory(f))) {
       return paths
-              .map(this::toTextAdapterConfig)
-              .filter(Objects::nonNull)
-              .sorted(Comparator.comparing(TextAdapterConfig::getId))
-              .collect(Collectors.toList());
+          .map(this::toTextAdapterConfig)
+          .filter(Objects::nonNull)
+          .sorted(Comparator.comparing(TextAdapterConfig::getId))
+          .collect(Collectors.toList());
     } catch (Exception e) {
       LOGGER.warning(
-              String.format("Could not load text adapter configs from dir '%s'.", dataSourceConfigDir));
+          String.format("Could not load text adapter configs from dir '%s'.", dataSourceConfigDir));
     }
     return Collections.emptyList();
   }
 
   public List<DataSource> getDataSources() {
     return getTextAdapterConfigs().stream()
-            .map(a -> new DataSource().id(a.getId()).title(a.getId().replace('_', ' ')))
-            .sorted(Comparator.comparing(DataSource::getId))
-            .collect(Collectors.toList());
+        .map(a -> new DataSource().id(a.getId()).title(a.getId().replace('_', ' ')))
+        .sorted(Comparator.comparing(DataSource::getId))
+        .collect(Collectors.toList());
   }
 
   @NotNull
   private List<TextAdapterConfig> getConfigs(List<String> dataSources) {
     return dataSources.stream()
-            .map(s -> getTextAdapterConfig(s).orElse(null))
-            .filter(Objects::nonNull)
-            .collect(Collectors.toList());
+        .map(s -> getTextAdapterConfig(s).orElse(null))
+        .filter(Objects::nonNull)
+        .collect(Collectors.toList());
   }
+
   private TextAdapterConfig toTextAdapterConfig(Path path) {
     try {
       TextAdapterConfig textAdapterConfig = TextAdapterConfig.getInstance(path.toString());
       return textAdapterConfig.getId() == null ? null : textAdapterConfig;
     } catch (Exception e) {
       LOGGER.warning(
-              String.format(
-                      "Text adapter config could not be loaded from file '%s'. Error: %s",
-                      path.toString(), e.getMessage()));
+          String.format(
+              "Text adapter config could not be loaded from file '%s'. Error: %s",
+              path.toString(), e.getMessage()));
     }
     return null;
   }
