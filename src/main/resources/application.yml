@@ -30,6 +30,7 @@ spring:
     hibernate:
       ddl-auto: validate
       dialect: org.hibernate.dialect.PostgreSQLDialect
+    open-in-view: false
   datasource:
     url: jdbc:${DB_TYPE:postgresql}://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:postgres}
     username: ${DB_USER:postgres}

@@ -24,6 +24,7 @@ spring:
   jpa:
     hibernate:
       dialect: org.hibernate.dialect.HSQLDialect
+    open-in-view: false
   datasource:
     url: jdbc:hsqldb:mem:test
   security:
