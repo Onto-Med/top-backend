@@ -39,11 +39,11 @@ public class EntityService implements ContentService {
   @Value("${spring.max-batch-size:100}")
   private int maxBatchSize;
 
-  @Autowired private EntityRepository entityRepository;
+  @Autowired private EntityRepository        entityRepository;
   @Autowired private EntityVersionRepository entityVersionRepository;
-  @Autowired private CategoryRepository categoryRepository;
+  @Autowired private CategoryRepository  categoryRepository;
   @Autowired private PhenotypeRepository phenotypeRepository;
-  @Autowired private ConceptRepository conceptRepository;
+  @Autowired private ConceptRepository   conceptRepository;
   @Autowired private RepositoryRepository repositoryRepository;
   @Autowired private UserService userService;
   @Autowired private CodeRepository codeRepository;
@@ -316,7 +316,7 @@ public class EntityService implements ContentService {
           HttpStatus.NOT_ACCEPTABLE, "Current version of a class cannot be deleted.");
 
     EntityVersionDao previous = entityVersion.getPreviousVersion();
-    EntityVersionDao next = entityVersion.getNextVersion();
+    EntityVersionDao next     = entityVersion.getNextVersion();
     if (next != null) entityVersionRepository.save(next.previousVersion(previous));
 
     entityVersionRepository.delete(entityVersion);
