@@ -1,6 +1,7 @@
 package care.smith.top.backend.model.neo4j;
 
 import java.util.List;
+
 import org.springframework.data.neo4j.core.schema.*;
 
 @Node("Document")
@@ -14,7 +15,7 @@ public class DocumentNodeEntity {
 
   @Id @GeneratedValue private Long id;
   // @Relationship(type = "HAS_PHRASE", direction = Relationship.Direction.OUTGOING)
-  private List<PhraseNodeEntity> documentPhrases;
+  private List<PhraseNodeEntity>   documentPhrases;
 
   public DocumentNodeEntity(String documentId, String documentName) {
     this.id = null;
