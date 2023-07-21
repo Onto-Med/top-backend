@@ -65,6 +65,7 @@
             </exclusions>
         </dependency>
         <dependency>
+
             <groupId>care.smith.top</groupId>
             <artifactId>top-document-query</artifactId>
             <version>0.7.2</version>
@@ -150,7 +151,7 @@
             <groupId>jakarta.json</groupId>
             <artifactId>jakarta.json-api</artifactId>
             <version>2.0.1</version>
-            <scope>compile</scope>
+            <scope>runtime</scope>
         </dependency>
 
         <!-- Test dependencies -->
