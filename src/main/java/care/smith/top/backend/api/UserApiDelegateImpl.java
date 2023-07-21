@@ -1,6 +1,6 @@
 package care.smith.top.backend.api;
 
-import care.smith.top.backend.model.UserDao;
+import care.smith.top.backend.model.jpa.UserDao;
 import care.smith.top.backend.service.UserService;
 import care.smith.top.backend.util.ApiModelMapper;
 import care.smith.top.model.User;

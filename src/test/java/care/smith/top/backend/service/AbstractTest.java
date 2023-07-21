@@ -1,7 +1,7 @@
 package care.smith.top.backend.service;
 
 import care.smith.top.backend.api.OrganisationApiDelegateImpl;
-import care.smith.top.backend.repository.*;
+import care.smith.top.backend.repository.jpa.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;

@@ -1,6 +1,6 @@
 package care.smith.top.backend.configuration;
 
-import care.smith.top.backend.model.UserDao;
+import care.smith.top.backend.model.jpa.UserDao;
 import java.util.Collection;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;

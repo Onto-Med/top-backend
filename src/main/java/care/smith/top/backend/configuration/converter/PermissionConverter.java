@@ -1,6 +1,6 @@
 package care.smith.top.backend.configuration.converter;
 
-import care.smith.top.backend.model.Permission;
+import care.smith.top.backend.model.jpa.Permission;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;

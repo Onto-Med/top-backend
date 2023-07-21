@@ -1,7 +1,7 @@
 package care.smith.top.backend.service;
 
-import care.smith.top.backend.model.*;
-import care.smith.top.backend.repository.PhenotypeRepository;
+import care.smith.top.backend.model.jpa.*;
+import care.smith.top.backend.repository.jpa.PhenotypeRepository;
 import care.smith.top.model.*;
 import care.smith.top.top_phenotypic_query.adapter.DataAdapter;
 import care.smith.top.top_phenotypic_query.adapter.config.DataAdapterConfig;
@@ -158,7 +158,7 @@ public class PhenotypeQueryService extends QueryService {
   }
 
   @PreAuthorize(
-      "hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
+      "hasPermission(#organisationId, 'care.smith.top.backend.model.jpa.OrganisationDao', 'WRITE')")
   public Path getQueryResultPath(String organisationId, String repositoryId, UUID queryId)
       throws FileSystemException {
     if (!queryResultDownloadEnabled)

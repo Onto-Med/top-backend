@@ -1,6 +1,6 @@
 package care.smith.top.backend.service.nlp;
 
-import care.smith.top.backend.repository.nlp.PhraseNodeRepository;
+import care.smith.top.backend.repository.neo4j.PhraseNodeRepository;
 import care.smith.top.backend.service.ContentService;
 import care.smith.top.model.Phrase;
 import java.util.List;

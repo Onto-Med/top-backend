@@ -1,11 +1,11 @@
 package care.smith.top.backend.service.nlp;
 
-import care.smith.top.backend.model.EntityDao;
-import care.smith.top.backend.model.QueryDao;
-import care.smith.top.backend.model.QueryResultDao;
-import care.smith.top.backend.model.RepositoryDao;
-import care.smith.top.backend.repository.ConceptRepository;
-import care.smith.top.backend.repository.nlp.DocumentRepository;
+import care.smith.top.backend.model.jpa.EntityDao;
+import care.smith.top.backend.model.jpa.QueryDao;
+import care.smith.top.backend.model.jpa.QueryResultDao;
+import care.smith.top.backend.model.jpa.RepositoryDao;
+import care.smith.top.backend.repository.jpa.ConceptRepository;
+import care.smith.top.backend.repository.elasticsearch.DocumentRepository;
 import care.smith.top.backend.service.QueryService;
 import care.smith.top.model.*;
 import care.smith.top.top_document_query.adapter.Document;

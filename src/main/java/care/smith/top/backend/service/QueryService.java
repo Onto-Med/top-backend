@@ -1,8 +1,9 @@
 package care.smith.top.backend.service;
 
-import care.smith.top.backend.model.QueryDao;
-import care.smith.top.backend.repository.QueryRepository;
-import care.smith.top.backend.repository.RepositoryRepository;
+import care.smith.top.backend.model.jpa.QueryDao;
+import care.smith.top.backend.model.jpa.Permission;
+import care.smith.top.backend.repository.jpa.QueryRepository;
+import care.smith.top.backend.repository.jpa.RepositoryRepository;
 import care.smith.top.model.*;
 import java.time.ZoneOffset;
 import java.util.Collection;
@@ -42,7 +43,7 @@ public abstract class QueryService {
    * @return A {@link QueryResult} that reflects the state immediately after enqueuing.
    */
   @PreAuthorize(
-      "hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
+      "hasPermission(#organisationId, 'care.smith.top.backend.model.jpa.OrganisationDao', 'WRITE')")
   public abstract QueryResult enqueueQuery(String organisationId, String repositoryId, Query query);
 
   /**
@@ -56,14 +57,14 @@ public abstract class QueryService {
    * Deletes a query. The delete request is propagated to the underlying {@link JobScheduler}.
    *
    * <p>If authentication is enabled, users are required to have {@link
-   * care.smith.top.backend.model.Permission#WRITE} permission for the organisation.
+   * Permission#WRITE} permission for the organisation.
    *
    * @param organisationId ID of the organisation the query belongs to.
    * @param repositoryId ID of the repository the query belongs to.
    * @param queryId ID of the query to be deleted.
    */
   @PreAuthorize(
-      "hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
+      "hasPermission(#organisationId, 'care.smith.top.backend.model.jpa.OrganisationDao', 'WRITE')")
   public void deleteQuery(String organisationId, String repositoryId, UUID queryId) {
     if (!repositoryRepository.existsByIdAndOrganisation_Id(repositoryId, organisationId))
       throw new ResponseStatusException(HttpStatus.NOT_FOUND);
@@ -98,7 +99,7 @@ public abstract class QueryService {
    * contain a creation timestamp and a state.
    *
    * <p>If authentication is enabled, users are required to have {@link
-   * care.smith.top.backend.model.Permission#WRITE} permission for the organisation.
+   * Permission#WRITE} permission for the organisation.
    *
    * @param organisationId ID of the organisation the query belongs to.
    * @param repositoryId ID of the repository the query belongs to.
@@ -106,7 +107,7 @@ public abstract class QueryService {
    * @return Description of the query's result.
    */
   @PreAuthorize(
-      "hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
+      "hasPermission(#organisationId, 'care.smith.top.backend.model.jpa.OrganisationDao', 'WRITE')")
   public QueryResult getQueryResult(String organisationId, String repositoryId, UUID queryId) {
     if (!repositoryRepository.existsByIdAndOrganisation_Id(repositoryId, organisationId))
       throw new ResponseStatusException(HttpStatus.NOT_FOUND);
@@ -136,7 +137,7 @@ public abstract class QueryService {
    * Returns a page of queries that belong to the given repository.
    *
    * <p>If authentication is enabled, users are required to have {@link
-   * care.smith.top.backend.model.Permission#WRITE} permission for the organisation.
+   * Permission#WRITE} permission for the organisation.
    *
    * @param organisationId ID of the organisation the repository belongs to.
    * @param repositoryId ID of the repository for which queries are requested.
@@ -144,7 +145,7 @@ public abstract class QueryService {
    * @return A {@link care.smith.top.model.Page} containing queries.
    */
   @PreAuthorize(
-      "hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
+      "hasPermission(#organisationId, 'care.smith.top.backend.model.jpa.OrganisationDao', 'WRITE')")
   public Page<Query> getQueries(String organisationId, String repositoryId, Integer page) {
     PageRequest pageRequest = PageRequest.of(page == null ? 0 : page - 1, pageSize);
     return queryRepository

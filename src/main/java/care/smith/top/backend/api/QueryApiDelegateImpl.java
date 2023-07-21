@@ -1,6 +1,6 @@
 package care.smith.top.backend.api;
 
-import care.smith.top.backend.repository.QueryRepository;
+import care.smith.top.backend.repository.jpa.QueryRepository;
 import care.smith.top.backend.service.PhenotypeQueryService;
 import care.smith.top.backend.service.QueryService;
 import care.smith.top.backend.service.nlp.DocumentQueryService;

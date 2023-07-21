@@ -2,8 +2,8 @@ package care.smith.top.backend.service.nlp;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import care.smith.top.backend.model.nlp.ConceptNodeEntity;
-import care.smith.top.backend.model.nlp.PhraseNodeEntity;
+import care.smith.top.backend.model.neo4j.ConceptNodeEntity;
+import care.smith.top.backend.model.neo4j.PhraseNodeEntity;
 import care.smith.top.model.ConceptCluster;
 import java.util.ArrayList;
 import java.util.HashSet;

@@ -2,7 +2,7 @@ package care.smith.top.backend.service;
 
 import static org.assertj.core.api.Assertions.*;
 
-import care.smith.top.backend.model.EntityDao;
+import care.smith.top.backend.model.jpa.EntityDao;
 import care.smith.top.backend.util.TopJsonFormat;
 import care.smith.top.model.*;
 import care.smith.top.top_phenotypic_query.c2reasoner.functions.bool.Not;

@@ -1,7 +1,7 @@
 package care.smith.top.backend.service.nlp;
 
-import care.smith.top.backend.model.nlp.ConceptNodeEntity;
-import care.smith.top.backend.repository.nlp.ConceptClusterNodeRepository;
+import care.smith.top.backend.model.neo4j.ConceptNodeEntity;
+import care.smith.top.backend.repository.neo4j.ConceptClusterNodeRepository;
 import care.smith.top.backend.service.ContentService;
 import care.smith.top.model.ConceptCluster;
 import java.util.List;

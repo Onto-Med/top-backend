@@ -1,8 +1,8 @@
 package care.smith.top.backend.service;
 
-import care.smith.top.backend.model.*;
-import care.smith.top.backend.repository.OrganisationMembershipRepository;
-import care.smith.top.backend.repository.OrganisationRepository;
+import care.smith.top.backend.model.jpa.*;
+import care.smith.top.backend.repository.jpa.OrganisationMembershipRepository;
+import care.smith.top.backend.repository.jpa.OrganisationRepository;
 import care.smith.top.model.Organisation;
 import care.smith.top.model.OrganisationMembership;
 import java.io.IOException;
@@ -73,7 +73,7 @@ public class OrganisationService implements ContentService {
   }
 
   @PreAuthorize(
-      "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
+      "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.jpa.OrganisationDao', 'WRITE')")
   @Transactional
   public Organisation updateOrganisationById(String organisationId, Organisation data) {
     OrganisationDao organisation =
@@ -93,7 +93,7 @@ public class OrganisationService implements ContentService {
   }
 
   @PreAuthorize(
-      "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'MANAGE')")
+      "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.jpa.OrganisationDao', 'MANAGE')")
   @Transactional
   public void deleteOrganisationById(String organisationId) {
     OrganisationDao organisation =
@@ -146,7 +146,7 @@ public class OrganisationService implements ContentService {
   }
 
   @PreAuthorize(
-      "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'MANAGE')")
+      "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.jpa.OrganisationDao', 'MANAGE')")
   @Transactional
   public void createOrganisationMembership(
       String organisationId, OrganisationMembership organisationMembership) {
@@ -167,7 +167,7 @@ public class OrganisationService implements ContentService {
   }
 
   @PreAuthorize(
-      "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'MANAGE')")
+      "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.jpa.OrganisationDao', 'MANAGE')")
   @Transactional
   public void deleteOrganisationMembership(
       String organisationId, OrganisationMembership organisationMembership) {
