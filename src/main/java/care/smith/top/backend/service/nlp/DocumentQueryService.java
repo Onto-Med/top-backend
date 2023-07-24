@@ -58,16 +58,17 @@ public class DocumentQueryService extends QueryService {
         conceptRepository
             .findByIdAndRepositoryId(queryDao.getEntityId(), queryDao.getRepository().getId())
             .orElseThrow();
-    Entity[] concepts =
+    List<Entity> concepts =
         conceptRepository.getDependencies(entity).stream()
             .map(EntityDao::toApiModel)
-            .toArray(Entity[]::new);
+            .collect(Collectors.toList());
+    concepts.add(entity.toApiModel());
 
     TextAdapterConfig config = getTextAdapterConfig(query.getDataSource()).orElseThrow();
     QueryResultDao result;
     try {
       TextAdapter adapter = TextAdapter.getInstance(config);
-      TextFinder finder = new TextFinder(query, concepts, adapter);
+      TextFinder finder = new TextFinder(query, concepts.toArray(new Entity[0]), adapter);
       List<ElasticDocument> documents = finder.execute();
       result =
           new QueryResultDao(

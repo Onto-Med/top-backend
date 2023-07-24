@@ -102,7 +102,13 @@ public class PhenotypeQueryService extends QueryService {
                 id ->
                     phenotypeRepository
                         .findByIdAndRepositoryId(id, queryDao.getRepository().getId())
-                        .map(entityDao -> phenotypeRepository.getDependencies(entityDao).stream())
+                        .map(
+                            entityDao -> {
+                              Set<EntityDao> result =
+                                  phenotypeRepository.getDependencies(entityDao);
+                              result.add(entityDao);
+                              return result.stream();
+                            })
                         .orElse(null))
             .filter(Objects::nonNull)
             .map(EntityDao::toApiModel)
