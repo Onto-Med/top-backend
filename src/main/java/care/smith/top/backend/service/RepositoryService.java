@@ -95,6 +95,7 @@ public class RepositoryService implements ContentService {
     }
   }
 
+  @Transactional
   public Page<Repository> getRepositories(
       List<String> include,
       String name,
@@ -106,7 +107,7 @@ public class RepositoryService implements ContentService {
     return repositoryRepository
         .findByOrganisationIdAndNameAndPrimaryAndRepositoryType(
             null, name, primary, repositoryType, userService.getCurrentUser(), pageRequest)
-        .map(RepositoryDao::toApiModel);
+        .map(r -> r.toApiModel(userService.getCurrentUser()));
   }
 
   public Page<Repository> getRepositoriesByOrganisationId(

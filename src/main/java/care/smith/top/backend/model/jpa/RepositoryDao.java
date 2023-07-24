@@ -142,6 +142,13 @@ public class RepositoryDao {
     return result;
   }
 
+  public Repository toApiModel(UserDao userDao) {
+    Repository repository = toApiModel();
+    if (organisation != null)
+      repository.organisation(organisation.toApiModel(userDao));
+    return repository;
+  }
+
   public Repository toApiModel() {
     Repository repository =
         new Repository()
