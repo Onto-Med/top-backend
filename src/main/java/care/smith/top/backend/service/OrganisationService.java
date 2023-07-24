@@ -122,6 +122,7 @@ public class OrganisationService implements ContentService {
     }
   }
 
+  @Transactional
   public Organisation getOrganisation(String organisationId, List<String> include) {
     return organisationRepository
         .findById(organisationId)
@@ -129,6 +130,7 @@ public class OrganisationService implements ContentService {
         .toApiModel(userService.getCurrentUser());
   }
 
+  @Transactional
   public Page<Organisation> getOrganisations(String name, Integer page, List<String> include) {
     PageRequest pageRequest =
         PageRequest.of(page == null ? 1 : page - 1, pageSize, Sort.by(OrganisationDao_.NAME));
