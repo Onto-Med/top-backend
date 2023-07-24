@@ -6,7 +6,6 @@ import care.smith.top.backend.service.QueryService;
 import care.smith.top.backend.service.nlp.DocumentQueryService;
 import care.smith.top.backend.util.ApiModelMapper;
 import care.smith.top.model.*;
-
 import java.io.File;
 import java.nio.file.FileSystemException;
 import java.util.ArrayList;
@@ -22,7 +21,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-
 @Service
 public class QueryApiDelegateImpl implements QueryApiDelegate {
   @Autowired private PhenotypeQueryService phenotypeQueryService;
@@ -33,7 +31,7 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
   public ResponseEntity<Void> deleteQuery(
       String organisationId, String repositoryId, UUID queryId) {
     getQueryService(organisationId, repositoryId, queryId)
-            .deleteQuery(organisationId, repositoryId, queryId);
+        .deleteQuery(organisationId, repositoryId, queryId);
     return new ResponseEntity<>(HttpStatus.NO_CONTENT);
   }
 
@@ -104,17 +102,20 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
         phenotypeQueryService.getQueryResult(organisationId, repositoryId, queryId), HttpStatus.OK);
   }
 
-  private QueryService getQueryService (String organisationId, String repositoryId, UUID queryId) {
-    QueryType queryType = queryRepository.findByRepository_OrganisationIdAndRepositoryIdAndId(
-            organisationId, repositoryId, String.valueOf(queryId)).orElseThrow().getQueryType();
+  private QueryService getQueryService(String organisationId, String repositoryId, UUID queryId) {
+    QueryType queryType =
+        queryRepository
+            .findByRepository_OrganisationIdAndRepositoryIdAndId(
+                organisationId, repositoryId, String.valueOf(queryId))
+            .orElseThrow()
+            .getQueryType();
     switch (queryType) {
       case PHENOTYPE:
         return phenotypeQueryService;
       case CONCEPT:
         return documentQueryService;
       default:
-        throw new ResponseStatusException(
-                HttpStatus.NOT_ACCEPTABLE, "No such query found.");
+        throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "No such query found.");
     }
   }
 }

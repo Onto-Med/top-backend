@@ -144,8 +144,7 @@ public class RepositoryDao {
 
   public Repository toApiModel(UserDao userDao) {
     Repository repository = toApiModel();
-    if (organisation != null)
-      repository.organisation(organisation.toApiModel(userDao));
+    if (organisation != null) repository.organisation(organisation.toApiModel(userDao));
     return repository;
   }
 

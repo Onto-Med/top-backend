@@ -39,11 +39,11 @@ public class EntityService implements ContentService {
   @Value("${spring.max-batch-size:100}")
   private int maxBatchSize;
 
-  @Autowired private EntityRepository        entityRepository;
+  @Autowired private EntityRepository entityRepository;
   @Autowired private EntityVersionRepository entityVersionRepository;
-  @Autowired private CategoryRepository  categoryRepository;
+  @Autowired private CategoryRepository categoryRepository;
   @Autowired private PhenotypeRepository phenotypeRepository;
-  @Autowired private ConceptRepository   conceptRepository;
+  @Autowired private ConceptRepository conceptRepository;
   @Autowired private RepositoryRepository repositoryRepository;
   @Autowired private UserService userService;
   @Autowired private CodeRepository codeRepository;
@@ -78,157 +78,6 @@ public class EntityService implements ContentService {
     }
 
     return ids.size();
-  }
-
-  /**
-   * Create an entity, if the entity depends on other entities, depending on the entity type the
-   * following will happen:
-   *
-   * <ul>
-   *   <li>category/concept: super categories/concepts are created too
-   *   <li>abstract phenotype: entities referenced in expressions are created too
-   *   <li>restriction: super phenotypes are created too
-   * </ul>
-   *
-   * If you are calling this method multiple times, you should sort the entities with the {@link
-   * ApiModelMapper#compare(Entity, Entity)} comparator.
-   *
-   * @param organisationId The organisation ID.
-   * @param repositoryId The repository ID.
-   * @param data The category to be created.
-   * @param ids Hash map containing all IDs of created entities.
-   */
-  private Entity createEntity(
-      String organisationId,
-      String repositoryId,
-      Entity data,
-      Map<String, String> ids,
-      List<Entity> entities) {
-    if (data == null || ids.containsKey(data.getId())) return data;
-    ids.put(data.getId(), null);
-
-    if (ApiModelMapper.isCategory(data)) {
-      if (((Category) data).getSuperCategories() != null)
-        ((Category) data)
-            .setSuperCategories(
-                ((Category) data)
-                    .getSuperCategories().stream()
-                        .map(
-                            e ->
-                                (Category)
-                                    createEntity(
-                                        organisationId,
-                                        repositoryId,
-                                        ApiModelMapper.getEntity(entities, e.getId()),
-                                        ids,
-                                        entities))
-                        .collect(Collectors.toList()));
-    } else if (ApiModelMapper.isConcept(data)) {
-      if (((Concept) data).getSuperConcepts() != null)
-        ((Concept) data)
-            .setSuperConcepts(
-                ((Concept) data)
-                    .getSuperConcepts().stream()
-                        .map(
-                            e ->
-                                (SingleConcept)
-                                    createEntity(
-                                        organisationId,
-                                        repositoryId,
-                                        ApiModelMapper.getEntity(entities, e.getId()),
-                                        ids,
-                                        entities))
-                        .collect(Collectors.toList()));
-    } else if (ApiModelMapper.isAbstract(data)) {
-      ApiModelMapper.getEntityIdsFromExpression(((Phenotype) data).getExpression())
-          .forEach(
-              id ->
-                  createEntity(
-                      organisationId,
-                      repositoryId,
-                      ApiModelMapper.getEntity(entities, id),
-                      ids,
-                      entities));
-      ((Phenotype) data)
-          .setExpression(ApiModelMapper.replaceEntityIds(((Phenotype) data).getExpression(), ids));
-    } else if (ApiModelMapper.isRestricted(data)
-        && ((Phenotype) data).getSuperPhenotype() != null) {
-      String oldId = ((Phenotype) data).getSuperPhenotype().getId();
-      createEntity(
-          organisationId, repositoryId, ApiModelMapper.getEntity(entities, oldId), ids, entities);
-      ((Phenotype) data).getSuperPhenotype().setId(ids.get(oldId));
-    }
-
-    if (data instanceof Category && ((Category) data).getSuperCategories() != null) {
-      ((Category) data)
-          .superCategories(
-              ((Category) data)
-                  .getSuperCategories().stream()
-                      .map(c -> (Category) c.id(ids.get(c.getId())))
-                      .collect(Collectors.toList()));
-    }
-
-    Entity entity = null;
-    try {
-      entity = createEntity(organisationId, repositoryId, data, true);
-      ids.put(data.getId(), entity.getId());
-    } catch (Exception ignored) {
-    }
-    return entity;
-  }
-
-  private Entity createEntity(
-      String organisationId, String repositoryId, Entity data, boolean modifyId) {
-    String id = data.getId();
-    if (entityRepository.existsById(data.getId())) {
-      if (modifyId) id = UUID.randomUUID().toString();
-      else throw new ResponseStatusException(HttpStatus.CONFLICT);
-    }
-    RepositoryDao repository = getRepository(organisationId, repositoryId);
-
-    if (data.getEntityType() == null)
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "entityType is missing");
-
-    if (RepositoryType.CONCEPT_REPOSITORY.equals(repository.getRepositoryType())
-        && !List.of(EntityType.SINGLE_CONCEPT, EntityType.COMPOSITE_CONCEPT)
-            .contains(data.getEntityType()))
-      throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST,
-          String.format(
-              "entityType '%s' is invalid for concept repository",
-              data.getEntityType().getValue()));
-
-    EntityDao entity = new EntityDao(data).id(id).repository(repository);
-
-    if (data instanceof Category && ((Category) data).getSuperCategories() != null)
-      for (Category category : ((Category) data).getSuperCategories())
-        categoryRepository
-            .findByIdAndRepositoryId(category.getId(), repositoryId)
-            .ifPresent(entity::addSuperEntitiesItem);
-
-    if (data instanceof Phenotype && ((Phenotype) data).getSuperPhenotype() != null)
-      phenotypeRepository
-          .findByIdAndRepositoryId(((Phenotype) data).getSuperPhenotype().getId(), repositoryId)
-          .ifPresentOrElse(
-              entity::addSuperEntitiesItem,
-              () -> {
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-              });
-
-    if (data instanceof Concept && ((Concept) data).getSuperConcepts() != null)
-      for (Concept concept : ((Concept) data).getSuperConcepts())
-        conceptRepository
-            .findByIdAndRepositoryId(concept.getId(), repositoryId)
-            .ifPresent(entity::addSuperEntitiesItem);
-
-    entity = entityRepository.save(entity);
-    EntityVersionDao entityVersion =
-        entityVersionRepository.save(new EntityVersionDao(data).version(1).entity(entity));
-    entity.currentVersion(entityVersion);
-
-    return populateWithCodeSystems()
-        .andThen(populateSubEntities())
-        .apply(entityRepository.save(entity).toApiModel());
   }
 
   @Caching(
@@ -467,7 +316,7 @@ public class EntityService implements ContentService {
           HttpStatus.NOT_ACCEPTABLE, "Current version of a class cannot be deleted.");
 
     EntityVersionDao previous = entityVersion.getPreviousVersion();
-    EntityVersionDao next     = entityVersion.getNextVersion();
+    EntityVersionDao next = entityVersion.getNextVersion();
     if (next != null) entityVersionRepository.save(next.previousVersion(previous));
 
     entityVersionRepository.delete(entityVersion);
@@ -739,18 +588,6 @@ public class EntityService implements ContentService {
     return stream;
   }
 
-  public Set<Class<? extends PhenotypeExporter>> getPhenotypeExporterImplementations() {
-    Reflections reflections =
-        new Reflections(new ConfigurationBuilder().forPackage("care.smith.top"));
-    return new HashSet<>(reflections.getSubTypesOf(PhenotypeExporter.class));
-  }
-
-  public Set<Class<? extends PhenotypeImporter>> getPhenotypeImporterImplementations() {
-    Reflections reflections =
-        new Reflections(new ConfigurationBuilder().forPackage("care.smith.top"));
-    return new HashSet<>(reflections.getSubTypesOf(PhenotypeImporter.class));
-  }
-
   @Caching(
       evict = {@CacheEvict("entityCount"), @CacheEvict(value = "entities", key = "#repositoryId")})
   @PreAuthorize(
@@ -776,6 +613,169 @@ public class EntityService implements ContentService {
       throw new ResponseStatusException(
           HttpStatus.INTERNAL_SERVER_ERROR, "Import failed with error: " + e.getMessage());
     }
+  }
+
+  public Set<Class<? extends PhenotypeExporter>> getPhenotypeExporterImplementations() {
+    Reflections reflections =
+        new Reflections(new ConfigurationBuilder().forPackage("care.smith.top"));
+    return new HashSet<>(reflections.getSubTypesOf(PhenotypeExporter.class));
+  }
+
+  public Set<Class<? extends PhenotypeImporter>> getPhenotypeImporterImplementations() {
+    Reflections reflections =
+        new Reflections(new ConfigurationBuilder().forPackage("care.smith.top"));
+    return new HashSet<>(reflections.getSubTypesOf(PhenotypeImporter.class));
+  }
+
+  /**
+   * Create an entity, if the entity depends on other entities, depending on the entity type the
+   * following will happen:
+   *
+   * <ul>
+   *   <li>category/concept: super categories/concepts are created too
+   *   <li>abstract phenotype: entities referenced in expressions are created too
+   *   <li>restriction: super phenotypes are created too
+   * </ul>
+   *
+   * If you are calling this method multiple times, you should sort the entities with the {@link
+   * ApiModelMapper#compare(Entity, Entity)} comparator.
+   *
+   * @param organisationId The organisation ID.
+   * @param repositoryId The repository ID.
+   * @param data The category to be created.
+   * @param ids Hash map containing all IDs of created entities.
+   */
+  private Entity createEntity(
+      String organisationId,
+      String repositoryId,
+      Entity data,
+      Map<String, String> ids,
+      List<Entity> entities) {
+    if (data == null || ids.containsKey(data.getId())) return data;
+    ids.put(data.getId(), null);
+
+    if (ApiModelMapper.isCategory(data)) {
+      if (((Category) data).getSuperCategories() != null)
+        ((Category) data)
+            .setSuperCategories(
+                ((Category) data)
+                    .getSuperCategories().stream()
+                        .map(
+                            e ->
+                                (Category)
+                                    createEntity(
+                                        organisationId,
+                                        repositoryId,
+                                        ApiModelMapper.getEntity(entities, e.getId()),
+                                        ids,
+                                        entities))
+                        .collect(Collectors.toList()));
+    } else if (ApiModelMapper.isConcept(data)) {
+      if (((Concept) data).getSuperConcepts() != null)
+        ((Concept) data)
+            .setSuperConcepts(
+                ((Concept) data)
+                    .getSuperConcepts().stream()
+                        .map(
+                            e ->
+                                (SingleConcept)
+                                    createEntity(
+                                        organisationId,
+                                        repositoryId,
+                                        ApiModelMapper.getEntity(entities, e.getId()),
+                                        ids,
+                                        entities))
+                        .collect(Collectors.toList()));
+    } else if (ApiModelMapper.isAbstract(data)) {
+      ApiModelMapper.getEntityIdsFromExpression(((Phenotype) data).getExpression())
+          .forEach(
+              id ->
+                  createEntity(
+                      organisationId,
+                      repositoryId,
+                      ApiModelMapper.getEntity(entities, id),
+                      ids,
+                      entities));
+      ((Phenotype) data)
+          .setExpression(ApiModelMapper.replaceEntityIds(((Phenotype) data).getExpression(), ids));
+    } else if (ApiModelMapper.isRestricted(data)
+        && ((Phenotype) data).getSuperPhenotype() != null) {
+      String oldId = ((Phenotype) data).getSuperPhenotype().getId();
+      createEntity(
+          organisationId, repositoryId, ApiModelMapper.getEntity(entities, oldId), ids, entities);
+      ((Phenotype) data).getSuperPhenotype().setId(ids.get(oldId));
+    }
+
+    if (data instanceof Category && ((Category) data).getSuperCategories() != null) {
+      ((Category) data)
+          .superCategories(
+              ((Category) data)
+                  .getSuperCategories().stream()
+                      .map(c -> (Category) c.id(ids.get(c.getId())))
+                      .collect(Collectors.toList()));
+    }
+
+    Entity entity = null;
+    try {
+      entity = createEntity(organisationId, repositoryId, data, true);
+      ids.put(data.getId(), entity.getId());
+    } catch (Exception ignored) {
+    }
+    return entity;
+  }
+
+  private Entity createEntity(
+      String organisationId, String repositoryId, Entity data, boolean modifyId) {
+    String id = data.getId();
+    if (entityRepository.existsById(data.getId())) {
+      if (modifyId) id = UUID.randomUUID().toString();
+      else throw new ResponseStatusException(HttpStatus.CONFLICT);
+    }
+    RepositoryDao repository = getRepository(organisationId, repositoryId);
+
+    if (data.getEntityType() == null)
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "entityType is missing");
+
+    if (RepositoryType.CONCEPT_REPOSITORY.equals(repository.getRepositoryType())
+        && !List.of(EntityType.SINGLE_CONCEPT, EntityType.COMPOSITE_CONCEPT)
+            .contains(data.getEntityType()))
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST,
+          String.format(
+              "entityType '%s' is invalid for concept repository",
+              data.getEntityType().getValue()));
+
+    EntityDao entity = new EntityDao(data).id(id).repository(repository);
+
+    if (data instanceof Category && ((Category) data).getSuperCategories() != null)
+      for (Category category : ((Category) data).getSuperCategories())
+        categoryRepository
+            .findByIdAndRepositoryId(category.getId(), repositoryId)
+            .ifPresent(entity::addSuperEntitiesItem);
+
+    if (data instanceof Phenotype && ((Phenotype) data).getSuperPhenotype() != null)
+      phenotypeRepository
+          .findByIdAndRepositoryId(((Phenotype) data).getSuperPhenotype().getId(), repositoryId)
+          .ifPresentOrElse(
+              entity::addSuperEntitiesItem,
+              () -> {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+              });
+
+    if (data instanceof Concept && ((Concept) data).getSuperConcepts() != null)
+      for (Concept concept : ((Concept) data).getSuperConcepts())
+        conceptRepository
+            .findByIdAndRepositoryId(concept.getId(), repositoryId)
+            .ifPresent(entity::addSuperEntitiesItem);
+
+    entity = entityRepository.save(entity);
+    EntityVersionDao entityVersion =
+        entityVersionRepository.save(new EntityVersionDao(data).version(1).entity(entity));
+    entity.currentVersion(entityVersion);
+
+    return populateWithCodeSystems()
+        .andThen(populateSubEntities())
+        .apply(entityRepository.save(entity).toApiModel());
   }
 
   /**

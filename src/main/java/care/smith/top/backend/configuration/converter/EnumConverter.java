@@ -10,30 +10,32 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 public class EnumConverter implements WebMvcConfigurer {
+  @Override
+  public void addFormatters(FormatterRegistry registry) {
+    registry.addConverterFactory(new QueryTypeEnumConverter());
+  }
+
+  public static class QueryTypeEnumConverter implements ConverterFactory<String, QueryType> {
+
     @Override
-    public void addFormatters(FormatterRegistry registry) {
-        registry.addConverterFactory(new QueryTypeEnumConverter());
+    public <T extends QueryType> @NotNull Converter<String, T> getConverter(
+        @NotNull Class<T> targetType) {
+      return new QueryTypeStringToEnumConverter<>(targetType);
     }
 
-    public static class QueryTypeEnumConverter implements ConverterFactory<String, QueryType> {
+    public static class QueryTypeStringToEnumConverter<T extends QueryType>
+        implements Converter<String, T> {
 
-        @Override
-        public <T extends QueryType> @NotNull Converter<String, T> getConverter(@NotNull Class<T> targetType) {
-            return new QueryTypeStringToEnumConverter<>(targetType);
-        }
+      private Class<T> targetClass;
 
-        public static class QueryTypeStringToEnumConverter<T extends QueryType> implements Converter<String, T> {
+      public QueryTypeStringToEnumConverter(Class<T> targetClass) {
+        this.targetClass = targetClass;
+      }
 
-            private Class<T> targetClass;
-
-            public QueryTypeStringToEnumConverter(Class<T> targetClass) {
-                this.targetClass = targetClass;
-            }
-
-            @Override
-            public T convert(String source) {
-                return (T) QueryType.fromValue(source);
-            }
-        }
+      @Override
+      public T convert(String source) {
+        return (T) QueryType.fromValue(source);
+      }
     }
+  }
 }
