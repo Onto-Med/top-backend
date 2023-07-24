@@ -52,7 +52,7 @@
         <dependency>
             <groupId>care.smith.top</groupId>
             <artifactId>top-phenotypic-query</artifactId>
-            <version>0.6.1</version>
+            <version>0.6.2-SNAPSHOT</version>
             <exclusions>
                 <exclusion>
                     <groupId>care.smith.top</groupId>
@@ -63,7 +63,7 @@
         <dependency>
             <groupId>care.smith.top</groupId>
             <artifactId>top-document-query</artifactId>
-            <version>0.7.1</version>
+            <version>0.7.1-SNAPSHOT</version>
             <exclusions>
                 <exclusion>
                     <groupId>care.smith.top</groupId>
