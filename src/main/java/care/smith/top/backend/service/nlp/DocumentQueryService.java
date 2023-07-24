@@ -4,8 +4,8 @@ import care.smith.top.backend.model.jpa.EntityDao;
 import care.smith.top.backend.model.jpa.QueryDao;
 import care.smith.top.backend.model.jpa.QueryResultDao;
 import care.smith.top.backend.model.jpa.RepositoryDao;
-import care.smith.top.backend.repository.jpa.ConceptRepository;
 import care.smith.top.backend.repository.elasticsearch.DocumentRepository;
+import care.smith.top.backend.repository.jpa.ConceptRepository;
 import care.smith.top.backend.service.QueryService;
 import care.smith.top.model.*;
 import care.smith.top.top_document_query.adapter.Document;
@@ -19,7 +19,6 @@ import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -63,9 +62,8 @@ public class DocumentQueryService extends QueryService {
         conceptRepository.getDependencies(entity).stream()
             .map(EntityDao::toApiModel)
             .toArray(Entity[]::new);
-    List<TextAdapterConfig> configs = getConfigs(query.getDataSources());
 
-    TextAdapterConfig config = configs.stream().findFirst().orElseThrow();
+    TextAdapterConfig config = getTextAdapterConfig(query.getDataSource()).orElseThrow();
     QueryResultDao result;
     try {
       TextAdapter adapter = TextAdapter.getInstance(config);
@@ -107,7 +105,7 @@ public class DocumentQueryService extends QueryService {
     if (queryRepository.existsById(queryId.toString()))
       throw new ResponseStatusException(HttpStatus.CONFLICT);
 
-    if (getConfigs(query.getDataSources()).isEmpty())
+    if (getTextAdapterConfig(query.getDataSource()).isEmpty())
       throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE);
 
     queryRepository.save(new QueryDao(query).repository(repository));
@@ -140,14 +138,6 @@ public class DocumentQueryService extends QueryService {
     return getTextAdapterConfigs().stream()
         .map(a -> new DataSource().id(a.getId()).title(a.getId().replace('_', ' ')))
         .sorted(Comparator.comparing(DataSource::getId))
-        .collect(Collectors.toList());
-  }
-
-  @NotNull
-  private List<TextAdapterConfig> getConfigs(List<String> dataSources) {
-    return dataSources.stream()
-        .map(s -> getTextAdapterConfig(s).orElse(null))
-        .filter(Objects::nonNull)
         .collect(Collectors.toList());
   }
 

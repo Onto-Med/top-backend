@@ -195,7 +195,7 @@ public abstract class QueryService {
   protected boolean isValid(Query query) {
     return query != null
         && query.getId() != null
-        && !isEmpty(query.getDataSources())
+        && query.getDataSource() != null
         && (QueryType.CONCEPT.equals(query.getType())
                 && ((ConceptQuery) query).getEntityId() != null
             || QueryType.PHENOTYPE.equals(query.getType())

@@ -22,7 +22,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -68,7 +67,7 @@ public class PhenotypeQueryService extends QueryService {
     if (queryRepository.existsById(queryId.toString()))
       throw new ResponseStatusException(HttpStatus.CONFLICT);
 
-    if (getConfigs(query.getDataSources()).isEmpty())
+    if (getDataAdapterConfig(query.getDataSource()).isEmpty())
       throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE);
 
     queryRepository.save(new QueryDao(query).repository(repository));
@@ -110,10 +109,7 @@ public class PhenotypeQueryService extends QueryService {
             .toArray(Entity[]::new);
 
     PhenotypeQuery query = (PhenotypeQuery) queryDao.toApiModel();
-    List<DataAdapterConfig> configs = getConfigs(query.getDataSources());
-
-    // TODO: only one data source supported yet
-    DataAdapterConfig config = configs.stream().findFirst().orElseThrow();
+    DataAdapterConfig config = getDataAdapterConfig(query.getDataSource()).orElseThrow();
 
     QueryResultDao result;
     try {
@@ -204,14 +200,6 @@ public class PhenotypeQueryService extends QueryService {
     return getDataAdapterConfigs().stream()
         .map(a -> new DataSource().id(a.getId()).title(a.getId().replace('_', ' ')))
         .sorted(Comparator.comparing(DataSource::getId))
-        .collect(Collectors.toList());
-  }
-
-  @NotNull
-  private List<DataAdapterConfig> getConfigs(List<String> dataSources) {
-    return dataSources.stream()
-        .map(s -> getDataAdapterConfig(s).orElse(null))
-        .filter(Objects::nonNull)
         .collect(Collectors.toList());
   }
 

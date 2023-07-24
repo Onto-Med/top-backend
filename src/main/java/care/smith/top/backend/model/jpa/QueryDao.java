@@ -3,16 +3,14 @@ package care.smith.top.backend.model.jpa;
 import care.smith.top.model.ConceptQuery;
 import care.smith.top.model.PhenotypeQuery;
 import care.smith.top.model.Query;
+import care.smith.top.model.QueryType;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
-
-import care.smith.top.model.QueryType;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -24,7 +22,7 @@ public class QueryDao {
   private QueryType queryType;
   private String entityId;
   private String language;
-  @ElementCollection private List<String> dataSources = null;
+  private String dataSource;
   @ElementCollection private List<QueryCriterionDao> criteria = null;
   @ElementCollection private List<ProjectionEntryDao> projection = null;
 
@@ -42,13 +40,13 @@ public class QueryDao {
   public QueryDao(
       @NotNull String id,
       String name,
-      List<String> dataSources,
+      @NotNull String dataSource,
       List<QueryCriterionDao> criteria,
       List<ProjectionEntryDao> projection,
       RepositoryDao repository) {
     this.id = id;
     this.name = name;
-    this.dataSources = dataSources;
+    this.dataSource = dataSource;
     this.criteria = criteria;
     this.projection = projection;
     this.repository = repository;
@@ -60,12 +58,12 @@ public class QueryDao {
       String name,
       String entityId,
       String language,
-      List<String> dataSources,
+      @NotNull String dataSource,
       RepositoryDao repository) {
     this.id = id;
     this.name = name;
     this.entityId = entityId;
-    this.dataSources = dataSources;
+    this.dataSource = dataSource;
     this.repository = repository;
     this.queryType = QueryType.CONCEPT;
     this.language = language;
@@ -74,7 +72,7 @@ public class QueryDao {
   public QueryDao(@NotNull Query query) {
     this.id = query.getId().toString();
     this.name = query.getName();
-    this.dataSources = query.getDataSources();
+    this.dataSource = query.getDataSource();
 
     if (query instanceof ConceptQuery) {
       this.queryType = QueryType.CONCEPT;
@@ -115,12 +113,12 @@ public class QueryDao {
     return queryType;
   }
 
-  public List<String> getDataSources() {
-    return dataSources;
+  public String getDataSource() {
+    return dataSource;
   }
 
-  public QueryDao dataSources(List<String> dataSources) {
-    this.dataSources = dataSources;
+  public QueryDao dataSource(String dataSource) {
+    this.dataSource = dataSource;
     return this;
   }
 
@@ -211,7 +209,7 @@ public class QueryDao {
         .id(UUID.fromString(getId()))
         .name(getName())
         .type(queryType)
-        .dataSources(new ArrayList<>(getDataSources()));
+        .dataSource(getDataSource());
   }
 
   @Override
@@ -222,19 +220,19 @@ public class QueryDao {
     if (this.queryType.equals(QueryType.PHENOTYPE)) {
       return getId().equals(queryDao.getId())
           && Objects.equals(getName(), queryDao.getName())
-          && Objects.equals(getDataSources(), queryDao.getDataSources())
+          && Objects.equals(getDataSource(), queryDao.getDataSource())
           && Objects.equals(getCriteria(), queryDao.getCriteria())
           && Objects.equals(getProjection(), queryDao.getProjection());
     } else if (this.queryType.equals(QueryType.CONCEPT)) {
       return getId().equals(queryDao.getId())
           && Objects.equals(getName(), queryDao.getName())
-          && Objects.equals(getDataSources(), queryDao.getDataSources())
+          && Objects.equals(getDataSource(), queryDao.getDataSource())
           && Objects.equals(getEntityId(), queryDao.getEntityId());
     } else return false;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(getId(), getName(), getDataSources(), getCriteria(), getProjection());
+    return Objects.hash(getId(), getName(), getDataSource(), getCriteria(), getProjection());
   }
 }
