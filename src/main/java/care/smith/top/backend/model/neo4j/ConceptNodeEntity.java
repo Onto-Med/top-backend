@@ -2,7 +2,6 @@ package care.smith.top.backend.model.neo4j;
 
 import java.util.List;
 import java.util.Set;
-
 import org.springframework.data.neo4j.core.schema.*;
 
 @Node("Concept")
@@ -18,7 +17,7 @@ public class ConceptNodeEntity {
   // ToDo: this takes a long time to load; maybe it's not necessary bc I get the Phrases later with
   // a Cypher query when needed
   // @Relationship(type = "IN_CONCEPT", direction = Relationship.Direction.INCOMING)
-  private Set<PhraseNodeEntity>    conceptPhrases;
+  private Set<PhraseNodeEntity> conceptPhrases;
 
   public ConceptNodeEntity(
       String conceptId, List<String> labels, Set<PhraseNodeEntity> conceptPhrases) {
