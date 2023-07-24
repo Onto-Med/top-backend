@@ -24,6 +24,7 @@ spring:
   jpa:
     hibernate:
       dialect: org.hibernate.dialect.HSQLDialect
+    open-in-view: false
   datasource:
     url: jdbc:hsqldb:mem:test
   security:
@@ -49,6 +50,8 @@ top:
   phenotyping:
     data-source-config-dir: src/test/resources/config/data_sources
     execute-queries: false
+  documents:
+    data-source-config-dir: src/test/resources/config/data_sources/nlp
 
 coding:
   terminology-service: ${TERMINOLOGY_SERVICE_ENDPOINT:https://www.ebi.ac.uk/ols/api}

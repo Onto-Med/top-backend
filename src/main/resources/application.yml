@@ -30,6 +30,7 @@ spring:
     hibernate:
       ddl-auto: validate
       dialect: org.hibernate.dialect.PostgreSQLDialect
+    open-in-view: false
   datasource:
     url: jdbc:${DB_TYPE:postgresql}://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:postgres}
     username: ${DB_USER:postgres}
@@ -60,6 +61,8 @@ top:
     result:
       dir: ${QUERY_RESULT_DIR:config/query_results}
       download-enabled: ${QUERY_RESULT_DOWNLOAD_ENABLED:true}
+  documents:
+    data-source-config-dir: ${DOCUMENT_DATA_SOURCE_CONFIG_DIR:config/data_sources/nlp}
 
 coding:
   terminology-service: ${TERMINOLOGY_SERVICE_ENDPOINT:http://localhost:9000/api}

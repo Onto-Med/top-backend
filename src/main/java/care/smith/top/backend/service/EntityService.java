@@ -1,7 +1,7 @@
 package care.smith.top.backend.service;
 
-import care.smith.top.backend.model.*;
-import care.smith.top.backend.repository.*;
+import care.smith.top.backend.model.jpa.*;
+import care.smith.top.backend.repository.jpa.*;
 import care.smith.top.backend.repository.ols.CodeRepository;
 import care.smith.top.backend.util.ApiModelMapper;
 import care.smith.top.model.*;
@@ -62,7 +62,7 @@ public class EntityService implements ContentService {
   @Caching(
       evict = {@CacheEvict("entityCount"), @CacheEvict(value = "entities", key = "#repositoryId")})
   @PreAuthorize(
-      "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
+      "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.jpa.OrganisationDao', 'WRITE')")
   public int createEntities(
       String organisationId, String repositoryId, List<Entity> entities, List<String> include) {
     Map<String, String> ids = new HashMap<>();
@@ -78,6 +78,553 @@ public class EntityService implements ContentService {
     }
 
     return ids.size();
+  }
+
+  @Caching(
+      evict = {@CacheEvict("entityCount"), @CacheEvict(value = "entities", key = "#repositoryId")})
+  @PreAuthorize(
+      "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.jpa.OrganisationDao', 'WRITE')")
+  public Entity createEntity(String organisationId, String repositoryId, Entity data) {
+    return createEntity(organisationId, repositoryId, data, false);
+  }
+
+  @Caching(
+      evict = {
+        @CacheEvict("entityCount"),
+        @CacheEvict(value = "entities", key = "#forkingInstruction.repositoryId")
+      })
+  @PreAuthorize(
+      "hasRole('ADMIN') or hasPermission(#repositoryId, 'care.smith.top.backend.model.jpa.RepositoryDao', 'READ') "
+          + "and hasPermission(#forkingInstruction.organisationId, 'care.smith.top.backend.model.jpa.OrganisationDao', 'WRITE')")
+  public List<Entity> createFork(
+      String organisationId,
+      String repositoryId,
+      String id,
+      ForkingInstruction forkingInstruction,
+      Integer version,
+      List<String> include) {
+    if (repositoryId.equals(forkingInstruction.getRepositoryId()))
+      throw new ResponseStatusException(
+          HttpStatus.NOT_ACCEPTABLE,
+          String.format("Cannot create fork of entity '%s' in the same repository.", id));
+
+    RepositoryDao originRepo = getRepository(organisationId, repositoryId);
+
+    if (!originRepo.getPrimary())
+      throw new ResponseStatusException(
+          HttpStatus.NOT_ACCEPTABLE,
+          String.format(
+              "Cannot create fork of entity '%s' from non-primary repository '%s'.",
+              id, originRepo.getId()));
+
+    RepositoryDao destinationRepo =
+        getRepository(forkingInstruction.getOrganisationId(), forkingInstruction.getRepositoryId());
+
+    EntityDao entityDao =
+        entityRepository
+            .findByIdAndRepositoryId(id, repositoryId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+    Entity entity = populateWithCodeSystems().apply(entityDao.toApiModel());
+
+    if (RepositoryType.CONCEPT_REPOSITORY.equals(destinationRepo.getRepositoryType())
+        && !List.of(EntityType.SINGLE_CONCEPT, EntityType.COMPOSITE_CONCEPT)
+            .contains(entity.getEntityType()))
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST,
+          String.format(
+              "entityType '%s' is invalid for concept repository",
+              entity.getEntityType().getValue()));
+
+    List<Entity> origins =
+        entityRepository.getDependencies(entityDao).stream()
+            .map(EntityDao::toApiModel)
+            .map(populateSubEntities())
+            .collect(Collectors.toList());
+    origins.add(entity);
+    if (forkingInstruction.isCascade() && ApiModelMapper.isAbstract(entity))
+      origins.addAll(getSubclasses(organisationId, repositoryId, origins.get(0).getId(), null));
+
+    List<Entity> results = new ArrayList<>();
+    Map<String, String> ids = new HashMap<>();
+    for (Entity origin :
+        origins.stream().sorted(ApiModelMapper::compare).collect(Collectors.toList())) {
+      String oldId = origin.getId();
+      Optional<EntityDao> fork =
+          entityRepository.findByRepositoryIdAndOriginId(destinationRepo.getId(), origin.getId());
+
+      if (!forkingInstruction.isUpdate() && fork.isPresent()) continue;
+
+      if (forkingInstruction.isUpdate() && fork.isPresent()) {
+        if (fork.get().getCurrentVersion().getEquivalentEntityVersions().stream()
+            .anyMatch(
+                e ->
+                    e.getEntity().getId().equals(origin.getId())
+                        && e.getVersion().equals(origin.getVersion()))) continue;
+        origin.setId(fork.get().getId());
+        origin.setVersion(fork.get().getCurrentVersion().getVersion() + 1);
+        if (origin instanceof Phenotype) {
+          ((Phenotype) origin)
+              .setSuperCategories(
+                  fork.get().getSuperEntities().stream()
+                      .map(e -> ((Category) new Category().id(e.getId())))
+                      .collect(Collectors.toList()));
+        } else if (origin instanceof Category) {
+          ((Category) origin)
+              .setSuperCategories(
+                  fork.get().getSuperEntities().stream()
+                      .map(e -> ((Category) new Category().id(e.getId())))
+                      .collect(Collectors.toList()));
+        } else if (origin instanceof Concept) {
+          ((Concept) origin)
+              .setSuperConcepts(
+                  fork.get().getSuperEntities().stream()
+                      .map(e -> ((SingleConcept) new SingleConcept().id(e.getId())))
+                      .collect(Collectors.toList()));
+        }
+      }
+
+      if (!forkingInstruction.isUpdate() || fork.isEmpty()) {
+        origin.setId(UUID.randomUUID().toString());
+        origin.setVersion(1);
+        if (origin instanceof Phenotype) ((Phenotype) origin).setSuperCategories(null);
+        else if (origin instanceof Category) ((Category) origin).setSuperCategories(null);
+        else if (origin instanceof Concept) ((Concept) origin).setSuperConcepts(null);
+      }
+
+      ids.put(oldId, origin.getId());
+
+      if (origin instanceof Phenotype) {
+        Phenotype phenotype = (Phenotype) origin;
+        if (phenotype.getSuperPhenotype() != null) {
+          Optional<EntityDao> superClass =
+              entityRepository.findByRepositoryIdAndOriginId(
+                  destinationRepo.getId(), phenotype.getSuperPhenotype().getId());
+          if (superClass.isEmpty()) continue;
+          phenotype.setSuperPhenotype((Phenotype) new Phenotype().id(superClass.get().getId()));
+          ids.put(phenotype.getSuperPhenotype().getId(), superClass.get().getId());
+        }
+
+        if (ApiModelMapper.isAbstract(origin) && ((Phenotype) origin).getExpression() != null) {
+          ((Phenotype) origin)
+              .expression(
+                  ApiModelMapper.replaceEntityIds(((Phenotype) origin).getExpression(), ids));
+        }
+      }
+
+      if (origin.getVersion() == 1) {
+        Entity curFork =
+            createEntity(forkingInstruction.getOrganisationId(), destinationRepo.getId(), origin);
+        curFork.addEquivalentEntitiesItem(
+            new Entity().id(oldId).entityType(origin.getEntityType()).version(origin.getVersion()));
+        results.add(curFork);
+        entityRepository.setFork(origin.getId(), oldId);
+      } else {
+        Entity curFork =
+            updateEntityById(
+                forkingInstruction.getOrganisationId(),
+                destinationRepo.getId(),
+                origin.getId(),
+                origin,
+                null);
+        curFork.addEquivalentEntitiesItem(
+            new Entity().id(oldId).entityType(origin.getEntityType()).version(origin.getVersion()));
+        results.add(curFork);
+      }
+
+      EntityDao createdFork =
+          entityRepository
+              .findByIdAndRepositoryId(origin.getId(), destinationRepo.getId())
+              .orElseThrow();
+
+      EntityDao originDao =
+          entityRepository.findByIdAndRepositoryId(oldId, repositoryId).orElseThrow();
+      entityRepository.save(createdFork.origin(originDao));
+      entityVersionRepository.save(
+          createdFork
+              .getCurrentVersion()
+              .addEquivalentEntityVersionsItem(originDao.getCurrentVersion()));
+    }
+
+    return results;
+  }
+
+  @Caching(
+      evict = {@CacheEvict("entityCount"), @CacheEvict(value = "entities", key = "#repositoryId")})
+  @PreAuthorize(
+      "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.jpa.OrganisationDao', 'WRITE')")
+  public void deleteEntity(String organisationId, String repositoryId, String id, Boolean cascade) {
+    getRepository(organisationId, repositoryId);
+
+    EntityDao entity =
+        entityRepository
+            .findByIdAndRepositoryId(id, repositoryId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+    if (entity.getSubEntities() != null) {
+      if (ApiModelMapper.isAbstract(entity.getEntityType())) {
+        entityRepository.deleteAll(entity.getSubEntities());
+      } else if (ApiModelMapper.canHaveSubs(entity.getEntityType())) {
+        if (cascade != null && cascade) {
+          entity
+              .getSubEntities()
+              .forEach(e -> deleteEntity(organisationId, repositoryId, e.getId(), true));
+        } else {
+          for (EntityDao subEntity : entity.getSubEntities()) {
+            subEntity
+                .removeSuperEntitiesItem(entity)
+                .addAllSuperEntitiesItems(entity.getSuperEntities());
+            entityRepository.save(subEntity);
+          }
+        }
+      }
+    }
+
+    if (entity.getForks() != null)
+      for (EntityDao fork : entity.getForks()) entityRepository.save(fork.origin(null));
+
+    if (entity.getVersions() != null)
+      for (EntityVersionDao version : entity.getVersions())
+        if (version.getEquivalentEntityVersionOf() != null)
+          for (EntityVersionDao eqVersion : version.getEquivalentEntityVersionOf())
+            entityVersionRepository.save(eqVersion.removeEquivalentEntityVersionsItem(version));
+
+    entityRepository.delete(entity);
+  }
+
+  @PreAuthorize(
+      "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.jpa.OrganisationDao', 'WRITE')")
+  public void deleteVersion(
+      String organisationId, String repositoryId, String id, Integer version) {
+    getRepository(organisationId, repositoryId);
+    EntityDao entity =
+        entityRepository
+            .findByIdAndRepositoryId(id, repositoryId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    EntityVersionDao entityVersion =
+        entityVersionRepository
+            .findByEntity_RepositoryIdAndEntityIdAndVersion(repositoryId, id, version)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+    EntityVersionDao currentVersion = entity.getCurrentVersion();
+    if (currentVersion == null)
+      throw new ResponseStatusException(
+          HttpStatus.NOT_FOUND, "Class does not have a current version.");
+
+    if (entityVersion.equals(currentVersion))
+      throw new ResponseStatusException(
+          HttpStatus.NOT_ACCEPTABLE, "Current version of a class cannot be deleted.");
+
+    EntityVersionDao previous = entityVersion.getPreviousVersion();
+    EntityVersionDao next = entityVersion.getNextVersion();
+    if (next != null) entityVersionRepository.save(next.previousVersion(previous));
+
+    entityVersionRepository.delete(entityVersion);
+  }
+
+  public Page<Entity> getEntities(
+      List<String> include,
+      String name,
+      List<EntityType> type,
+      DataType dataType,
+      ItemType itemType,
+      List<String> repositoryIds,
+      Boolean includePrimary,
+      Integer page) {
+    PageRequest pageRequest = PageRequest.of(page != null ? page - 1 : 0, pageSize);
+    return phenotypeRepository
+        .findAllByRepositoryIdsAndRepository_PrimaryAndTitleAndEntityTypeAndDataTypeAndItemType(
+            repositoryIds,
+            includePrimary,
+            name,
+            type,
+            dataType,
+            itemType,
+            userService.getCurrentUser(),
+            pageRequest)
+        .map(EntityDao::toApiModel)
+        .map(populateSubEntities())
+        .map(populateWithCodeSystems());
+  }
+
+  @PreAuthorize(
+      "hasRole('ADMIN') or hasPermission(#repositoryId, 'care.smith.top.backend.model.jpa.RepositoryDao', 'READ')")
+  public Page<Entity> getEntitiesByRepositoryId(
+      String organisationId,
+      String repositoryId,
+      List<String> include,
+      String name,
+      List<EntityType> type,
+      DataType dataType,
+      ItemType itemType,
+      Integer page) {
+    getRepository(organisationId, repositoryId);
+    PageRequest pageRequest = PageRequest.of(page != null ? page - 1 : 0, pageSize);
+
+    return phenotypeRepository
+        .findAllByRepositoryIdAndTitleAndEntityTypeAndDataTypeAndItemType(
+            repositoryId, name, type, dataType, itemType, pageRequest)
+        .map(EntityDao::toApiModel)
+        .map(populateSubEntities())
+        .map(populateWithCodeSystems());
+  }
+
+  @PreAuthorize(
+      "hasRole('ADMIN') or hasPermission(#repositoryId, 'care.smith.top.backend.model.jpa.RepositoryDao', 'READ')")
+  public ForkingStats getForkingStats(
+      String organisationId, String repositoryId, String id, List<String> include) {
+    getRepository(organisationId, repositoryId);
+    EntityDao entity =
+        entityRepository
+            .findByIdAndRepositoryId(id, repositoryId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+    ForkingStats forkingStats = new ForkingStats();
+    EntityDao origin = entity.getOrigin();
+    if (origin != null && origin.getCurrentVersion() != null)
+      forkingStats.origin(
+          new Entity()
+              .id(origin.getId())
+              .repository(origin.getRepository().toApiModel())
+              .titles(
+                  origin.getCurrentVersion().getTitles().stream()
+                      .map(LocalisableTextDao::toApiModel)
+                      .collect(Collectors.toList())));
+    if (entity.getForks() != null)
+      entity.getForks().stream()
+          .map(
+              f -> {
+                RepositoryDao repository = f.getRepository();
+                return new Entity()
+                    .id(f.getId())
+                    .author(
+                        f.getCurrentVersion().getAuthor() != null
+                            ? f.getCurrentVersion().getAuthor().getUsername()
+                            : null)
+                    .createdAt(f.getCurrentVersion().getCreatedAt())
+                    .repository(repository.toApiModel());
+              })
+          .forEach(forkingStats::addForksItem);
+    return forkingStats;
+  }
+
+  @Cacheable(
+      value = "entities",
+      key = "#repositoryId",
+      condition = "#name == null && #type == null && #dataType == null")
+  @PreAuthorize(
+      "hasRole('ADMIN') or hasPermission(#repositoryId, 'care.smith.top.backend.model.jpa.RepositoryDao', 'READ')")
+  public List<Entity> getRootEntitiesByRepositoryId(
+      String organisationId,
+      String repositoryId,
+      List<String> include,
+      String name,
+      List<EntityType> type,
+      DataType dataType,
+      ItemType itemType) {
+    // TODO: filter parameters are ignored
+    getRepository(organisationId, repositoryId);
+    return entityRepository
+        .findAllByRepositoryIdAndSuperEntitiesEmpty(repositoryId, Sort.by(EntityDao_.ID))
+        .map(EntityDao::toApiModel)
+        .map(populateSubEntities())
+        .map(populateWithCodeSystems())
+        .getContent();
+  }
+
+  @PreAuthorize(
+      "hasRole('ADMIN') or hasPermission(#repositoryId, 'care.smith.top.backend.model.jpa.RepositoryDao', 'READ')")
+  public List<Entity> getSubclasses(
+      String organisationId, String repositoryId, String id, List<String> include) {
+    RepositoryDao repoDao = getRepository(organisationId, repositoryId);
+    EntityRepository repo = categoryRepository;
+    if (RepositoryType.CONCEPT_REPOSITORY.equals(repoDao.getRepositoryType())) {
+      repo = conceptRepository;
+    }
+    return repo.findAllByRepositoryIdAndSuperEntities_Id(repositoryId, id, Sort.by(EntityDao_.ID))
+        .map(EntityDao::toApiModel)
+        .map(populateSubEntities())
+        .map(populateWithCodeSystems())
+        .getContent();
+  }
+
+  @PreAuthorize(
+      "hasRole('ADMIN') or hasPermission(#repositoryId, 'care.smith.top.backend.model.jpa.RepositoryDao', 'READ')")
+  public List<Entity> getVersions(
+      String organisationId, String repositoryId, String id, List<String> include) {
+    getRepository(organisationId, repositoryId);
+    return entityVersionRepository
+        .findAllByEntity_RepositoryIdAndEntityIdOrderByVersionDesc(repositoryId, id)
+        .stream()
+        .map(EntityVersionDao::toApiModel)
+        .map(populateWithCodeSystems())
+        .collect(Collectors.toList());
+  }
+
+  @PreAuthorize(
+      "hasRole('ADMIN') or hasPermission(#repositoryId, 'care.smith.top.backend.model.jpa.RepositoryDao', 'READ')")
+  public Entity loadEntity(String organisationId, String repositoryId, String id, Integer version) {
+    getRepository(organisationId, repositoryId);
+    if (version == null)
+      return entityRepository
+          .findByIdAndRepositoryId(id, repositoryId)
+          .map(EntityDao::toApiModel)
+          .map(populateWithCodeSystems())
+          .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+    return entityVersionRepository
+        .findByEntity_RepositoryIdAndEntityIdAndVersion(repositoryId, id, version)
+        .map(EntityVersionDao::toApiModel)
+        .map(populateSubEntities())
+        .map(populateWithCodeSystems())
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+  }
+
+  @CacheEvict(value = "entities", key = "#repositoryId")
+  @PreAuthorize(
+      "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.jpa.OrganisationDao', 'WRITE')")
+  public Entity setCurrentEntityVersion(
+      String organisationId,
+      String repositoryId,
+      String id,
+      Integer version,
+      List<String> include) {
+    getRepository(organisationId, repositoryId);
+
+    EntityDao entity =
+        entityRepository
+            .findByIdAndRepositoryId(id, repositoryId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    EntityVersionDao entityVersion =
+        entityVersionRepository
+            .findByEntity_RepositoryIdAndEntityIdAndVersion(repositoryId, id, version)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+    return populateWithCodeSystems()
+        .andThen(populateSubEntities())
+        .apply(entityRepository.save(entity.currentVersion(entityVersion)).toApiModel());
+  }
+
+  @CacheEvict(value = "entities", key = "#repositoryId")
+  @PreAuthorize(
+      "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.jpa.OrganisationDao', 'WRITE')")
+  public Entity updateEntityById(
+      String organisationId, String repositoryId, String id, Entity data, List<String> include) {
+    getRepository(organisationId, repositoryId);
+    EntityDao entity =
+        entityRepository
+            .findByIdAndRepositoryId(id, repositoryId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+    EntityVersionDao latestVersion = entityVersionRepository.findByEntityIdAndNextVersionNull(id);
+    EntityVersionDao newVersion = new EntityVersionDao(data).entity(entity);
+
+    if (latestVersion != null) {
+      if (latestVersion.getDataType() != newVersion.getDataType())
+        throw new ResponseStatusException(
+            HttpStatus.NOT_ACCEPTABLE, "update of data type is forbidden");
+      newVersion.previousVersion(latestVersion).version(latestVersion.getVersion() + 1);
+    } else {
+      newVersion.version(0);
+    }
+
+    newVersion = entityVersionRepository.save(newVersion);
+
+    if (!ApiModelMapper.isRestricted(entity.getEntityType())) {
+      entity.superEntities(null);
+      if (data instanceof Concept) {
+        if (((Concept) data).getSuperConcepts() != null) {
+          for (Concept concept : ((Concept) data).getSuperConcepts())
+            conceptRepository
+                .findByIdAndRepositoryId(concept.getId(), repositoryId)
+                .ifPresent(entity::addSuperEntitiesItem);
+        }
+      } else {
+        if (((Category) data).getSuperCategories() != null)
+          for (Category category : ((Category) data).getSuperCategories())
+            categoryRepository
+                .findByIdAndRepositoryId(category.getId(), repositoryId)
+                .ifPresent(entity::addSuperEntitiesItem);
+      }
+    }
+
+    return populateWithCodeSystems()
+        .andThen(populateSubEntities())
+        .apply(entityRepository.save(entity.currentVersion(newVersion)).toApiModel());
+  }
+
+  @PreAuthorize(
+      "hasRole('ADMIN') or hasPermission(#repositoryId, 'care.smith.top.backend.model.jpa.RepositoryDao', 'READ')")
+  public ByteArrayOutputStream exportRepository(
+      String organisationId, String repositoryId, String converter) {
+    RepositoryDao repository = getRepository(organisationId, repositoryId);
+    Entity[] entities =
+        entityRepository
+            .findAllByRepositoryId(repositoryId, Pageable.unpaged())
+            .map(EntityDao::toApiModel)
+            .map(populateWithCodeSystems())
+            .stream()
+            .toArray(Entity[]::new);
+
+    Optional<Class<? extends PhenotypeExporter>> optional =
+        getPhenotypeExporterImplementations().stream()
+            .filter(c -> c.getSimpleName().equals(converter))
+            .findFirst();
+
+    if (optional.isEmpty())
+      throw new ResponseStatusException(
+          HttpStatus.NOT_ACCEPTABLE, String.format("No converter '%s' available.", converter));
+
+    ByteArrayOutputStream stream = new ByteArrayOutputStream();
+    try {
+      PhenotypeExporter exporter = optional.get().getConstructor().newInstance();
+      String uri = String.format("http://%s.org/%s", organisationId, repositoryId);
+      exporter.write(entities, repository.toApiModel(), uri, stream);
+    } catch (Exception e) {
+      throw new ResponseStatusException(
+          HttpStatus.INTERNAL_SERVER_ERROR, "Export failed with error: " + e.getMessage());
+    }
+
+    return stream;
+  }
+
+  @Caching(
+      evict = {@CacheEvict("entityCount"), @CacheEvict(value = "entities", key = "#repositoryId")})
+  @PreAuthorize(
+      "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.jpa.OrganisationDao', 'WRITE')")
+  public void importRepository(
+      String organisationId, String repositoryId, String converter, InputStream stream) {
+
+    Optional<Class<? extends PhenotypeImporter>> optional =
+        getPhenotypeImporterImplementations().stream()
+            .filter(c -> c.getSimpleName().equals(converter))
+            .findFirst();
+
+    if (optional.isEmpty())
+      throw new ResponseStatusException(
+          HttpStatus.NOT_ACCEPTABLE, String.format("No converter '%s' available.", converter));
+
+    try {
+      PhenotypeImporter importer = optional.get().getConstructor().newInstance();
+      List<Entity> entities = List.of(importer.read(stream));
+      createEntities(organisationId, repositoryId, entities, null);
+    } catch (Exception e) {
+      e.printStackTrace();
+      throw new ResponseStatusException(
+          HttpStatus.INTERNAL_SERVER_ERROR, "Import failed with error: " + e.getMessage());
+    }
+  }
+
+  public Set<Class<? extends PhenotypeExporter>> getPhenotypeExporterImplementations() {
+    Reflections reflections =
+        new Reflections(new ConfigurationBuilder().forPackage("care.smith.top"));
+    return new HashSet<>(reflections.getSubTypesOf(PhenotypeExporter.class));
+  }
+
+  public Set<Class<? extends PhenotypeImporter>> getPhenotypeImporterImplementations() {
+    Reflections reflections =
+        new Reflections(new ConfigurationBuilder().forPackage("care.smith.top"));
+    return new HashSet<>(reflections.getSubTypesOf(PhenotypeImporter.class));
   }
 
   /**
@@ -229,587 +776,6 @@ public class EntityService implements ContentService {
     return populateWithCodeSystems()
         .andThen(populateSubEntities())
         .apply(entityRepository.save(entity).toApiModel());
-  }
-
-  @Caching(
-      evict = {@CacheEvict("entityCount"), @CacheEvict(value = "entities", key = "#repositoryId")})
-  @PreAuthorize(
-      "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
-  public Entity createEntity(String organisationId, String repositoryId, Entity data) {
-    return createEntity(organisationId, repositoryId, data, false);
-  }
-
-  @Caching(
-      evict = {
-        @CacheEvict("entityCount"),
-        @CacheEvict(value = "entities", key = "#forkingInstruction.repositoryId")
-      })
-  @PreAuthorize(
-      "hasRole('ADMIN') or hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'READ') "
-          + "and hasPermission(#forkingInstruction.organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
-  public List<Entity> createFork(
-      String organisationId,
-      String repositoryId,
-      String id,
-      ForkingInstruction forkingInstruction,
-      Integer version,
-      List<String> include) {
-    if (repositoryId.equals(forkingInstruction.getRepositoryId()))
-      throw new ResponseStatusException(
-          HttpStatus.NOT_ACCEPTABLE,
-          String.format("Cannot create fork of entity '%s' in the same repository.", id));
-
-    RepositoryDao originRepo = getRepository(organisationId, repositoryId);
-
-    if (!originRepo.getPrimary())
-      throw new ResponseStatusException(
-          HttpStatus.NOT_ACCEPTABLE,
-          String.format(
-              "Cannot create fork of entity '%s' from non-primary repository '%s'.",
-              id, originRepo.getId()));
-
-    RepositoryDao destinationRepo =
-        getRepository(forkingInstruction.getOrganisationId(), forkingInstruction.getRepositoryId());
-
-    Entity entity = loadEntity(organisationId, repositoryId, id, null);
-
-    if (RepositoryType.CONCEPT_REPOSITORY.equals(destinationRepo.getRepositoryType())
-        && !List.of(EntityType.SINGLE_CONCEPT, EntityType.COMPOSITE_CONCEPT)
-            .contains(entity.getEntityType()))
-      throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST,
-          String.format(
-              "entityType '%s' is invalid for concept repository",
-              entity.getEntityType().getValue()));
-
-    List<Entity> origins = new ArrayList<>(getDependencies(entity));
-    origins.add(entity);
-    if (forkingInstruction.isCascade() && ApiModelMapper.isAbstract(entity))
-      origins.addAll(getSubclasses(organisationId, repositoryId, origins.get(0).getId(), null));
-
-    List<Entity> results = new ArrayList<>();
-    Map<String, String> ids = new HashMap<>();
-    for (Entity origin :
-        origins.stream().sorted(ApiModelMapper::compare).collect(Collectors.toList())) {
-      String oldId = origin.getId();
-      Optional<EntityDao> fork =
-          entityRepository.findByRepositoryIdAndOriginId(destinationRepo.getId(), origin.getId());
-
-      if (!forkingInstruction.isUpdate() && fork.isPresent()) continue;
-
-      if (forkingInstruction.isUpdate() && fork.isPresent()) {
-        if (fork.get().getCurrentVersion().getEquivalentEntityVersions().stream()
-            .anyMatch(
-                e ->
-                    e.getEntity().getId().equals(origin.getId())
-                        && e.getVersion().equals(origin.getVersion()))) continue;
-        origin.setId(fork.get().getId());
-        origin.setVersion(fork.get().getCurrentVersion().getVersion() + 1);
-        if (origin instanceof Phenotype) {
-          ((Phenotype) origin)
-              .setSuperCategories(
-                  fork.get().getSuperEntities().stream()
-                      .map(e -> ((Category) new Category().id(e.getId())))
-                      .collect(Collectors.toList()));
-        } else if (origin instanceof Category) {
-          ((Category) origin)
-              .setSuperCategories(
-                  fork.get().getSuperEntities().stream()
-                      .map(e -> ((Category) new Category().id(e.getId())))
-                      .collect(Collectors.toList()));
-        } else if (origin instanceof Concept) {
-          ((Concept) origin)
-              .setSuperConcepts(
-                  fork.get().getSuperEntities().stream()
-                      .map(e -> ((SingleConcept) new SingleConcept().id(e.getId())))
-                      .collect(Collectors.toList()));
-        }
-      }
-
-      if (!forkingInstruction.isUpdate() || fork.isEmpty()) {
-        origin.setId(UUID.randomUUID().toString());
-        origin.setVersion(1);
-        if (origin instanceof Phenotype) ((Phenotype) origin).setSuperCategories(null);
-        else if (origin instanceof Category) ((Category) origin).setSuperCategories(null);
-        else if (origin instanceof Concept) ((Concept) origin).setSuperConcepts(null);
-      }
-
-      ids.put(oldId, origin.getId());
-
-      if (origin instanceof Phenotype) {
-        Phenotype phenotype = (Phenotype) origin;
-        if (phenotype.getSuperPhenotype() != null) {
-          Optional<EntityDao> superClass =
-              entityRepository.findByRepositoryIdAndOriginId(
-                  destinationRepo.getId(), phenotype.getSuperPhenotype().getId());
-          if (superClass.isEmpty()) continue;
-          phenotype.setSuperPhenotype((Phenotype) new Phenotype().id(superClass.get().getId()));
-          ids.put(phenotype.getSuperPhenotype().getId(), superClass.get().getId());
-        }
-
-        if (ApiModelMapper.isAbstract(origin) && ((Phenotype) origin).getExpression() != null) {
-          ((Phenotype) origin)
-              .expression(
-                  ApiModelMapper.replaceEntityIds(((Phenotype) origin).getExpression(), ids));
-        }
-      }
-
-      if (origin.getVersion() == 1) {
-        Entity curFork =
-            createEntity(forkingInstruction.getOrganisationId(), destinationRepo.getId(), origin);
-        curFork.addEquivalentEntitiesItem(
-            new Entity().id(oldId).entityType(origin.getEntityType()).version(origin.getVersion()));
-        results.add(curFork);
-        entityRepository.setFork(origin.getId(), oldId);
-      } else {
-        Entity curFork =
-            updateEntityById(
-                forkingInstruction.getOrganisationId(),
-                destinationRepo.getId(),
-                origin.getId(),
-                origin,
-                null);
-        curFork.addEquivalentEntitiesItem(
-            new Entity().id(oldId).entityType(origin.getEntityType()).version(origin.getVersion()));
-        results.add(curFork);
-      }
-
-      EntityDao createdFork =
-          entityRepository
-              .findByIdAndRepositoryId(origin.getId(), destinationRepo.getId())
-              .orElseThrow();
-
-      EntityDao originDao =
-          entityRepository.findByIdAndRepositoryId(oldId, repositoryId).orElseThrow();
-      entityRepository.save(createdFork.origin(originDao));
-      entityVersionRepository.save(
-          createdFork
-              .getCurrentVersion()
-              .addEquivalentEntityVersionsItem(originDao.getCurrentVersion()));
-    }
-
-    return results;
-  }
-
-  @Caching(
-      evict = {@CacheEvict("entityCount"), @CacheEvict(value = "entities", key = "#repositoryId")})
-  @PreAuthorize(
-      "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
-  public void deleteEntity(String organisationId, String repositoryId, String id, Boolean cascade) {
-    getRepository(organisationId, repositoryId);
-
-    EntityDao entity =
-        entityRepository
-            .findByIdAndRepositoryId(id, repositoryId)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-
-    if (entity.getSubEntities() != null) {
-      if (ApiModelMapper.isAbstract(entity.getEntityType())) {
-        entityRepository.deleteAll(entity.getSubEntities());
-      } else if (ApiModelMapper.canHaveSubs(entity.getEntityType())) {
-        if (cascade != null && cascade) {
-          entity
-              .getSubEntities()
-              .forEach(e -> deleteEntity(organisationId, repositoryId, e.getId(), true));
-        } else {
-          for (EntityDao subEntity : entity.getSubEntities()) {
-            subEntity
-                .removeSuperEntitiesItem(entity)
-                .addAllSuperEntitiesItems(entity.getSuperEntities());
-            entityRepository.save(subEntity);
-          }
-        }
-      }
-    }
-
-    if (entity.getForks() != null)
-      for (EntityDao fork : entity.getForks()) entityRepository.save(fork.origin(null));
-
-    if (entity.getVersions() != null)
-      for (EntityVersionDao version : entity.getVersions())
-        if (version.getEquivalentEntityVersionOf() != null)
-          for (EntityVersionDao eqVersion : version.getEquivalentEntityVersionOf())
-            entityVersionRepository.save(eqVersion.removeEquivalentEntityVersionsItem(version));
-
-    entityRepository.delete(entity);
-  }
-
-  @PreAuthorize(
-      "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
-  public void deleteVersion(
-      String organisationId, String repositoryId, String id, Integer version) {
-    getRepository(organisationId, repositoryId);
-    EntityDao entity =
-        entityRepository
-            .findByIdAndRepositoryId(id, repositoryId)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-    EntityVersionDao entityVersion =
-        entityVersionRepository
-            .findByEntity_RepositoryIdAndEntityIdAndVersion(repositoryId, id, version)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-
-    EntityVersionDao currentVersion = entity.getCurrentVersion();
-    if (currentVersion == null)
-      throw new ResponseStatusException(
-          HttpStatus.NOT_FOUND, "Class does not have a current version.");
-
-    if (entityVersion.equals(currentVersion))
-      throw new ResponseStatusException(
-          HttpStatus.NOT_ACCEPTABLE, "Current version of a class cannot be deleted.");
-
-    EntityVersionDao previous = entityVersion.getPreviousVersion();
-    EntityVersionDao next = entityVersion.getNextVersion();
-    if (next != null) entityVersionRepository.save(next.previousVersion(previous));
-
-    entityVersionRepository.delete(entityVersion);
-  }
-
-  public Page<Entity> getEntities(
-      List<String> include,
-      String name,
-      List<EntityType> type,
-      DataType dataType,
-      ItemType itemType,
-      List<String> repositoryIds,
-      Boolean includePrimary,
-      Integer page) {
-    PageRequest pageRequest = PageRequest.of(page != null ? page - 1 : 0, pageSize);
-    return phenotypeRepository
-        .findAllByRepositoryIdsAndRepository_PrimaryAndTitleAndEntityTypeAndDataTypeAndItemType(
-            repositoryIds,
-            includePrimary,
-            name,
-            type,
-            dataType,
-            itemType,
-            userService.getCurrentUser(),
-            pageRequest)
-        .map(EntityDao::toApiModel)
-        .map(populateSubEntities())
-        .map(populateWithCodeSystems());
-  }
-
-  @PreAuthorize(
-      "hasRole('ADMIN') or hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'READ')")
-  public Page<Entity> getEntitiesByRepositoryId(
-      String organisationId,
-      String repositoryId,
-      List<String> include,
-      String name,
-      List<EntityType> type,
-      DataType dataType,
-      ItemType itemType,
-      Integer page) {
-    getRepository(organisationId, repositoryId);
-    PageRequest pageRequest = PageRequest.of(page != null ? page - 1 : 0, pageSize);
-
-    return phenotypeRepository
-        .findAllByRepositoryIdAndTitleAndEntityTypeAndDataTypeAndItemType(
-            repositoryId, name, type, dataType, itemType, pageRequest)
-        .map(EntityDao::toApiModel)
-        .map(populateSubEntities())
-        .map(populateWithCodeSystems());
-  }
-
-  @PreAuthorize(
-      "hasRole('ADMIN') or hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'READ')")
-  public ForkingStats getForkingStats(
-      String organisationId, String repositoryId, String id, List<String> include) {
-    getRepository(organisationId, repositoryId);
-    EntityDao entity =
-        entityRepository
-            .findByIdAndRepositoryId(id, repositoryId)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-
-    ForkingStats forkingStats = new ForkingStats();
-    EntityDao origin = entity.getOrigin();
-    if (origin != null && origin.getCurrentVersion() != null)
-      forkingStats.origin(
-          new Entity()
-              .id(origin.getId())
-              .repository(origin.getRepository().toApiModel())
-              .titles(
-                  origin.getCurrentVersion().getTitles().stream()
-                      .map(LocalisableTextDao::toApiModel)
-                      .collect(Collectors.toList())));
-    if (entity.getForks() != null)
-      entity.getForks().stream()
-          .map(
-              f -> {
-                RepositoryDao repository = f.getRepository();
-                return new Entity()
-                    .id(f.getId())
-                    .author(
-                        f.getCurrentVersion().getAuthor() != null
-                            ? f.getCurrentVersion().getAuthor().getUsername()
-                            : null)
-                    .createdAt(f.getCurrentVersion().getCreatedAt())
-                    .repository(repository.toApiModel());
-              })
-          .forEach(forkingStats::addForksItem);
-    return forkingStats;
-  }
-
-  @Cacheable(
-      value = "entities",
-      key = "#repositoryId",
-      condition = "#name == null && #type == null && #dataType == null")
-  @PreAuthorize(
-      "hasRole('ADMIN') or hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'READ')")
-  public List<Entity> getRootEntitiesByRepositoryId(
-      String organisationId,
-      String repositoryId,
-      List<String> include,
-      String name,
-      List<EntityType> type,
-      DataType dataType,
-      ItemType itemType) {
-    // TODO: filter parameters are ignored
-    getRepository(organisationId, repositoryId);
-    return entityRepository
-        .findAllByRepositoryIdAndSuperEntitiesEmpty(repositoryId, Sort.by(EntityDao_.ID))
-        .map(EntityDao::toApiModel)
-        .map(populateSubEntities())
-        .map(populateWithCodeSystems())
-        .getContent();
-  }
-
-  @PreAuthorize(
-      "hasRole('ADMIN') or hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'READ')")
-  public List<Entity> getSubclasses(
-      String organisationId, String repositoryId, String id, List<String> include) {
-    RepositoryDao repoDao = getRepository(organisationId, repositoryId);
-    EntityRepository repo = categoryRepository;
-    if (RepositoryType.CONCEPT_REPOSITORY.equals(repoDao.getRepositoryType())) {
-      repo = conceptRepository;
-    }
-    return repo.findAllByRepositoryIdAndSuperEntities_Id(repositoryId, id, Sort.by(EntityDao_.ID))
-        .map(EntityDao::toApiModel)
-        .map(populateSubEntities())
-        .map(populateWithCodeSystems())
-        .getContent();
-  }
-
-  @PreAuthorize(
-      "hasRole('ADMIN') or hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'READ')")
-  public List<Entity> getVersions(
-      String organisationId, String repositoryId, String id, List<String> include) {
-    getRepository(organisationId, repositoryId);
-    return entityVersionRepository
-        .findAllByEntity_RepositoryIdAndEntityIdOrderByVersionDesc(repositoryId, id)
-        .stream()
-        .map(EntityVersionDao::toApiModel)
-        .map(populateWithCodeSystems())
-        .collect(Collectors.toList());
-  }
-
-  @PreAuthorize(
-      "hasRole('ADMIN') or hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'READ')")
-  public Entity loadEntity(String organisationId, String repositoryId, String id, Integer version) {
-    getRepository(organisationId, repositoryId);
-    if (version == null)
-      return entityRepository
-          .findByIdAndRepositoryId(id, repositoryId)
-          .map(EntityDao::toApiModel)
-          .map(populateWithCodeSystems())
-          .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-
-    return entityVersionRepository
-        .findByEntity_RepositoryIdAndEntityIdAndVersion(repositoryId, id, version)
-        .map(EntityVersionDao::toApiModel)
-        .map(populateSubEntities())
-        .map(populateWithCodeSystems())
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-  }
-
-  @CacheEvict(value = "entities", key = "#repositoryId")
-  @PreAuthorize(
-      "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
-  public Entity setCurrentEntityVersion(
-      String organisationId,
-      String repositoryId,
-      String id,
-      Integer version,
-      List<String> include) {
-    getRepository(organisationId, repositoryId);
-
-    EntityDao entity =
-        entityRepository
-            .findByIdAndRepositoryId(id, repositoryId)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-    EntityVersionDao entityVersion =
-        entityVersionRepository
-            .findByEntity_RepositoryIdAndEntityIdAndVersion(repositoryId, id, version)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-
-    return populateWithCodeSystems()
-        .andThen(populateSubEntities())
-        .apply(entityRepository.save(entity.currentVersion(entityVersion)).toApiModel());
-  }
-
-  @CacheEvict(value = "entities", key = "#repositoryId")
-  @PreAuthorize(
-      "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
-  public Entity updateEntityById(
-      String organisationId, String repositoryId, String id, Entity data, List<String> include) {
-    getRepository(organisationId, repositoryId);
-    EntityDao entity =
-        entityRepository
-            .findByIdAndRepositoryId(id, repositoryId)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-
-    EntityVersionDao latestVersion = entityVersionRepository.findByEntityIdAndNextVersionNull(id);
-    EntityVersionDao newVersion = new EntityVersionDao(data).entity(entity);
-
-    if (latestVersion != null) {
-      if (latestVersion.getDataType() != newVersion.getDataType())
-        throw new ResponseStatusException(
-            HttpStatus.NOT_ACCEPTABLE, "update of data type is forbidden");
-      newVersion.previousVersion(latestVersion).version(latestVersion.getVersion() + 1);
-    } else {
-      newVersion.version(0);
-    }
-
-    newVersion = entityVersionRepository.save(newVersion);
-
-    if (!ApiModelMapper.isRestricted(entity.getEntityType())) {
-      entity.superEntities(null);
-      if (data instanceof Concept) {
-        if (((Concept) data).getSuperConcepts() != null) {
-          for (Concept concept : ((Concept) data).getSuperConcepts())
-            conceptRepository
-                .findByIdAndRepositoryId(concept.getId(), repositoryId)
-                .ifPresent(entity::addSuperEntitiesItem);
-        }
-      } else {
-        if (((Category) data).getSuperCategories() != null)
-          for (Category category : ((Category) data).getSuperCategories())
-            categoryRepository
-                .findByIdAndRepositoryId(category.getId(), repositoryId)
-                .ifPresent(entity::addSuperEntitiesItem);
-      }
-    }
-
-    return populateWithCodeSystems()
-        .andThen(populateSubEntities())
-        .apply(entityRepository.save(entity.currentVersion(newVersion)).toApiModel());
-  }
-
-  @PreAuthorize(
-      "hasRole('ADMIN') or hasPermission(#repositoryId, 'care.smith.top.backend.model.RepositoryDao', 'READ')")
-  public ByteArrayOutputStream exportRepository(
-      String organisationId, String repositoryId, String converter) {
-    RepositoryDao repository = getRepository(organisationId, repositoryId);
-    Entity[] entities =
-        entityRepository
-            .findAllByRepositoryId(repositoryId, Pageable.unpaged())
-            .map(EntityDao::toApiModel)
-            .map(populateWithCodeSystems())
-            .stream()
-            .toArray(Entity[]::new);
-
-    Optional<Class<? extends PhenotypeExporter>> optional =
-        getPhenotypeExporterImplementations().stream()
-            .filter(c -> c.getSimpleName().equals(converter))
-            .findFirst();
-
-    if (optional.isEmpty())
-      throw new ResponseStatusException(
-          HttpStatus.NOT_ACCEPTABLE, String.format("No converter '%s' available.", converter));
-
-    ByteArrayOutputStream stream = new ByteArrayOutputStream();
-    try {
-      PhenotypeExporter exporter = optional.get().getConstructor().newInstance();
-      String uri = String.format("http://%s.org/%s", organisationId, repositoryId);
-      exporter.write(entities, repository.toApiModel(), uri, stream);
-    } catch (Exception e) {
-      throw new ResponseStatusException(
-          HttpStatus.INTERNAL_SERVER_ERROR, "Export failed with error: " + e.getMessage());
-    }
-
-    return stream;
-  }
-
-  public Set<Class<? extends PhenotypeExporter>> getPhenotypeExporterImplementations() {
-    Reflections reflections =
-        new Reflections(new ConfigurationBuilder().forPackage("care.smith.top"));
-    return new HashSet<>(reflections.getSubTypesOf(PhenotypeExporter.class));
-  }
-
-  public Set<Class<? extends PhenotypeImporter>> getPhenotypeImporterImplementations() {
-    Reflections reflections =
-        new Reflections(new ConfigurationBuilder().forPackage("care.smith.top"));
-    return new HashSet<>(reflections.getSubTypesOf(PhenotypeImporter.class));
-  }
-
-  @Caching(
-      evict = {@CacheEvict("entityCount"), @CacheEvict(value = "entities", key = "#repositoryId")})
-  @PreAuthorize(
-      "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.OrganisationDao', 'WRITE')")
-  public void importRepository(
-      String organisationId, String repositoryId, String converter, InputStream stream) {
-
-    Optional<Class<? extends PhenotypeImporter>> optional =
-        getPhenotypeImporterImplementations().stream()
-            .filter(c -> c.getSimpleName().equals(converter))
-            .findFirst();
-
-    if (optional.isEmpty())
-      throw new ResponseStatusException(
-          HttpStatus.NOT_ACCEPTABLE, String.format("No converter '%s' available.", converter));
-
-    try {
-      PhenotypeImporter importer = optional.get().getConstructor().newInstance();
-      List<Entity> entities = List.of(importer.read(stream));
-      createEntities(organisationId, repositoryId, entities, null);
-    } catch (Exception e) {
-      e.printStackTrace();
-      throw new ResponseStatusException(
-          HttpStatus.INTERNAL_SERVER_ERROR, "Import failed with error: " + e.getMessage());
-    }
-  }
-
-  /**
-   * This method collects all dependencies of an entity.
-   *
-   * <p>Dependencies can be:
-   *
-   * <ul>
-   *   <li>super phenotypes of restricted phenotypes
-   *   <li>entities referenced from expressions
-   * </ul>
-   *
-   * @param entity The entity to collect dependencies for.
-   * @return A set of {@link Entity} objects.
-   */
-  private Set<Entity> getDependencies(Entity entity) {
-    Set<Entity> dependencies = new HashSet<>();
-
-    if (ApiModelMapper.isRestricted(entity)) {
-      Entity superPhenotype =
-          loadEntity(
-              entity.getRepository().getOrganisation().getId(),
-              entity.getRepository().getId(),
-              ((Phenotype) entity).getSuperPhenotype().getId(),
-              null);
-      dependencies.add(superPhenotype);
-    }
-
-    if (ApiModelMapper.isAbstract(entity)) {
-      dependencies.addAll(
-          ApiModelMapper.getEntityIdsFromExpression(((Phenotype) entity).getExpression()).stream()
-              .distinct()
-              .map(e -> entityRepository.findById(e))
-              .flatMap(Optional::stream)
-              .map(EntityDao::toApiModel)
-              .collect(Collectors.toSet()));
-    }
-
-    Set<Entity> superDependencies = new HashSet<>();
-    dependencies.forEach(d -> superDependencies.addAll(getDependencies(d)));
-    dependencies.addAll(superDependencies);
-
-    return dependencies;
   }
 
   /**

@@ -1,6 +1,6 @@
 package care.smith.top.backend.configuration;
 
-import care.smith.top.backend.model.UserDao;
+import care.smith.top.backend.model.jpa.UserDao;
 import java.util.Optional;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;

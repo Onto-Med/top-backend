@@ -1,9 +1,9 @@
 package care.smith.top.backend.configuration;
 
-import care.smith.top.backend.model.OrganisationDao;
-import care.smith.top.backend.model.Permission;
-import care.smith.top.backend.model.RepositoryDao;
-import care.smith.top.backend.model.UserDao;
+import care.smith.top.backend.model.jpa.OrganisationDao;
+import care.smith.top.backend.model.jpa.Permission;
+import care.smith.top.backend.model.jpa.RepositoryDao;
+import care.smith.top.backend.model.jpa.UserDao;
 import care.smith.top.backend.service.UserService;
 import java.io.Serializable;
 import org.springframework.beans.factory.annotation.Autowired;

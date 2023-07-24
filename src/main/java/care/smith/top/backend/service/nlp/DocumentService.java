@@ -1,9 +1,9 @@
 package care.smith.top.backend.service.nlp;
 
-import care.smith.top.backend.model.nlp.DocumentEntity;
-import care.smith.top.backend.model.nlp.DocumentNodeEntity;
-import care.smith.top.backend.repository.nlp.DocumentNodeRepository;
-import care.smith.top.backend.repository.nlp.DocumentRepository;
+import care.smith.top.backend.model.elasticsearch.DocumentEntity;
+import care.smith.top.backend.model.neo4j.DocumentNodeEntity;
+import care.smith.top.backend.repository.elasticsearch.DocumentRepository;
+import care.smith.top.backend.repository.neo4j.DocumentNodeRepository;
 import care.smith.top.backend.service.ContentService;
 import care.smith.top.model.Document;
 import java.util.*;

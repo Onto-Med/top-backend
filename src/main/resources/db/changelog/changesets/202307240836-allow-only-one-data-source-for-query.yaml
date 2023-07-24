@@ -1,0 +1,25 @@
+databaseChangeLog:
+- changeSet:
+    id: 1690180506187-8
+    author: ChristophB (generated)
+    changes:
+    - addColumn:
+        columns:
+        - column:
+            name: data_source
+            type: varchar(255)
+        tableName: query
+- changeSet:
+    id: 1690180506187-9
+    author: ChristophB (generated)
+    changes:
+    - dropForeignKeyConstraint:
+        baseTableName: QUERY_DATA_SOURCES
+        constraintName: FKn76qq858dn2hoqdt9by11qbu5
+- changeSet:
+    id: 1690180506187-10
+    author: ChristophB (generated)
+    changes:
+    - dropTable:
+        tableName: QUERY_DATA_SOURCES
+

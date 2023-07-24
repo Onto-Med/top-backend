@@ -1,11 +1,11 @@
 package care.smith.top.backend.service;
 
-import care.smith.top.backend.model.*;
-import care.smith.top.backend.model.key.OrganisationMembershipKeyDao;
-import care.smith.top.backend.repository.OrganisationMembershipRepository;
-import care.smith.top.backend.repository.OrganisationRepository;
-import care.smith.top.backend.repository.RepositoryRepository;
-import care.smith.top.backend.repository.UserRepository;
+import care.smith.top.backend.model.jpa.*;
+import care.smith.top.backend.model.jpa.key.OrganisationMembershipKeyDao;
+import care.smith.top.backend.repository.jpa.OrganisationMembershipRepository;
+import care.smith.top.backend.repository.jpa.OrganisationRepository;
+import care.smith.top.backend.repository.jpa.RepositoryRepository;
+import care.smith.top.backend.repository.jpa.UserRepository;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Optional;

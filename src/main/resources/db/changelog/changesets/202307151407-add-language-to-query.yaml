@@ -1,0 +1,12 @@
+databaseChangeLog:
+- changeSet:
+    id: 1689422872450-8
+    author: fmatthies (generated)
+    changes:
+    - addColumn:
+        columns:
+        - column:
+            name: language
+            type: varchar(255)
+        tableName: query
+

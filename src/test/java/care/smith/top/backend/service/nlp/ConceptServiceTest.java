@@ -2,15 +2,17 @@ package care.smith.top.backend.service.nlp;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import care.smith.top.backend.model.nlp.ConceptNodeEntity;
-import care.smith.top.backend.model.nlp.PhraseNodeEntity;
+import care.smith.top.backend.model.neo4j.ConceptNodeEntity;
+import care.smith.top.backend.model.neo4j.PhraseNodeEntity;
 import care.smith.top.model.ConceptCluster;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import org.junit.jupiter.api.*;
+import org.springframework.test.annotation.DirtiesContext;
 
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class ConceptServiceTest extends AbstractNLPTest {
 

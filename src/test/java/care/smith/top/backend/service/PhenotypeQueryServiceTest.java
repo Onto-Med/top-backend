@@ -65,8 +65,9 @@ class PhenotypeQueryServiceTest extends AbstractTest {
                                         .addValuesItem(
                                             LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS))
                                         .type(DataType.DATE_TIME)))
+                .type(QueryType.PHENOTYPE)
                 .id(UUID.randomUUID())
-                .addDataSourcesItem(dataSources.get(0));
+                .dataSource(dataSources.get(0));
 
     assertThatThrownBy(() -> queryService.enqueueQuery(orga.getId(), "invalid", query))
         .isInstanceOf(ResponseStatusException.class)
@@ -83,7 +84,7 @@ class PhenotypeQueryServiceTest extends AbstractTest {
         .anySatisfy(
             q -> {
               assertThat(q.getId()).isEqualTo(query.getId());
-              assertThat(q.getDataSources()).anyMatch(d -> d.equals(query.getDataSources().get(0)));
+              assertThat(q.getDataSource()).isEqualTo(query.getDataSource());
               assertThat(q.getCriteria()).size().isEqualTo(1);
               assertThat(q.getCriteria().get(0))
                   .satisfies(
