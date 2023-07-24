@@ -5,15 +5,18 @@ import static care.smith.top.backend.configuration.RequestValidator.isValidId;
 import care.smith.top.backend.service.EntityService;
 import care.smith.top.backend.util.ApiModelMapper;
 import care.smith.top.model.*;
+import care.smith.top.top_document_query.SONG;
 import care.smith.top.top_phenotypic_query.c2reasoner.C2R;
 import care.smith.top.top_phenotypic_query.c2reasoner.constants.ConstantEntity;
 import care.smith.top.top_phenotypic_query.c2reasoner.functions.FunctionEntity;
 import care.smith.top.top_phenotypic_query.converter.PhenotypeExporter;
 import care.smith.top.top_phenotypic_query.converter.PhenotypeImporter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
@@ -24,7 +27,8 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class EntityApiDelegateImpl implements EntityApiDelegate {
-  private final C2R calculator = new C2R();
+  private final C2R c2r = new C2R();
+
   @Autowired EntityService entityService;
 
   @Override
@@ -182,24 +186,16 @@ public class EntityApiDelegateImpl implements EntityApiDelegate {
   }
 
   @Override
-  @Cacheable("expressionConstants")
-  public ResponseEntity<List<Constant>> getExpressionConstants() {
-    return new ResponseEntity<>(
-        calculator.getConstants().stream()
-            .map(ConstantEntity::getConstant)
-            .sorted(Comparator.comparing(Constant::getTitle))
-            .collect(Collectors.toList()),
-        HttpStatus.OK);
-  }
-
-  @Override
   @Cacheable("expressionFunctions")
   public ResponseEntity<List<ExpressionFunction>> getExpressionFunctions(String type) {
     return new ResponseEntity<>(
-        calculator.getFunctions().stream()
+        Stream.concat(
+                c2r.getFunctions().stream().map(FunctionEntity::getFunction),
+                Arrays.stream(SONG.getExpressionFunctions()).map(f -> f.type("textFunction")))
             .filter(f -> StringUtils.isBlank(type) || type.equals(f.getType()))
-            .map(FunctionEntity::getFunction)
-            .sorted(Comparator.comparing(ExpressionFunction::getTitle))
+            .sorted(
+                Comparator.comparing(ExpressionFunction::getType)
+                    .thenComparing(ExpressionFunction::getTitle))
             .collect(Collectors.toList()),
         HttpStatus.OK);
   }
@@ -245,5 +241,16 @@ public class EntityApiDelegateImpl implements EntityApiDelegate {
 
     formats.sort(Comparator.comparing(Converter::getId));
     return new ResponseEntity<>(formats, HttpStatus.OK);
+  }
+
+  @Override
+  @Cacheable("expressionConstants")
+  public ResponseEntity<List<Constant>> getExpressionConstants() {
+    return new ResponseEntity<>(
+        c2r.getConstants().stream()
+            .map(ConstantEntity::getConstant)
+            .sorted(Comparator.comparing(Constant::getTitle))
+            .collect(Collectors.toList()),
+        HttpStatus.OK);
   }
 }
