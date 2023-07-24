@@ -1,7 +1,7 @@
 package care.smith.top.backend.service;
 
-import care.smith.top.backend.model.jpa.QueryDao;
 import care.smith.top.backend.model.jpa.Permission;
+import care.smith.top.backend.model.jpa.QueryDao;
 import care.smith.top.backend.repository.jpa.QueryRepository;
 import care.smith.top.backend.repository.jpa.RepositoryRepository;
 import care.smith.top.model.*;
@@ -12,6 +12,7 @@ import java.util.logging.Logger;
 import org.jobrunr.jobs.Job;
 import org.jobrunr.jobs.states.StateName;
 import org.jobrunr.scheduling.JobScheduler;
+import org.jobrunr.storage.JobNotFoundException;
 import org.jobrunr.storage.StorageProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -56,8 +57,8 @@ public abstract class QueryService {
   /**
    * Deletes a query. The delete request is propagated to the underlying {@link JobScheduler}.
    *
-   * <p>If authentication is enabled, users are required to have {@link
-   * Permission#WRITE} permission for the organisation.
+   * <p>If authentication is enabled, users are required to have {@link Permission#WRITE} permission
+   * for the organisation.
    *
    * @param organisationId ID of the organisation the query belongs to.
    * @param repositoryId ID of the repository the query belongs to.
@@ -98,8 +99,8 @@ public abstract class QueryService {
    * Returns the result description of a query. If the query is still running, the result will only
    * contain a creation timestamp and a state.
    *
-   * <p>If authentication is enabled, users are required to have {@link
-   * Permission#WRITE} permission for the organisation.
+   * <p>If authentication is enabled, users are required to have {@link Permission#WRITE} permission
+   * for the organisation.
    *
    * @param organisationId ID of the organisation the query belongs to.
    * @param repositoryId ID of the repository the query belongs to.
@@ -120,24 +121,24 @@ public abstract class QueryService {
 
     if (query.getResult() != null) return query.getResult().toApiModel();
 
-    Job job = storageProvider.getJobById(queryId);
+    QueryResult queryResult = new QueryResult().id(queryId);
 
-    QueryResult queryResult =
-        new QueryResult()
-            .id(queryId)
-            .createdAt(job.getCreatedAt().atOffset(ZoneOffset.UTC))
-            .state(getState(job));
+    try {
+      Job job = storageProvider.getJobById(queryId);
+      queryResult.createdAt(job.getCreatedAt().atOffset(ZoneOffset.UTC)).state(getState(job));
+      if (QueryState.FAILED.equals(queryResult.getState()))
+        queryResult.finishedAt(job.getUpdatedAt().atOffset(ZoneOffset.UTC));
+    } catch (JobNotFoundException ignored) {
+    }
 
-    if (QueryState.FAILED.equals(queryResult.getState()))
-      queryResult.finishedAt(job.getUpdatedAt().atOffset(ZoneOffset.UTC));
     return queryResult;
   }
 
   /**
    * Returns a page of queries that belong to the given repository.
    *
-   * <p>If authentication is enabled, users are required to have {@link
-   * Permission#WRITE} permission for the organisation.
+   * <p>If authentication is enabled, users are required to have {@link Permission#WRITE} permission
+   * for the organisation.
    *
    * @param organisationId ID of the organisation the repository belongs to.
    * @param repositoryId ID of the repository for which queries are requested.
@@ -152,6 +153,10 @@ public abstract class QueryService {
         .findAllByRepository_OrganisationIdAndRepositoryIdOrderByCreatedAtDesc(
             organisationId, repositoryId, pageRequest)
         .map(QueryDao::toApiModel);
+  }
+
+  private boolean isEmpty(Collection<?> list) {
+    return list == null || list.isEmpty();
   }
 
   /**
@@ -201,9 +206,5 @@ public abstract class QueryService {
             || QueryType.PHENOTYPE.equals(query.getType())
                 && (!isEmpty(((PhenotypeQuery) query).getCriteria())
                     || !isEmpty(((PhenotypeQuery) query).getProjection())));
-  }
-
-  private boolean isEmpty(Collection<?> list) {
-    return list == null || list.isEmpty();
   }
 }
