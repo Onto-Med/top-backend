@@ -154,18 +154,20 @@ public class EntityDao {
               .map(LocalisableTextDao::toApiModel)
               .collect(Collectors.toList()));
 
-    if (ApiModelMapper.isAbstract(entityDao.getEntityType())) {
-      ((Phenotype) entity)
-          .dataType(entityVersionDao.getDataType())
-          .itemType(entityVersionDao.getItemType())
-          .unit(entityVersionDao.getUnit());
-      if (entityVersionDao.getExpression() != null)
-        ((Phenotype) entity).expression(entityVersionDao.getExpression().toApiModel());
-      if (entityDao.getSubEntities() == null || entityDao.getSubEntities().size() == 0)
-        ((Phenotype) entity).phenotypes(new ArrayList<>());
-    } else if (ApiModelMapper.isRestricted(entityDao.getEntityType())
-        && entityVersionDao.getRestriction() != null)
-      ((Phenotype) entity).restriction(entityVersionDao.getRestriction().toApiModel());
+    if (ApiModelMapper.isPhenotype(entityDao.getEntityType())) {
+      ((Phenotype) entity).dataType(entityVersionDao.getDataType());
+      if (ApiModelMapper.isAbstract(entityDao.getEntityType())) {
+        ((Phenotype) entity)
+            .itemType(entityVersionDao.getItemType())
+            .unit(entityVersionDao.getUnit());
+        if (entityVersionDao.getExpression() != null)
+          ((Phenotype) entity).expression(entityVersionDao.getExpression().toApiModel());
+        if (entityDao.getSubEntities() == null || entityDao.getSubEntities().isEmpty())
+          ((Phenotype) entity).phenotypes(new ArrayList<>());
+      } else if (ApiModelMapper.isRestricted(entityDao.getEntityType())
+          && entityVersionDao.getRestriction() != null)
+        ((Phenotype) entity).restriction(entityVersionDao.getRestriction().toApiModel());
+    }
 
     if (ApiModelMapper.isCompositeConcept(entityDao.getEntityType())) {
       if (entityVersionDao.getExpression() != null)
@@ -189,8 +191,7 @@ public class EntityDao {
                       new Phenotype()
                           .id(superPhenotype.getId())
                           .entityType(superPhenotype.getEntityType())
-                          .titles(titles)))
-              .dataType(superPhenotype.currentVersion.getDataType());
+                          .titles(titles)));
         }
       } else if (ApiModelMapper.isConcept(entityDao.getEntityType())) {
         ((Concept) entity)
