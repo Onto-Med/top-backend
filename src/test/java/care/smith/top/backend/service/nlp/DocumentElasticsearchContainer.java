@@ -16,7 +16,7 @@ public class DocumentElasticsearchContainer extends ElasticsearchContainer {
 
   public DocumentElasticsearchContainer() {
     super(DOCKER_ELASTIC);
-    addFixedExposedPort(9200, 9200);
+    addFixedExposedPort(9201, 9201);
     addEnv(CLUSTER_NAME, ELASTIC_SEARCH);
     addEnv(DISCOVERY_TYPE, DISCOVERY_TYPE_SINGLE_NODE);
     addEnv(XPACK_SECURITY_ENABLED, Boolean.FALSE.toString());
