@@ -8,7 +8,7 @@ import care.smith.top.backend.repository.elasticsearch.DocumentRepository;
 import care.smith.top.backend.repository.jpa.ConceptRepository;
 import care.smith.top.backend.service.QueryService;
 import care.smith.top.model.*;
-import care.smith.top.top_document_query.adapter.ElasticDocument;
+import care.smith.top.top_document_query.adapter.AbstractDocument;
 import care.smith.top.top_document_query.adapter.TextAdapter;
 import care.smith.top.top_document_query.adapter.TextAdapterConfig;
 import care.smith.top.top_document_query.adapter.TextFinder;
@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+
 
 @Service
 public class DocumentQueryService extends QueryService {
@@ -69,7 +70,7 @@ public class DocumentQueryService extends QueryService {
     try {
       TextAdapter adapter = TextAdapter.getInstance(config);
       TextFinder finder = new TextFinder(query, concepts.toArray(new Entity[0]), adapter);
-      List<ElasticDocument> documents = finder.execute();
+      List<? extends AbstractDocument> documents = finder.execute();
       result =
           new QueryResultDao(
               queryDao,
