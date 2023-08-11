@@ -47,11 +47,11 @@ public class RestrictionDao {
       RestrictionOperator minOperator = ((DateTimeRestriction) restriction).getMinOperator();
       RestrictionOperator maxOperator = ((DateTimeRestriction) restriction).getMaxOperator();
       if (minOperator != null || maxOperator != null) {
-        if (values != null && values.size() > 0) {
+        if (values != null && !values.isEmpty() && values.get(0) != null) {
           minimumDateTimeValue = values.get(0);
           this.minOperator = minOperator;
         }
-        if (values != null && values.size() > 1) {
+        if (values != null && values.size() > 1 && values.get(1) != null) {
           maximumDateTimeValue = values.get(1);
           this.maxOperator = maxOperator;
         }
@@ -64,7 +64,7 @@ public class RestrictionDao {
       RestrictionOperator minOperator = ((NumberRestriction) restriction).getMinOperator();
       RestrictionOperator maxOperator = ((NumberRestriction) restriction).getMaxOperator();
       if (minOperator != null || maxOperator != null) {
-        if (values != null && values.size() > 0 && values.get(0) != null) {
+        if (values != null && !values.isEmpty() && values.get(0) != null) {
           minimumNumberValue = values.get(0);
           this.minOperator = minOperator;
         }

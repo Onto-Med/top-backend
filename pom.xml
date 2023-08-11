@@ -52,11 +52,15 @@
         <dependency>
             <groupId>care.smith.top</groupId>
             <artifactId>top-phenotypic-query</artifactId>
-            <version>0.6.2-SNAPSHOT</version>
+            <version>0.6.5</version>
             <exclusions>
                 <exclusion>
                     <groupId>care.smith.top</groupId>
                     <artifactId>top-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>*</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>

@@ -439,6 +439,7 @@ class EntityServiceTest extends AbstractTest {
                         .quantifier(Quantifier.MIN)
                         .cardinality(1)
                         .type(DataType.NUMBER))
+                .dataType(DataType.BOOLEAN)
                 .superPhenotype(abstractPhenotype)
                 .id(UUID.randomUUID().toString())
                 .entityType(EntityType.SINGLE_RESTRICTION)
@@ -456,6 +457,7 @@ class EntityServiceTest extends AbstractTest {
               assertThat(rp.getEntityType()).isEqualTo(EntityType.SINGLE_RESTRICTION);
               assertThat(((Phenotype) rp).getSuperPhenotype())
                   .hasFieldOrPropertyWithValue("id", abstractPhenotype.getId());
+              assertThat(((Phenotype) rp).getDataType()).isEqualTo(DataType.BOOLEAN);
               assertThat(rp.getTitles())
                   .allMatch(t -> t.getText().equals("> 50cm") && t.getLang().equals("en"))
                   .size()
@@ -488,7 +490,8 @@ class EntityServiceTest extends AbstractTest {
                     .addValuesItem(BigDecimal.valueOf(50))
                     .maxOperator(RestrictionOperator.LESS_THAN_OR_EQUAL_TO)
                     .quantifier(Quantifier.ALL)
-                    .type(DataType.NUMBER));
+                    .type(DataType.NUMBER))
+            .dataType(DataType.BOOLEAN);
     restrictedPhenotype2
         .superPhenotype(abstractPhenotype)
         .id(UUID.randomUUID().toString())
@@ -508,7 +511,7 @@ class EntityServiceTest extends AbstractTest {
                   .allMatch(t -> t.getText().equals("<= 50cm") && t.getLang().equals("en"))
                   .size()
                   .isEqualTo(1);
-              assertThat(((Phenotype) rp).getDataType()).isEqualTo(abstractPhenotype.getDataType());
+              assertThat(((Phenotype) rp).getDataType()).isEqualTo(DataType.BOOLEAN);
               assertThat(((Phenotype) rp).getRestriction())
                   .isNotNull()
                   .isInstanceOf(NumberRestriction.class)
