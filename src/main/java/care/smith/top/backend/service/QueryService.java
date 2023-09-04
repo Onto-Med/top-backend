@@ -5,10 +5,24 @@ import care.smith.top.backend.model.jpa.QueryDao;
 import care.smith.top.backend.repository.jpa.QueryRepository;
 import care.smith.top.backend.repository.jpa.RepositoryRepository;
 import care.smith.top.model.*;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.FileSystemException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.ZoneOffset;
 import java.util.Collection;
+import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Logger;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+
+import care.smith.top.top_phenotypic_query.result.ResultSet;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.jobrunr.jobs.Job;
 import org.jobrunr.jobs.states.StateName;
 import org.jobrunr.scheduling.JobScheduler;
@@ -29,6 +43,12 @@ public abstract class QueryService {
 
   @Value("${spring.paging.page-size:10}")
   protected int pageSize;
+
+  @Value("${top.result.dir:config/query_results}")
+  protected String resultDir;
+
+  @Value("${top.result.download-enabled:true}")
+  protected boolean queryResultDownloadEnabled;
 
   @Autowired protected JobScheduler jobScheduler;
   @Autowired protected StorageProvider storageProvider;
@@ -206,5 +226,20 @@ public abstract class QueryService {
             || QueryType.PHENOTYPE.equals(query.getType())
                 && (!isEmpty(((PhenotypeQuery) query).getCriteria())
                     || !isEmpty(((PhenotypeQuery) query).getProjection())));
+  }
+
+  protected ZipOutputStream createZipStream(
+      String organisationId, String repositoryId, String queryId, String subPath) throws IOException {
+    Path repositoryPath = Paths.get(resultDir, organisationId, repositoryId);
+    if (subPath != null) {
+      repositoryPath = repositoryPath.resolve(subPath);
+    }
+    if (!repositoryPath.startsWith(Paths.get(resultDir)))
+      throw new FileSystemException("Repository directory isn't a child of the results directory.");
+
+    Files.createDirectories(repositoryPath);
+    File zipFile =
+        Files.createFile(repositoryPath.resolve(String.format("%s.zip", queryId))).toFile();
+    return new ZipOutputStream(new FileOutputStream(zipFile));
   }
 }

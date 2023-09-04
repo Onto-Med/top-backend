@@ -12,6 +12,8 @@ import care.smith.top.top_document_query.adapter.AbstractDocument;
 import care.smith.top.top_document_query.adapter.TextAdapter;
 import care.smith.top.top_document_query.adapter.TextAdapterConfig;
 import care.smith.top.top_document_query.adapter.TextFinder;
+
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.OffsetDateTime;
@@ -19,6 +21,10 @@ import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+
+import care.smith.top.top_document_query.converter.csv.DocumentCSV;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -29,6 +35,8 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 public class DocumentQueryService extends QueryService {
   private final Logger LOGGER = Logger.getLogger(DocumentQueryService.class.getName());
+
+  private final DocumentCSV csvConverter = new DocumentCSV();
 
   @Value("${top.documents.data-source-config-dir:config/data_sources/nlp}")
   private String dataSourceConfigDir;
@@ -78,7 +86,16 @@ public class DocumentQueryService extends QueryService {
               (long) documents.size(),
               OffsetDateTime.now(),
               QueryState.FINISHED);
-    } catch (InstantiationException e) {
+
+
+      storeResult(
+          queryDao.getRepository().getOrganisation().getId(),
+          queryDao.getRepository().getId(),
+          queryId.toString(),
+          documents,
+          concepts.toArray(new Concept[0])
+      );
+    } catch (Throwable e) {
       e.printStackTrace();
       result =
           new QueryResultDao(queryDao, createdAt, null, OffsetDateTime.now(), QueryState.FAILED)
@@ -159,4 +176,20 @@ public class DocumentQueryService extends QueryService {
   @Override
   protected void clearResults(String organisationId, String repositoryId, String queryId)
       throws Exception {}
+
+  private void storeResult(
+      String organisationId,
+      String repositoryId,
+      String queryId,
+      List<? extends AbstractDocument> results,
+      Concept[] concepts)
+      throws IOException {
+
+    ZipOutputStream zipStream = createZipStream(organisationId, repositoryId, queryId, "nlp");
+
+    zipStream.putNextEntry(new ZipEntry("metadata.csv"));
+    csvConverter.write(concepts, zipStream);
+
+    zipStream.close();
+  }
 }
