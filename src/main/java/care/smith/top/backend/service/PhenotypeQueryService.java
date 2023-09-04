@@ -22,6 +22,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -40,12 +42,6 @@ public class PhenotypeQueryService extends QueryService {
 
   @Value("${top.phenotyping.execute-queries:true}")
   private boolean executeQueries;
-
-  @Value("${top.phenotyping.result.dir:config/query_results}")
-  private String resultDir;
-
-  @Value("${top.phenotyping.result.download-enabled:true}")
-  private boolean queryResultDownloadEnabled;
 
   @Autowired private PhenotypeRepository phenotypeRepository;
 
@@ -142,7 +138,8 @@ public class PhenotypeQueryService extends QueryService {
           queryDao.getRepository().getId(),
           queryId.toString(),
           rs,
-          phenotypes);
+          phenotypes
+      );
     } catch (Throwable e) {
       e.printStackTrace();
       result =
@@ -216,14 +213,7 @@ public class PhenotypeQueryService extends QueryService {
       ResultSet resultSet,
       Entity[] phenotypes)
       throws IOException {
-    Path repositoryPath = Paths.get(resultDir, organisationId, repositoryId);
-    if (!repositoryPath.startsWith(Paths.get(resultDir)))
-      throw new FileSystemException("Repository directory isn't a child of the results directory.");
-
-    Files.createDirectories(repositoryPath);
-    File zipFile =
-        Files.createFile(repositoryPath.resolve(String.format("%s.zip", queryId))).toFile();
-    ZipOutputStream zipStream = new ZipOutputStream(new FileOutputStream(zipFile));
+    ZipOutputStream zipStream = createZipStream(organisationId, repositoryId, queryId, null);
 
     zipStream.putNextEntry(new ZipEntry("data.csv"));
     csvConverter.write(resultSet, zipStream);
