@@ -156,34 +156,6 @@ public class PhenotypeQueryService extends QueryService {
     return getDataAdapterConfigs().stream().filter(a -> id.equals(a.getId())).findFirst();
   }
 
-  @PreAuthorize(
-      "hasPermission(#organisationId, 'care.smith.top.backend.model.jpa.OrganisationDao', 'WRITE')")
-  public Path getQueryResultPath(String organisationId, String repositoryId, UUID queryId)
-      throws FileSystemException {
-    if (!queryResultDownloadEnabled)
-      throw new ResponseStatusException(
-          HttpStatus.NOT_ACCEPTABLE, "Query result download is disabled.");
-    if (!repositoryRepository.existsByIdAndOrganisation_Id(repositoryId, organisationId))
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Repository does not exist.");
-
-    QueryDao query =
-        queryRepository
-            .findByRepository_OrganisationIdAndRepositoryIdAndId(
-                organisationId, repositoryId, queryId.toString())
-            .orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Query does not exist."));
-
-    if (query.getResult() == null)
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Query has no result.");
-
-    Path queryPath =
-        Paths.get(resultDir, organisationId, repositoryId, String.format("%s.zip", queryId));
-    if (!queryPath.startsWith(Paths.get(resultDir)))
-      throw new FileSystemException("Repository directory isn't a child of the results directory.");
-
-    return queryPath;
-  }
-
   public List<DataAdapterConfig> getDataAdapterConfigs() {
     try (Stream<Path> paths =
         Files.list(Path.of(dataSourceConfigDir)).filter(f -> !Files.isDirectory(f))) {

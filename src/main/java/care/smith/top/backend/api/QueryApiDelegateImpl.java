@@ -40,7 +40,8 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
       String organisationId, String repositoryId, UUID queryId) {
     try {
       File file =
-          phenotypeQueryService.getQueryResultPath(organisationId, repositoryId, queryId).toFile();
+          getQueryService(organisationId, repositoryId, queryId)
+              .getQueryResultPath(organisationId, repositoryId, queryId).toFile();
       ContentDisposition contentDisposition =
           ContentDisposition.builder("inline").filename(file.getName()).build();
       HttpHeaders headers = new HttpHeaders();
@@ -103,13 +104,7 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
   }
 
   private QueryService getQueryService(String organisationId, String repositoryId, UUID queryId) {
-    QueryType queryType =
-        queryRepository
-            .findByRepository_OrganisationIdAndRepositoryIdAndId(
-                organisationId, repositoryId, String.valueOf(queryId))
-            .orElseThrow()
-            .getQueryType();
-    switch (queryType) {
+    switch (getQueryType(organisationId, repositoryId, queryId)) {
       case PHENOTYPE:
         return phenotypeQueryService;
       case CONCEPT:
@@ -117,5 +112,13 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
       default:
         throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "No such query found.");
     }
+  }
+
+  private QueryType getQueryType(String organisationId, String repositoryId, UUID queryId) {
+    return queryRepository
+        .findByRepository_OrganisationIdAndRepositoryIdAndId(
+            organisationId, repositoryId, String.valueOf(queryId))
+        .orElseThrow()
+        .getQueryType();
   }
 }
