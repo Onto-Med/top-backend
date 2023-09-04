@@ -190,6 +190,9 @@ public class DocumentQueryService extends QueryService {
     zipStream.putNextEntry(new ZipEntry("metadata.csv"));
     csvConverter.write(concepts, zipStream);
 
+    zipStream.putNextEntry(new ZipEntry("data.csv"));
+    csvConverter.write(results, zipStream);
+
     zipStream.close();
   }
 }
