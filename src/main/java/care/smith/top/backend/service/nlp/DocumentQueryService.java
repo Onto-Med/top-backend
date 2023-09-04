@@ -16,6 +16,7 @@ import care.smith.top.top_document_query.adapter.TextFinder;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.logging.Logger;
@@ -175,7 +176,13 @@ public class DocumentQueryService extends QueryService {
 
   @Override
   protected void clearResults(String organisationId, String repositoryId, String queryId)
-      throws Exception {}
+      throws IOException {
+    Path queryPath =
+        Paths.get(resultDir, organisationId, repositoryId, String.format("%s.zip", queryId));
+    if (!queryPath.startsWith(Paths.get(resultDir)))
+      LOGGER.severe(String.format("Query file '%s' is invalid and cannot be deleted!", queryPath));
+    Files.deleteIfExists(queryPath);
+  }
 
   private void storeResult(
       String organisationId,
