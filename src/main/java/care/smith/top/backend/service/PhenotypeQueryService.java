@@ -8,10 +8,7 @@ import care.smith.top.top_phenotypic_query.adapter.config.DataAdapterConfig;
 import care.smith.top.top_phenotypic_query.converter.csv.CSV;
 import care.smith.top.top_phenotypic_query.result.ResultSet;
 import care.smith.top.top_phenotypic_query.search.PhenotypeFinder;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -23,11 +20,9 @@ import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -185,7 +180,7 @@ public class PhenotypeQueryService extends QueryService {
       ResultSet resultSet,
       Entity[] phenotypes)
       throws IOException {
-    ZipOutputStream zipStream = createZipStream(organisationId, repositoryId, queryId, null);
+    ZipOutputStream zipStream = createZipStream(organisationId, repositoryId, queryId);
 
     zipStream.putNextEntry(new ZipEntry("data.csv"));
     csvConverter.write(resultSet, zipStream);

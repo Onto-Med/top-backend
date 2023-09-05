@@ -9,8 +9,11 @@ import care.smith.top.model.*;
 import java.io.File;
 import java.nio.file.FileSystemException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -56,6 +59,7 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
   @Override
   public ResponseEntity<QueryResult> enqueueQuery(
       String organisationId, String repositoryId, Query query) {
+
     switch (query.getType()) {
       case PHENOTYPE:
         return new ResponseEntity<>(
@@ -67,7 +71,8 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
             HttpStatus.CREATED);
       default:
         throw new ResponseStatusException(
-            HttpStatus.NOT_ACCEPTABLE, "Query type is neither Phenotype nor Concept.");
+            HttpStatus.NOT_ACCEPTABLE, String.format("Query type is not valid; must be one of [%s]",
+            Arrays.stream(QueryType.values()).map(QueryType::toString).collect(Collectors.joining(", "))));
     }
   }
 
