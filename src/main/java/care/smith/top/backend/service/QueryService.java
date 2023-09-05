@@ -15,14 +15,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.ZoneOffset;
 import java.util.Collection;
-import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Logger;
-import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import care.smith.top.top_phenotypic_query.result.ResultSet;
-import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.jobrunr.jobs.Job;
 import org.jobrunr.jobs.states.StateName;
 import org.jobrunr.scheduling.JobScheduler;
@@ -257,11 +253,8 @@ public abstract class QueryService {
   }
 
   protected ZipOutputStream createZipStream(
-      String organisationId, String repositoryId, String queryId, String subPath) throws IOException {
+      String organisationId, String repositoryId, String queryId) throws IOException {
     Path repositoryPath = Paths.get(resultDir, organisationId, repositoryId);
-    if (subPath != null) {
-      repositoryPath = repositoryPath.resolve(subPath);
-    }
     if (!repositoryPath.startsWith(Paths.get(resultDir)))
       throw new FileSystemException("Repository directory isn't a child of the results directory.");
 

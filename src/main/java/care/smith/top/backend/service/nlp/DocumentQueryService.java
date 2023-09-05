@@ -42,6 +42,7 @@ public class DocumentQueryService extends QueryService {
   @Value("${top.documents.data-source-config-dir:config/data_sources/nlp}")
   private String dataSourceConfigDir;
 
+
   @Autowired private DocumentRepository documentRepository;
   @Autowired private ConceptRepository conceptRepository;
 
@@ -192,7 +193,7 @@ public class DocumentQueryService extends QueryService {
       Concept[] concepts)
       throws IOException {
 
-    ZipOutputStream zipStream = createZipStream(organisationId, repositoryId, queryId, "nlp");
+    ZipOutputStream zipStream = createZipStream(organisationId, repositoryId, queryId);
 
     zipStream.putNextEntry(new ZipEntry("metadata.csv"));
     csvConverter.write(concepts, zipStream);
