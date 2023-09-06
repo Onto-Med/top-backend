@@ -1,6 +1,7 @@
 package care.smith.top.backend.api.nlp;
 
 import care.smith.top.backend.api.DocumentApiDelegate;
+import care.smith.top.backend.model.elasticsearch.DocumentEntity;
 import care.smith.top.backend.service.nlp.ConceptClusterService;
 import care.smith.top.backend.service.nlp.DocumentService;
 import care.smith.top.backend.service.nlp.PhraseService;
@@ -10,6 +11,7 @@ import care.smith.top.model.Phrase;
 import java.util.*;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -98,11 +100,27 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
   }
 
   @Override
-  public ResponseEntity<List<Document>> getDocuments(
-      List<String> include, List<String> phraseText) {
-    return new ResponseEntity<>(
-        documentService.getDocumentsByTerms(
-            phraseText.toArray(new String[0]), new String[] {"text"}),
-        HttpStatus.OK);
+  public ResponseEntity<DocumentPage> getDocuments(
+      List<String> include, List<String> phraseText, Integer page) {
+    // ToDo: this is just for now to not change the api: we need proper methods to access documents
+    // by its ids
+    System.out.println();
+    if (phraseText == null || phraseText.isEmpty()) {
+      Page<Document> pageOfDocument = documentService.getDocumentsByIds(include, page);
+
+      DocumentPage documentPage = (DocumentPage) new DocumentPage()
+              .content(pageOfDocument.getContent())
+              .type("document")
+              .number(pageOfDocument.getNumber() + 1)
+              .size(pageOfDocument.getSize())
+              .totalElements(pageOfDocument.getTotalElements())
+              .totalPages(pageOfDocument.getTotalPages());
+      return ResponseEntity.ok(documentPage);
+    } else {
+      return ResponseEntity.status(-1).build();
+//      return ResponseEntity.ok(
+//          documentService.getDocumentsByTerms(
+//              phraseText.toArray(new String[0]), new String[] {"text"}));
+    }
   }
 }

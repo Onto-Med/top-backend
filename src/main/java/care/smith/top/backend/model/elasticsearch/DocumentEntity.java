@@ -17,6 +17,9 @@ public class DocumentEntity {
   @Field(name = "text", type = FieldType.Text)
   private String documentText;
 
+  @Field(name = "id", type = FieldType.Keyword)
+  private String documentId;
+
   private Map<String, List<String>> highlights;
 
   public String getId() {
