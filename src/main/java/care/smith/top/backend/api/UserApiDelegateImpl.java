@@ -7,6 +7,7 @@ import care.smith.top.model.User;
 import care.smith.top.model.UserPage;
 import java.util.List;
 import java.util.Optional;
+import javax.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -24,6 +25,7 @@ public class UserApiDelegateImpl implements UserApiDelegate {
   }
 
   @Override
+  @Transactional
   @PreAuthorize("hasRole('USER')")
   public ResponseEntity<UserPage> getUsers(
       String name, List<String> organisationIds, Integer page) {
