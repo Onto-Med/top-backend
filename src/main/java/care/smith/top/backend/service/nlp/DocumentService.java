@@ -1,6 +1,7 @@
 package care.smith.top.backend.service.nlp;
 
 import care.smith.top.backend.model.elasticsearch.DocumentEntity;
+import care.smith.top.backend.model.jpa.OrganisationDao_;
 import care.smith.top.backend.model.neo4j.DocumentNodeEntity;
 import care.smith.top.backend.repository.elasticsearch.DocumentRepository;
 import care.smith.top.backend.repository.neo4j.DocumentNodeRepository;
@@ -11,11 +12,20 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+
+import javax.print.Doc;
 
 @Service
 public class DocumentService implements ContentService {
+
+  @Value("${spring.paging.page-size:10}")
+  private int pageSize = 10;
 
   private final DocumentRepository documentRepository;
   private final DocumentNodeRepository documentNodeRepository;
@@ -55,6 +65,17 @@ public class DocumentService implements ContentService {
     } else {
       return new Document().id("No Id").text("No text").name("No Name");
     }
+  }
+
+  public Page<Document> getDocumentsByIds(Collection<String> ids, Integer page) {
+    PageRequest pageRequest =
+        PageRequest.of(page == null ? 1 : page - 1, pageSize);
+    if (!(ids == null) && !ids.isEmpty()) {
+      return documentRepository
+          .findDocumentEntitiesByIdIn(ids, pageRequest)
+          .map(documentEntityMapper);
+    }
+    return documentRepository.findAll(pageRequest).map(documentEntityMapper);
   }
 
   public Document getDocumentByName(String documentName) {
