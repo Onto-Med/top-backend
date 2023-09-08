@@ -80,6 +80,13 @@ public class EntityApiDelegateImpl implements EntityApiDelegate {
   }
 
   @Override
+  public ResponseEntity<Entity> moveEntity(
+      String organisationId, String repositoryId, String entityId, List<Entity> entity) {
+    return new ResponseEntity<>(
+        entityService.moveEntity(organisationId, repositoryId, entityId, entity), HttpStatus.OK);
+  }
+
+  @Override
   public ResponseEntity<Entity> updateEntityById(
       String organisationId,
       String repositoryId,
