@@ -1,7 +1,13 @@
 package care.smith.top.backend.model.elasticsearch;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+
+import care.smith.top.backend.configuration.nlp.ElasticsearchConfigBean;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
@@ -9,7 +15,12 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
 
 @Document(indexName = "#{ @elasticsearchConfigBean.getIndexName() }", createIndex = false)
 public class DocumentEntity {
+
   @Id private String id;
+
+  //ToDo: @Value does not work
+  @Value("${top.documents.ellipsis:15}")
+  private Integer wordEllipsis = 25;
 
   @Field(name = "name", type = FieldType.Keyword)
   private String documentName;
@@ -52,5 +63,26 @@ public class DocumentEntity {
 
   public void setHighlights(Map<String, List<String>> highlights) {
     this.highlights = highlights;
+  }
+
+  public care.smith.top.model.Document toApiModel() {
+    return new care.smith.top.model.Document()
+        .id(id)
+        .name(documentName)
+        .text(Arrays.stream(documentText.split("\\s+"))
+            .limit(wordEllipsis)
+            .collect(Collectors.joining(" ")))
+        .highlightedText(
+            this.getHighlights().values().stream()
+                .flatMap(Collection::stream)
+                .collect(Collectors.joining()));
+  }
+
+  public care.smith.top.model.Document nullDocument() {
+    return new care.smith.top.model.Document()
+        .id("null")
+        .name("null")
+        .text("null")
+        .highlightedText("null");
   }
 }

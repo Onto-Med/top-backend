@@ -5,6 +5,7 @@ import care.smith.top.backend.model.elasticsearch.DocumentEntity;
 import care.smith.top.backend.service.nlp.ConceptClusterService;
 import care.smith.top.backend.service.nlp.DocumentService;
 import care.smith.top.backend.service.nlp.PhraseService;
+import care.smith.top.backend.util.ApiModelMapper;
 import care.smith.top.model.Document;
 import care.smith.top.model.DocumentPage;
 import care.smith.top.model.Phrase;
@@ -101,26 +102,22 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
 
   @Override
   public ResponseEntity<DocumentPage> getDocuments(
-      List<String> include, List<String> phraseText, Integer page) {
-    // ToDo: this is just for now to not change the api: we need proper methods to access documents
-    // by its ids
-    System.out.println();
-    if (phraseText == null || phraseText.isEmpty()) {
-      Page<Document> pageOfDocument = documentService.getDocumentsByIds(include, page);
-
-      DocumentPage documentPage = (DocumentPage) new DocumentPage()
-              .content(pageOfDocument.getContent())
-              .type("document")
-              .number(pageOfDocument.getNumber() + 1)
-              .size(pageOfDocument.getSize())
-              .totalElements(pageOfDocument.getTotalElements())
-              .totalPages(pageOfDocument.getTotalPages());
-      return ResponseEntity.ok(documentPage);
+      List<String> include, List<String> phraseText, List<String> documentIds, Integer page) {
+    Page<Document> documentPage;
+    if (!(documentIds == null || documentIds.isEmpty()) && (phraseText == null || phraseText.isEmpty())) {
+      documentPage = documentService.getDocumentsByIds(documentIds, page);
+    } else if ((documentIds == null || documentIds.isEmpty()) && !(phraseText == null || phraseText.isEmpty())) {
+      documentPage = documentService.getDocumentsByPhrases(phraseText, page);
+    } else if (!(documentIds == null || documentIds.isEmpty()) && !(phraseText == null || phraseText.isEmpty())) {
+      documentPage = documentService.getDocumentsByIdsAndPhrases(documentIds, phraseText, page);
     } else {
-      return ResponseEntity.status(-1).build();
-//      return ResponseEntity.ok(
-//          documentService.getDocumentsByTerms(
-//              phraseText.toArray(new String[0]), new String[] {"text"}));
+      documentPage = documentService.getAllDocuments(page);
     }
+
+    if (documentPage == null) {
+      return ResponseEntity.noContent().build();
+    }
+
+    return ResponseEntity.ok(ApiModelMapper.toDocumentPage(documentPage));
   }
 }
