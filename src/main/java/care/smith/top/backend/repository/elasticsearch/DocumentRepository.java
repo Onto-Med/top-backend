@@ -14,7 +14,13 @@ import java.util.List;
 public interface DocumentRepository
     extends ElasticsearchRepository<DocumentEntity, String>, DocumentCustomRepository {
 
-  DocumentEntity findDocumentEntityByDocumentName(String documentName);
+  Page<DocumentEntity> findDocumentEntitiesByDocumentNameContains(String documentName, Pageable page);
 
-  Page<DocumentEntity> findDocumentEntitiesByIdIn(Collection<String> id, Pageable page);
+  Page<DocumentEntity> findDocumentEntitiesByIdIn(Collection<String> ids, Pageable page);
+
+  Page<DocumentEntity> findDocumentEntitiesByDocumentTextIn(Collection<String> phrases, Pageable page);
+
+  Page<DocumentEntity> findDocumentEntitiesByIdInAndDocumentTextIn(
+      Collection<String> ids, Collection<String> phrases, Pageable page);
+
 }

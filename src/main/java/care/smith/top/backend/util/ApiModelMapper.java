@@ -109,6 +109,17 @@ public abstract class ApiModelMapper {
             .totalPages(page.getTotalPages());
   }
 
+  public static DocumentPage toDocumentPage(Page<Document> page) {
+    return (DocumentPage)
+        new DocumentPage()
+            .content(page.getContent())
+            .type("document")
+            .number(page.getNumber() + 1)
+            .size(page.getSize())
+            .totalElements(page.getTotalElements())
+            .totalPages(page.getTotalPages());
+  }
+
   public static EntityType toRestrictedEntityType(EntityType entityType) {
     if (EntityType.SINGLE_PHENOTYPE.equals(entityType)) return EntityType.SINGLE_RESTRICTION;
     if (EntityType.COMPOSITE_PHENOTYPE.equals(entityType)) return EntityType.COMPOSITE_RESTRICTION;
