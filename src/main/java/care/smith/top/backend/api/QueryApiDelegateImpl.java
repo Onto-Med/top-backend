@@ -7,6 +7,7 @@ import care.smith.top.backend.service.nlp.DocumentQueryService;
 import care.smith.top.backend.util.ApiModelMapper;
 import care.smith.top.model.*;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.FileSystemException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -44,7 +45,8 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
     try {
       File file =
           getQueryService(organisationId, repositoryId, queryId)
-              .getQueryResultPath(organisationId, repositoryId, queryId).toFile();
+              .getQueryResultPath(organisationId, repositoryId, queryId)
+              .toFile();
       ContentDisposition contentDisposition =
           ContentDisposition.builder("inline").filename(file.getName()).build();
       HttpHeaders headers = new HttpHeaders();
@@ -105,7 +107,23 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
   public ResponseEntity<QueryResult> getQueryResult(
       String organisationId, String repositoryId, UUID queryId) {
     return new ResponseEntity<>(
-        phenotypeQueryService.getQueryResult(organisationId, repositoryId, queryId), HttpStatus.OK);
+        getQueryService(organisationId, repositoryId, queryId)
+            .getQueryResult(organisationId, repositoryId, queryId), HttpStatus.OK);
+  }
+
+  @Override
+  public ResponseEntity<List<String>> getQueryResultIds(String organisationId, String repositoryId, UUID queryId) {
+    try {
+      if (getQueryType(organisationId, repositoryId, queryId) == QueryType.CONCEPT){
+        return ResponseEntity.ok(
+          documentQueryService.getDocumentIds(organisationId, repositoryId, queryId));}
+      else {
+        // ToDo: this should not be reached by non-ConceptQueries, but maybe another response necessary
+        return ResponseEntity.ok(new ArrayList<>());
+      }
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   private QueryService getQueryService(String organisationId, String repositoryId, UUID queryId) {
