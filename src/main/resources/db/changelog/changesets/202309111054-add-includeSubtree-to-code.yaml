@@ -1,0 +1,15 @@
+databaseChangeLog:
+- changeSet:
+    id: 1694422511823-8
+    author: ChristophB (generated)
+    changes:
+    - addColumn:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+            defaultValue: false
+            name: include_subtree
+            type: boolean
+        tableName: entity_version_codes
+

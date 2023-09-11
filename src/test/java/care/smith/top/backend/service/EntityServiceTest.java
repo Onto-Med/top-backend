@@ -348,6 +348,7 @@ class EntityServiceTest extends AbstractTest {
         .addCodesItem(
             new Code()
                 .code("1234")
+                .includeSubtree(true)
                 .uri(URI.create("http://loing.org/1234"))
                 .codeSystem(codeSystem));
 
@@ -375,6 +376,8 @@ class EntityServiceTest extends AbstractTest {
                   .isEqualTo(category.getCodes().get(0).getCode());
               assertThat(c.getCodes().get(0).getUri())
                   .isEqualTo(category.getCodes().get(0).getUri());
+              assertThat(c.getCodes().get(0).isIncludeSubtree())
+                  .isEqualTo(category.getCodes().get(0).isIncludeSubtree());
               assertThat(c.getCreatedAt()).isNotNull();
               assertThat(c.getSynonyms()).size().isEqualTo(1);
               assertThat(c.getSynonyms().get(0)).isEqualTo(category.getSynonyms().get(0));

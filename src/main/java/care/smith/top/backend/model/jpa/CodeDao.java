@@ -12,6 +12,9 @@ public class CodeDao {
   @Column(nullable = false)
   private String code;
 
+  @Column(nullable = false)
+  private boolean includeSubtree = false;
+
   private String name;
 
   private String uri;
@@ -37,6 +40,7 @@ public class CodeDao {
   public CodeDao(@NotNull Code code) {
     this.code = code.getCode();
     name = code.getName();
+    if (code.isIncludeSubtree() != null) includeSubtree = code.isIncludeSubtree();
     if (code.getUri() != null) uri = code.getUri().toString();
     if (code.getCodeSystem() != null) codeSystemUri = code.getCodeSystem().getUri().toString();
   }
@@ -46,6 +50,7 @@ public class CodeDao {
         .code(code)
         .uri(uri != null ? URI.create(uri) : null)
         .name(name)
+        .includeSubtree(includeSubtree)
         .codeSystem(new CodeSystem().uri(URI.create(codeSystemUri)));
   }
 
@@ -82,6 +87,15 @@ public class CodeDao {
 
   public CodeDao codeSystemUri(@NotNull String codeSystemUri) {
     this.codeSystemUri = codeSystemUri;
+    return this;
+  }
+
+  public boolean isIncludeSubtree() {
+    return includeSubtree;
+  }
+
+  public CodeDao includeSubtree(boolean includeSubtree) {
+    this.includeSubtree = includeSubtree;
     return this;
   }
 
