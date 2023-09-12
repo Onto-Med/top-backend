@@ -1,7 +1,6 @@
 package care.smith.top.backend.service.nlp;
 
 import care.smith.top.backend.model.elasticsearch.DocumentEntity;
-import care.smith.top.backend.model.jpa.OrganisationDao_;
 import care.smith.top.backend.model.neo4j.DocumentNodeEntity;
 import care.smith.top.backend.repository.elasticsearch.DocumentRepository;
 import care.smith.top.backend.repository.neo4j.DocumentNodeRepository;
@@ -9,14 +8,15 @@ import care.smith.top.backend.service.ContentService;
 import care.smith.top.model.Document;
 import java.util.*;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
@@ -45,7 +45,7 @@ public class DocumentService implements ContentService {
   @Override
   @Cacheable("documentCount")
   public long count() {
-    return documentNodeRepository.count();
+    return documentRepository.count();
   }
 
   // ### method calls for the Spring ES Repository
@@ -75,9 +75,17 @@ public class DocumentService implements ContentService {
 
   public Page<Document> getDocumentsByIds(
       @NonNull Collection<String> ids, Integer page) {
-    return documentRepository
-        .findDocumentEntitiesByIdIn(ids, pageRequestOf(page))
-        .map(DocumentEntity::toApiModel);
+    //ToDo: something's not working with the repository constructed methods; so I needed to implement my own filtering and paging
+//    Page<DocumentEntity> documentPageEntity = documentRepository.findDocumentEntitiesByIdIn(ids, pageRequestOf(page));
+//    Page<Document> documentPage =  documentPageEntity.map(DocumentEntity::toApiModel);
+    Spliterator<DocumentEntity> documentEntitySpliterator = documentRepository.findAllById(ids).spliterator();
+    int documentCount = (int) documentEntitySpliterator.getExactSizeIfKnown();
+    List<Document> documents = StreamSupport.stream(documentEntitySpliterator, false)
+        .map(DocumentEntity::toApiModel)
+        .skip((long) (page - 1) * pageSize)
+        .limit(pageSize)
+        .collect(Collectors.toList());
+    return new PageImpl<>(documents, pageRequestOf(page), documentCount);
   }
 
   public Page<Document> getDocumentsByPhrases(
