@@ -2,13 +2,17 @@ package care.smith.top.backend.api.nlp;
 
 import care.smith.top.backend.api.DocumentApiDelegate;
 import care.smith.top.backend.model.elasticsearch.DocumentEntity;
+import care.smith.top.backend.service.QueryService;
 import care.smith.top.backend.service.nlp.ConceptClusterService;
+import care.smith.top.backend.service.nlp.DocumentQueryService;
 import care.smith.top.backend.service.nlp.DocumentService;
 import care.smith.top.backend.service.nlp.PhraseService;
 import care.smith.top.backend.util.ApiModelMapper;
 import care.smith.top.model.Document;
 import care.smith.top.model.DocumentPage;
 import care.smith.top.model.Phrase;
+
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +27,7 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
   @Autowired DocumentService documentService;
   @Autowired PhraseService phraseService;
   @Autowired ConceptClusterService conceptService;
+  @Autowired DocumentQueryService documentQueryService;
 
   @Override
   public ResponseEntity<List<Document>> getDocumentIdsByConceptClusterIds(
@@ -55,6 +60,18 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
               .map(hashMapDocuments::get)
               .collect(Collectors.toList()),
           HttpStatus.OK);
+    }
+  }
+
+  @Override
+  public ResponseEntity<DocumentPage> getDocumentIdsForQuery(String organisationId, String repositoryId, UUID queryId, Integer page) {
+    try {
+      return ResponseEntity.ok(
+          ApiModelMapper.toDocumentPage(
+            documentService.getDocumentsByIds(
+              documentQueryService.getDocumentIds(organisationId, repositoryId, queryId), page)));
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
   }
 
