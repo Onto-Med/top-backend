@@ -9,6 +9,7 @@ on:
       - "pom.xml"
       - ".mvn-ci.xml"
       - "src/**"
+      - ".github/workflows/lint-and-test.yml"
   pull_request:
     branches:
       - master
@@ -16,6 +17,7 @@ on:
       - "pom.xml"
       - ".mvn-ci.xml"
       - "src/**"
+      - ".github/workflows/lint-and-test.yml"
 
 jobs:
   test:
