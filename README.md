@@ -3,6 +3,8 @@
 Spring Boot based backend of the TOP framework. Please see [top-deployment](https://onto-med.github.io/top-deployment)
 for additional documentation.
 
+[![Lint and Test](https://github.com/Onto-Med/top-backend/actions/workflows/lint-and-test.yml/badge.svg)](https://github.com/Onto-Med/top-backend/actions/workflows/lint-and-test.yml)
+
 ## Running the Spring Server
 
 1. Set up environment variables:
