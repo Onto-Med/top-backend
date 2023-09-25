@@ -1,6 +1,7 @@
 package care.smith.top.backend.model.jpa;
 
 import care.smith.top.model.Code;
+import care.smith.top.model.CodeScope;
 import care.smith.top.model.CodeSystem;
 import java.net.URI;
 import javax.persistence.Column;
@@ -13,7 +14,7 @@ public class CodeDao {
   private String code;
 
   @Column(nullable = false)
-  private boolean includeSubtree = false;
+  private CodeScope scope = CodeScope.SELF;
 
   private String name;
 
@@ -40,7 +41,7 @@ public class CodeDao {
   public CodeDao(@NotNull Code code) {
     this.code = code.getCode();
     name = code.getName();
-    if (code.isIncludeSubtree() != null) includeSubtree = code.isIncludeSubtree();
+    if (code.getScope() != null) scope = code.getScope();
     if (code.getUri() != null) uri = code.getUri().toString();
     if (code.getCodeSystem() != null) codeSystemUri = code.getCodeSystem().getUri().toString();
   }
@@ -50,7 +51,7 @@ public class CodeDao {
         .code(code)
         .uri(uri != null ? URI.create(uri) : null)
         .name(name)
-        .includeSubtree(includeSubtree)
+        .scope(scope)
         .codeSystem(new CodeSystem().uri(URI.create(codeSystemUri)));
   }
 
@@ -90,12 +91,12 @@ public class CodeDao {
     return this;
   }
 
-  public boolean isIncludeSubtree() {
-    return includeSubtree;
+  public CodeScope getScope() {
+    return scope;
   }
 
-  public CodeDao includeSubtree(boolean includeSubtree) {
-    this.includeSubtree = includeSubtree;
+  public CodeDao scope(CodeScope scope) {
+    this.scope = scope;
     return this;
   }
 
@@ -111,6 +112,8 @@ public class CodeDao {
       return false;
     if (getUri() != null ? !getUri().equals(codeDao.getUri()) : codeDao.getUri() != null)
       return false;
+    if (getScope() != null ? !getScope().equals(codeDao.getScope()) : codeDao.getScope() != null)
+      return false;
     return getCodeSystemUri().equals(codeDao.getCodeSystemUri());
   }
 
@@ -119,6 +122,7 @@ public class CodeDao {
     int result = getCode().hashCode();
     result = 31 * result + (getName() != null ? getName().hashCode() : 0);
     result = 31 * result + (getUri() != null ? getUri().hashCode() : 0);
+    result = 31 * result + (getScope() != null ? getScope().hashCode() : 0);
     result = 31 * result + getCodeSystemUri().hashCode();
     return result;
   }

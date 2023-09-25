@@ -8,8 +8,8 @@ databaseChangeLog:
         - column:
             constraints:
               nullable: false
-            defaultValue: false
-            name: include_subtree
-            type: boolean
+            defaultValue: 0
+            name: scope
+            type: integer
         tableName: entity_version_codes
 
