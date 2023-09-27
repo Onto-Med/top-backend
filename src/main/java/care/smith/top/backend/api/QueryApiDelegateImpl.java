@@ -14,7 +14,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -73,8 +72,12 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
             HttpStatus.CREATED);
       default:
         throw new ResponseStatusException(
-            HttpStatus.NOT_ACCEPTABLE, String.format("Query type is not valid; must be one of [%s]",
-            Arrays.stream(QueryType.values()).map(QueryType::toString).collect(Collectors.joining(", "))));
+            HttpStatus.NOT_ACCEPTABLE,
+            String.format(
+                "Query type is not valid; must be one of [%s]",
+                Arrays.stream(QueryType.values())
+                    .map(QueryType::toString)
+                    .collect(Collectors.joining(", "))));
     }
   }
 
@@ -108,17 +111,20 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
       String organisationId, String repositoryId, UUID queryId) {
     return new ResponseEntity<>(
         getQueryService(organisationId, repositoryId, queryId)
-            .getQueryResult(organisationId, repositoryId, queryId), HttpStatus.OK);
+            .getQueryResult(organisationId, repositoryId, queryId),
+        HttpStatus.OK);
   }
 
   @Override
-  public ResponseEntity<List<String>> getQueryResultIds(String organisationId, String repositoryId, UUID queryId) {
+  public ResponseEntity<List<String>> getQueryResultIds(
+      String organisationId, String repositoryId, UUID queryId) {
     try {
-      if (getQueryType(organisationId, repositoryId, queryId) == QueryType.CONCEPT){
+      if (getQueryType(organisationId, repositoryId, queryId) == QueryType.CONCEPT) {
         return ResponseEntity.ok(
-          documentQueryService.getDocumentIds(organisationId, repositoryId, queryId));}
-      else {
-        // ToDo: this should not be reached by non-ConceptQueries, but maybe another response necessary
+            documentQueryService.getDocumentIds(organisationId, repositoryId, queryId));
+      } else {
+        // ToDo: this should not be reached by non-ConceptQueries, but maybe another response
+        // necessary
         return ResponseEntity.ok(new ArrayList<>());
       }
     } catch (IOException e) {

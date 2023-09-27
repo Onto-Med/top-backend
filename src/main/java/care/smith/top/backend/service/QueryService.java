@@ -5,7 +5,6 @@ import care.smith.top.backend.model.jpa.QueryDao;
 import care.smith.top.backend.repository.jpa.QueryRepository;
 import care.smith.top.backend.repository.jpa.RepositoryRepository;
 import care.smith.top.model.*;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -18,7 +17,6 @@ import java.util.Collection;
 import java.util.UUID;
 import java.util.logging.Logger;
 import java.util.zip.ZipOutputStream;
-
 import org.jobrunr.jobs.Job;
 import org.jobrunr.jobs.states.StateName;
 import org.jobrunr.scheduling.JobScheduler;

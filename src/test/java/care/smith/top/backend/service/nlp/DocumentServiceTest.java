@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import care.smith.top.model.Document;
 import java.util.List;
 import java.util.stream.Collectors;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,12 +23,11 @@ class DocumentServiceTest extends AbstractNLPTest {
   @Test
   void getDocumentByName() {
     List<String> documentName =
-        documentService.getDocumentsByName("test01", 1)
-            .stream()
+        documentService.getDocumentsByName("test01", 1).stream()
             .map(Document::getName)
             .collect(Collectors.toList());
     assertNotNull(documentName);
-    assertArrayEquals(new String[]{"test01"}, documentName.toArray());
+    assertArrayEquals(new String[] {"test01"}, documentName.toArray());
   }
 
   @Test

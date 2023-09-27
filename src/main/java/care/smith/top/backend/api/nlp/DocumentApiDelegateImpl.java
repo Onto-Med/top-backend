@@ -1,8 +1,6 @@
 package care.smith.top.backend.api.nlp;
 
 import care.smith.top.backend.api.DocumentApiDelegate;
-import care.smith.top.backend.model.elasticsearch.DocumentEntity;
-import care.smith.top.backend.service.QueryService;
 import care.smith.top.backend.service.nlp.ConceptClusterService;
 import care.smith.top.backend.service.nlp.DocumentQueryService;
 import care.smith.top.backend.service.nlp.DocumentService;
@@ -11,7 +9,6 @@ import care.smith.top.backend.util.ApiModelMapper;
 import care.smith.top.model.Document;
 import care.smith.top.model.DocumentPage;
 import care.smith.top.model.Phrase;
-
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -64,12 +61,14 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
   }
 
   @Override
-  public ResponseEntity<DocumentPage> getDocumentsForQuery(String organisationId, String repositoryId, UUID queryId, Integer page) {
+  public ResponseEntity<DocumentPage> getDocumentsForQuery(
+      String organisationId, String repositoryId, UUID queryId, Integer page) {
     try {
       return ResponseEntity.ok(
           ApiModelMapper.toDocumentPage(
-            documentService.getDocumentsByIds(
-              documentQueryService.getDocumentIds(organisationId, repositoryId, queryId), page)));
+              documentService.getDocumentsByIds(
+                  documentQueryService.getDocumentIds(organisationId, repositoryId, queryId),
+                  page)));
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -121,11 +120,14 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
   public ResponseEntity<DocumentPage> getDocuments(
       List<String> include, List<String> phraseText, List<String> documentIds, Integer page) {
     Page<Document> documentPage;
-    if (!(documentIds == null || documentIds.isEmpty()) && (phraseText == null || phraseText.isEmpty())) {
+    if (!(documentIds == null || documentIds.isEmpty())
+        && (phraseText == null || phraseText.isEmpty())) {
       documentPage = documentService.getDocumentsByIds(documentIds, page);
-    } else if ((documentIds == null || documentIds.isEmpty()) && !(phraseText == null || phraseText.isEmpty())) {
+    } else if ((documentIds == null || documentIds.isEmpty())
+        && !(phraseText == null || phraseText.isEmpty())) {
       documentPage = documentService.getDocumentsByPhrases(phraseText, page);
-    } else if (!(documentIds == null || documentIds.isEmpty()) && !(phraseText == null || phraseText.isEmpty())) {
+    } else if (!(documentIds == null || documentIds.isEmpty())
+        && !(phraseText == null || phraseText.isEmpty())) {
       documentPage = documentService.getDocumentsByIdsAndPhrases(documentIds, phraseText, page);
     } else {
       documentPage = documentService.getAllDocuments(page);
