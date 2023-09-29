@@ -16,5 +16,4 @@ public class ElasticsearchConfigBean {
   public void setIndexName(String indexName) {
     this.indexName = indexName;
   }
-
 }

@@ -10,7 +10,6 @@ import java.util.*;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
@@ -20,20 +19,14 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
-import javax.print.Doc;
-
 @Service
 public class DocumentService implements ContentService {
-
-  @Value("${spring.paging.page-size:10}")
-  private int pageSize = 10;
 
   private final DocumentRepository documentRepository;
   private final DocumentNodeRepository documentNodeRepository;
 
-  private PageRequest pageRequestOf(Integer page) {
-    return PageRequest.of(page == null ? 1 : page - 1, pageSize);
-  }
+  @Value("${spring.paging.page-size:10}")
+  private int pageSize = 10;
 
   @Autowired
   public DocumentService(
@@ -48,10 +41,7 @@ public class DocumentService implements ContentService {
     return documentRepository.count();
   }
 
-  // ### method calls for the Spring ES Repository
-
-  public Document getDocumentById(
-      @NonNull String documentId) {
+  public Document getDocumentById(@NonNull String documentId) {
     DocumentEntity document = documentRepository.findById(documentId).orElse(null);
     if (document != null) {
       return document.toApiModel();
@@ -60,36 +50,37 @@ public class DocumentService implements ContentService {
     }
   }
 
-  public Page<Document> getAllDocuments(Integer page){
-    return documentRepository
-        .findAll(pageRequestOf(page))
-        .map(DocumentEntity::toApiModel);
+  // ### method calls for the Spring ES Repository
+
+  public Page<Document> getAllDocuments(Integer page) {
+    return documentRepository.findAll(pageRequestOf(page)).map(DocumentEntity::toApiModel);
   }
 
-  public Page<Document> getDocumentsByName(
-      @NonNull String documentName, Integer page) {
+  public Page<Document> getDocumentsByName(@NonNull String documentName, Integer page) {
     return documentRepository
         .findDocumentEntitiesByDocumentNameContains(documentName, pageRequestOf(page))
         .map(DocumentEntity::toApiModel);
   }
 
-  public Page<Document> getDocumentsByIds(
-      @NonNull Collection<String> ids, Integer page) {
-    //ToDo: something's not working with the repository constructed methods; so I needed to implement my own filtering and paging
-//    Page<DocumentEntity> documentPageEntity = documentRepository.findDocumentEntitiesByIdIn(ids, pageRequestOf(page));
-//    Page<Document> documentPage =  documentPageEntity.map(DocumentEntity::toApiModel);
-    Spliterator<DocumentEntity> documentEntitySpliterator = documentRepository.findAllById(ids).spliterator();
+  public Page<Document> getDocumentsByIds(@NonNull Collection<String> ids, Integer page) {
+    // ToDo: something's not working with the repository constructed methods; so I needed to
+    // implement my own filtering and paging
+    //    Page<DocumentEntity> documentPageEntity =
+    // documentRepository.findDocumentEntitiesByIdIn(ids, pageRequestOf(page));
+    //    Page<Document> documentPage =  documentPageEntity.map(DocumentEntity::toApiModel);
+    Spliterator<DocumentEntity> documentEntitySpliterator =
+        documentRepository.findAllById(ids).spliterator();
     int documentCount = (int) documentEntitySpliterator.getExactSizeIfKnown();
-    List<Document> documents = StreamSupport.stream(documentEntitySpliterator, false)
-        .map(DocumentEntity::toApiModel)
-        .skip((long) (page - 1) * pageSize)
-        .limit(pageSize)
-        .collect(Collectors.toList());
+    List<Document> documents =
+        StreamSupport.stream(documentEntitySpliterator, false)
+            .map(DocumentEntity::toApiModel)
+            .skip((long) (page - 1) * pageSize)
+            .limit(pageSize)
+            .collect(Collectors.toList());
     return new PageImpl<>(documents, pageRequestOf(page), documentCount);
   }
 
-  public Page<Document> getDocumentsByPhrases(
-      @NonNull Collection<String> phrases, Integer page) {
+  public Page<Document> getDocumentsByPhrases(@NonNull Collection<String> phrases, Integer page) {
     return documentRepository
         .findDocumentEntitiesByDocumentTextIn(phrases, pageRequestOf(page))
         .map(DocumentEntity::toApiModel);
@@ -102,13 +93,13 @@ public class DocumentService implements ContentService {
         .map(DocumentEntity::toApiModel);
   }
 
-  // ### method calls for the custom ES repository
-
   public List<Document> getDocumentsByTerms(String[] terms, String[] fields) {
     return documentRepository.getESDocumentsByTerms(terms, fields).stream()
         .map(DocumentEntity::toApiModel)
         .collect(Collectors.toList());
   }
+
+  // ### method calls for the custom ES repository
 
   public List<Document> getDocumentsByTermsBoolean(
       String[] mustTerms, String[] shouldTerms, String[] notTerms, String[] fields) {
@@ -134,8 +125,6 @@ public class DocumentService implements ContentService {
         .collect(Collectors.toList());
   }
 
-  // ### method calls for the Document Node Repository (i.e. graph database)
-
   public List<Document> getDocumentsForConcepts(Set<String> conceptIds, Boolean exemplarOnly) {
     if (conceptIds.size() == 0) {
       return List.of();
@@ -145,5 +134,11 @@ public class DocumentService implements ContentService {
         .stream()
         .map(DocumentNodeEntity::toApiModel)
         .collect(Collectors.toList());
+  }
+
+  // ### method calls for the Document Node Repository (i.e. graph database)
+
+  private PageRequest pageRequestOf(Integer page) {
+    return PageRequest.of(page == null ? 1 : page - 1, pageSize);
   }
 }

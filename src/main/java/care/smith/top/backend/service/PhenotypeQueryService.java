@@ -19,7 +19,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -133,8 +132,7 @@ public class PhenotypeQueryService extends QueryService {
           queryDao.getRepository().getId(),
           queryId.toString(),
           rs,
-          phenotypes
-      );
+          phenotypes);
     } catch (Throwable e) {
       e.printStackTrace();
       result =

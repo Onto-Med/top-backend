@@ -9,9 +9,7 @@ import care.smith.top.backend.repository.jpa.ConceptRepository;
 import care.smith.top.backend.service.QueryService;
 import care.smith.top.model.*;
 import care.smith.top.top_document_query.adapter.*;
-
-import java.io.File;
-import java.io.FileInputStream;
+import care.smith.top.top_document_query.converter.csv.DocumentCSV;
 import java.io.IOException;
 import java.nio.file.FileSystemException;
 import java.nio.file.Files;
@@ -24,16 +22,12 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
-
-import care.smith.top.top_document_query.converter.csv.DocumentCSV;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-
 
 @Service
 public class DocumentQueryService extends QueryService {
@@ -43,7 +37,6 @@ public class DocumentQueryService extends QueryService {
 
   @Value("${top.documents.data-source-config-dir:config/data_sources/nlp}")
   private String dataSourceConfigDir;
-
 
   @Autowired private DocumentRepository documentRepository;
   @Autowired private ConceptRepository conceptRepository;
@@ -91,14 +84,12 @@ public class DocumentQueryService extends QueryService {
               OffsetDateTime.now(),
               QueryState.FINISHED);
 
-
       storeResult(
           queryDao.getRepository().getOrganisation().getId(),
           queryDao.getRepository().getId(),
           queryId.toString(),
           documents,
-          concepts.toArray(new Concept[0])
-      );
+          concepts.toArray(new Concept[0]));
     } catch (Throwable e) {
       e.printStackTrace();
       result =
@@ -142,6 +133,27 @@ public class DocumentQueryService extends QueryService {
     return getTextAdapterConfigs().stream().filter(a -> id.equals(a.getId())).findFirst();
   }
 
+  public List<String> getDocumentIds(String organisationId, String repositoryId, UUID queryId)
+      throws IOException {
+    Path queryPath =
+        Paths.get(resultDir, organisationId, repositoryId, String.format("%s.zip", queryId));
+    if (!queryPath.toFile().exists())
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No data for query found");
+    if (!queryPath.startsWith(Paths.get(resultDir)))
+      throw new FileSystemException("Repository directory isn't a child of the results directory.");
+
+    ArrayList<String> ids = new ArrayList<>();
+    ZipFile zip = new ZipFile(queryPath.toFile());
+    Enumeration<? extends ZipEntry> entries = zip.entries();
+    while (entries.hasMoreElements()) {
+      ZipEntry content = entries.nextElement();
+      if (content.getName().equals("data.csv")) {
+        ids.addAll(csvConverter.readFirstColumn(zip.getInputStream(content)));
+      }
+    }
+    return ids;
+  }
+
   public List<TextAdapterConfig> getTextAdapterConfigs() {
     try (Stream<Path> paths =
         Files.list(Path.of(dataSourceConfigDir)).filter(f -> !Files.isDirectory(f))) {
@@ -177,42 +189,6 @@ public class DocumentQueryService extends QueryService {
     return null;
   }
 
-  @Override
-  protected void clearResults(String organisationId, String repositoryId, String queryId)
-      throws IOException {
-    Path queryPath =
-        Paths.get(resultDir, organisationId, repositoryId, String.format("%s.zip", queryId));
-    if (!queryPath.startsWith(Paths.get(resultDir)))
-      LOGGER.severe(String.format("Query file '%s' is invalid and cannot be deleted!", queryPath));
-    Files.deleteIfExists(queryPath);
-  }
-
-  public List<String> getDocumentIds(
-      String organisationId,
-      String repositoryId,
-      UUID queryId
-  ) throws IOException {
-    Path queryPath =
-        Paths.get(resultDir, organisationId, repositoryId, String.format("%s.zip", queryId));
-    if (!queryPath.toFile().exists())
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No data for query found");
-    if (!queryPath.startsWith(Paths.get(resultDir)))
-      throw new FileSystemException("Repository directory isn't a child of the results directory.");
-
-    ArrayList<String> ids = new ArrayList<>();
-    ZipFile zip = new ZipFile(queryPath.toFile());
-    Enumeration<? extends ZipEntry> entries = zip.entries();
-    while (entries.hasMoreElements()) {
-      ZipEntry content = entries.nextElement();
-      if (content.getName().equals("data.csv")) {
-        ids.addAll(
-            csvConverter.readFirstColumn(zip.getInputStream(content))
-        );
-      }
-    }
-    return ids;
-  }
-
   private void storeResult(
       String organisationId,
       String repositoryId,
@@ -230,5 +206,15 @@ public class DocumentQueryService extends QueryService {
     csvConverter.write(results, zipStream);
 
     zipStream.close();
+  }
+
+  @Override
+  protected void clearResults(String organisationId, String repositoryId, String queryId)
+      throws IOException {
+    Path queryPath =
+        Paths.get(resultDir, organisationId, repositoryId, String.format("%s.zip", queryId));
+    if (!queryPath.startsWith(Paths.get(resultDir)))
+      LOGGER.severe(String.format("Query file '%s' is invalid and cannot be deleted!", queryPath));
+    Files.deleteIfExists(queryPath);
   }
 }

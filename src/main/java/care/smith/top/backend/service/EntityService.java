@@ -532,20 +532,11 @@ public class EntityService implements ContentService {
 
     if (!ApiModelMapper.isRestricted(entity.getEntityType())) {
       entity.superEntities(null);
-      if (data instanceof Concept) {
-        if (((Concept) data).getSuperConcepts() != null) {
-          for (Concept concept : ((Concept) data).getSuperConcepts())
-            conceptRepository
-                .findByIdAndRepositoryId(concept.getId(), repositoryId)
-                .ifPresent(entity::addSuperEntitiesItem);
-        }
-      } else {
-        if (((Category) data).getSuperCategories() != null)
-          for (Category category : ((Category) data).getSuperCategories())
-            categoryRepository
-                .findByIdAndRepositoryId(category.getId(), repositoryId)
-                .ifPresent(entity::addSuperEntitiesItem);
-      }
+      List<? extends Entity> superEntities =
+          data instanceof Concept
+              ? ((Concept) data).getSuperConcepts()
+              : ((Category) data).getSuperCategories();
+      setSuperEntities(entity, superEntities);
     }
 
     return populateWithCodeSystems()
@@ -615,6 +606,26 @@ public class EntityService implements ContentService {
     }
   }
 
+  @CacheEvict(value = "entities", key = "#repositoryId")
+  @PreAuthorize(
+      "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.jpa.OrganisationDao', 'WRITE')")
+  public Entity moveEntity(
+      String organisationId, String repositoryId, String entityId, List<Entity> superEntities) {
+    getRepository(organisationId, repositoryId);
+    EntityDao entity =
+        entityRepository
+            .findByIdAndRepositoryId(entityId, repositoryId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+    if (!ApiModelMapper.isRestricted(entity.getEntityType())) {
+      setSuperEntities(entity, superEntities);
+    }
+
+    return populateWithCodeSystems()
+        .andThen(populateSubEntities())
+        .apply(entityRepository.save(entity).toApiModel());
+  }
+
   public Set<Class<? extends PhenotypeExporter>> getPhenotypeExporterImplementations() {
     Reflections reflections =
         new Reflections(new ConfigurationBuilder().forPackage("care.smith.top"));
@@ -625,6 +636,21 @@ public class EntityService implements ContentService {
     Reflections reflections =
         new Reflections(new ConfigurationBuilder().forPackage("care.smith.top"));
     return new HashSet<>(reflections.getSubTypesOf(PhenotypeImporter.class));
+  }
+
+  /**
+   * Modifies entity dao's super entities in place.
+   *
+   * @param entityDao Entity dao of which super entities are updated
+   * @param superEntities Super entities to apply to the entity dao
+   */
+  private void setSuperEntities(EntityDao entityDao, List<? extends Entity> superEntities) {
+    entityDao.superEntities(null);
+    if (superEntities != null)
+      for (Entity superEntity : superEntities)
+        entityRepository
+            .findByIdAndRepositoryId(superEntity.getId(), entityDao.getRepository().getId())
+            .ifPresent(entityDao::addSuperEntitiesItem);
   }
 
   /**

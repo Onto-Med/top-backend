@@ -1,8 +1,7 @@
 package care.smith.top.backend.model.neo4j;
 
-import java.util.List;
-
 import care.smith.top.model.Document;
+import java.util.List;
 import org.springframework.data.neo4j.core.schema.*;
 
 @Node("Document")
@@ -47,8 +46,6 @@ public class DocumentNodeEntity {
   }
 
   public Document toApiModel() {
-    return new Document()
-        .id(documentId)
-        .name(documentName);
+    return new Document().id(documentId).name(documentName);
   }
 }
