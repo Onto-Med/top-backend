@@ -64,7 +64,7 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
   }
 
   @Override
-  public ResponseEntity<DocumentPage> getDocumentIdsForQuery(String organisationId, String repositoryId, UUID queryId, Integer page) {
+  public ResponseEntity<DocumentPage> getDocumentsForQuery(String organisationId, String repositoryId, UUID queryId, Integer page) {
     try {
       return ResponseEntity.ok(
           ApiModelMapper.toDocumentPage(

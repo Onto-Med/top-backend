@@ -9,9 +9,6 @@ public class ElasticsearchConfigBean {
   @Value("${spring.elasticsearch.index.name}")
   private String indexName;
 
-//  @Value("${top.documents.ellipsis:15}")
-//  private static Integer wordEllipsis;
-
   public String getIndexName() {
     return indexName;
   }
@@ -20,5 +17,4 @@ public class ElasticsearchConfigBean {
     this.indexName = indexName;
   }
 
-//  public static Integer wordEllipsis() { return wordEllipsis; }
 }

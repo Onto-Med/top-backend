@@ -18,7 +18,7 @@ public class DocumentEntity {
 
   @Id private String id;
 
-  //ToDo: @Value does not work
+  //ToDo: @Value does not work; find a way to change this via config
   @Value("${top.documents.ellipsis:15}")
   private Integer wordEllipsis = 25;
 
