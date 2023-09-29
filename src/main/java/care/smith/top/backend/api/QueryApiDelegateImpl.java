@@ -7,10 +7,13 @@ import care.smith.top.backend.service.nlp.DocumentQueryService;
 import care.smith.top.backend.util.ApiModelMapper;
 import care.smith.top.model.*;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.FileSystemException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -40,7 +43,9 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
       String organisationId, String repositoryId, UUID queryId) {
     try {
       File file =
-          phenotypeQueryService.getQueryResultPath(organisationId, repositoryId, queryId).toFile();
+          getQueryService(organisationId, repositoryId, queryId)
+              .getQueryResultPath(organisationId, repositoryId, queryId)
+              .toFile();
       ContentDisposition contentDisposition =
           ContentDisposition.builder("inline").filename(file.getName()).build();
       HttpHeaders headers = new HttpHeaders();
@@ -55,6 +60,7 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
   @Override
   public ResponseEntity<QueryResult> enqueueQuery(
       String organisationId, String repositoryId, Query query) {
+
     switch (query.getType()) {
       case PHENOTYPE:
         return new ResponseEntity<>(
@@ -66,7 +72,12 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
             HttpStatus.CREATED);
       default:
         throw new ResponseStatusException(
-            HttpStatus.NOT_ACCEPTABLE, "Query type is neither Phenotype nor Concept.");
+            HttpStatus.NOT_ACCEPTABLE,
+            String.format(
+                "Query type is not valid; must be one of [%s]",
+                Arrays.stream(QueryType.values())
+                    .map(QueryType::toString)
+                    .collect(Collectors.joining(", "))));
     }
   }
 
@@ -99,17 +110,30 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
   public ResponseEntity<QueryResult> getQueryResult(
       String organisationId, String repositoryId, UUID queryId) {
     return new ResponseEntity<>(
-        phenotypeQueryService.getQueryResult(organisationId, repositoryId, queryId), HttpStatus.OK);
+        getQueryService(organisationId, repositoryId, queryId)
+            .getQueryResult(organisationId, repositoryId, queryId),
+        HttpStatus.OK);
+  }
+
+  @Override
+  public ResponseEntity<List<String>> getQueryResultIds(
+      String organisationId, String repositoryId, UUID queryId) {
+    try {
+      if (getQueryType(organisationId, repositoryId, queryId) == QueryType.CONCEPT) {
+        return ResponseEntity.ok(
+            documentQueryService.getDocumentIds(organisationId, repositoryId, queryId));
+      } else {
+        // ToDo: this should not be reached by non-ConceptQueries, but maybe another response
+        // necessary
+        return ResponseEntity.ok(new ArrayList<>());
+      }
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   private QueryService getQueryService(String organisationId, String repositoryId, UUID queryId) {
-    QueryType queryType =
-        queryRepository
-            .findByRepository_OrganisationIdAndRepositoryIdAndId(
-                organisationId, repositoryId, String.valueOf(queryId))
-            .orElseThrow()
-            .getQueryType();
-    switch (queryType) {
+    switch (getQueryType(organisationId, repositoryId, queryId)) {
       case PHENOTYPE:
         return phenotypeQueryService;
       case CONCEPT:
@@ -117,5 +141,13 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
       default:
         throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "No such query found.");
     }
+  }
+
+  private QueryType getQueryType(String organisationId, String repositoryId, UUID queryId) {
+    return queryRepository
+        .findByRepository_OrganisationIdAndRepositoryIdAndId(
+            organisationId, repositoryId, String.valueOf(queryId))
+        .orElseThrow()
+        .getQueryType();
   }
 }

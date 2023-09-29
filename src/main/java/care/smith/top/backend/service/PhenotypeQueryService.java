@@ -8,10 +8,7 @@ import care.smith.top.top_phenotypic_query.adapter.config.DataAdapterConfig;
 import care.smith.top.top_phenotypic_query.converter.csv.CSV;
 import care.smith.top.top_phenotypic_query.result.ResultSet;
 import care.smith.top.top_phenotypic_query.search.PhenotypeFinder;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -25,7 +22,6 @@ import java.util.zip.ZipOutputStream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -40,12 +36,6 @@ public class PhenotypeQueryService extends QueryService {
 
   @Value("${top.phenotyping.execute-queries:true}")
   private boolean executeQueries;
-
-  @Value("${top.phenotyping.result.dir:config/query_results}")
-  private String resultDir;
-
-  @Value("${top.phenotyping.result.download-enabled:true}")
-  private boolean queryResultDownloadEnabled;
 
   @Autowired private PhenotypeRepository phenotypeRepository;
 
@@ -159,34 +149,6 @@ public class PhenotypeQueryService extends QueryService {
     return getDataAdapterConfigs().stream().filter(a -> id.equals(a.getId())).findFirst();
   }
 
-  @PreAuthorize(
-      "hasPermission(#organisationId, 'care.smith.top.backend.model.jpa.OrganisationDao', 'WRITE')")
-  public Path getQueryResultPath(String organisationId, String repositoryId, UUID queryId)
-      throws FileSystemException {
-    if (!queryResultDownloadEnabled)
-      throw new ResponseStatusException(
-          HttpStatus.NOT_ACCEPTABLE, "Query result download is disabled.");
-    if (!repositoryRepository.existsByIdAndOrganisation_Id(repositoryId, organisationId))
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Repository does not exist.");
-
-    QueryDao query =
-        queryRepository
-            .findByRepository_OrganisationIdAndRepositoryIdAndId(
-                organisationId, repositoryId, queryId.toString())
-            .orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Query does not exist."));
-
-    if (query.getResult() == null)
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Query has no result.");
-
-    Path queryPath =
-        Paths.get(resultDir, organisationId, repositoryId, String.format("%s.zip", queryId));
-    if (!queryPath.startsWith(Paths.get(resultDir)))
-      throw new FileSystemException("Repository directory isn't a child of the results directory.");
-
-    return queryPath;
-  }
-
   public List<DataAdapterConfig> getDataAdapterConfigs() {
     try (Stream<Path> paths =
         Files.list(Path.of(dataSourceConfigDir)).filter(f -> !Files.isDirectory(f))) {
@@ -216,14 +178,7 @@ public class PhenotypeQueryService extends QueryService {
       ResultSet resultSet,
       Entity[] phenotypes)
       throws IOException {
-    Path repositoryPath = Paths.get(resultDir, organisationId, repositoryId);
-    if (!repositoryPath.startsWith(Paths.get(resultDir)))
-      throw new FileSystemException("Repository directory isn't a child of the results directory.");
-
-    Files.createDirectories(repositoryPath);
-    File zipFile =
-        Files.createFile(repositoryPath.resolve(String.format("%s.zip", queryId))).toFile();
-    ZipOutputStream zipStream = new ZipOutputStream(new FileOutputStream(zipFile));
+    ZipOutputStream zipStream = createZipStream(organisationId, repositoryId, queryId);
 
     zipStream.putNextEntry(new ZipEntry("data.csv"));
     csvConverter.write(resultSet, zipStream);

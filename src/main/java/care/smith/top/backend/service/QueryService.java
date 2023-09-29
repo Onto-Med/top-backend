@@ -5,10 +5,18 @@ import care.smith.top.backend.model.jpa.QueryDao;
 import care.smith.top.backend.repository.jpa.QueryRepository;
 import care.smith.top.backend.repository.jpa.RepositoryRepository;
 import care.smith.top.model.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.FileSystemException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.ZoneOffset;
 import java.util.Collection;
 import java.util.UUID;
 import java.util.logging.Logger;
+import java.util.zip.ZipOutputStream;
 import org.jobrunr.jobs.Job;
 import org.jobrunr.jobs.states.StateName;
 import org.jobrunr.scheduling.JobScheduler;
@@ -29,6 +37,12 @@ public abstract class QueryService {
 
   @Value("${spring.paging.page-size:10}")
   protected int pageSize;
+
+  @Value("${top.result.dir:config/query_results}")
+  protected String resultDir;
+
+  @Value("${top.result.download-enabled:true}")
+  protected boolean queryResultDownloadEnabled;
 
   @Autowired protected JobScheduler jobScheduler;
   @Autowired protected StorageProvider storageProvider;
@@ -53,6 +67,34 @@ public abstract class QueryService {
    * @param queryId ID of the query to be executed.
    */
   public abstract void executeQuery(UUID queryId);
+
+  @PreAuthorize(
+      "hasPermission(#organisationId, 'care.smith.top.backend.model.jpa.OrganisationDao', 'WRITE')")
+  public Path getQueryResultPath(String organisationId, String repositoryId, UUID queryId)
+      throws FileSystemException {
+    if (!queryResultDownloadEnabled)
+      throw new ResponseStatusException(
+          HttpStatus.NOT_ACCEPTABLE, "Query result download is disabled.");
+    if (!repositoryRepository.existsByIdAndOrganisation_Id(repositoryId, organisationId))
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Repository does not exist.");
+
+    QueryDao query =
+        queryRepository
+            .findByRepository_OrganisationIdAndRepositoryIdAndId(
+                organisationId, repositoryId, queryId.toString())
+            .orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Query does not exist."));
+
+    if (query.getResult() == null)
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Query has no result.");
+
+    Path queryPath =
+        Paths.get(resultDir, organisationId, repositoryId, String.format("%s.zip", queryId));
+    if (!queryPath.startsWith(Paths.get(resultDir)))
+      throw new FileSystemException("Repository directory isn't a child of the results directory.");
+
+    return queryPath;
+  }
 
   /**
    * Deletes a query. The delete request is propagated to the underlying {@link JobScheduler}.
@@ -206,5 +248,17 @@ public abstract class QueryService {
             || QueryType.PHENOTYPE.equals(query.getType())
                 && (!isEmpty(((PhenotypeQuery) query).getCriteria())
                     || !isEmpty(((PhenotypeQuery) query).getProjection())));
+  }
+
+  protected ZipOutputStream createZipStream(
+      String organisationId, String repositoryId, String queryId) throws IOException {
+    Path repositoryPath = Paths.get(resultDir, organisationId, repositoryId);
+    if (!repositoryPath.startsWith(Paths.get(resultDir)))
+      throw new FileSystemException("Repository directory isn't a child of the results directory.");
+
+    Files.createDirectories(repositoryPath);
+    File zipFile =
+        Files.createFile(repositoryPath.resolve(String.format("%s.zip", queryId))).toFile();
+    return new ZipOutputStream(new FileOutputStream(zipFile));
   }
 }
