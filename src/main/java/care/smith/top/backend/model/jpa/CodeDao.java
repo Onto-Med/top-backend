@@ -19,26 +19,33 @@ public class CodeDao {
   @Column(nullable = false)
   private String codeSystemUri;
 
+  private String codeSystemVersion;
+
   public CodeDao() {}
 
-  public CodeDao(@NotNull String code, String uri, @NotNull String codeSystemUri) {
+  public CodeDao(@NotNull String code, String uri, @NotNull String codeSystemUri, String codeSystemVersion) {
     this.code = code;
     this.uri = uri;
     this.codeSystemUri = codeSystemUri;
+    this.codeSystemVersion = codeSystemVersion;
   }
 
-  public CodeDao(@NotNull String code, String name, String uri, @NotNull String codeSystemUri) {
+  public CodeDao(@NotNull String code, String name, String uri, @NotNull String codeSystemUri, String codeSystemVersion) {
     this.code = code;
     this.name = name;
     this.uri = uri;
     this.codeSystemUri = codeSystemUri;
+    this.codeSystemVersion = codeSystemVersion;
   }
 
   public CodeDao(@NotNull Code code) {
     this.code = code.getCode();
     name = code.getName();
     if (code.getUri() != null) uri = code.getUri().toString();
-    if (code.getCodeSystem() != null) codeSystemUri = code.getCodeSystem().getUri().toString();
+    if (code.getCodeSystem() != null) {
+      codeSystemUri = code.getCodeSystem().getUri().toString();
+      codeSystemVersion = code.getCodeSystem().getVersion();
+    }
   }
 
   public Code toApiModel() {
@@ -46,7 +53,9 @@ public class CodeDao {
         .code(code)
         .uri(uri != null ? URI.create(uri) : null)
         .name(name)
-        .codeSystem(new CodeSystem().uri(URI.create(codeSystemUri)));
+        .codeSystem(new CodeSystem()
+                .uri(URI.create(codeSystemUri))
+                .version(codeSystemVersion));
   }
 
   public String getCode() {
@@ -82,6 +91,15 @@ public class CodeDao {
 
   public CodeDao codeSystemUri(@NotNull String codeSystemUri) {
     this.codeSystemUri = codeSystemUri;
+    return this;
+  }
+
+  public String getCodeSystemVersion() {
+    return codeSystemVersion;
+  }
+
+  public CodeDao codeSystemVersion(String codeSystemVersion) {
+    this.codeSystemVersion = codeSystemVersion;
     return this;
   }
 

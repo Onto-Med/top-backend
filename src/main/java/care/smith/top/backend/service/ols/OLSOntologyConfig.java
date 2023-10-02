@@ -11,6 +11,8 @@ public class OLSOntologyConfig {
   private String description;
   private String preferredPrefix;
 
+  private String version;
+
   public URI getId() {
     return id;
   }
@@ -41,5 +43,13 @@ public class OLSOntologyConfig {
 
   public void setPreferredPrefix(String preferredPrefix) {
     this.preferredPrefix = preferredPrefix;
+  }
+
+  public String getVersion() {
+    return version;
+  }
+
+  public void setVersion(String version) {
+    this.version = version;
   }
 }

@@ -40,6 +40,7 @@ public class CodeSystemRepository extends OlsRepository {
                   new CodeSystem()
                       .externalId(ontology.getOntologyId())
                       .uri(ontology.getConfig().getId())
+                      .version(ontology.getConfig().getVersion())
                       .name(ontology.getConfig().getTitle())
                       .shortName(ontology.getConfig().getPreferredPrefix()))
           .collect(
