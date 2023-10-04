@@ -209,7 +209,8 @@ public class QueryDao {
         .id(UUID.fromString(getId()))
         .name(getName())
         .type(queryType)
-        .dataSource(getDataSource());
+        .dataSource(getDataSource())
+        .result(result != null ? result.toApiModel() : null);
   }
 
   @Override

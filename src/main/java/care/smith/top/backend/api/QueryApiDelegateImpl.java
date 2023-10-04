@@ -107,11 +107,11 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
   }
 
   @Override
-  public ResponseEntity<QueryResult> getQueryResult(
+  public ResponseEntity<Query> getQueryById(
       String organisationId, String repositoryId, UUID queryId) {
     return new ResponseEntity<>(
         getQueryService(organisationId, repositoryId, queryId)
-            .getQueryResult(organisationId, repositoryId, queryId),
+            .getQueryById(organisationId, repositoryId, queryId),
         HttpStatus.OK);
   }
 
