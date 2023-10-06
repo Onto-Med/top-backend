@@ -3,8 +3,15 @@ package care.smith.top.backend.service.nlp;
 import static org.junit.jupiter.api.Assertions.*;
 
 import care.smith.top.model.Document;
+
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import org.apache.commons.collections.CollectionUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -73,4 +80,23 @@ class DocumentServiceTest extends AbstractNLPTest {
 
   @Test
   void getDocumentsForConcepts() {}
+
+  @Test
+  void getAllDocumentsBatched() {
+    documentService.getAllDocumentsBatched(1)
+        .forEach(list -> {
+          assertEquals(1, list.size());
+          assertInstanceOf(Document.class, list.get(0));
+        });
+
+    List<Document> newList1 = new ArrayList<>();
+    List<String> newList2 = new ArrayList<>();
+    documentService.getAllDocumentsBatched(2)
+        .forEach(list -> {
+          newList1.addAll(list);
+          list.forEach( document -> newList2.add(document.getName()) );
+        });
+    assertEquals(3, newList1.size());
+    assertEquals(new HashSet<>(List.of("test01", "test02", "test03")), new HashSet<>(newList2));
+  }
 }
