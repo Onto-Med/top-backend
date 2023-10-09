@@ -98,20 +98,20 @@ class PhenotypeQueryServiceTest extends AbstractTest {
         .size()
         .isEqualTo(1);
 
-    assertThatThrownBy(
-            () -> queryService.getQueryResult(orga.getId(), repo2.getId(), query.getId()))
+    assertThatThrownBy(() -> queryService.getQueryById(orga.getId(), repo2.getId(), query.getId()))
         .isInstanceOf(ResponseStatusException.class)
         .hasFieldOrPropertyWithValue("status", HttpStatus.NOT_FOUND);
 
-    assertThat(queryService.getQueryResult(orga.getId(), repo1.getId(), query.getId()))
+    assertThat(queryService.getQueryById(orga.getId(), repo1.getId(), query.getId()))
         .satisfies(
             r -> {
               assertThat(r.getId()).isEqualTo(query.getId());
-              assertThat(r.getCreatedAt()).isNotNull();
-              assertThat(r.getFinishedAt()).isNotNull();
-              assertThat(r.getCreatedAt().compareTo(r.getFinishedAt())).isLessThanOrEqualTo(0);
-              assertThat(r.getCount()).isEqualTo(0);
-              assertThat(r.getState()).isNotNull();
+              assertThat(r.getResult().getCreatedAt()).isNotNull();
+              assertThat(r.getResult().getFinishedAt()).isNotNull();
+              assertThat(r.getResult().getCreatedAt().compareTo(r.getResult().getFinishedAt()))
+                  .isLessThanOrEqualTo(0);
+              assertThat(r.getResult().getCount()).isEqualTo(0);
+              assertThat(r.getResult().getState()).isNotNull();
             });
 
     queryService.deleteQuery(orga.getId(), repo1.getId(), query.getId());

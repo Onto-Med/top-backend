@@ -138,7 +138,7 @@ public abstract class QueryService {
   }
 
   /**
-   * Returns the result description of a query. If the query is still running, the result will only
+   * Returns a query and its result description. If the query is still running, the result will only
    * contain a creation timestamp and a state.
    *
    * <p>If authentication is enabled, users are required to have {@link Permission#WRITE} permission
@@ -151,29 +151,30 @@ public abstract class QueryService {
    */
   @PreAuthorize(
       "hasPermission(#organisationId, 'care.smith.top.backend.model.jpa.OrganisationDao', 'WRITE')")
-  public QueryResult getQueryResult(String organisationId, String repositoryId, UUID queryId) {
+  public Query getQueryById(String organisationId, String repositoryId, UUID queryId) {
     if (!repositoryRepository.existsByIdAndOrganisation_Id(repositoryId, organisationId))
       throw new ResponseStatusException(HttpStatus.NOT_FOUND);
 
-    QueryDao query =
+    QueryDao queryDao =
         queryRepository
             .findByRepository_OrganisationIdAndRepositoryIdAndId(
                 organisationId, repositoryId, queryId.toString())
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-    if (query.getResult() != null) return query.getResult().toApiModel();
-
-    QueryResult queryResult = new QueryResult().id(queryId);
-
-    try {
-      Job job = storageProvider.getJobById(queryId);
-      queryResult.createdAt(job.getCreatedAt().atOffset(ZoneOffset.UTC)).state(getState(job));
-      if (QueryState.FAILED.equals(queryResult.getState()))
-        queryResult.finishedAt(job.getUpdatedAt().atOffset(ZoneOffset.UTC));
-    } catch (JobNotFoundException ignored) {
+    Query query = queryDao.toApiModel();
+    if (queryDao.getResult() == null) {
+      QueryResult queryResult = new QueryResult().id(queryId);
+      try {
+        Job job = storageProvider.getJobById(queryId);
+        queryResult.createdAt(job.getCreatedAt().atOffset(ZoneOffset.UTC)).state(getState(job));
+        if (QueryState.FAILED.equals(queryResult.getState()))
+          queryResult.finishedAt(job.getUpdatedAt().atOffset(ZoneOffset.UTC));
+      } catch (JobNotFoundException ignored) {
+      }
+      query.result(queryResult);
     }
 
-    return queryResult;
+    return query;
   }
 
   /**
