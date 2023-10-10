@@ -24,16 +24,13 @@ for additional documentation.
     * `TERMINOLOGY_SERVICE_ENDPOINT`: endpoint of the Ontology Lookup Service to be used for code search, default
       to http://localhost:9000/api (OLS3 is currently supported)
 
-   Document related:
-    * `DB_NEO4J_HOST`: host running the neo4j database server, defaults to localhost
-    * `DB_NEO4J_PORT`: port of the neo4j database, defaults to 7687
-    * `DB_NEO4J_USER`: username for neo4j database, defaults to neo4j
-    * `DB_NEO4J_PASS`: password for neo4j database
-    * `DB_ELASTIC_HOST`: host running the Elasticsearch document storage, defaults to localhost
-    * `DB_ELASTIC_PORT`: port of the Elasticsearch document storage, defaults to 9200
+   Document related:  
+    * `DB_NEO4J_USER`: username for neo4j database, defaults to neo4j (will be overwritten by adapter value if specified)
+    * `DB_NEO4J_PASS`: password for neo4j database (will be overwritten by adapter value if specified)
+    * `DB_ELASTIC_USER`: username for elasticsearch database, defaults to elastic (will be overwritten by adapter value if specified)
+    * `DB_ELASTIC_PASS`: password for elasticsearch database (will be overwritten by adapter value if specified)  
     * `DB_ELASTIC_CONNECTION_TIMEOUT`: timeout in seconds, defaults to 1s
     * `DB_ELASTIC_SOCKET_TIMEOUT` timeout in seconds, defaults to 30s
-    * `DB_ELASTIC_INDEX` name of the document index, defaults to 'documents'
 
    OAuth2 related:
     * `OAUTH2_ENABLED`: enable or disable oauth2, defaults to `false`
