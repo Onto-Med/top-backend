@@ -9,6 +9,7 @@ import care.smith.top.backend.repository.jpa.ConceptRepository;
 import care.smith.top.backend.service.QueryService;
 import care.smith.top.model.*;
 import care.smith.top.top_document_query.adapter.*;
+import care.smith.top.top_document_query.adapter.config.TextAdapterConfig;
 import care.smith.top.top_document_query.converter.csv.DocumentCSV;
 import java.io.IOException;
 import java.nio.file.FileSystemException;
