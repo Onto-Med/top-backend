@@ -22,15 +22,19 @@ for additional documentation.
     * `QUERY_RESULT_DOWNLOAD_ENABLED`: whether users with write permission for a repository can download query results
       or not, defaults to true
     * `TERMINOLOGY_SERVICE_ENDPOINT`: endpoint of the Ontology Lookup Service to be used for code search, default
-      to http://localhost:9000/api (OLS3 is currently supported)
+      to http://localhost:9000/api (OLS3 is currently supported)  
 
    Document related:  
-    * `DB_NEO4J_USER`: username for neo4j database, defaults to neo4j (will be overwritten by adapter value if specified)
-    * `DB_NEO4J_PASS`: password for neo4j database (will be overwritten by adapter value if specified)
-    * `DB_ELASTIC_USER`: username for elasticsearch database, defaults to elastic (will be overwritten by adapter value if specified)
-    * `DB_ELASTIC_PASS`: password for elasticsearch database (will be overwritten by adapter value if specified)  
-    * `DB_ELASTIC_CONNECTION_TIMEOUT`: timeout in seconds, defaults to 1s
-    * `DB_ELASTIC_SOCKET_TIMEOUT` timeout in seconds, defaults to 30s
+   *(The following variables will be overwritten by their respective adapter values if specified)*  
+    * `DB_NEO4J_USER`: username for neo4j database, defaults to `neo4j`
+    * `DB_NEO4J_PASS`: password for neo4j database (should be declared here and not written into an adapter)
+    * `DB_ELASTIC_USER`: username for elasticsearch database, defaults to `elastic`
+    * `DB_ELASTIC_PASS`: password for elasticsearch database (should be declared here and not written into an adapter)
+
+   *(These are general configuration variables for the database that won't be declared in an adapter)*  
+    * `DB_ELASTIC_CONNECTION_TIMEOUT`: timeout in seconds, defaults to `1s`
+    * `DB_ELASTIC_SOCKET_TIMEOUT`: timeout in seconds, defaults to `30s`
+    * `DB_NEO4J_CONNECTION_TIMEOUT`: timeout in seconds, defaults to `30s`  
 
    OAuth2 related:
     * `OAUTH2_ENABLED`: enable or disable oauth2, defaults to `false`
