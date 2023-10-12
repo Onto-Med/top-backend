@@ -15,17 +15,11 @@ logging:
 
 spring:
   max-batch-size: 100
-#  neo4j:
-#    uri: bolt://${DB_NEO4J_HOST:localhost}:${DB_NEO4J_PORT:7687}
-#    authentication:
-#      username: ${DB_NEO4J_USER:neo4j}
-#      password: ${DB_NEO4J_PASS}
+  neo4j:
+    connection-timeout: ${DB_NEO4J_CONNECTION_TIMEOUT:30}s
   elasticsearch:
-#    uris: http://${DB_ELASTIC_HOST:localhost}:${DB_ELASTIC_PORT:9200}
     connection-timeout: ${DB_ELASTIC_CONNECTION_TIMEOUT:1}s
     socket-timeout: ${DB_ELASTIC_SOCKET_TIMEOUT:30}s
-#    index:
-#      name: ${DB_ELASTIC_INDEX:documents}
   jpa:
     hibernate:
       ddl-auto: validate
@@ -64,10 +58,10 @@ top:
   documents:
     data-source-config-dir: ${DOCUMENT_DATA_SOURCE_CONFIG_DIR:config/data_sources/nlp}
     security:
-      neo4j:
+      graphdb:
         username: ${DB_NEO4J_USER:neo4j}
         password: ${DB_NEO4J_PASS}
-      elasticsearch:
+      documentdb:
         username: ${DB_ELASTIC_USER:elastic}
         password: ${DB_ELASTIC_PASS}
 
