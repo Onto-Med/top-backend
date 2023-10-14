@@ -17,7 +17,6 @@ public class PhraseService implements ContentService {
 
   private final PhraseNodeRepository phraseRepository;
 
-  @Autowired
   public PhraseService(PhraseNodeRepository phraseRepository) {
     this.phraseRepository = phraseRepository;
   }

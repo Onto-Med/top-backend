@@ -13,7 +13,11 @@ import org.springframework.stereotype.Service;
 @Service
 public class PhraseApiDelegateImpl implements PhraseApiDelegate {
 
-  @Autowired PhraseService phraseService;
+  private final PhraseService phraseService;
+
+  public PhraseApiDelegateImpl(PhraseService phraseService) {
+    this.phraseService = phraseService;
+  }
 
   @Override
   public ResponseEntity<PhrasePage> getPhrasesByConceptClusterIds(

@@ -39,8 +39,14 @@ public class DocumentQueryService extends QueryService {
   @Value("${top.documents.data-source-config-dir:config/data_sources/nlp}")
   private String dataSourceConfigDir;
 
-  @Autowired private DocumentRepository documentRepository;
-  @Autowired private ConceptRepository conceptRepository;
+  private final DocumentRepository documentRepository;
+  private final ConceptRepository conceptRepository;
+
+  public DocumentQueryService(DocumentRepository documentRepository, ConceptRepository conceptRepository) {
+    this.documentRepository = documentRepository;
+    this.conceptRepository = conceptRepository;
+  }
+
 
   @Override
   @org.jobrunr.jobs.annotations.Job(name = "Document query", retries = 0)
