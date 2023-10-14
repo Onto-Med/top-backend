@@ -31,7 +31,6 @@ public class DocumentService implements ContentService {
   @Value("${spring.paging.page-size:10}")
   private int pageSize = 10;
 
-  @Autowired
   public DocumentService(
       DocumentRepository documentRepository, DocumentNodeRepository documentNodeRepository) {
     this.documentRepository = documentRepository;

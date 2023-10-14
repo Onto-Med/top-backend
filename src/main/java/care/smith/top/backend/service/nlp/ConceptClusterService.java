@@ -24,7 +24,6 @@ public class ConceptClusterService implements ContentService {
               .id(conceptEntity.conceptId())
               .labels(String.join(", ", conceptEntity.lables()));
 
-  @Autowired
   public ConceptClusterService(ConceptClusterNodeRepository conceptRepository) {
     this.conceptRepository = conceptRepository;
   }
