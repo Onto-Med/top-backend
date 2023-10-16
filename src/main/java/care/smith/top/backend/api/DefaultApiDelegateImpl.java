@@ -5,6 +5,7 @@ import care.smith.top.backend.service.OrganisationService;
 import care.smith.top.backend.service.RepositoryService;
 import care.smith.top.backend.service.nlp.DocumentService;
 import care.smith.top.model.*;
+import java.util.logging.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +13,8 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class DefaultApiDelegateImpl implements DefaultApiDelegate {
+  private final Logger LOGGER = Logger.getLogger(DefaultApiDelegateImpl.class.getName());
+
   @Autowired OrganisationService organisationService;
   @Autowired RepositoryService repositoryService;
   @Autowired EntityService entityService;
@@ -28,7 +31,8 @@ public class DefaultApiDelegateImpl implements DefaultApiDelegate {
     long documentCount = 0;
     try {
       documentCount = documentService.count();
-    } catch (Exception ignored) {
+    } catch (Throwable e) {
+      LOGGER.warning(e.getMessage());
     }
     Statistic statistic =
         new Statistic()
