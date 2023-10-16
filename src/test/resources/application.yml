@@ -8,6 +8,9 @@ logging:
     root: INFO
 
 spring:
+  spring:
+    concept-graph:
+      uri: http://localhost:9007
   neo4j:
     uri: bolt://${DB_NEO4J_HOST:localhost}:${DB_NEO4J_PORT:7687}
     authentication:
