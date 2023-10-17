@@ -57,4 +57,4 @@ top:
     data-source-config-dir: src/test/resources/config/data_sources/nlp
 
 coding:
-  terminology-service: ${TERMINOLOGY_SERVICE_ENDPOINT:https://www.ebi.ac.uk/ols/api}
+  terminology-service: ${TERMINOLOGY_SERVICE_ENDPOINT:http://localhost:9000/api}

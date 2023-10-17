@@ -1,0 +1,23 @@
+{
+  "ontologies": [
+    {
+      "id": "test",
+      "preferredPrefix": "TEST",
+      "title": "TOP Framework OLS 4 Terminology Service Test Ontology",
+      "uri": "https://top.smith.care/test/terminology",
+      "base_uri": [
+        "https://top.smith.care/test/terminology#"
+      ],
+      "label_property": [
+        "http://www.w3.org/2004/02/skos/core#prefLabel"
+      ],
+      "synonym_property": [
+        "http://www.w3.org/2004/02/skos/core#exactMatch",
+        "http://www.w3.org/2004/02/skos/core#altLabel"
+      ],
+      "reasoner": "OWL2",
+      "oboSlims": false,
+      "ontology_purl": "file:///opt/dataload/testcases/test.owl"
+    }
+  ]
+}
