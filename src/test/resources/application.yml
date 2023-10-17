@@ -8,9 +8,6 @@ logging:
     root: INFO
 
 spring:
-  spring:
-    concept-graph:
-      uri: http://localhost:9007
   neo4j:
     uri: bolt://${DB_NEO4J_HOST:localhost}:${DB_NEO4J_PORT:7687}
     authentication:
@@ -57,6 +54,8 @@ top:
     data-source-config-dir: src/test/resources/config/data_sources
     execute-queries: false
   documents:
+    concept-graphs-api:
+      uri: http://localhost:9007
     data-source-config-dir: src/test/resources/config/data_sources/nlp
 
 coding:

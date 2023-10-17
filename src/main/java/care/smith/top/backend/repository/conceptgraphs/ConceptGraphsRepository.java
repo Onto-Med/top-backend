@@ -1,46 +1,58 @@
 package care.smith.top.backend.repository.conceptgraphs;
 
+import care.smith.top.backend.model.conceptgraphs.ConceptGraphEntity;
 import care.smith.top.backend.model.conceptgraphs.ConceptGraphStatisticsEntity;
-import care.smith.top.model.ConceptGraphStat;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Repository;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.function.Function;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 @Repository
 public class ConceptGraphsRepository extends ConceptGraphsApi {
   private static final Logger LOGGER = Logger.getLogger(ConceptGraphsRepository.class.getName());
 
-  @Cacheable("conceptGraphStatistics")
-  public Map<String, ConceptGraphStat> getGraphStatisticsForProcess(String processName) {
-    ConceptGraphStatisticsEntity graphStatistics =
-        conceptGraphsApi
-            .get()
-            .uri(
-                uriBuilder ->
-                  uriBuilder
-                      .path(API_GRAPH_METHODS.STATISTICS.getEndpoint())
-                      .queryParam("process",processName)
-                      .build())
-            .retrieve()
-            .bodyToMono(ConceptGraphStatisticsEntity.class)
-            .block();
+  @Cacheable(value = "conceptGraphStoredProcesses", unless = " #result == null ")
+  public String[] getAllStoredProcesses() {
+    return null;
+  }
 
-    return Arrays.stream(Objects.requireNonNull(graphStatistics).getConceptGraphs())
-        .map(
-            graphStats ->
-                new ConceptGraphStat()
-                    .id(graphStats.getId())
-                    .nodes(graphStats.getNodes())
-                    .edges(graphStats.getEdges()))
-        .collect(
-            Collectors.toMap(
-              ConceptGraphStat::getId, Function.identity(), (existing, replacement) -> existing));
+  @Cacheable(value = "conceptGraphStatistics", unless = " #result == null ")
+  public ConceptGraphStatisticsEntity getGraphStatisticsForProcess(String processName) {
+    try {
+      return conceptGraphsApi
+              .get()
+              .uri(
+                  uriBuilder ->
+                      uriBuilder
+                          .path(API_GRAPH_METHODS.STATISTICS.getEndpoint())
+                          .queryParam("process", processName)
+                          .build())
+              .retrieve()
+              .bodyToMono(ConceptGraphStatisticsEntity.class)
+              .block();
+    } catch (WebClientResponseException e) {
+      LOGGER.warning(e.getResponseBodyAsString() + " -- " + e.getMessage());
+      return null;
+    }
+  }
+
+  public ConceptGraphEntity getGraphForIdAndProcess(String id, String processName) {
+    try {
+      return conceptGraphsApi
+              .get()
+              .uri(
+                  uriBuilder ->
+                      uriBuilder
+                          .path(API_GRAPH_METHODS.GRAPH.getEndpoint(id))
+                          .queryParam("process", processName)
+                          .build())
+              .retrieve()
+              .bodyToMono(ConceptGraphEntity.class)
+              .block();
+    } catch (WebClientResponseException e) {
+      LOGGER.warning(e.getResponseBodyAsString() + " -- " + e.getMessage());
+      return null;
+    }
   }
 }

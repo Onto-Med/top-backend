@@ -1,11 +1,16 @@
 package care.smith.top.backend.service.nlp;
 
+import care.smith.top.backend.model.conceptgraphs.GraphStatsEntity;
 import care.smith.top.backend.repository.conceptgraphs.ConceptGraphsRepository;
 import care.smith.top.backend.service.ContentService;
+import care.smith.top.model.ConceptGraph;
 import care.smith.top.model.ConceptGraphStat;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 public class ConceptGraphsService implements ContentService {
@@ -21,8 +26,18 @@ public class ConceptGraphsService implements ContentService {
     return 0;
   }
 
-  public void getAllConceptGraphStatistics(String processName) {
-    Map<String, ConceptGraphStat> map = conceptGraphsRepository.getGraphStatisticsForProcess(processName);
-    System.out.println();
+  public Map<String, ConceptGraphStat> getAllConceptGraphStatistics(String processName) {
+      return Arrays.stream(conceptGraphsRepository.getGraphStatisticsForProcess(processName).getConceptGraphs())
+          .map(GraphStatsEntity::toApiModel)
+          .collect(
+              Collectors.toMap(
+                  ConceptGraphStat::getId,
+                  Function.identity(),
+                  (existing, replacement) -> existing)
+          );
+  }
+
+  public ConceptGraph getConceptGraphForIdAndProcess(String id, String process) {
+    return conceptGraphsRepository.getGraphForIdAndProcess(id, process).toApiModel();
   }
 }
