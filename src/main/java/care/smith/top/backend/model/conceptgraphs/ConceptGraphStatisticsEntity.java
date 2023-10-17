@@ -1,5 +1,7 @@
 package care.smith.top.backend.model.conceptgraphs;
 
+import care.smith.top.model.ConceptGraphStat;
+
 public class ConceptGraphStatisticsEntity {
   private int numberOfGraphs;
   private GraphStatsEntity[] conceptGraphs;

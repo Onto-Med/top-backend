@@ -30,7 +30,7 @@ public class DocumentQueryConfigMap {
   private static final String SPRING_NEO4J_URI_PROP = "spring.neo4j.uri";
   private static final String SPRING_NEO4J_USERNAME_PROP = "spring.neo4j.authentication.username";
   private static final String SPRING_NEO4J_PASSWORD_PROP = "spring.neo4j.authentication.password";
-  private static final String SPRING_CONCEPT_GRAPH_URI_PROP = "spring.concept-graph.uri";
+  private static final String SPRING_CONCEPT_GRAPH_URI_PROP = "top.documents.concept-graphs-api.uri";
   private static final String TOP_SECURITY_GRAPHDB_USERNAME = "top.documents.security.graphdb.username";
   private static final String TOP_SECURITY_GRAPHDB_PASSWORD = "top.documents.security.graphdb.password";
   private static final String TOP_SECURITY_DOCUMENTDB_USERNAME = "top.documents.security.documentdb.username";

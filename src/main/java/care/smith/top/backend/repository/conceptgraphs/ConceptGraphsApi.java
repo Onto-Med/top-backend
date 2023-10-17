@@ -9,11 +9,12 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.Objects;
 
-abstract class ConceptGraphsApi {
+public abstract class ConceptGraphsApi {
   protected WebClient conceptGraphsApi;
 
   @Autowired
-  public void setConceptGraphApiEndpoint(@Value("spring.concept-graph.uri") String conceptGraphApiEndpoint) {
+  public void setConceptGraphApiEndpoint(
+      @Value("${top.documents.concept-graphs-api.uri}") String conceptGraphApiEndpoint) {
     int size = 16 * 1024 * 1024;
     ExchangeStrategies exchangeStrategies =
         ExchangeStrategies.builder()
@@ -35,10 +36,10 @@ abstract class ConceptGraphsApi {
     private String endpoint;
 
     API_GRAPH_METHODS(String endpoint) {
-      this.endpoint = endpoint;
+      this.setEndpoint(endpoint);
     }
 
-    public String getEndpoint(int graphId) {
+    public String getEndpoint(String graphId) {
       if (Objects.equals(endpoint, GRAPH.endpoint)) return endpoint + graphId;
       return endpoint;
     }

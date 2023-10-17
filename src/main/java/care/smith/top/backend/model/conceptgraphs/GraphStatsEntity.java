@@ -1,5 +1,7 @@
 package care.smith.top.backend.model.conceptgraphs;
 
+import care.smith.top.model.ConceptGraphStat;
+
 public class GraphStatsEntity {
   private String id;
   private int edges;
@@ -27,5 +29,12 @@ public class GraphStatsEntity {
 
   public void setNodes(int nodes) {
     this.nodes = nodes;
+  }
+
+  public ConceptGraphStat toApiModel() {
+    return new ConceptGraphStat()
+        .id(this.getId())
+        .edges(this.getEdges())
+        .nodes(this.getNodes());
   }
 }
