@@ -15,18 +15,20 @@ import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
 /**
  * @author ralph
  */
 @Service
+@Primary
 public class OLSCodeService {
   @Value("${spring.paging.page-size:10}")
   private int ontologyPageSize;
 
-  @Autowired private CodeSystemRepository codeSystemRepository;
-  @Autowired private CodeRepository codeRepository;
+  @Autowired protected CodeSystemRepository codeSystemRepository;
+  @Autowired protected CodeRepository codeRepository;
 
   @NotNull
   private static Predicate<CodeSystem> filterByName(String name) {
