@@ -5,7 +5,7 @@ services:
       volumes:
         - ols4-solr-data:/opt/solr/server/solr:rw
         - ols4-neo4j-data:/opt/neo4j/data:rw
-        - ./${OLS4_CONFIG:?OLS4 dataload requires a config file}:/mnt/config.json:ro
+        - ${OLS4_CONFIG}:/mnt/config.json:ro
         - ./testcases:/opt/dataload/testcases:ro
           #- ./docker_out:/tmp/out:rw
       command: ./dataload.dockersh ${OLS4_DATALOAD_ARGS:-}
@@ -30,8 +30,6 @@ services:
           condition: service_completed_successfully
     ols4-backend:
       build: ./backend
-#      ports:
-#        - 9000:8080
       environment:
         - OLS_SOLR_HOST=http://ols4-solr:8983
         - OLS_NEO4J_HOST=bolt://ols4-neo4j:7687
