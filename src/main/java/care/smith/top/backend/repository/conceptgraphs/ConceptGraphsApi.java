@@ -28,6 +28,24 @@ public abstract class ConceptGraphsApi {
             .build();
   }
 
+  public enum API_PROCESS_METHODS {
+    STATISTICS("/processes");
+
+    private String endpoint;
+
+    API_PROCESS_METHODS(String endpoint) {
+      this.setEndpoint(endpoint);
+    }
+
+    public String getEndpoint() {
+      return endpoint;
+    }
+
+    public void setEndpoint(String endpoint) {
+      this.endpoint = endpoint;
+    }
+  }
+
   public enum API_GRAPH_METHODS {
     CREATION("/graph/creation"),
     STATISTICS("/graph/statistics"),
@@ -60,7 +78,7 @@ public abstract class ConceptGraphsApi {
     private String endpoint;
 
     API_PIPELINE_METHODS(String endpoint) {
-      this.endpoint = endpoint;
+      this.setEndpoint(endpoint);
     }
 
     public String getEndpoint() {

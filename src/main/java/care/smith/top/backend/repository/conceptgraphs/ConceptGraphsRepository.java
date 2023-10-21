@@ -2,6 +2,7 @@ package care.smith.top.backend.repository.conceptgraphs;
 
 import care.smith.top.backend.model.conceptgraphs.ConceptGraphEntity;
 import care.smith.top.backend.model.conceptgraphs.ConceptGraphStatisticsEntity;
+import care.smith.top.backend.model.conceptgraphs.ProcessOverviewEntity;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
@@ -13,8 +14,18 @@ public class ConceptGraphsRepository extends ConceptGraphsApi {
   private static final Logger LOGGER = Logger.getLogger(ConceptGraphsRepository.class.getName());
 
   @Cacheable(value = "conceptGraphStoredProcesses", unless = " #result == null ")
-  public String[] getAllStoredProcesses() {
-    return null;
+  public ProcessOverviewEntity getAllStoredProcesses() {
+    try {
+      return conceptGraphsApi
+          .get()
+          .uri(uriBuilder -> uriBuilder.path(API_PROCESS_METHODS.STATISTICS.getEndpoint()).build())
+          .retrieve()
+          .bodyToMono(ProcessOverviewEntity.class)
+          .block();
+    } catch (WebClientResponseException e) {
+      LOGGER.warning(e.getResponseBodyAsString() + " -- " + e.getMessage());
+      return null;
+    }
   }
 
   @Cacheable(value = "conceptGraphStatistics", unless = " #result == null ")

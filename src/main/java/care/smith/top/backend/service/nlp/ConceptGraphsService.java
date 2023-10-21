@@ -4,10 +4,12 @@ import care.smith.top.backend.model.conceptgraphs.GraphStatsEntity;
 import care.smith.top.backend.repository.conceptgraphs.ConceptGraphsRepository;
 import care.smith.top.backend.service.ContentService;
 import care.smith.top.model.ConceptGraph;
+import care.smith.top.model.ConceptGraphProcess;
 import care.smith.top.model.ConceptGraphStat;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -23,7 +25,7 @@ public class ConceptGraphsService implements ContentService {
 
   @Override
   public long count() {
-    return 0;
+    return Arrays.stream(conceptGraphsRepository.getAllStoredProcesses().getProcesses()).count();
   }
 
   public Map<String, ConceptGraphStat> getAllConceptGraphStatistics(String processName) {
@@ -39,5 +41,10 @@ public class ConceptGraphsService implements ContentService {
 
   public ConceptGraph getConceptGraphForIdAndProcess(String id, String process) {
     return conceptGraphsRepository.getGraphForIdAndProcess(id, process).toApiModel();
+  }
+
+  public List<ConceptGraphProcess> getAllStoredProcesses() {
+    List<ConceptGraphProcess> processes = conceptGraphsRepository.getAllStoredProcesses().toApiModel();
+    return processes;
   }
 }
