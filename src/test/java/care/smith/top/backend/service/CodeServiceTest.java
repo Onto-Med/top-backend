@@ -1,7 +1,15 @@
 package care.smith.top.backend.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import care.smith.top.model.CodePage;
 import care.smith.top.model.CodeSystemPage;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Collections;
+import java.util.logging.Logger;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -14,15 +22,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.testcontainers.containers.DockerComposeContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Collections;
-import java.util.logging.Logger;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author ralph
