@@ -63,7 +63,7 @@ public class PhenotypeQueryService extends QueryService {
     queryRepository.save(new QueryDao(query).repository(repository));
     jobScheduler.enqueue(queryId, () -> this.executeQuery(queryId));
 
-    return getQueryResult(organisationId, repositoryId, queryId);
+    return getQueryById(organisationId, repositoryId, queryId).getResult();
   }
 
   @Override
