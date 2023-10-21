@@ -7,8 +7,8 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class MutableOLSCodeService extends OLSCodeService {
-    public void setEndpoint(String endpoint) {
-        codeSystemRepository.setTerminologyServiceEndpoint(endpoint);
-        codeRepository.setTerminologyServiceEndpoint(endpoint);
-    }
+  public void setEndpoint(String endpoint) {
+    codeSystemRepository.setTerminologyServiceEndpoint(endpoint);
+    codeRepository.setTerminologyServiceEndpoint(endpoint);
+  }
 }

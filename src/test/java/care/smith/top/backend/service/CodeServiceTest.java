@@ -32,13 +32,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class CodeServiceTest extends AbstractTest {
 
-  @Autowired
-  private MutableOLSCodeService codeService;
+  @Autowired private MutableOLSCodeService codeService;
 
   private DockerComposeContainer olsContainer;
 
   private static final Logger LOGGER = Logger.getLogger(CodeServiceTest.class.getName());
-  
+
   @BeforeAll
   void initializeOLS() throws GitAPIException, IOException {
 
@@ -46,29 +45,35 @@ public class CodeServiceTest extends AbstractTest {
     olsSourcePath.toFile().deleteOnExit();
 
     File dockerComposeFile = olsSourcePath.resolve("docker-compose.yml").toFile();
-    File testOntologyConfigFile = olsSourcePath.resolve("dataload/configs/test-ontology.json").toFile();
+    File testOntologyConfigFile =
+        olsSourcePath.resolve("dataload/configs/test-ontology.json").toFile();
 
     LOGGER.info(String.format("**** Cloning OLS 4 repo to %s", olsSourcePath));
 
-    try (Git git = Git.cloneRepository()
+    try (Git git =
+        Git.cloneRepository()
             .setURI("https://github.com/EBISPOT/ols4.git")
             .setDirectory(olsSourcePath.toFile())
             .call()) {
       LOGGER.info("**** Copying files...");
 
-      FileUtils.copyInputStreamToFile(CodeServiceTest.class.getResourceAsStream("/ols4/docker-compose.yml"), dockerComposeFile);
-      FileUtils.copyInputStreamToFile(CodeServiceTest.class.getResourceAsStream("/ols4/test.owl"), olsSourcePath.resolve("testcases/test.owl").toFile());
-      FileUtils.copyInputStreamToFile(CodeServiceTest.class.getResourceAsStream("/ols4/test-ontology.json"), testOntologyConfigFile);
+      FileUtils.copyInputStreamToFile(
+          CodeServiceTest.class.getResourceAsStream("/ols4/docker-compose.yml"), dockerComposeFile);
+      FileUtils.copyInputStreamToFile(
+          CodeServiceTest.class.getResourceAsStream("/ols4/test.owl"),
+          olsSourcePath.resolve("testcases/test.owl").toFile());
+      FileUtils.copyInputStreamToFile(
+          CodeServiceTest.class.getResourceAsStream("/ols4/test-ontology.json"),
+          testOntologyConfigFile);
 
-      olsContainer = new DockerComposeContainer(dockerComposeFile)
+      olsContainer =
+          new DockerComposeContainer(dockerComposeFile)
               .withLocalCompose(true)
               .withOptions("--compatibility")
               .withEnv("OLS4_CONFIG", testOntologyConfigFile.getAbsolutePath())
               .withServices("ols4-dataload", "ols4-solr", "ols4-neo4j", "ols4-backend")
-              .withExposedService("ols4-backend", 8080,
-                      Wait.forHttp("/api")
-                              .forStatusCode(200)
-                              .forStatusCode(401));
+              .withExposedService(
+                  "ols4-backend", 8080, Wait.forHttp("/api").forStatusCode(200).forStatusCode(401));
 
       LOGGER.info("**** Starting OLS4 container...");
 
@@ -88,8 +93,7 @@ public class CodeServiceTest extends AbstractTest {
 
   @Test
   void getSuggestions() {
-    CodePage suggestions =
-        codeService.getCodeSuggestions(null, "term", Collections.emptyList(), 1);
+    CodePage suggestions = codeService.getCodeSuggestions(null, "term", Collections.emptyList(), 1);
     assertThat(suggestions).isNotNull().satisfies(s -> assertThat(s.getContent()).isNotEmpty());
   }
 
