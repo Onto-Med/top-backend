@@ -1,0 +1,58 @@
+{
+  "responseHeader": {
+    "status": 0,
+    "QTime": 6,
+    "params": {
+      "hl": "true",
+      "fl": "id,iri,short_form,ontology_name,label,synonym",
+      "start": "0",
+      "fq": "is_obsolete:false",
+      "rows": "10",
+      "hl.simple.pre": "<b>",
+      "bq": "type:ontology^10.0 is_defining_ontology:true^100.0 label_s:\"term\"^1000  label_autosuggest_e:\"term\"^500 synonym_s:\"term\" synonym_autosuggest_e:\"term\"^100",
+      "q": "term",
+      "defType": "edismax",
+      "hl.simple.post": "</b>",
+      "qf": "label synonym label_autosuggest_e label_autosuggest synonym_autosuggest_e synonym_autosuggest shortform_autosuggest iri",
+      "hl.fl": [
+        "label_autosuggest",
+        "label",
+        "synonym_autosuggest",
+        "synonym"
+      ],
+      "wt": "json"
+    }
+  },
+  "response": {
+    "numFound": 7410,
+    "start": 0,
+    "docs": [
+      {
+        "id": "test:class:http://top.smith.care/test/terminology#term",
+        "iri": "http://top.smith.care/test/terminology#term",
+        "short_form": "TERM",
+        "label": "Term",
+        "synonym": [
+          "Term"
+        ],
+        "ontology_name": "test"
+      }
+    ]
+  },
+  "highlighting": {
+    "test:class:http://top.smith.care/test/terminology#term": {
+      "label_autosuggest": [
+        "<b>Term</b>"
+      ],
+      "label": [
+        "<b>Term</b>"
+      ],
+      "synonym_autosuggest": [
+        "<b>Term</b>"
+      ],
+      "synonym": [
+        "<b>Term</b>"
+      ]
+    }
+  }
+}

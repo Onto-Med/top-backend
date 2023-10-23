@@ -4,15 +4,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import care.smith.top.model.CodePage;
 import care.smith.top.model.CodeSystemPage;
-import java.io.File;
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
+import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
 import java.util.Collections;
-import java.util.logging.Logger;
-import org.apache.commons.io.FileUtils;
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.errors.GitAPIException;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -20,8 +20,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.testcontainers.containers.DockerComposeContainer;
-import org.testcontainers.containers.wait.strategy.Wait;
 
 /**
  * @author ralph
@@ -30,64 +28,26 @@ import org.testcontainers.containers.wait.strategy.Wait;
 @ExtendWith(SpringExtension.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class CodeServiceTest extends AbstractTest {
-
   @Autowired private MutableOLSCodeService codeService;
-
-  private DockerComposeContainer olsContainer;
-
-  private static final Logger LOGGER = Logger.getLogger(CodeServiceTest.class.getName());
+  private HttpServer olsServer;
 
   @BeforeAll
-  void initializeOLS() throws GitAPIException, IOException {
+  void initializeOLS() throws IOException {
+    InetSocketAddress address = new InetSocketAddress(9000);
 
-    Path olsSourcePath = Files.createTempDirectory("top-code-test-ols4");
-    olsSourcePath.toFile().deleteOnExit();
+    olsServer = HttpServer.create(address, 0);
+    olsServer.createContext(
+        "/api/ontologies", new OlsHttpHandler("/ols4_fixtures/ontologies.json"));
+    olsServer.createContext("/api/select", new OlsHttpHandler("/ols4_fixtures/select.json"));
+    olsServer.start();
 
-    File dockerComposeFile = olsSourcePath.resolve("docker-compose.yml").toFile();
-    File testOntologyConfigFile =
-        olsSourcePath.resolve("dataload/configs/test-ontology.json").toFile();
+    String endpoint = String.format("http://127.0.0.1:%d/api", address.getPort());
+    codeService.setEndpoint(endpoint);
+  }
 
-    LOGGER.info(String.format("**** Cloning OLS 4 repo to %s", olsSourcePath));
-
-    try (Git git =
-        Git.cloneRepository()
-            .setURI("https://github.com/EBISPOT/ols4.git")
-            .setDirectory(olsSourcePath.toFile())
-            .call()) {
-      LOGGER.info("**** Copying files...");
-
-      FileUtils.copyInputStreamToFile(
-          CodeServiceTest.class.getResourceAsStream("/ols4/docker-compose.yml"), dockerComposeFile);
-      FileUtils.copyInputStreamToFile(
-          CodeServiceTest.class.getResourceAsStream("/ols4/test.owl"),
-          olsSourcePath.resolve("testcases/test.owl").toFile());
-      FileUtils.copyInputStreamToFile(
-          CodeServiceTest.class.getResourceAsStream("/ols4/test-ontology.json"),
-          testOntologyConfigFile);
-
-      olsContainer =
-          new DockerComposeContainer(dockerComposeFile)
-              .withLocalCompose(true)
-              .withOptions("--compatibility")
-              .withEnv("OLS4_CONFIG", testOntologyConfigFile.getAbsolutePath())
-              .withServices("ols4-dataload", "ols4-solr", "ols4-neo4j", "ols4-backend")
-              .withExposedService(
-                  "ols4-backend", 8080, Wait.forHttp("/api").forStatusCode(200).forStatusCode(401));
-
-      LOGGER.info("**** Starting OLS4 container...");
-
-      olsContainer.start();
-
-      LOGGER.info("**** OLS4 container started.");
-
-      int olsExternalPort = olsContainer.getServicePort("ols4-backend", 8080);
-
-      LOGGER.info(String.format("OLS4 API port: %d", olsExternalPort));
-
-      String endpoint = String.format("http://localhost:%d/api", olsExternalPort);
-
-      codeService.setEndpoint(endpoint);
-    }
+  @AfterAll
+  void stopOLS() {
+    olsServer.stop(0);
   }
 
   @Test
@@ -100,5 +60,25 @@ public class CodeServiceTest extends AbstractTest {
   void getCodeSystems() {
     CodeSystemPage codeSystems = codeService.getCodeSystems(null, null, null, 1);
     assertThat(codeSystems).isNotNull().satisfies(cs -> assertThat(cs.getContent()).isNotEmpty());
+  }
+
+  static class OlsHttpHandler implements HttpHandler {
+    private final String resourcePath;
+
+    public OlsHttpHandler(String resourcePath) {
+      this.resourcePath = resourcePath;
+    }
+
+    @Override
+    public void handle(HttpExchange exchange) throws IOException {
+      try (InputStream resource = CodeServiceTest.class.getResourceAsStream(resourcePath)) {
+        assert resource != null;
+        byte[] response = resource.readAllBytes();
+        exchange.getResponseHeaders().set("Content-Type", "application/json");
+        exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, response.length);
+        exchange.getResponseBody().write(response);
+      }
+      exchange.close();
+    }
   }
 }
