@@ -1,0 +1,58 @@
+databaseChangeLog:
+- changeSet:
+    id: 1698074771922-8
+    author: ChristophB (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: organisation_data_sourcePK
+            name: data_source_id
+            type: VARCHAR(255)
+        - column:
+            name: created_at
+            type: TIMESTAMP
+        - column:
+            name: md5hash
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: organisation_data_sourcePK
+            name: organisation_id
+            type: VARCHAR(255)
+        - column:
+            name: user_id
+            type: VARCHAR(255)
+        tableName: organisation_data_source
+- changeSet:
+    id: 1698074771922-9
+    author: ChristophB (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: organisation_id
+        baseTableName: organisation_data_source
+        constraintName: FKfay3qfmr5qoe7c5vrdgae2mb6
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: id
+        referencedTableName: organisation
+        validate: true
+- changeSet:
+    id: 1698074771922-10
+    author: ChristophB (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: user_id
+        baseTableName: organisation_data_source
+        constraintName: FKp8jp3xh43j6r08kbbtp6bs6s2
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: id
+        referencedTableName: user_table
+        validate: true
+

@@ -21,6 +21,7 @@ import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -82,6 +83,7 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
   }
 
   @Override
+  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<List<DataSource>> getDataSources(QueryType queryType) {
     List<DataSource> dataSources = new ArrayList<>();
     switch (queryType) {
@@ -96,6 +98,24 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
         break;
     }
     return new ResponseEntity<>(dataSources, HttpStatus.OK);
+  }
+
+  @Override
+  @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<Void> addOrganisationDataSource(String organisationId, String body) {
+    return QueryApiDelegate.super.addOrganisationDataSource(organisationId, body);
+  }
+
+  @Override
+  @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<List<DataSource>> getOrganisationDataSources(String organisationId) {
+    return QueryApiDelegate.super.getOrganisationDataSources(organisationId);
+  }
+
+  @Override
+  @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<Void> removeOrganisationDataSource(String organisationId, String body) {
+    return QueryApiDelegate.super.removeOrganisationDataSource(organisationId, body);
   }
 
   @Override
