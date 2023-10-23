@@ -1,0 +1,79 @@
+{
+  "_embedded": {
+    "ontologies": [
+      {
+        "ontologyId": "test",
+        "loaded": null,
+        "updated": "2023-10-09T08:56:21.067+0000",
+        "status": "TOLOAD",
+        "message": "No ontology loaded",
+        "version": null,
+        "fileHash": "",
+        "loadAttempts": 0,
+        "numberOfTerms": 0,
+        "numberOfProperties": 0,
+        "numberOfIndividuals": 0,
+        "config": {
+          "id": "https://top.smith.care/test/terminology/",
+          "versionIri": null,
+          "namespace": "test",
+          "preferredPrefix": "TEST",
+          "title": null,
+          "localizedTitles": null,
+          "description": null,
+          "localizedDescriptions": null,
+          "homepage": null,
+          "version": null,
+          "mailingList": null,
+          "tracker": null,
+          "logo": null,
+          "creators": [],
+          "fileLocation": null,
+          "reasonerType": "NONE",
+          "oboSlims": false,
+          "labelProperty": "http://www.w3.org/2004/02/skos/core#prefLabel",
+          "definitionProperties": [
+            "http://purl.obolibrary.org/obo/IAO_0000115"
+          ],
+          "synonym_property": [
+            "http://www.w3.org/2004/02/skos/core#exactMatch",
+            "http://www.w3.org/2004/02/skos/core#altLabel"
+          ],
+          "hierarchicalProperties": null,
+          "baseUris": null,
+          "hiddenProperties": [],
+          "preferredRootTerms": [],
+          "languages": null,
+          "allowDownload": true,
+          "internalMetadataProperties": [],
+          "skos": false
+        },
+        "_links": {
+          "self": {
+            "href": "http://localhost:9000/ols/api/ontologies/test"
+          },
+          "terms": {
+            "href": "http://localhost:9000/ols/api/ontologies/test/terms"
+          },
+          "properties": {
+            "href": "http://localhost:9000/ols/api/ontologies/test/properties"
+          },
+          "individuals": {
+            "href": "http://localhost:9000/ols/api/ontologies/test/individuals"
+          }
+        }
+      }
+    ]
+  },
+  "_links": {
+    "self": {
+      "href": "http://localhost:9000/ols/api/ontologies"
+    }
+  },
+  "page": {
+    "size": 1000,
+    "totalElements": 1,
+    "totalPages": 1,
+    "number": 0
+  }
+}
