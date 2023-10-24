@@ -21,6 +21,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 import java.io.File;
+import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Logger;
 
@@ -88,8 +89,42 @@ public class ConceptGraphsRepository extends ConceptGraphsApi {
       @Nullable String language,
       @Nullable Boolean skipPresent
   ) {
+    return startPipelineForDataAndLabelsAndConfigs(data, null, processName, language, skipPresent, null);
+  }
+
+  public ConceptGraphStatisticsEntity startPipelineForDataAndLabels(
+      @Nonnull File data,
+      @Nonnull File labels,
+      @Nonnull String processName,
+      @Nullable String language,
+      @Nullable Boolean skipPresent
+  ) {
+    return startPipelineForDataAndLabelsAndConfigs(data, labels, processName, language, skipPresent, null);
+  }
+
+  public ConceptGraphStatisticsEntity startPipelineForDataAndConfigs(
+      @Nonnull File data,
+      @Nullable String processName,
+      @Nullable String language,
+      @Nullable Boolean skipPresent,
+      @Nonnull Map<String, File> configs
+  ) {
+      return startPipelineForDataAndLabelsAndConfigs(data, null, processName, language, skipPresent, configs);
+    }
+
+  public ConceptGraphStatisticsEntity startPipelineForDataAndLabelsAndConfigs(
+      @Nonnull File data,
+      File labels,
+      @Nullable String processName,
+      @Nullable String language,
+      @Nullable Boolean skipPresent,
+      Map<String, File> configs
+  ) {
     MultiValueMap<String, Object> parts = new LinkedMultiValueMap<>();
     parts.add("data", new FileSystemResource(data));
+    if (labels != null) parts.add("labels", new FileSystemResource(labels));
+    if (configs != null && !configs.isEmpty()) configs.forEach( (name, file) -> parts.add(name + "_config", new FileSystemResource(file)));
+
     try {
       Mono<ConceptGraphStatisticsEntity> apiResponse = conceptGraphsApi
           .post()
@@ -104,42 +139,12 @@ public class ConceptGraphsRepository extends ConceptGraphsApi {
           .body(BodyInserters.fromMultipartData(parts))
           .retrieve()
           .bodyToMono(ConceptGraphStatisticsEntity.class);
+      // ToDo: if I want to do something different when Response status != 200
 //          .exchangeToMono(response -> response.bodyToMono(ConceptGraphStatisticsEntity.class));
       return apiResponse.block(); //ToDo: now I need some way of accessing the status of the pipeline...
     } catch (WebClientResponseException e) {
       LOGGER.warning(e.getResponseBodyAsString() + " -- " + e.getMessage());
       return null;
     }
-  }
-
-  public String startPipelineForDataAndLabels(
-      Object data,
-      Object labels,
-      String processName,
-      @Nullable String language,
-      @Nullable Boolean skipPresent
-  ) {
-    return null;
-  }
-
-  public String startPipelineForDataAndConfigs(
-      Object data,
-      @Nullable String processName,
-      @Nullable String language,
-      @Nullable Boolean skipPresent,
-      Object... configs
-  ) {
-      return null;
-    }
-
-  public String startPipelineForDataAndLabelsAndConfigs(
-      Object data,
-      Object labels,
-      @Nullable String processName,
-      @Nullable String language,
-      @Nullable Boolean skipPresent,
-      Object... configs
-  ) {
-    return null;
   }
 }
