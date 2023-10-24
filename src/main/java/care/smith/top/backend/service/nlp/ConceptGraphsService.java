@@ -8,6 +8,7 @@ import care.smith.top.model.ConceptGraphProcess;
 import care.smith.top.model.ConceptGraphStat;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -44,7 +45,18 @@ public class ConceptGraphsService implements ContentService {
   }
 
   public List<ConceptGraphProcess> getAllStoredProcesses() {
-    List<ConceptGraphProcess> processes = conceptGraphsRepository.getAllStoredProcesses().toApiModel();
-    return processes;
+    return conceptGraphsRepository.getAllStoredProcesses().toApiModel();
+  }
+
+  public Map<String, ConceptGraphStat> initPipeline(File data, String processName) {
+    return Arrays.stream(conceptGraphsRepository.startPipelineForData(data, processName, null, null)
+        .getConceptGraphs())
+        .map(GraphStatsEntity::toApiModel)
+        .collect(
+            Collectors.toMap(
+                ConceptGraphStat::getId,
+                Function.identity(),
+                (existing, replacement) -> existing)
+        );
   }
 }

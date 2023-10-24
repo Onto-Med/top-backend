@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class ConceptGraphApiDelegateImpl implements ConceptgraphsApiDelegate {
@@ -19,18 +20,18 @@ public class ConceptGraphApiDelegateImpl implements ConceptgraphsApiDelegate {
   }
 
   @Override
-  public ResponseEntity<List<ConceptGraphStat>> getConceptGraphStatistics(List<String> include, String process) {
-    return ConceptgraphsApiDelegate.super.getConceptGraphStatistics(include, process);
+  public ResponseEntity<Map<String, ConceptGraphStat>> getConceptGraphStatistics(List<String> include, String process) {
+    return ResponseEntity.ok(conceptGraphsService.getAllConceptGraphStatistics(process));
   }
 
   @Override
   public ResponseEntity<ConceptGraph> getConceptGraph(List<String> include, String processId, String graphId) {
-    return ConceptgraphsApiDelegate.super.getConceptGraph(include, processId, graphId);
+    return ResponseEntity.ok(
+        conceptGraphsService.getConceptGraphForIdAndProcess(graphId, processId));
   }
 
   @Override
   public ResponseEntity<List<ConceptGraphProcess>> getStoredProcesses(List<String> include) {
-    conceptGraphsService.getAllStoredProcesses();
-    return ConceptgraphsApiDelegate.super.getStoredProcesses(include);
+    return ResponseEntity.ok(conceptGraphsService.getAllStoredProcesses());
   }
 }

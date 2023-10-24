@@ -29,7 +29,7 @@ public abstract class ConceptGraphsApi {
   }
 
   public enum API_PROCESS_METHODS {
-    STATISTICS("/processes");
+    ALL("/processes");
 
     private String endpoint;
 
