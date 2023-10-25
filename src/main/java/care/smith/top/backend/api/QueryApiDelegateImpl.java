@@ -1,6 +1,7 @@
 package care.smith.top.backend.api;
 
 import care.smith.top.backend.repository.jpa.QueryRepository;
+import care.smith.top.backend.service.OrganisationService;
 import care.smith.top.backend.service.PhenotypeQueryService;
 import care.smith.top.backend.service.QueryService;
 import care.smith.top.backend.service.nlp.DocumentQueryService;
@@ -9,10 +10,7 @@ import care.smith.top.model.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystemException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
@@ -29,6 +27,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class QueryApiDelegateImpl implements QueryApiDelegate {
   @Autowired private PhenotypeQueryService phenotypeQueryService;
   @Autowired private DocumentQueryService documentQueryService;
+  @Autowired private OrganisationService organisationService;
   @Autowired private QueryRepository queryRepository;
 
   @Override
@@ -85,37 +84,32 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
   @Override
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<List<DataSource>> getDataSources(QueryType queryType) {
-    List<DataSource> dataSources = new ArrayList<>();
-    switch (queryType) {
-      case PHENOTYPE:
-        dataSources = phenotypeQueryService.getDataSources();
-        break;
-      case CONCEPT:
-        dataSources = documentQueryService.getDataSources();
-        break;
-      default:
-        phenotypeQueryService.getDataSources().addAll(documentQueryService.getDataSources());
-        break;
-    }
-    return new ResponseEntity<>(dataSources, HttpStatus.OK);
+    return new ResponseEntity<>(new ArrayList<>(loadDataSources(queryType)), HttpStatus.OK);
   }
 
   @Override
-  @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<Void> addOrganisationDataSource(String organisationId, String body) {
-    return QueryApiDelegate.super.addOrganisationDataSource(organisationId, body);
+  public ResponseEntity<Void> addOrganisationDataSource(
+      String organisationId, DataSource dataSource) {
+    organisationService.addOrganisationDataSource(organisationId, dataSource);
+    return new ResponseEntity<>(HttpStatus.CREATED);
   }
 
   @Override
-  @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<List<DataSource>> getOrganisationDataSources(String organisationId) {
-    return QueryApiDelegate.super.getOrganisationDataSources(organisationId);
+  public ResponseEntity<List<DataSource>> getOrganisationDataSources(
+      String organisationId, QueryType queryType) {
+    Collection<String> ids =
+        organisationService.getOrganisationDataSourceIds(organisationId, queryType);
+    return ResponseEntity.ok(
+        loadDataSources(queryType).stream()
+            .filter(ds -> ids.contains(ds.getId()))
+            .collect(Collectors.toList()));
   }
 
   @Override
-  @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<Void> removeOrganisationDataSource(String organisationId, String body) {
-    return QueryApiDelegate.super.removeOrganisationDataSource(organisationId, body);
+  public ResponseEntity<Void> removeOrganisationDataSource(
+      String organisationId, DataSource dataSource) {
+    organisationService.removeOrganisationDataSource(organisationId, dataSource);
+    return new ResponseEntity<>(HttpStatus.NO_CONTENT);
   }
 
   @Override
@@ -169,5 +163,14 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
             organisationId, repositoryId, String.valueOf(queryId))
         .orElseThrow()
         .getQueryType();
+  }
+
+  private Collection<DataSource> loadDataSources(QueryType queryType) {
+    List<DataSource> dataSources = new ArrayList<>();
+    if (queryType == null || QueryType.PHENOTYPE.equals(queryType))
+      dataSources.addAll(phenotypeQueryService.getDataSources());
+    if (queryType == null || QueryType.CONCEPT.equals(queryType))
+      dataSources.addAll(documentQueryService.getDataSources());
+    return dataSources;
   }
 }

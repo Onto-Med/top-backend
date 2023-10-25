@@ -34,6 +34,9 @@ public class OrganisationDao {
   @OneToMany(mappedBy = "organisation", cascade = CascadeType.ALL, orphanRemoval = true)
   private Collection<OrganisationMembershipDao> members = new ArrayList<>();
 
+  @OneToMany(mappedBy = "organisation", cascade = CascadeType.ALL, orphanRemoval = true)
+  private Collection<OrganisationDataSourceDao> dataSources = new ArrayList<>();
+
   public OrganisationDao() {}
 
   public OrganisationDao(@NotNull String id, String name, String description) {
@@ -80,6 +83,17 @@ public class OrganisationDao {
 
   public OrganisationDao members(Collection<OrganisationMembershipDao> members) {
     this.members = members;
+    return this;
+  }
+
+  public OrganisationDao dataSources(Collection<OrganisationDataSourceDao> dataSources) {
+    this.dataSources = dataSources;
+    return this;
+  }
+
+  public OrganisationDao addDataSource(OrganisationDataSourceDao dataSource) {
+    // TODO: update existing entry and hash
+    this.dataSources.add(dataSource);
     return this;
   }
 
@@ -167,8 +181,16 @@ public class OrganisationDao {
     }
   }
 
+  public boolean removeDataSourceById(String dataSourceId) {
+    return dataSources.removeIf(ds -> ds.getDataSourceId().equals(dataSourceId));
+  }
+
   public Collection<OrganisationMembershipDao> getMembers() {
     return members;
+  }
+
+  public Collection<OrganisationDataSourceDao> getDataSources() {
+    return dataSources;
   }
 
   public String getId() {
