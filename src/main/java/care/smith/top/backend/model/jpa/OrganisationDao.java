@@ -185,6 +185,10 @@ public class OrganisationDao {
     return dataSources.removeIf(ds -> ds.getDataSourceId().equals(dataSourceId));
   }
 
+  public boolean hasDataSource(String dataSource) {
+    return dataSources.stream().anyMatch(ds -> ds.getDataSourceId().equals(dataSource));
+  }
+
   public Collection<OrganisationMembershipDao> getMembers() {
     return members;
   }
