@@ -224,6 +224,7 @@ public class OrganisationService implements ContentService {
     String hash = "";
     OrganisationDataSourceDao dataSourceDao =
         new OrganisationDataSourceDao(organisation, dataSource.getId(), hash);
+    organisation.removeDataSourceById(dataSource.getId());
     organisationRepository.save(organisation.addDataSource(dataSourceDao));
   }
 

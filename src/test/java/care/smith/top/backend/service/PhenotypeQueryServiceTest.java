@@ -1,7 +1,6 @@
 package care.smith.top.backend.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.*;
 import static org.awaitility.Awaitility.await;
 
 import care.smith.top.backend.AbstractTest;
@@ -30,6 +29,7 @@ class PhenotypeQueryServiceTest extends AbstractTest {
 
   @Test
   void executeQuery() {
+    DataSource dataSource = new DataSource().id(dataSources.get(0));
     Organisation orga = organisationService.createOrganisation(new Organisation().id("orga_1"));
     Repository repo1 =
         repositoryService.createRepository(
@@ -68,13 +68,24 @@ class PhenotypeQueryServiceTest extends AbstractTest {
                                         .type(DataType.DATE_TIME)))
                 .type(QueryType.PHENOTYPE)
                 .id(UUID.randomUUID())
-                .dataSource(dataSources.get(0));
+                .dataSource(dataSource.getId());
 
     assertThatThrownBy(() -> queryService.enqueueQuery(orga.getId(), "invalid", query))
         .isInstanceOf(ResponseStatusException.class)
         .hasFieldOrPropertyWithValue("status", HttpStatus.NOT_FOUND);
 
-    assertThat(queryService.enqueueQuery(orga.getId(), repo1.getId(), query)).isNotNull();
+    assertThatThrownBy(
+            () -> queryService.enqueueQuery(orga.getId(), repo1.getId(), query),
+            "data source was not added to organisation, enqueue should fail")
+        .isInstanceOf(ResponseStatusException.class)
+        .hasFieldOrPropertyWithValue("status", HttpStatus.NOT_ACCEPTABLE);
+
+    assertThatCode(() -> organisationService.addOrganisationDataSource(orga.getId(), dataSource))
+        .doesNotThrowAnyException();
+
+    assertThatCode(() -> queryService.enqueueQuery(orga.getId(), repo1.getId(), query))
+        .doesNotThrowAnyException();
+
     await()
         .atMost(100, TimeUnit.SECONDS)
         .until(() -> storageProvider.getJobStats().getSucceeded() == 1);
