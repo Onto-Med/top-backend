@@ -119,8 +119,13 @@ public class DocumentQueryService extends QueryService {
     if (queryRepository.existsById(queryId.toString()))
       throw new ResponseStatusException(HttpStatus.CONFLICT);
 
+    // TODO: check MD5 hash
+    if (!repository.getOrganisation().hasDataSource(query.getDataSource()))
+      throw new ResponseStatusException(
+          HttpStatus.NOT_ACCEPTABLE, "Data source does not exist for organisation!");
+
     if (getTextAdapterConfig(query.getDataSource()).isEmpty())
-      throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE);
+      throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Data source does not exist!");
 
     queryRepository.save(new QueryDao(query).repository(repository));
     jobScheduler.enqueue(queryId, () -> this.executeQuery(queryId));
@@ -174,6 +179,13 @@ public class DocumentQueryService extends QueryService {
         .map(a -> new DataSource().id(a.getId()).title(a.getId().replace('_', ' ')))
         .sorted(Comparator.comparing(DataSource::getId))
         .collect(Collectors.toList());
+  }
+
+  private DataSource textAdapterConfigToDataSource(TextAdapterConfig textAdapterConfig) {
+    return new DataSource()
+        .id(textAdapterConfig.getId())
+        .queryType(QueryType.CONCEPT)
+        .title(textAdapterConfig.getId().replace('_', ' '));
   }
 
   private TextAdapterConfig toTextAdapterConfig(Path path) {

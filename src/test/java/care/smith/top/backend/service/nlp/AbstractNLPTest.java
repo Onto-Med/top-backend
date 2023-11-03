@@ -3,11 +3,11 @@ package care.smith.top.backend.service.nlp;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
 
+import care.smith.top.backend.AbstractTest;
 import care.smith.top.backend.repository.elasticsearch.DocumentRepository;
 import care.smith.top.backend.repository.neo4j.ConceptClusterNodeRepository;
 import care.smith.top.backend.repository.neo4j.DocumentNodeRepository;
 import care.smith.top.backend.repository.neo4j.PhraseNodeRepository;
-import care.smith.top.backend.service.AbstractTest;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import co.elastic.clients.transport.ElasticsearchTransport;

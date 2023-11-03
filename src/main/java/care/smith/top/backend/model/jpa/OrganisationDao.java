@@ -1,8 +1,10 @@
 package care.smith.top.backend.model.jpa;
 
 import care.smith.top.model.Organisation;
+import care.smith.top.model.QueryType;
 import java.time.OffsetDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import org.springframework.data.annotation.CreatedDate;
@@ -33,6 +35,9 @@ public class OrganisationDao {
 
   @OneToMany(mappedBy = "organisation", cascade = CascadeType.ALL, orphanRemoval = true)
   private Collection<OrganisationMembershipDao> members = new ArrayList<>();
+
+  @OneToMany(mappedBy = "organisation", cascade = CascadeType.ALL, orphanRemoval = true)
+  private Collection<OrganisationDataSourceDao> dataSources = new ArrayList<>();
 
   public OrganisationDao() {}
 
@@ -80,6 +85,18 @@ public class OrganisationDao {
 
   public OrganisationDao members(Collection<OrganisationMembershipDao> members) {
     this.members = members;
+    return this;
+  }
+
+  public OrganisationDao dataSources(Collection<OrganisationDataSourceDao> dataSources) {
+    this.dataSources = dataSources;
+    return this;
+  }
+
+  public OrganisationDao addDataSource(OrganisationDataSourceDao dataSource) {
+    if (!dataSources.contains(dataSource)) {
+      dataSources.add(dataSource);
+    }
     return this;
   }
 
@@ -167,8 +184,27 @@ public class OrganisationDao {
     }
   }
 
+  public boolean removeDataSource(String dataSourceId, QueryType queryType) {
+    return dataSources.removeIf(
+        ds -> ds.getDataSourceId().equals(dataSourceId) && ds.getQueryType().equals(queryType));
+  }
+
+  public boolean hasDataSource(String dataSource) {
+    return dataSources.stream().anyMatch(ds -> ds.getDataSourceId().equals(dataSource));
+  }
+
+  public Collection<OrganisationDataSourceDao> getDataSourcesByQueryType(QueryType queryType) {
+    return getDataSources().stream()
+        .filter(ds -> queryType == null || ds.getQueryType().equals(queryType))
+        .collect(Collectors.toSet());
+  }
+
   public Collection<OrganisationMembershipDao> getMembers() {
     return members;
+  }
+
+  public Collection<OrganisationDataSourceDao> getDataSources() {
+    return dataSources;
   }
 
   public String getId() {

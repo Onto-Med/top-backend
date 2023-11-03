@@ -14,6 +14,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.OffsetDateTime;
 import java.util.*;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -57,8 +58,12 @@ public class PhenotypeQueryService extends QueryService {
     if (queryRepository.existsById(queryId.toString()))
       throw new ResponseStatusException(HttpStatus.CONFLICT);
 
+    if (!repository.getOrganisation().hasDataSource(query.getDataSource()))
+      throw new ResponseStatusException(
+          HttpStatus.NOT_ACCEPTABLE, "Data source does not exist for organisation!");
+
     if (getDataAdapterConfig(query.getDataSource()).isEmpty())
-      throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE);
+      throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Data source does not exist!");
 
     queryRepository.save(new QueryDao(query).repository(repository));
     jobScheduler.enqueue(queryId, () -> this.executeQuery(queryId));
@@ -134,7 +139,7 @@ public class PhenotypeQueryService extends QueryService {
           rs,
           phenotypes);
     } catch (Throwable e) {
-      e.printStackTrace();
+      LOGGER.log(Level.WARNING, e.getMessage(), e);
       result =
           new QueryResultDao(queryDao, createdAt, null, OffsetDateTime.now(), QueryState.FAILED)
               .message("Cause: " + (e.getMessage() != null ? e.getMessage() : e.toString()));
@@ -166,9 +171,16 @@ public class PhenotypeQueryService extends QueryService {
 
   public List<DataSource> getDataSources() {
     return getDataAdapterConfigs().stream()
-        .map(a -> new DataSource().id(a.getId()).title(a.getId().replace('_', ' ')))
+        .map(this::dataAdapterConfigToDataSource)
         .sorted(Comparator.comparing(DataSource::getId))
         .collect(Collectors.toList());
+  }
+
+  private DataSource dataAdapterConfigToDataSource(DataAdapterConfig dataAdapterConfig) {
+    return new DataSource()
+        .id(dataAdapterConfig.getId())
+        .queryType(QueryType.PHENOTYPE)
+        .title(dataAdapterConfig.getId().replace('_', ' '));
   }
 
   private void storeResult(

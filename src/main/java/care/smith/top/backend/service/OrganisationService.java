@@ -3,12 +3,15 @@ package care.smith.top.backend.service;
 import care.smith.top.backend.model.jpa.*;
 import care.smith.top.backend.repository.jpa.OrganisationMembershipRepository;
 import care.smith.top.backend.repository.jpa.OrganisationRepository;
+import care.smith.top.model.DataSource;
 import care.smith.top.model.Organisation;
 import care.smith.top.model.OrganisationMembership;
+import care.smith.top.model.QueryType;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.List;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -186,5 +189,55 @@ public class OrganisationService implements ContentService {
             .orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User does not exist."));
     userService.revokeMembership(organisation, user);
+  }
+
+  @Transactional
+  public Collection<String> getOrganisationDataSourceIds(
+      String organisationId, QueryType queryType) {
+    OrganisationDao organisation =
+        organisationRepository
+            .findById(organisationId)
+            .orElseThrow(
+                () ->
+                    new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Organisation does not exist."));
+
+    return organisation.getDataSourcesByQueryType(queryType).stream()
+        .map(OrganisationDataSourceDao::getDataSourceId)
+        .collect(Collectors.toSet());
+  }
+
+  @PreAuthorize("hasRole('ADMIN')")
+  @Transactional
+  public void addOrganisationDataSource(String organisationId, DataSource dataSource) {
+    OrganisationDao organisation =
+        organisationRepository
+            .findById(organisationId)
+            .orElseThrow(
+                () ->
+                    new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Organisation does not exist."));
+
+    OrganisationDataSourceDao dataSourceDao =
+        new OrganisationDataSourceDao(organisation, dataSource.getId(), dataSource.getQueryType());
+    organisationRepository.save(organisation.addDataSource(dataSourceDao));
+  }
+
+  @PreAuthorize("hasRole('ADMIN')")
+  @Transactional
+  public void removeOrganisationDataSource(String organisationId, DataSource dataSource) {
+    OrganisationDao organisation =
+        organisationRepository
+            .findById(organisationId)
+            .orElseThrow(
+                () ->
+                    new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Organisation does not exist."));
+
+    if (!organisation.removeDataSource(dataSource.getId(), dataSource.getQueryType()))
+      throw new ResponseStatusException(
+          HttpStatus.NOT_FOUND, "Organisation has no such data source.");
+
+    organisationRepository.save(organisation);
   }
 }

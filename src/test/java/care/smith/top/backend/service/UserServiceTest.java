@@ -2,6 +2,7 @@ package care.smith.top.backend.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import care.smith.top.backend.AbstractTest;
 import care.smith.top.backend.model.jpa.OrganisationDao;
 import care.smith.top.backend.model.jpa.Permission;
 import care.smith.top.backend.model.jpa.UserDao;

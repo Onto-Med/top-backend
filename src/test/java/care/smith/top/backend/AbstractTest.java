@@ -1,7 +1,11 @@
-package care.smith.top.backend.service;
+package care.smith.top.backend;
 
 import care.smith.top.backend.api.OrganisationApiDelegateImpl;
 import care.smith.top.backend.repository.jpa.*;
+import care.smith.top.backend.service.EntityService;
+import care.smith.top.backend.service.OrganisationService;
+import care.smith.top.backend.service.RepositoryService;
+import care.smith.top.backend.service.UserService;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
@@ -18,28 +22,27 @@ import org.springframework.boot.test.context.SpringBootTest;
 @SpringBootTest
 public abstract class AbstractTest {
   static HttpServer olsServer;
-  @Autowired OrganisationApiDelegateImpl organisationApiDelegate;
-  @Autowired OrganisationService organisationService;
-  @Autowired OrganisationRepository organisationRepository;
-  @Autowired RepositoryService repositoryService;
-  @Autowired RepositoryRepository repositoryRepository;
-  @Autowired EntityService entityService;
-  @Autowired CategoryRepository categoryRepository;
-  @Autowired ConceptRepository conceptRepository;
-  @Autowired EntityRepository entityRepository;
-  @Autowired PhenotypeRepository phenotypeRepository;
-  @Autowired EntityVersionRepository entityVersionRepository;
-  @Autowired UserRepository userRepository;
-  @Autowired UserService userService;
-  @Autowired OrganisationMembershipRepository organisationMembershipRepository;
+  @Autowired protected OrganisationApiDelegateImpl organisationApiDelegate;
+  @Autowired protected OrganisationService organisationService;
+  @Autowired protected OrganisationRepository organisationRepository;
+  @Autowired protected RepositoryService repositoryService;
+  @Autowired protected RepositoryRepository repositoryRepository;
+  @Autowired protected EntityService entityService;
+  @Autowired protected CategoryRepository categoryRepository;
+  @Autowired protected ConceptRepository conceptRepository;
+  @Autowired protected EntityRepository entityRepository;
+  @Autowired protected PhenotypeRepository phenotypeRepository;
+  @Autowired protected EntityVersionRepository entityVersionRepository;
+  @Autowired protected UserRepository userRepository;
+  @Autowired protected UserService userService;
+  @Autowired protected OrganisationMembershipRepository organisationMembershipRepository;
 
   @BeforeAll
   static void initializeOLS() throws IOException {
     olsServer = HttpServer.create(new InetSocketAddress(9000), 0);
     olsServer.createContext(
-        "/api/ontologies", new CodeServiceTest.OlsHttpHandler("/ols4_fixtures/ontologies.json"));
-    olsServer.createContext(
-        "/api/select", new CodeServiceTest.OlsHttpHandler("/ols4_fixtures/select.json"));
+        "/api/ontologies", new OlsHttpHandler("/ols4_fixtures/ontologies.json"));
+    olsServer.createContext("/api/select", new OlsHttpHandler("/ols4_fixtures/select.json"));
     olsServer.start();
   }
 
@@ -63,7 +66,7 @@ public abstract class AbstractTest {
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
-      try (InputStream resource = CodeServiceTest.class.getResourceAsStream(resourcePath)) {
+      try (InputStream resource = AbstractTest.class.getResourceAsStream(resourcePath)) {
         assert resource != null;
         byte[] response = resource.readAllBytes();
         exchange.getResponseHeaders().set("Content-Type", "application/json");
