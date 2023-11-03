@@ -18,6 +18,7 @@ public class UserApiDelegateImpl implements UserApiDelegate {
   @Autowired UserService userService;
 
   @Override
+  @Transactional
   @PreAuthorize("hasRole('USER')")
   public ResponseEntity<User> getUserById(String userId) {
     Optional<User> user = userService.getUserById(userId).map(UserDao::toApiModel);
