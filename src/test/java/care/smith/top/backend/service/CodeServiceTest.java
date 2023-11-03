@@ -15,38 +15,25 @@ import java.util.Collections;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-/**
- * @author ralph
- */
 @SpringBootTest
-@ExtendWith(SpringExtension.class)
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class CodeServiceTest extends AbstractTest {
-  @Autowired private MutableOLSCodeService codeService;
-  private HttpServer olsServer;
+  static HttpServer olsServer;
+  @Autowired OLSCodeService codeService;
 
   @BeforeAll
-  void initializeOLS() throws IOException {
-    InetSocketAddress address = new InetSocketAddress(9000);
-
-    olsServer = HttpServer.create(address, 0);
+  static void initializeOLS() throws IOException {
+    olsServer = HttpServer.create(new InetSocketAddress(9000), 0);
     olsServer.createContext(
         "/api/ontologies", new OlsHttpHandler("/ols4_fixtures/ontologies.json"));
     olsServer.createContext("/api/select", new OlsHttpHandler("/ols4_fixtures/select.json"));
     olsServer.start();
-
-    String endpoint = String.format("http://127.0.0.1:%d/api", address.getPort());
-    codeService.setEndpoint(endpoint);
   }
 
   @AfterAll
-  void stopOLS() {
+  static void stopOLS() {
     olsServer.stop(0);
   }
 
