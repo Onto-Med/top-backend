@@ -2,6 +2,7 @@ package care.smith.top.backend.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import care.smith.top.backend.AbstractTest;
 import care.smith.top.model.CodePage;
 import care.smith.top.model.CodeSystemPage;
 import java.util.Collections;

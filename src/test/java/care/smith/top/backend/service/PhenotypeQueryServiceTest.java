@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Awaitility.await;
 
+import care.smith.top.backend.AbstractTest;
 import care.smith.top.model.*;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;

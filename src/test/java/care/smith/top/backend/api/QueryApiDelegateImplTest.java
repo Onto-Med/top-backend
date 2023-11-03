@@ -2,7 +2,7 @@ package care.smith.top.backend.api;
 
 import static org.assertj.core.api.Assertions.*;
 
-import care.smith.top.backend.service.AbstractTest;
+import care.smith.top.backend.AbstractTest;
 import care.smith.top.model.DataSource;
 import care.smith.top.model.Organisation;
 import care.smith.top.model.QueryType;
