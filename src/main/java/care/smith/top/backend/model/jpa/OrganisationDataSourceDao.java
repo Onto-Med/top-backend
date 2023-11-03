@@ -2,13 +2,12 @@ package care.smith.top.backend.model.jpa;
 
 import care.smith.top.backend.model.jpa.key.OrganisationDataSourceKeyDao;
 import care.smith.top.model.QueryType;
+import java.time.OffsetDateTime;
+import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
-import java.time.OffsetDateTime;
 
 @Entity(name = "organisation_data_source")
 @EntityListeners(AuditingEntityListener.class)
@@ -50,11 +49,6 @@ public class OrganisationDataSourceDao {
     return this;
   }
 
-  private OrganisationDataSourceDao queryType(@NotNull QueryType queryType) {
-    this.queryType = queryType;
-    return this;
-  }
-
   public OrganisationDataSourceDao createdAt(OffsetDateTime createdAt) {
     this.createdAt = createdAt;
     return this;
@@ -63,6 +57,26 @@ public class OrganisationDataSourceDao {
   public OrganisationDataSourceDao author(UserDao createdBy) {
     this.createdBy = createdBy;
     return this;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+
+    OrganisationDataSourceDao that = (OrganisationDataSourceDao) o;
+
+    if (!getOrganisation().equals(that.getOrganisation())) return false;
+    if (!getQueryType().equals(that.getQueryType())) return false;
+    return getDataSourceId().equals(that.getDataSourceId());
+  }
+
+  @Override
+  public int hashCode() {
+    int result = getOrganisation().hashCode();
+    result = 31 * result + getQueryType().hashCode();
+    result = 31 * result + getDataSourceId().hashCode();
+    return result;
   }
 
   public OrganisationDao getOrganisation() {
@@ -85,23 +99,8 @@ public class OrganisationDataSourceDao {
     return createdBy;
   }
 
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-
-    OrganisationDataSourceDao that = (OrganisationDataSourceDao) o;
-
-    if (!getOrganisation().equals(that.getOrganisation())) return false;
-    if (!getQueryType().equals(that.getQueryType())) return false;
-    return getDataSourceId().equals(that.getDataSourceId());
-  }
-
-  @Override
-  public int hashCode() {
-    int result = getOrganisation().hashCode();
-    result = 31 * result + getQueryType().hashCode();
-    result = 31 * result + getDataSourceId().hashCode();
-    return result;
+  private OrganisationDataSourceDao queryType(@NotNull QueryType queryType) {
+    this.queryType = queryType;
+    return this;
   }
 }

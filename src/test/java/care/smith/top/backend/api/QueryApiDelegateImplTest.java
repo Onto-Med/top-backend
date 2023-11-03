@@ -60,10 +60,11 @@ class QueryApiDelegateImplTest extends AbstractTest {
 
     assertThat(queryApi.getOrganisationDataSources(organisation.getId(), null).getBody())
         .isNotNull()
-        .allSatisfy(ds -> {
-          assertThat(ds.getId()).isEqualTo(dataSource.getId());
-          assertThat(ds.getQueryType()).isEqualTo(QueryType.PHENOTYPE);
-        });
+        .allSatisfy(
+            ds -> {
+              assertThat(ds.getId()).isEqualTo(dataSource.getId());
+              assertThat(ds.getQueryType()).isEqualTo(QueryType.PHENOTYPE);
+            });
 
     assertThat(
             queryApi

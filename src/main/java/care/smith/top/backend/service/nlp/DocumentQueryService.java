@@ -183,9 +183,9 @@ public class DocumentQueryService extends QueryService {
 
   private DataSource textAdapterConfigToDataSource(TextAdapterConfig textAdapterConfig) {
     return new DataSource()
-      .id(textAdapterConfig.getId())
-      .queryType(QueryType.CONCEPT)
-      .title(textAdapterConfig.getId().replace('_', ' '));
+        .id(textAdapterConfig.getId())
+        .queryType(QueryType.CONCEPT)
+        .title(textAdapterConfig.getId().replace('_', ' '));
   }
 
   private TextAdapterConfig toTextAdapterConfig(Path path) {
