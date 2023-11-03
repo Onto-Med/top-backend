@@ -1,6 +1,6 @@
 databaseChangeLog:
 - changeSet:
-    id: 1698074771922-8
+    id: 1698996399964-8
     author: ChristophB (generated)
     changes:
     - createTable:
@@ -16,8 +16,10 @@ databaseChangeLog:
             name: created_at
             type: TIMESTAMP
         - column:
-            name: md5hash
-            type: VARCHAR(255)
+            constraints:
+              nullable: false
+            name: query_type
+            type: INT
         - column:
             constraints:
               nullable: false
@@ -30,7 +32,7 @@ databaseChangeLog:
             type: VARCHAR(255)
         tableName: organisation_data_source
 - changeSet:
-    id: 1698074771922-9
+    id: 1698996399964-9
     author: ChristophB (generated)
     changes:
     - addForeignKeyConstraint:
@@ -43,7 +45,7 @@ databaseChangeLog:
         referencedTableName: organisation
         validate: true
 - changeSet:
-    id: 1698074771922-10
+    id: 1698996399964-10
     author: ChristophB (generated)
     changes:
     - addForeignKeyConstraint:

@@ -27,7 +27,8 @@ class QueryApiDelegateImplTest extends AbstractTest {
   @Test
   void getOrganisationDataSources() {
     Organisation organisation = new Organisation().id("orga");
-    DataSource dataSource = new DataSource().id("Test_Data_Source_1");
+    DataSource dataSource =
+        new DataSource().id("Test_Data_Source_1").queryType(QueryType.PHENOTYPE);
 
     assertThatThrownBy(
             () -> queryApi.getOrganisationDataSources("does not exist", null).getStatusCode())
@@ -59,7 +60,10 @@ class QueryApiDelegateImplTest extends AbstractTest {
 
     assertThat(queryApi.getOrganisationDataSources(organisation.getId(), null).getBody())
         .isNotNull()
-        .allSatisfy(ds -> assertThat(ds.getId()).isEqualTo(dataSource.getId()));
+        .allSatisfy(ds -> {
+          assertThat(ds.getId()).isEqualTo(dataSource.getId());
+          assertThat(ds.getQueryType()).isEqualTo(QueryType.PHENOTYPE);
+        });
 
     assertThat(
             queryApi
@@ -67,6 +71,7 @@ class QueryApiDelegateImplTest extends AbstractTest {
                 .getBody())
         .isNotNull()
         .allSatisfy(ds -> assertThat(ds.getId()).isEqualTo(dataSource.getId()));
+
     assertThat(
             queryApi.getOrganisationDataSources(organisation.getId(), QueryType.CONCEPT).getBody())
         .isNotNull()

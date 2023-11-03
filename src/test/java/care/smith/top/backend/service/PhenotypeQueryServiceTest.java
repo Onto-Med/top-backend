@@ -29,7 +29,7 @@ class PhenotypeQueryServiceTest extends AbstractTest {
 
   @Test
   void executeQuery() {
-    DataSource dataSource = new DataSource().id(dataSources.get(0));
+    DataSource dataSource = new DataSource().id(dataSources.get(0)).queryType(QueryType.PHENOTYPE);
     Organisation orga = organisationService.createOrganisation(new Organisation().id("orga_1"));
     Repository repo1 =
         repositoryService.createRepository(

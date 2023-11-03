@@ -181,6 +181,13 @@ public class DocumentQueryService extends QueryService {
         .collect(Collectors.toList());
   }
 
+  private DataSource textAdapterConfigToDataSource(TextAdapterConfig textAdapterConfig) {
+    return new DataSource()
+      .id(textAdapterConfig.getId())
+      .queryType(QueryType.CONCEPT)
+      .title(textAdapterConfig.getId().replace('_', ' '));
+  }
+
   private TextAdapterConfig toTextAdapterConfig(Path path) {
     try {
       TextAdapterConfig textAdapterConfig = TextAdapterConfig.getInstance(path.toString());

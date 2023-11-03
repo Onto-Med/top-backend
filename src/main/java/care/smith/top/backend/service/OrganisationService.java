@@ -11,7 +11,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.logging.Logger;
@@ -203,8 +202,7 @@ public class OrganisationService implements ContentService {
                     new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Organisation does not exist."));
 
-    // TODO: filter by valid hashes
-    return organisation.getDataSources().stream()
+    return organisation.getDataSourcesByQueryType(queryType).stream()
         .map(OrganisationDataSourceDao::getDataSourceId)
         .collect(Collectors.toSet());
   }
@@ -220,11 +218,8 @@ public class OrganisationService implements ContentService {
                     new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Organisation does not exist."));
 
-    // TODO: generate hash
-    String hash = "";
     OrganisationDataSourceDao dataSourceDao =
-        new OrganisationDataSourceDao(organisation, dataSource.getId(), hash);
-    organisation.removeDataSourceById(dataSource.getId());
+        new OrganisationDataSourceDao(organisation, dataSource.getId(), dataSource.getQueryType());
     organisationRepository.save(organisation.addDataSource(dataSourceDao));
   }
 
@@ -239,7 +234,7 @@ public class OrganisationService implements ContentService {
                     new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Organisation does not exist."));
 
-    if (!organisation.removeDataSourceById(dataSource.getId()))
+    if (!organisation.removeDataSource(dataSource.getId(), dataSource.getQueryType()))
       throw new ResponseStatusException(
           HttpStatus.NOT_FOUND, "Organisation has no such data source.");
 
