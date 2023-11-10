@@ -6,6 +6,7 @@ import care.smith.top.model.*;
 import care.smith.top.top_phenotypic_query.adapter.DataAdapter;
 import care.smith.top.top_phenotypic_query.adapter.config.DataAdapterConfig;
 import care.smith.top.top_phenotypic_query.converter.csv.CSV;
+import care.smith.top.top_phenotypic_query.converter.fhir.FHIRConverter;
 import care.smith.top.top_phenotypic_query.result.ResultSet;
 import care.smith.top.top_phenotypic_query.search.PhenotypeFinder;
 import java.io.IOException;
@@ -31,6 +32,7 @@ public class PhenotypeQueryService extends QueryService {
   private final Logger LOGGER = Logger.getLogger(PhenotypeQueryService.class.getName());
 
   private final CSV csvConverter = new CSV();
+  private final FHIRConverter fhirConverter = new FHIRConverter();
 
   @Value("${top.phenotyping.data-source-config-dir:config/data_sources}")
   private String dataSourceConfigDir;
@@ -197,6 +199,9 @@ public class PhenotypeQueryService extends QueryService {
 
     zipStream.putNextEntry(new ZipEntry("metadata.csv"));
     csvConverter.write(phenotypes, zipStream);
+
+    zipStream.putNextEntry(new ZipEntry("data.json"));
+    fhirConverter.write(resultSet, zipStream);
 
     zipStream.close();
   }
