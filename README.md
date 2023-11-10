@@ -116,6 +116,10 @@ On newer JDK versions, you might need the following arguments to run Neo4j tests
 `--add-opens java.base/java.nio=ALL-UNNAMED`
 `--add-opens java.base/java.lang=ALL-UNNAMED`
 
+### Docker
+
+Before building the Docker image, copy `.env.dist` to `.env` and fill in your GitHub username and Maven package registry authentication token.
+
 ## License
 
 The code in this repository and the package `care.smith.top:top-backend` are licensed under [MIT](LICENSE).
