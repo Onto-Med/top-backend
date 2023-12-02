@@ -6,6 +6,7 @@ import care.smith.top.backend.service.ContentService;
 import care.smith.top.model.ConceptGraph;
 import care.smith.top.model.ConceptGraphProcess;
 import care.smith.top.model.ConceptGraphStat;
+import care.smith.top.model.PipelineResponse;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -48,19 +49,43 @@ public class ConceptGraphsService implements ContentService {
     return conceptGraphsRepository.getAllStoredProcesses().toApiModel();
   }
 
-  public Map<String, ConceptGraphStat> initPipeline(File data, String processName) {
-    return Arrays.stream(conceptGraphsRepository.startPipelineForData(data, processName, null, true)
-        .getConceptGraphs())
-        .map(GraphStatsEntity::toApiModel)
-        .collect(
-            Collectors.toMap(
-                ConceptGraphStat::getId,
-                Function.identity(),
-                (existing, replacement) -> existing)
-        );
-  }
+//  public Map<String, ConceptGraphStat> initPipeline(File data, String processName) {
+//      return Arrays.stream(conceptGraphsRepository.startPipelineForData(data, processName, null, true)
+//          .getConceptGraphs())
+//          .map(GraphStatsEntity::toApiModel)
+//          .collect(
+//              Collectors.toMap(
+//                  ConceptGraphStat::getId,
+//                  Function.identity(),
+//                  (existing, replacement) -> existing)
+//          );
+//    }
+//
+//  public Map<String, ConceptGraphStat> initPipelineWithConfigs(
+//      File data,
+//      File labels,
+//      String processName,
+//      String language,
+//      Boolean skipPresent,
+//      Map<String, File> configs
+//  ) {
+//    return Arrays.stream(conceptGraphsRepository.startPipelineForDataAndLabelsAndConfigs(
+//        data, labels, processName, language, skipPresent, configs).getConceptGraphs())
+//        .map(GraphStatsEntity::toApiModel)
+//        .collect(
+//            Collectors.toMap(
+//                ConceptGraphStat::getId,
+//                Function.identity(),
+//                (existing, replacement) -> existing)
+//        );
+//  }
 
-  public Map<String, ConceptGraphStat> initPipelineWithConfigs(
+  public PipelineResponse initPipeline(File data, String processName) {
+      return conceptGraphsRepository.startPipelineForData(data, processName, null, true)
+          .getResponse();
+    }
+
+  public PipelineResponse initPipelineWithConfigs(
       File data,
       File labels,
       String processName,
