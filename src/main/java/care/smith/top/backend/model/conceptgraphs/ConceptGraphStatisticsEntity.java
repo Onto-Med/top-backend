@@ -2,7 +2,7 @@ package care.smith.top.backend.model.conceptgraphs;
 
 import care.smith.top.model.ConceptGraphStat;
 
-public class ConceptGraphStatisticsEntity {
+public class ConceptGraphStatisticsEntity implements PipelineResponseEntity {
   private int numberOfGraphs;
   private GraphStatsEntity[] conceptGraphs;
 

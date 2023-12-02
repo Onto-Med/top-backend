@@ -1,8 +1,7 @@
 package care.smith.top.backend.repository.conceptgraphs;
 
-import care.smith.top.backend.model.conceptgraphs.ConceptGraphEntity;
-import care.smith.top.backend.model.conceptgraphs.ConceptGraphStatisticsEntity;
-import care.smith.top.backend.model.conceptgraphs.ProcessOverviewEntity;
+import care.smith.top.backend.model.conceptgraphs.*;
+import io.swagger.v3.core.util.Json;
 import org.hibernate.service.spi.ServiceException;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.io.FileSystemResource;
@@ -83,7 +82,7 @@ public class ConceptGraphsRepository extends ConceptGraphsApi {
     }
   }
 
-  public ConceptGraphStatisticsEntity startPipelineForData(
+  public PipelineResponseEntity startPipelineForData(
       @Nonnull File data,
       @Nonnull String processName,
       @Nullable String language,
@@ -92,7 +91,7 @@ public class ConceptGraphsRepository extends ConceptGraphsApi {
     return startPipelineForDataAndLabelsAndConfigs(data, null, processName, language, skipPresent, null);
   }
 
-  public ConceptGraphStatisticsEntity startPipelineForDataAndLabels(
+  public PipelineResponseEntity startPipelineForDataAndLabels(
       @Nonnull File data,
       @Nonnull File labels,
       @Nonnull String processName,
@@ -102,7 +101,7 @@ public class ConceptGraphsRepository extends ConceptGraphsApi {
     return startPipelineForDataAndLabelsAndConfigs(data, labels, processName, language, skipPresent, null);
   }
 
-  public ConceptGraphStatisticsEntity startPipelineForDataAndConfigs(
+  public PipelineResponseEntity startPipelineForDataAndConfigs(
       @Nonnull File data,
       @Nullable String processName,
       @Nullable String language,
@@ -112,7 +111,7 @@ public class ConceptGraphsRepository extends ConceptGraphsApi {
       return startPipelineForDataAndLabelsAndConfigs(data, null, processName, language, skipPresent, configs);
     }
 
-  public ConceptGraphStatisticsEntity startPipelineForDataAndLabelsAndConfigs(
+  public PipelineResponseEntity startPipelineForDataAndLabelsAndConfigs(
       @Nonnull File data,
       File labels,
       @Nullable String processName,
@@ -126,21 +125,30 @@ public class ConceptGraphsRepository extends ConceptGraphsApi {
     if (configs != null && !configs.isEmpty()) configs.forEach( (name, file) -> parts.add(name + "_config", new FileSystemResource(file)));
 
     try {
-      Mono<ConceptGraphStatisticsEntity> apiResponse = conceptGraphsApi
-          .post()
-          .uri(
-              uriBuilder ->
-                  uriBuilder
-                      .path(API_PIPELINE_METHODS.INITIALIZE.getEndpoint())
-                      .queryParam("process", processName)
-                      .queryParam("lang", language == null ? "en" : language)
-                      .queryParam("skip_present", skipPresent == null || skipPresent)
-                      .build())
-          .body(BodyInserters.fromMultipartData(parts))
-          .retrieve()
-          .bodyToMono(ConceptGraphStatisticsEntity.class);
-      // ToDo: if I want to do something different when Response status != 200
-//          .exchangeToMono(response -> response.bodyToMono(ConceptGraphStatisticsEntity.class));
+      Mono<PipelineResponseEntity> apiResponse =
+          conceptGraphsApi
+              .post()
+              .uri(
+                  uriBuilder ->
+                      uriBuilder
+                          .path(API_PIPELINE_METHODS.INITIALIZE.getEndpoint())
+                          .queryParam("process", processName)
+                          .queryParam("lang", language == null ? "en" : language)
+                          .queryParam("skip_present", skipPresent == null || skipPresent)
+                          .build())
+              .body(BodyInserters.fromMultipartData(parts))
+              //          .retrieve()
+              //          .bodyToMono(ConceptGraphStatisticsEntity.class);
+              .exchangeToMono(
+                  response -> {
+                    if (response.statusCode().equals(HttpStatus.OK)) {
+                      return response.bodyToMono(ConceptGraphStatisticsEntity.class);
+                    } else if (response.statusCode().equals(HttpStatus.ACCEPTED)) {
+                      return response.bodyToMono(PipelineStatusEntity.class);
+                    } else {
+                      return response.createException().flatMap(Mono::error);
+                    }
+                  });
       return apiResponse.block(); //ToDo: now I need some way of accessing the status of the pipeline...
     } catch (WebClientResponseException e) {
       LOGGER.warning(e.getResponseBodyAsString() + " -- " + e.getMessage());
