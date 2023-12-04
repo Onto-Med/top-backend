@@ -81,9 +81,33 @@ public class ConceptGraphsService implements ContentService {
 //  }
 
   public PipelineResponse initPipeline(File data, String processName) {
-      return conceptGraphsRepository.startPipelineForData(data, processName, null, true)
-          .getResponse();
-    }
+      return conceptGraphsRepository.startPipelineForData(data, processName, null, true, false)
+          .getSpecificResponse();
+  }
+
+  public PipelineResponse initPipelineWithBooleans(File data, String processName, Boolean skipPresent, Boolean returnStatistics) {
+        return conceptGraphsRepository.startPipelineForData(data, processName, null, skipPresent, returnStatistics)
+            .getSpecificResponse();
+  }
+
+//  public PipelineResponse initPipelineWithConfigs(
+//      File data,
+//      File labels,
+//      String processName,
+//      String language,
+//      Boolean skipPresent,
+//      Map<String, File> configs
+//  ) {
+//    return Arrays.stream(conceptGraphsRepository.startPipelineForDataAndLabelsAndConfigs(
+//        data, labels, processName, language, skipPresent, configs).getConceptGraphs())
+//        .map(GraphStatsEntity::toApiModel)
+//        .collect(
+//            Collectors.toMap(
+//                ConceptGraphStat::getId,
+//                Function.identity(),
+//                (existing, replacement) -> existing)
+//        );
+//  }
 
   public PipelineResponse initPipelineWithConfigs(
       File data,
@@ -91,17 +115,11 @@ public class ConceptGraphsService implements ContentService {
       String processName,
       String language,
       Boolean skipPresent,
+      Boolean returnStatistics,
       Map<String, File> configs
   ) {
-    return Arrays.stream(conceptGraphsRepository.startPipelineForDataAndLabelsAndConfigs(
-        data, labels, processName, language, skipPresent, configs).getConceptGraphs())
-        .map(GraphStatsEntity::toApiModel)
-        .collect(
-            Collectors.toMap(
-                ConceptGraphStat::getId,
-                Function.identity(),
-                (existing, replacement) -> existing)
-        );
+    return conceptGraphsRepository.startPipelineForDataAndLabelsAndConfigs(
+        data, labels, processName, language, skipPresent, returnStatistics, configs).getSpecificResponse();
   }
 }
 
