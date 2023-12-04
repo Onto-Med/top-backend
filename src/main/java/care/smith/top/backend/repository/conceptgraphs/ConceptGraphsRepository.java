@@ -86,9 +86,12 @@ public class ConceptGraphsRepository extends ConceptGraphsApi {
       @Nonnull File data,
       @Nonnull String processName,
       @Nullable String language,
-      @Nullable Boolean skipPresent
+      @Nullable Boolean skipPresent,
+      @Nullable Boolean returnStatistics
   ) {
-    return startPipelineForDataAndLabelsAndConfigs(data, null, processName, language, skipPresent, null);
+    return startPipelineForDataAndLabelsAndConfigs(
+        data, null, processName,
+        language, skipPresent, returnStatistics, null);
   }
 
   public PipelineResponseEntity startPipelineForDataAndLabels(
@@ -96,9 +99,12 @@ public class ConceptGraphsRepository extends ConceptGraphsApi {
       @Nonnull File labels,
       @Nonnull String processName,
       @Nullable String language,
-      @Nullable Boolean skipPresent
+      @Nullable Boolean skipPresent,
+      @Nullable Boolean returnStatistics
   ) {
-    return startPipelineForDataAndLabelsAndConfigs(data, labels, processName, language, skipPresent, null);
+    return startPipelineForDataAndLabelsAndConfigs(
+        data, labels, processName,
+        language, skipPresent, returnStatistics, null);
   }
 
   public PipelineResponseEntity startPipelineForDataAndConfigs(
@@ -106,9 +112,12 @@ public class ConceptGraphsRepository extends ConceptGraphsApi {
       @Nullable String processName,
       @Nullable String language,
       @Nullable Boolean skipPresent,
+      @Nullable Boolean returnStatistics,
       @Nonnull Map<String, File> configs
   ) {
-      return startPipelineForDataAndLabelsAndConfigs(data, null, processName, language, skipPresent, configs);
+      return startPipelineForDataAndLabelsAndConfigs(
+          data, null, processName,
+          language, skipPresent, returnStatistics, configs);
     }
 
   public PipelineResponseEntity startPipelineForDataAndLabelsAndConfigs(
@@ -117,6 +126,7 @@ public class ConceptGraphsRepository extends ConceptGraphsApi {
       @Nullable String processName,
       @Nullable String language,
       @Nullable Boolean skipPresent,
+      @Nullable Boolean returnStatistics,
       Map<String, File> configs
   ) {
     MultiValueMap<String, Object> parts = new LinkedMultiValueMap<>();
@@ -135,6 +145,7 @@ public class ConceptGraphsRepository extends ConceptGraphsApi {
                           .queryParam("process", processName)
                           .queryParam("lang", language == null ? "en" : language)
                           .queryParam("skip_present", skipPresent == null || skipPresent)
+                          .queryParam("return_statistics", returnStatistics != null && returnStatistics)
                           .build())
               .body(BodyInserters.fromMultipartData(parts))
               //          .retrieve()
@@ -146,7 +157,7 @@ public class ConceptGraphsRepository extends ConceptGraphsApi {
                     } else if (response.statusCode().equals(HttpStatus.ACCEPTED)) {
                       return response.bodyToMono(PipelineStatusEntity.class);
                     } else {
-                      return response.createException().flatMap(Mono::error);
+                      return response.bodyToMono(PipelineFailEntity.class);
                     }
                   });
       return apiResponse.block(); //ToDo: now I need some way of accessing the status of the pipeline...

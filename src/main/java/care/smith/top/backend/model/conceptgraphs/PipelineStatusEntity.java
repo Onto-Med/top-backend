@@ -1,5 +1,11 @@
 package care.smith.top.backend.model.conceptgraphs;
 
+import care.smith.top.model.PipelineResponse;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+
 public class PipelineStatusEntity implements PipelineResponseEntity {
   private String name;
   private PipelineStatus status;
@@ -19,12 +25,23 @@ public class PipelineStatusEntity implements PipelineResponseEntity {
   public void setStatus(PipelineStatus status) {
     this.status = status;
   }
+
+  @Override
+  public PipelineResponse getSpecificResponse() {
+    return new PipelineResponse()
+        .name(this.getName())
+        .response(this.getStatus().toJsonString());
+  }
 }
 
 class PipelineStatus {
+  @JsonProperty("data")
   private String dataStatus;
+  @JsonProperty("embedding")
   private String embeddingStatus;
+  @JsonProperty("clustering")
   private String clusteringStatus;
+  @JsonProperty("graph")
   private String graphStatus;
 
   public String getDataStatus() {
@@ -57,5 +74,16 @@ class PipelineStatus {
 
   public void setGraphStatus(String graphStatus) {
     this.graphStatus = graphStatus;
+  }
+
+  public String toJsonString() {
+    String status = "";
+    try {
+      ObjectMapper mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
+      status =  mapper.writeValueAsString(this);
+    } catch (JsonProcessingException e) {
+      e.printStackTrace();
+    }
+    return status;
   }
 }

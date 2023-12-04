@@ -1,5 +1,7 @@
 package care.smith.top.backend.model.conceptgraphs;
 
-public interface PipelineResponseEntity {
+import care.smith.top.model.PipelineResponse;
 
+public interface PipelineResponseEntity {
+  PipelineResponse getSpecificResponse();
 }

@@ -5,6 +5,7 @@ import care.smith.top.backend.service.nlp.ConceptGraphsService;
 import care.smith.top.model.ConceptGraph;
 import care.smith.top.model.ConceptGraphProcess;
 import care.smith.top.model.ConceptGraphStat;
+import care.smith.top.model.PipelineResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -41,10 +42,10 @@ public class ConceptGraphApiDelegateImpl implements ConceptgraphsApiDelegate {
   }
 
   @Override
-  public ResponseEntity<Map<String, ConceptGraphStat>> startConceptGraphPipeline (
+  public ResponseEntity<PipelineResponse> startConceptGraphPipeline (
       String process, MultipartFile data,
       List<String> include,
-      String lang, Boolean skipPresent,
+      String lang, Boolean skipPresent, Boolean returnStatistics,
       MultipartFile labels,
       MultipartFile dataConfig, MultipartFile embeddingConfig,
       MultipartFile clusteringConfig, MultipartFile graphConfig
@@ -71,7 +72,7 @@ public class ConceptGraphApiDelegateImpl implements ConceptgraphsApiDelegate {
               data.getResource().getFile(),
               labels != null ? labels.getResource().getFile(): null,
               process, lang,
-              skipPresent, configMap
+              skipPresent, returnStatistics, configMap
           )
       );
     } catch (IOException e) {
