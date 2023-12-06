@@ -17,7 +17,7 @@ import java.util.stream.Stream;
 
 public class DocumentQueryConfigMap {
   private static final String DEFAULT_ES_URL = "http://localhost";
-  private static final String DEFAULT_ES_PORT = "9200";
+  private static final String DEFAULT_ES_PORT = "9008";
   private static final String DEFAULT_ES_INDEX = "documents";
   private static final String DEFAULT_ES_FIELD = "text";
   private static final String DEFAULT_NEO4J_URL = "bolt://localhost";
