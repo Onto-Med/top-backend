@@ -50,9 +50,24 @@ for additional documentation.
     ```sh
     docker run --rm -p 7687:7687 -e NEO4J_AUTH=neo4j/password neo4j
     ```
-4. Start the OAuth2 server ([see dockerhub](https://hub.docker.com/r/bitnami/keycloak)).
+4. Start a default document index service (Elasticsearch) on the address specified in the adapter (if no adapter file is found defaults to `localhost:9200`).
+
+5. Start the [concept graphs service](https://github.com/Onto-Med/concept-graphs) on the address specified in the adapter (if no adapter file is found defaults to `localhost:9007`).
+
+6. Start the OAuth2 server ([see dockerhub](https://hub.docker.com/r/bitnami/keycloak)).
 
 If you run the TOP Framework with an OAuth2 server, the first user that is created will have the admin role.
+
+## NLP/Document related configuration
+
+To utilize the document search of the framework, one needs three different services running: 
+1. Elasticsearch or something similar
+2. A Neo4j cluster
+3. And the [concept graphs service](https://github.com/Onto-Med/concept-graphs)
+
+The document search is adapter centric and one needs a working configuration file (yml) that specifies the addresses of said services
+under the folder declared with the environment variable `DOCUMENT_DATA_SOURCE_CONFIG_DIR`.
+If no `DOCUMENT_DEFAULT_ADAPTER` is specified, the first adapter found in the folder is used for setup.  
 
 ## Plugins
 

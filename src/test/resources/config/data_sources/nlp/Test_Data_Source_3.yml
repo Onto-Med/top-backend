@@ -1,3 +1,17 @@
 id: Test_Data_Source_3
+adapter: care.smith.top.top_document_query.adapter.lucene.LuceneAdapter
 connection:
-  url: http://localhost:9100
+  url: http://localhost
+  port: 9008
+index:
+  - test_documents
+field:
+  - text
+graphDB:
+  connection:
+    url: bolt://localhost
+    port: 7687
+conceptGraph:
+  connection:
+    url: http://localhost
+    port: 9007
