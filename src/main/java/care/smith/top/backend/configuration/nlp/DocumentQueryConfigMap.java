@@ -10,6 +10,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
@@ -36,6 +37,7 @@ public class DocumentQueryConfigMap {
   private static final String TOP_SECURITY_DOCUMENTDB_USERNAME = "top.documents.security.documentdb.username";
   private static final String TOP_SECURITY_DOCUMENTDB_PASSWORD = "top.documents.security.documentdb.password";
   private static final String TOP_DATA_SOURCE_CONFIG_DIR_DOCUMENTS = "top.documents.data-source-config-dir";
+  private static final String TOP_DEFAULT_ADAPTER_DOCUMENTS = "top.documents.default_adapter";
   private static final Logger LOGGER = Logger.getLogger(DocumentQueryConfigMap.class.getName());
   private Map<String, Object> configMap;
   private String name;
@@ -121,7 +123,12 @@ public class DocumentQueryConfigMap {
   }
 
   public DocumentQueryConfigMap(Environment environment) {
-    TextAdapterConfig config = getFirstTextAdapterConfig(environment.getProperty(TOP_DATA_SOURCE_CONFIG_DIR_DOCUMENTS));
+    String srcPath = environment.getProperty(TOP_DATA_SOURCE_CONFIG_DIR_DOCUMENTS);
+    String defaultAdapter = environment.getProperty(TOP_DEFAULT_ADAPTER_DOCUMENTS);
+    TextAdapterConfig config =
+            !Objects.equals(defaultAdapter, "#{null}") ?
+            toTextAdapterConfig(Path.of(srcPath != null ? srcPath : Paths.get("").toAbsolutePath().toString(), defaultAdapter)) :
+            getFirstTextAdapterConfig(srcPath);
     if (config == null) config = defaultConfig(environment);
     this.setName(config.getId());
     this.setConfigMap(config, environment);

@@ -56,9 +56,8 @@ top:
     data-source-config-dir: ${DATA_SOURCE_CONFIG_DIR:config/data_sources}
     execute-queries: ${EXECUTE_QUERIES:true}
   documents:
-    concept-graphs-api:
-      uri: http://localhost:9007
     data-source-config-dir: ${DOCUMENT_DATA_SOURCE_CONFIG_DIR:config/data_sources/nlp}
+    default_adapter: ${DOCUMENT_DEFAULT_ADAPTER:#{null}}
     security:
       graphdb:
         username: ${DB_NEO4J_USER:neo4j}
