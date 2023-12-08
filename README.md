@@ -50,7 +50,7 @@ for additional documentation.
     ```sh
     docker run --rm -p 7687:7687 -e NEO4J_AUTH=neo4j/password neo4j
     ```
-4. Start a default document index service (Elasticsearch) on the address specified in the adapter (if no adapter file is found defaults to `localhost:9200`).
+4. Start a default document index service (Elasticsearch) on the address specified in the adapter (if no adapter file is found defaults to `localhost:9008`).
 
 5. Start the [concept graphs service](https://github.com/Onto-Med/concept-graphs) on the address specified in the adapter (if no adapter file is found defaults to `localhost:9007`).
 
