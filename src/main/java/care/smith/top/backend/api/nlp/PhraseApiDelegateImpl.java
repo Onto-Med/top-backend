@@ -5,7 +5,6 @@ import care.smith.top.backend.service.nlp.PhraseService;
 import care.smith.top.model.Phrase;
 import care.smith.top.model.PhrasePage;
 import java.util.List;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;

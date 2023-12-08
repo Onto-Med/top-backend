@@ -28,19 +28,20 @@ public class PipelineStatusEntity implements PipelineResponseEntity {
 
   @Override
   public PipelineResponse getSpecificResponse() {
-    return new PipelineResponse()
-        .name(this.getName())
-        .response(this.getStatus().toJsonString());
+    return new PipelineResponse().name(this.getName()).response(this.getStatus().toJsonString());
   }
 }
 
 class PipelineStatus {
   @JsonProperty("data")
   private String dataStatus;
+
   @JsonProperty("embedding")
   private String embeddingStatus;
+
   @JsonProperty("clustering")
   private String clusteringStatus;
+
   @JsonProperty("graph")
   private String graphStatus;
 
@@ -80,7 +81,7 @@ class PipelineStatus {
     String status = "";
     try {
       ObjectMapper mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
-      status =  mapper.writeValueAsString(this);
+      status = mapper.writeValueAsString(this);
     } catch (JsonProcessingException e) {
       e.printStackTrace();
     }

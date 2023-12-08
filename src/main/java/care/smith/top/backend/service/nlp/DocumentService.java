@@ -12,7 +12,6 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
@@ -46,22 +45,23 @@ public class DocumentService implements ContentService {
   // ### method calls for the Spring ES Repository
 
   /**
-   *
    * @param batchSize size of each list element returned from the stream
    * @return A stream consisting of lists with size 'batchSize'
    */
   public Stream<List<Document>> getAllDocumentsBatched(Integer batchSize) {
-    return Stream.generate(new Supplier<List<Document>>() {
-      int page = 0;
-      @Override
-      public List<Document> get() {
-        Page<DocumentEntity> documentEntityPage = documentRepository.findAll(PageRequest.of(page++, batchSize));
-        return documentEntityPage
-            .map(DocumentEntity::toApiModel)
-            .stream()
-            .collect(Collectors.toList());
-      }
-    }).takeWhile(list -> !list.isEmpty());
+    return Stream.generate(
+            new Supplier<List<Document>>() {
+              int page = 0;
+
+              @Override
+              public List<Document> get() {
+                Page<DocumentEntity> documentEntityPage =
+                    documentRepository.findAll(PageRequest.of(page++, batchSize));
+                return documentEntityPage.map(DocumentEntity::toApiModel).stream()
+                    .collect(Collectors.toList());
+              }
+            })
+        .takeWhile(list -> !list.isEmpty());
   }
 
   public Document getDocumentById(@NonNull String documentId) {
@@ -74,12 +74,12 @@ public class DocumentService implements ContentService {
   }
 
   /**
-   *
    * @param page Integer; if negative, method returns all entries as one page
    * @return Paged Document entries
    */
   public Page<Document> getAllDocuments(Integer page) {
-    if (page < 0) return documentRepository.findAll(Pageable.unpaged()).map(DocumentEntity::toApiModel);
+    if (page < 0)
+      return documentRepository.findAll(Pageable.unpaged()).map(DocumentEntity::toApiModel);
     return documentRepository.findAll(pageRequestOf(page)).map(DocumentEntity::toApiModel);
   }
 
@@ -166,14 +166,9 @@ public class DocumentService implements ContentService {
         .collect(Collectors.toList());
   }
 
-
   // ### helper functions
 
   private PageRequest pageRequestOf(Integer page) {
-    return PageRequest.of(
-        (page == null || page <= 0) ? 0 : page - 1,
-        pageSize < 1 ? 1 : pageSize
-    );
+    return PageRequest.of((page == null || page <= 0) ? 0 : page - 1, pageSize < 1 ? 1 : pageSize);
   }
-
 }

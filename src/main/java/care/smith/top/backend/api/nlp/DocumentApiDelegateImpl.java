@@ -13,7 +13,6 @@ import java.io.IOException;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,8 +31,7 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
       DocumentService documentService,
       PhraseService phraseService,
       ConceptClusterService conceptClusterService,
-      DocumentQueryService documentQueryService
-  ) {
+      DocumentQueryService documentQueryService) {
     this.documentService = documentService;
     this.phraseService = phraseService;
     this.conceptClusterService = conceptClusterService;

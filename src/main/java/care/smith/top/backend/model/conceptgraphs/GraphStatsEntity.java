@@ -32,9 +32,6 @@ public class GraphStatsEntity {
   }
 
   public ConceptGraphStat toApiModel() {
-    return new ConceptGraphStat()
-        .id(this.getId())
-        .edges(this.getEdges())
-        .nodes(this.getNodes());
+    return new ConceptGraphStat().id(this.getId()).edges(this.getEdges()).nodes(this.getNodes());
   }
 }

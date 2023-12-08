@@ -4,7 +4,6 @@ import care.smith.top.model.ConceptGraph;
 import care.smith.top.model.ConceptGraphAdjacency;
 import care.smith.top.model.ConceptGraphNeighbors;
 import care.smith.top.model.ConceptGraphNodes;
-
 import java.util.Arrays;
 
 public class ConceptGraphEntity {
@@ -30,27 +29,25 @@ public class ConceptGraphEntity {
   public ConceptGraph toApiModel() {
     ConceptGraph conceptGraph = new ConceptGraph();
 
-    for (AdjacencyObject adj: getAdjacency()) {
+    for (AdjacencyObject adj : getAdjacency()) {
       ConceptGraphAdjacency conceptGraphAdjacency = new ConceptGraphAdjacency();
       conceptGraphAdjacency.setId(adj.getId());
-      for (Neighbors neighbors: adj.getNeighbors()) {
+      for (Neighbors neighbors : adj.getNeighbors()) {
         conceptGraphAdjacency.addNeighborsItem(
             new ConceptGraphNeighbors()
                 .id(neighbors.getId())
                 .significance(neighbors.getSignificance())
-                .weight(neighbors.getWeight())
-        );
+                .weight(neighbors.getWeight()));
       }
       conceptGraph.addAdjacencyItem(conceptGraphAdjacency);
     }
 
-    for (NodeObject node: getNodes()) {
+    for (NodeObject node : getNodes()) {
       conceptGraph.addNodesItem(
           new ConceptGraphNodes()
               .id(node.getId())
               .label(node.getLabel())
-              .documents(Arrays.asList(node.getDocuments()))
-      );
+              .documents(Arrays.asList(node.getDocuments())));
     }
 
     return conceptGraph;

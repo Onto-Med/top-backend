@@ -4,8 +4,6 @@ import care.smith.top.top_document_query.adapter.config.ConceptGraphConfig;
 import care.smith.top.top_document_query.adapter.config.Connection;
 import care.smith.top.top_document_query.adapter.config.GraphDBConfig;
 import care.smith.top.top_document_query.adapter.config.TextAdapterConfig;
-import org.springframework.core.env.Environment;
-
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
@@ -14,6 +12,7 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
+import org.springframework.core.env.Environment;
 
 public class DocumentQueryConfigMap {
   private static final String DEFAULT_ES_URL = "http://localhost";
@@ -31,12 +30,18 @@ public class DocumentQueryConfigMap {
   private static final String SPRING_NEO4J_URI_PROP = "spring.neo4j.uri";
   private static final String SPRING_NEO4J_USERNAME_PROP = "spring.neo4j.authentication.username";
   private static final String SPRING_NEO4J_PASSWORD_PROP = "spring.neo4j.authentication.password";
-  private static final String SPRING_CONCEPT_GRAPH_URI_PROP = "top.documents.concept-graphs-api.uri";
-  private static final String TOP_SECURITY_GRAPHDB_USERNAME = "top.documents.security.graphdb.username";
-  private static final String TOP_SECURITY_GRAPHDB_PASSWORD = "top.documents.security.graphdb.password";
-  private static final String TOP_SECURITY_DOCUMENTDB_USERNAME = "top.documents.security.documentdb.username";
-  private static final String TOP_SECURITY_DOCUMENTDB_PASSWORD = "top.documents.security.documentdb.password";
-  private static final String TOP_DATA_SOURCE_CONFIG_DIR_DOCUMENTS = "top.documents.data-source-config-dir";
+  private static final String SPRING_CONCEPT_GRAPH_URI_PROP =
+      "top.documents.concept-graphs-api.uri";
+  private static final String TOP_SECURITY_GRAPHDB_USERNAME =
+      "top.documents.security.graphdb.username";
+  private static final String TOP_SECURITY_GRAPHDB_PASSWORD =
+      "top.documents.security.graphdb.password";
+  private static final String TOP_SECURITY_DOCUMENTDB_USERNAME =
+      "top.documents.security.documentdb.username";
+  private static final String TOP_SECURITY_DOCUMENTDB_PASSWORD =
+      "top.documents.security.documentdb.password";
+  private static final String TOP_DATA_SOURCE_CONFIG_DIR_DOCUMENTS =
+      "top.documents.data-source-config-dir";
   private static final String TOP_DEFAULT_ADAPTER_DOCUMENTS = "top.documents.default_adapter";
   private static final Logger LOGGER = Logger.getLogger(DocumentQueryConfigMap.class.getName());
   private Map<String, Object> configMap;
@@ -45,6 +50,7 @@ public class DocumentQueryConfigMap {
   public Map<String, Object> getConfigMap() {
     return configMap;
   }
+
   public void setConfigMap(Map<String, Object> configMap) {
     this.configMap = configMap;
   }
@@ -107,7 +113,9 @@ public class DocumentQueryConfigMap {
                         : DEFAULT_CONCEPT_GRAPH_PORT;
                 put(SPRING_CONCEPT_GRAPH_URI_PROP, url + ":" + port);
               } else {
-                put(SPRING_CONCEPT_GRAPH_URI_PROP, DEFAULT_CONCEPT_GRAPH_URL + ":" + DEFAULT_CONCEPT_GRAPH_PORT);
+                put(
+                    SPRING_CONCEPT_GRAPH_URI_PROP,
+                    DEFAULT_CONCEPT_GRAPH_URL + ":" + DEFAULT_CONCEPT_GRAPH_PORT);
               }
             }
           }
@@ -126,9 +134,12 @@ public class DocumentQueryConfigMap {
     String srcPath = environment.getProperty(TOP_DATA_SOURCE_CONFIG_DIR_DOCUMENTS);
     String defaultAdapter = environment.getProperty(TOP_DEFAULT_ADAPTER_DOCUMENTS);
     TextAdapterConfig config =
-            !Objects.equals(defaultAdapter, "#{null}") ?
-            toTextAdapterConfig(Path.of(srcPath != null ? srcPath : Paths.get("").toAbsolutePath().toString(), defaultAdapter)) :
-            getFirstTextAdapterConfig(srcPath);
+        !Objects.equals(defaultAdapter, "#{null}")
+            ? toTextAdapterConfig(
+                Path.of(
+                    srcPath != null ? srcPath : Paths.get("").toAbsolutePath().toString(),
+                    defaultAdapter))
+            : getFirstTextAdapterConfig(srcPath);
     if (config == null) config = defaultConfig(environment);
     this.setName(config.getId());
     this.setConfigMap(config, environment);
@@ -136,7 +147,7 @@ public class DocumentQueryConfigMap {
 
   private TextAdapterConfig getFirstTextAdapterConfig(String dataSourceConfigDir) {
     try (Stream<Path> paths =
-             Files.list(Path.of(dataSourceConfigDir)).filter(f -> !Files.isDirectory(f))) {
+        Files.list(Path.of(dataSourceConfigDir)).filter(f -> !Files.isDirectory(f))) {
       return paths
           .map(this::toTextAdapterConfig)
           .filter(Objects::nonNull)
@@ -145,7 +156,8 @@ public class DocumentQueryConfigMap {
     } catch (Exception e) {
       LOGGER.warning(
           String.format(
-              "Could not load text adapter configs from dir '%s'. Using default adapter settings.", dataSourceConfigDir));
+              "Could not load text adapter configs from dir '%s'. Using default adapter settings.",
+              dataSourceConfigDir));
       return null;
     }
   }
@@ -179,13 +191,15 @@ public class DocumentQueryConfigMap {
         throw new RuntimeException(e);
       }
       elasticConnection.setUrl(url.getHost());
-      elasticConnection.setPort(url.getPort() != -1 ? String.valueOf(url.getPort()) : DEFAULT_ES_PORT);
+      elasticConnection.setPort(
+          url.getPort() != -1 ? String.valueOf(url.getPort()) : DEFAULT_ES_PORT);
     }
     config.setConnection(elasticConnection);
 
-    config.setIndex(new String[]{ DEFAULT_ES_INDEX });
-    if (env.getProperty(SPRING_ES_INDEX_PROP) != null) config.setIndex(new String[]{ env.getProperty(SPRING_ES_INDEX_PROP) });
-    config.setField(new String[]{DEFAULT_ES_FIELD});
+    config.setIndex(new String[] {DEFAULT_ES_INDEX});
+    if (env.getProperty(SPRING_ES_INDEX_PROP) != null)
+      config.setIndex(new String[] {env.getProperty(SPRING_ES_INDEX_PROP)});
+    config.setField(new String[] {DEFAULT_ES_FIELD});
 
     Connection neo4JConnection = new Connection();
     neo4JConnection.setUrl(DEFAULT_NEO4J_URL);
@@ -198,7 +212,8 @@ public class DocumentQueryConfigMap {
         throw new RuntimeException(e);
       }
       neo4JConnection.setUrl(url.getHost());
-      neo4JConnection.setPort(url.getPort() != -1 ? String.valueOf(url.getPort()) : DEFAULT_NEO4J_PORT);
+      neo4JConnection.setPort(
+          url.getPort() != -1 ? String.valueOf(url.getPort()) : DEFAULT_NEO4J_PORT);
     }
     GraphDBConfig neo4j = new GraphDBConfig();
     neo4j.setConnection(neo4JConnection);
@@ -215,7 +230,8 @@ public class DocumentQueryConfigMap {
         throw new RuntimeException(e);
       }
       conceptGraphConnection.setUrl(url.getHost());
-      conceptGraphConnection.setPort(url.getPort() != -1 ? String.valueOf(url.getPort()) : DEFAULT_CONCEPT_GRAPH_PORT);
+      conceptGraphConnection.setPort(
+          url.getPort() != -1 ? String.valueOf(url.getPort()) : DEFAULT_CONCEPT_GRAPH_PORT);
     }
     ConceptGraphConfig conceptGraph = new ConceptGraphConfig();
     conceptGraph.setConnection(conceptGraphConnection);
@@ -224,4 +240,3 @@ public class DocumentQueryConfigMap {
     return config;
   }
 }
-

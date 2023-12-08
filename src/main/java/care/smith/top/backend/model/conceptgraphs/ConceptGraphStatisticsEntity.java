@@ -4,7 +4,6 @@ import care.smith.top.model.PipelineResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-
 import java.util.Map;
 
 public class ConceptGraphStatisticsEntity implements PipelineResponseEntity {
@@ -38,21 +37,18 @@ public class ConceptGraphStatisticsEntity implements PipelineResponseEntity {
 
   @Override
   public PipelineResponse getSpecificResponse() {
-    //ToDo: catch null conceptGraphs/numberOfGraphs
+    // ToDo: catch null conceptGraphs/numberOfGraphs
     String status = "";
     try {
       ObjectMapper mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
-      status = mapper.writeValueAsString(
-          Map.of(
-              "conceptGraphs", conceptGraphs,
-              "numberOfGraphs", numberOfGraphs
-          )
-      );
+      status =
+          mapper.writeValueAsString(
+              Map.of(
+                  "conceptGraphs", conceptGraphs,
+                  "numberOfGraphs", numberOfGraphs));
     } catch (JsonProcessingException e) {
       e.printStackTrace();
     }
-    return new PipelineResponse()
-        .name(this.getName())
-        .response(status);
+    return new PipelineResponse().name(this.getName()).response(status);
   }
 }

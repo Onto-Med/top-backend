@@ -2,7 +2,6 @@ package care.smith.top.backend.model.conceptgraphs;
 
 import care.smith.top.model.ConceptGraphProcess;
 import care.smith.top.model.ConceptGraphProcessFinishedSteps;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -46,7 +45,7 @@ class Process {
   public ConceptGraphProcess toApiModel() {
     ConceptGraphProcess process = new ConceptGraphProcess();
     process.setName(getName());
-    for (ProcessStep processStep : getFinished_steps()){
+    for (ProcessStep processStep : getFinished_steps()) {
       ConceptGraphProcessFinishedSteps finishedSteps = new ConceptGraphProcessFinishedSteps();
       finishedSteps.setName(processStep.getName());
       finishedSteps.setRank(processStep.getRank());
@@ -55,7 +54,6 @@ class Process {
     return process;
   }
 }
-
 
 class ProcessStep {
   private int rank;

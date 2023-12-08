@@ -24,7 +24,6 @@ import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -42,11 +41,11 @@ public class DocumentQueryService extends QueryService {
   private final DocumentRepository documentRepository;
   private final ConceptRepository conceptRepository;
 
-  public DocumentQueryService(DocumentRepository documentRepository, ConceptRepository conceptRepository) {
+  public DocumentQueryService(
+      DocumentRepository documentRepository, ConceptRepository conceptRepository) {
     this.documentRepository = documentRepository;
     this.conceptRepository = conceptRepository;
   }
-
 
   @Override
   @org.jobrunr.jobs.annotations.Job(name = "Document query", retries = 0)

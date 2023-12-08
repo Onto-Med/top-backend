@@ -1,28 +1,20 @@
 package care.smith.top.backend.repository.conceptgraphs;
 
 import care.smith.top.backend.model.conceptgraphs.*;
-import io.swagger.v3.core.util.Json;
-import org.hibernate.service.spi.ServiceException;
+import java.io.File;
+import java.util.Map;
+import java.util.logging.Logger;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.reactive.function.BodyInserter;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import javax.validation.constraints.NotNull;
-import java.io.File;
-import java.util.Map;
-import java.util.Objects;
-import java.util.logging.Logger;
 
 @Repository
 public class ConceptGraphsRepository extends ConceptGraphsApi {
@@ -47,16 +39,16 @@ public class ConceptGraphsRepository extends ConceptGraphsApi {
   public ConceptGraphStatisticsEntity getGraphStatisticsForProcess(String processName) {
     try {
       return conceptGraphsApi
-              .get()
-              .uri(
-                  uriBuilder ->
-                      uriBuilder
-                          .path(API_GRAPH_METHODS.STATISTICS.getEndpoint())
-                          .queryParam("process", processName)
-                          .build())
-              .retrieve()
-              .bodyToMono(ConceptGraphStatisticsEntity.class)
-              .block();
+          .get()
+          .uri(
+              uriBuilder ->
+                  uriBuilder
+                      .path(API_GRAPH_METHODS.STATISTICS.getEndpoint())
+                      .queryParam("process", processName)
+                      .build())
+          .retrieve()
+          .bodyToMono(ConceptGraphStatisticsEntity.class)
+          .block();
     } catch (WebClientResponseException e) {
       LOGGER.warning(e.getResponseBodyAsString() + " -- " + e.getMessage());
       return null;
@@ -66,16 +58,16 @@ public class ConceptGraphsRepository extends ConceptGraphsApi {
   public ConceptGraphEntity getGraphForIdAndProcess(String id, String processName) {
     try {
       return conceptGraphsApi
-              .get()
-              .uri(
-                  uriBuilder ->
-                      uriBuilder
-                          .path(API_GRAPH_METHODS.GRAPH.getEndpoint(id))
-                          .queryParam("process", processName)
-                          .build())
-              .retrieve()
-              .bodyToMono(ConceptGraphEntity.class)
-              .block();
+          .get()
+          .uri(
+              uriBuilder ->
+                  uriBuilder
+                      .path(API_GRAPH_METHODS.GRAPH.getEndpoint(id))
+                      .queryParam("process", processName)
+                      .build())
+          .retrieve()
+          .bodyToMono(ConceptGraphEntity.class)
+          .block();
     } catch (WebClientResponseException e) {
       LOGGER.warning(e.getResponseBodyAsString() + " -- " + e.getMessage());
       return null;
@@ -87,11 +79,9 @@ public class ConceptGraphsRepository extends ConceptGraphsApi {
       @Nonnull String processName,
       @Nullable String language,
       @Nullable Boolean skipPresent,
-      @Nullable Boolean returnStatistics
-  ) {
+      @Nullable Boolean returnStatistics) {
     return startPipelineForDataAndLabelsAndConfigs(
-        data, null, processName,
-        language, skipPresent, returnStatistics, null);
+        data, null, processName, language, skipPresent, returnStatistics, null);
   }
 
   public PipelineResponseEntity startPipelineForDataAndLabels(
@@ -100,11 +90,9 @@ public class ConceptGraphsRepository extends ConceptGraphsApi {
       @Nonnull String processName,
       @Nullable String language,
       @Nullable Boolean skipPresent,
-      @Nullable Boolean returnStatistics
-  ) {
+      @Nullable Boolean returnStatistics) {
     return startPipelineForDataAndLabelsAndConfigs(
-        data, labels, processName,
-        language, skipPresent, returnStatistics, null);
+        data, labels, processName, language, skipPresent, returnStatistics, null);
   }
 
   public PipelineResponseEntity startPipelineForDataAndConfigs(
@@ -113,12 +101,10 @@ public class ConceptGraphsRepository extends ConceptGraphsApi {
       @Nullable String language,
       @Nullable Boolean skipPresent,
       @Nullable Boolean returnStatistics,
-      @Nonnull Map<String, File> configs
-  ) {
-      return startPipelineForDataAndLabelsAndConfigs(
-          data, null, processName,
-          language, skipPresent, returnStatistics, configs);
-    }
+      @Nonnull Map<String, File> configs) {
+    return startPipelineForDataAndLabelsAndConfigs(
+        data, null, processName, language, skipPresent, returnStatistics, configs);
+  }
 
   public PipelineResponseEntity startPipelineForDataAndLabelsAndConfigs(
       @Nonnull File data,
@@ -127,12 +113,12 @@ public class ConceptGraphsRepository extends ConceptGraphsApi {
       @Nullable String language,
       @Nullable Boolean skipPresent,
       @Nullable Boolean returnStatistics,
-      Map<String, File> configs
-  ) {
+      Map<String, File> configs) {
     MultiValueMap<String, Object> parts = new LinkedMultiValueMap<>();
     parts.add("data", new FileSystemResource(data));
     if (labels != null) parts.add("labels", new FileSystemResource(labels));
-    if (configs != null && !configs.isEmpty()) configs.forEach( (name, file) -> parts.add(name + "_config", new FileSystemResource(file)));
+    if (configs != null && !configs.isEmpty())
+      configs.forEach((name, file) -> parts.add(name + "_config", new FileSystemResource(file)));
 
     try {
       Mono<PipelineResponseEntity> apiResponse =
@@ -145,7 +131,8 @@ public class ConceptGraphsRepository extends ConceptGraphsApi {
                           .queryParam("process", processName)
                           .queryParam("lang", language == null ? "en" : language)
                           .queryParam("skip_present", skipPresent == null || skipPresent)
-                          .queryParam("return_statistics", returnStatistics != null && returnStatistics)
+                          .queryParam(
+                              "return_statistics", returnStatistics != null && returnStatistics)
                           .build())
               .body(BodyInserters.fromMultipartData(parts))
               //          .retrieve()
@@ -160,7 +147,8 @@ public class ConceptGraphsRepository extends ConceptGraphsApi {
                       return response.bodyToMono(PipelineFailEntity.class);
                     }
                   });
-      return apiResponse.block(); //ToDo: now I need some way of accessing the status of the pipeline...
+      return apiResponse
+          .block(); // ToDo: now I need some way of accessing the status of the pipeline...
     } catch (WebClientResponseException e) {
       LOGGER.warning(e.getResponseBodyAsString() + " -- " + e.getMessage());
       return null;
