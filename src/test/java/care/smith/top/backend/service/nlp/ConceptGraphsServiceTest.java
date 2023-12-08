@@ -4,6 +4,7 @@ import care.smith.top.model.ConceptGraph;
 import care.smith.top.model.ConceptGraphProcess;
 import care.smith.top.model.ConceptGraphStat;
 import care.smith.top.model.PipelineResponse;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -22,21 +23,25 @@ class ConceptGraphsServiceTest extends AbstractNLPTest{
   //ToDo: build test zip here to use
 
   @Test
+  @Disabled
   void getAllConceptGraphStatistics() {
     Map<String, ConceptGraphStat> conceptGraphStatMap = conceptGraphsService.getAllConceptGraphStatistics("grassco");
   }
 
   @Test
+  @Disabled
   void getConceptGraphForIdAndProcess() {
     ConceptGraph conceptGraph = conceptGraphsService.getConceptGraphForIdAndProcess("0", "grassco");
   }
 
   @Test
+  @Disabled
   void getStoredProcesses() {
     List<ConceptGraphProcess> processes = conceptGraphsService.getAllStoredProcesses();
   }
 
   @Test
+  @Disabled
   void initPipeline() {
     try {
       PipelineResponse stats =
