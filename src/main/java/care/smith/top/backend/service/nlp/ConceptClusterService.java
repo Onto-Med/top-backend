@@ -41,6 +41,7 @@ public class ConceptClusterService implements ContentService {
 
   @Cacheable("concepts")
   public List<ConceptCluster> concepts() {
+    //ToDo: for late - when generating concept clusters from the frontend (as its intended) this cache needs to be recalculated
     return conceptRepository.findAll().stream()
         .map(conceptEntityMapper)
         .collect(Collectors.toList());

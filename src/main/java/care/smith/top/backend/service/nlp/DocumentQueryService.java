@@ -182,7 +182,7 @@ public class DocumentQueryService extends QueryService {
 
   public List<DataSource> getDataSources() {
     return getTextAdapterConfigs().stream()
-        .map(a -> new DataSource().id(a.getId()).title(a.getId().replace('_', ' ')))
+        .map(this::textAdapterConfigToDataSource)
         .sorted(Comparator.comparing(DataSource::getId))
         .collect(Collectors.toList());
   }
