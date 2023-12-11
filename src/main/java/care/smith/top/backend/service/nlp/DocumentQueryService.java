@@ -9,6 +9,7 @@ import care.smith.top.backend.repository.jpa.ConceptRepository;
 import care.smith.top.backend.service.QueryService;
 import care.smith.top.model.*;
 import care.smith.top.top_document_query.adapter.*;
+import care.smith.top.top_document_query.adapter.config.TextAdapterConfig;
 import care.smith.top.top_document_query.converter.csv.DocumentCSV;
 import java.io.IOException;
 import java.nio.file.FileSystemException;
@@ -23,7 +24,6 @@ import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -38,8 +38,14 @@ public class DocumentQueryService extends QueryService {
   @Value("${top.documents.data-source-config-dir:config/data_sources/nlp}")
   private String dataSourceConfigDir;
 
-  @Autowired private DocumentRepository documentRepository;
-  @Autowired private ConceptRepository conceptRepository;
+  private final DocumentRepository documentRepository;
+  private final ConceptRepository conceptRepository;
+
+  public DocumentQueryService(
+      DocumentRepository documentRepository, ConceptRepository conceptRepository) {
+    this.documentRepository = documentRepository;
+    this.conceptRepository = conceptRepository;
+  }
 
   @Override
   @org.jobrunr.jobs.annotations.Job(name = "Document query", retries = 0)
@@ -176,7 +182,7 @@ public class DocumentQueryService extends QueryService {
 
   public List<DataSource> getDataSources() {
     return getTextAdapterConfigs().stream()
-        .map(a -> new DataSource().id(a.getId()).title(a.getId().replace('_', ' ')))
+        .map(this::textAdapterConfigToDataSource)
         .sorted(Comparator.comparing(DataSource::getId))
         .collect(Collectors.toList());
   }

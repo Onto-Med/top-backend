@@ -11,8 +11,8 @@ import care.smith.top.model.DocumentPage;
 import care.smith.top.model.Phrase;
 import java.io.IOException;
 import java.util.*;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,11 +20,23 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class DocumentApiDelegateImpl implements DocumentApiDelegate {
+  private final Logger LOGGER = Logger.getLogger(DocumentApiDelegateImpl.class.getName());
 
-  @Autowired DocumentService documentService;
-  @Autowired PhraseService phraseService;
-  @Autowired ConceptClusterService conceptService;
-  @Autowired DocumentQueryService documentQueryService;
+  private DocumentService documentService;
+  private final PhraseService phraseService;
+  private final ConceptClusterService conceptClusterService;
+  private final DocumentQueryService documentQueryService;
+
+  public DocumentApiDelegateImpl(
+      DocumentService documentService,
+      PhraseService phraseService,
+      ConceptClusterService conceptClusterService,
+      DocumentQueryService documentQueryService) {
+    this.documentService = documentService;
+    this.phraseService = phraseService;
+    this.conceptClusterService = conceptClusterService;
+    this.documentQueryService = documentQueryService;
+  }
 
   @Override
   public ResponseEntity<List<Document>> getDocumentIdsByConceptClusterIds(

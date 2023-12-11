@@ -10,7 +10,6 @@ import java.util.stream.Collectors;
 import org.neo4j.cypherdsl.core.Cypher;
 import org.neo4j.cypherdsl.core.Node;
 import org.neo4j.cypherdsl.core.Statement;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
@@ -24,7 +23,6 @@ public class ConceptClusterService implements ContentService {
               .id(conceptEntity.conceptId())
               .labels(String.join(", ", conceptEntity.lables()));
 
-  @Autowired
   public ConceptClusterService(ConceptClusterNodeRepository conceptRepository) {
     this.conceptRepository = conceptRepository;
   }
@@ -43,6 +41,8 @@ public class ConceptClusterService implements ContentService {
 
   @Cacheable("concepts")
   public List<ConceptCluster> concepts() {
+    // ToDo: for late - when generating concept clusters from the frontend (as its intended) this
+    // cache needs to be recalculated
     return conceptRepository.findAll().stream()
         .map(conceptEntityMapper)
         .collect(Collectors.toList());

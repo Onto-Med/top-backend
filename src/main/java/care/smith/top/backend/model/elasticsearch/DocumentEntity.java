@@ -46,7 +46,7 @@ public class DocumentEntity {
   }
   ;
 
-  public care.smith.top.model.Document nullDocument() {
+  public static care.smith.top.model.Document nullDocument() {
     return new care.smith.top.model.Document()
         .id("null")
         .name("null")

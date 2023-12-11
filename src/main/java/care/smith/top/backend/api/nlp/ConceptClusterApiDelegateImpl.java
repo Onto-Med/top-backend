@@ -5,14 +5,17 @@ import care.smith.top.backend.service.nlp.ConceptClusterService;
 import care.smith.top.model.ConceptCluster;
 import care.smith.top.model.ConceptClusterPage;
 import java.util.List;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 @Service
 public class ConceptClusterApiDelegateImpl implements ConceptclusterApiDelegate {
 
-  @Autowired ConceptClusterService conceptService;
+  private final ConceptClusterService conceptClusterService;
+
+  public ConceptClusterApiDelegateImpl(ConceptClusterService conceptClusterService) {
+    this.conceptClusterService = conceptClusterService;
+  }
 
   @Override
   public ResponseEntity<ConceptClusterPage> getConceptClustersByDocumentId(
@@ -37,6 +40,6 @@ public class ConceptClusterApiDelegateImpl implements ConceptclusterApiDelegate 
   @Override
   public ResponseEntity<List<ConceptCluster>> getConceptClusters(String phraseText) {
     // ToDo: filter by phraseText
-    return ResponseEntity.ok(conceptService.concepts());
+    return ResponseEntity.ok(conceptClusterService.concepts());
   }
 }

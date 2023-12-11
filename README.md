@@ -22,18 +22,19 @@ for additional documentation.
     * `QUERY_RESULT_DOWNLOAD_ENABLED`: whether users with write permission for a repository can download query results
       or not, defaults to true
     * `TERMINOLOGY_SERVICE_ENDPOINT`: endpoint of the Ontology Lookup Service to be used for code search, default
-      to http://localhost:9000/api (OLS3 is currently supported)
+      to http://localhost:9000/api (OLS3 is currently supported)  
 
-   Document related:
-    * `DB_NEO4J_HOST`: host running the neo4j database server, defaults to localhost
-    * `DB_NEO4J_PORT`: port of the neo4j database, defaults to 7687
-    * `DB_NEO4J_USER`: username for neo4j database, defaults to neo4j
-    * `DB_NEO4J_PASS`: password for neo4j database
-    * `DB_ELASTIC_HOST`: host running the Elasticsearch document storage, defaults to localhost
-    * `DB_ELASTIC_PORT`: port of the Elasticsearch document storage, defaults to 9200
-    * `DB_ELASTIC_CONNECTION_TIMEOUT`: timeout in seconds, defaults to 1s
-    * `DB_ELASTIC_SOCKET_TIMEOUT` timeout in seconds, defaults to 30s
-    * `DB_ELASTIC_INDEX` name of the document index, defaults to 'documents'
+   Document related:  
+   *(The following variables will be overwritten by their respective adapter values if specified)*  
+    * `DB_NEO4J_USER`: username for neo4j database, defaults to `neo4j`
+    * `DB_NEO4J_PASS`: password for neo4j database (should be declared here and not written into an adapter)
+    * `DB_ELASTIC_USER`: username for elasticsearch database, defaults to `elastic`
+    * `DB_ELASTIC_PASS`: password for elasticsearch database (should be declared here and not written into an adapter)
+
+   *(These are general configuration variables for the database that won't be declared in an adapter)*  
+    * `DB_ELASTIC_CONNECTION_TIMEOUT`: timeout in seconds, defaults to `1s`
+    * `DB_ELASTIC_SOCKET_TIMEOUT`: timeout in seconds, defaults to `30s`
+    * `DB_NEO4J_CONNECTION_TIMEOUT`: timeout in seconds, defaults to `30s`  
 
    OAuth2 related:
     * `OAUTH2_ENABLED`: enable or disable oauth2, defaults to `false`
@@ -49,9 +50,24 @@ for additional documentation.
     ```sh
     docker run --rm -p 7687:7687 -e NEO4J_AUTH=neo4j/password neo4j
     ```
-4. Start the OAuth2 server ([see dockerhub](https://hub.docker.com/r/bitnami/keycloak)).
+4. Start a default document index service (Elasticsearch) on the address specified in the adapter (if no adapter file is found defaults to `localhost:9008`).
+
+5. Start the [concept graphs service](https://github.com/Onto-Med/concept-graphs) on the address specified in the adapter (if no adapter file is found defaults to `localhost:9007`).
+
+6. Start the OAuth2 server ([see dockerhub](https://hub.docker.com/r/bitnami/keycloak)).
 
 If you run the TOP Framework with an OAuth2 server, the first user that is created will have the admin role.
+
+## NLP/Document related configuration
+
+To utilize the document search of the framework, one needs three different services running: 
+1. Elasticsearch or something similar
+2. A Neo4j cluster
+3. And the [concept graphs service](https://github.com/Onto-Med/concept-graphs)
+
+The document search is adapter centric and one needs a working configuration file (yml) that specifies the addresses of said services
+under the folder declared with the environment variable `DOCUMENT_DATA_SOURCE_CONFIG_DIR`.
+If no `DOCUMENT_DEFAULT_ADAPTER` is specified, the first adapter found in the folder is used for setup.  
 
 ## Plugins
 
