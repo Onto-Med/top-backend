@@ -1,5 +1,6 @@
 package care.smith.top.backend.service.nlp;
 
+import care.smith.top.backend.model.conceptgraphs.ConceptGraphStatisticsEntity;
 import care.smith.top.backend.model.conceptgraphs.GraphStatsEntity;
 import care.smith.top.backend.repository.conceptgraphs.ConceptGraphsRepository;
 import care.smith.top.backend.service.ContentService;
@@ -30,8 +31,9 @@ public class ConceptGraphsService implements ContentService {
   }
 
   public Map<String, ConceptGraphStat> getAllConceptGraphStatistics(String processName) {
-    return Arrays.stream(
-            conceptGraphsRepository.getGraphStatisticsForProcess(processName).getConceptGraphs())
+    ConceptGraphStatisticsEntity conceptGraphStatisticsEntity = conceptGraphsRepository.getGraphStatisticsForProcess(processName);
+    if (conceptGraphStatisticsEntity.getConceptGraphs() == null) return null;
+    return Arrays.stream(conceptGraphStatisticsEntity.getConceptGraphs())
         .map(GraphStatsEntity::toApiModel)
         .collect(
             Collectors.toMap(
@@ -46,38 +48,6 @@ public class ConceptGraphsService implements ContentService {
     return conceptGraphsRepository.getAllStoredProcesses().toApiModel();
   }
 
-  //  public Map<String, ConceptGraphStat> initPipeline(File data, String processName) {
-  //      return Arrays.stream(conceptGraphsRepository.startPipelineForData(data, processName, null,
-  // true)
-  //          .getConceptGraphs())
-  //          .map(GraphStatsEntity::toApiModel)
-  //          .collect(
-  //              Collectors.toMap(
-  //                  ConceptGraphStat::getId,
-  //                  Function.identity(),
-  //                  (existing, replacement) -> existing)
-  //          );
-  //    }
-  //
-  //  public Map<String, ConceptGraphStat> initPipelineWithConfigs(
-  //      File data,
-  //      File labels,
-  //      String processName,
-  //      String language,
-  //      Boolean skipPresent,
-  //      Map<String, File> configs
-  //  ) {
-  //    return Arrays.stream(conceptGraphsRepository.startPipelineForDataAndLabelsAndConfigs(
-  //        data, labels, processName, language, skipPresent, configs).getConceptGraphs())
-  //        .map(GraphStatsEntity::toApiModel)
-  //        .collect(
-  //            Collectors.toMap(
-  //                ConceptGraphStat::getId,
-  //                Function.identity(),
-  //                (existing, replacement) -> existing)
-  //        );
-  //  }
-
   public PipelineResponse initPipeline(File data, String processName) {
     return conceptGraphsRepository
         .startPipelineForData(data, processName, null, true, false)
@@ -90,25 +60,6 @@ public class ConceptGraphsService implements ContentService {
         .startPipelineForData(data, processName, null, skipPresent, returnStatistics)
         .getSpecificResponse();
   }
-
-  //  public PipelineResponse initPipelineWithConfigs(
-  //      File data,
-  //      File labels,
-  //      String processName,
-  //      String language,
-  //      Boolean skipPresent,
-  //      Map<String, File> configs
-  //  ) {
-  //    return Arrays.stream(conceptGraphsRepository.startPipelineForDataAndLabelsAndConfigs(
-  //        data, labels, processName, language, skipPresent, configs).getConceptGraphs())
-  //        .map(GraphStatsEntity::toApiModel)
-  //        .collect(
-  //            Collectors.toMap(
-  //                ConceptGraphStat::getId,
-  //                Function.identity(),
-  //                (existing, replacement) -> existing)
-  //        );
-  //  }
 
   public PipelineResponse initPipelineWithConfigs(
       File data,

@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -26,7 +27,9 @@ public class ConceptGraphApiDelegateImpl implements ConceptgraphsApiDelegate {
   @Override
   public ResponseEntity<Map<String, ConceptGraphStat>> getConceptGraphStatistics(
       List<String> include, String process) {
-    return ResponseEntity.ok(conceptGraphsService.getAllConceptGraphStatistics(process));
+    Map<String, ConceptGraphStat> statistics = conceptGraphsService.getAllConceptGraphStatistics(process);
+    if (statistics == null) return ResponseEntity.of(Optional.empty());
+    return ResponseEntity.ok(statistics);
   }
 
   @Override
