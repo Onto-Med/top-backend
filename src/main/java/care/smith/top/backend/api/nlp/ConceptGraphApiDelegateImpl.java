@@ -31,7 +31,7 @@ public class ConceptGraphApiDelegateImpl implements ConceptgraphsApiDelegate {
 
   @Override
   public ResponseEntity<ConceptGraph> getConceptGraph(
-      List<String> include, String processId, String graphId) {
+      String processId, String graphId, List<String> include) {
     return ResponseEntity.ok(
         conceptGraphsService.getConceptGraphForIdAndProcess(graphId, processId));
   }
