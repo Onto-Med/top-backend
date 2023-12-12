@@ -1,6 +1,7 @@
 package care.smith.top.backend.api.nlp;
 
 import care.smith.top.backend.api.ConceptgraphsApiDelegate;
+import care.smith.top.backend.service.nlp.ConceptClusterService;
 import care.smith.top.backend.service.nlp.ConceptGraphsService;
 import care.smith.top.model.ConceptGraph;
 import care.smith.top.model.ConceptGraphProcess;
@@ -19,9 +20,14 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 public class ConceptGraphApiDelegateImpl implements ConceptgraphsApiDelegate {
   private final ConceptGraphsService conceptGraphsService;
+  private final ConceptClusterService conceptClusterService;
 
-  public ConceptGraphApiDelegateImpl(ConceptGraphsService conceptGraphsService) {
+  public ConceptGraphApiDelegateImpl(
+          ConceptGraphsService conceptGraphsService,
+          ConceptClusterService conceptClusterService
+  ) {
     this.conceptGraphsService = conceptGraphsService;
+    this.conceptClusterService = conceptClusterService;
   }
 
   @Override
@@ -34,7 +40,8 @@ public class ConceptGraphApiDelegateImpl implements ConceptgraphsApiDelegate {
 
   @Override
   public ResponseEntity<ConceptGraph> getConceptGraph(
-      String processId, String graphId, List<String> include) {
+          List<String> include, String processId, String graphId) {
+    conceptClusterService.createGraphInNeo4j(graphId, processId);
     return ResponseEntity.ok(
         conceptGraphsService.getConceptGraphForIdAndProcess(graphId, processId));
   }

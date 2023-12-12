@@ -19,4 +19,10 @@ public interface PhraseNodeRepository
           // ToDo: implement check for whether all or only exemplars should be regarded
           "RETURN DISTINCT p;")
   List<PhraseNodeEntity> getPhrasesForDocument(String documentId, Boolean exemplarOnly);
+
+  @Query(
+      "OPTIONAL MATCH (n:Phrase {phraseId: $phraseId})\n" +
+          "RETURN n IS NOT NULL AS Predicate;"
+  )
+  Boolean phraseNodeExists(String phraseId);
 }
