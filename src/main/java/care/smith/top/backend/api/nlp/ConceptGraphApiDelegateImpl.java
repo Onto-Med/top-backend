@@ -40,7 +40,8 @@ public class ConceptGraphApiDelegateImpl implements ConceptgraphsApiDelegate {
 
   @Override
   public ResponseEntity<ConceptGraph> getConceptGraph(
-          List<String> include, String processId, String graphId) {
+          String processId, String graphId, List<String> include) {
+    //ToDo: IMPORTANT! Remove the following line; was just for testing
     conceptClusterService.createGraphInNeo4j(graphId, processId);
     return ResponseEntity.ok(
         conceptGraphsService.getConceptGraphForIdAndProcess(graphId, processId));

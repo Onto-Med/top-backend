@@ -1,8 +1,10 @@
 package care.smith.top.backend.service.nlp;
 
 import care.smith.top.backend.model.conceptgraphs.ConceptGraphEntity;
+import care.smith.top.backend.model.conceptgraphs.PhraseNodeObject;
 import care.smith.top.backend.model.neo4j.ConceptNodeEntity;
 import care.smith.top.backend.model.neo4j.DocumentNodeEntity;
+import care.smith.top.backend.model.neo4j.PhraseNodeEntity;
 import care.smith.top.backend.repository.conceptgraphs.ConceptGraphsRepository;
 import care.smith.top.backend.repository.elasticsearch.DocumentRepository;
 import care.smith.top.backend.repository.neo4j.ConceptClusterNodeRepository;
@@ -11,10 +13,7 @@ import care.smith.top.backend.repository.neo4j.PhraseNodeRepository;
 import care.smith.top.backend.service.ContentService;
 import care.smith.top.model.ConceptCluster;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.neo4j.cypherdsl.core.Cypher;
@@ -73,21 +72,46 @@ public class ConceptClusterService implements ContentService {
 
   public void createGraphInNeo4j(String graphId, String processName) {
     Set<String> documentSet = new HashSet<>();
+    Map<PhraseNodeObject, Integer> phrasesDocumentCount = new HashMap<>();
     ConceptGraphEntity conceptGraph = conceptGraphsRepository.getGraphForIdAndProcess(graphId, processName);
+
+    // Save Phrase Nodes
     Arrays.stream(conceptGraph.getNodes()).forEach(
             phraseNodeObject -> {
+                Set<String> documents = Arrays.stream(phraseNodeObject.getDocuments()).collect(Collectors.toSet());
+                documentSet.addAll(documents);
+                phrasesDocumentCount.put(phraseNodeObject, documentSet.size());
               if (!phraseNodeRepository.phraseNodeExists(phraseNodeObject.getId())) {
-                documentSet.addAll(Arrays.stream(phraseNodeObject.getDocuments()).collect(Collectors.toSet()));
                 phraseNodeRepository.save(phraseNodeObject.toPhraseNodeEntity());
               }
             }
     );
-    documentRepository.findAllById(documentSet).forEach(
+
+    Set<PhraseNodeEntity> currentPhrases =
+        phrasesDocumentCount.keySet().stream()
+            .map(PhraseNodeObject::toPhraseNodeEntity)
+            .collect(Collectors.toSet());
+
+    // Save Concept Nodes and by extension create relationships 'PHRASE-IN_CONCEPT->CONCEPT'
+    if (!conceptNodeRepository.conceptNodeExists(graphId)) {
+      List<String> labels = phrasesDocumentCount.entrySet().stream()
+          .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
+          .map(nodeEntry -> nodeEntry.getKey().getLabel())
+          .limit(3)
+          .collect(Collectors.toList());
+      conceptNodeRepository.save(new ConceptNodeEntity(graphId, labels, currentPhrases));
+    }
+
+    // Save Document Nodes
+    documentRepository
+        .findAllById(documentSet)
+        .forEach(
             documentEntity -> {
-              documentNodeRepository.save(
-                      new DocumentNodeEntity(documentEntity.getId(), documentEntity.getDocumentName()));
-            }
-    );
+              if (!documentNodeRepository.documentNodeExists(documentEntity.getId())) {
+                documentNodeRepository.save(
+                    new DocumentNodeEntity(documentEntity.getId(), documentEntity.getDocumentName(), currentPhrases));
+              }
+            });
   }
 
   public void createAllGraphsInNeo4j(String processName) {

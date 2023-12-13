@@ -23,4 +23,10 @@ public interface DocumentNodeRepository
           + "AND returnBool\n"
           + "RETURN DISTINCT d;")
   List<DocumentNodeEntity> getDocumentsForConcepts(List<String> conceptIds, Boolean exemplarOnly);
+
+  @Query(
+      "OPTIONAL MATCH (n:Document {documentId: $documentId})\n" +
+          "RETURN n IS NOT NULL AS Predicate;"
+  )
+  Boolean documentNodeExists(String documentId);
 }

@@ -16,7 +16,7 @@ public class ConceptNodeEntity {
   @Id @GeneratedValue private Long id;
   // ToDo: this takes a long time to load; maybe it's not necessary bc I get the Phrases later with
   // a Cypher query when needed
-  // @Relationship(type = "IN_CONCEPT", direction = Relationship.Direction.INCOMING)
+   @Relationship(type = "IN_CONCEPT", direction = Relationship.Direction.INCOMING)
   private Set<PhraseNodeEntity> conceptPhrases;
 
   public ConceptNodeEntity(
