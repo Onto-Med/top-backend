@@ -42,7 +42,7 @@ public class ConceptGraphApiDelegateImpl implements ConceptgraphsApiDelegate {
   public ResponseEntity<ConceptGraph> getConceptGraph(
           String processId, String graphId, List<String> include) {
     //ToDo: IMPORTANT! Remove the following line; was just for testing
-    conceptClusterService.createGraphInNeo4j(graphId, processId);
+//    conceptClusterService.createGraphInNeo4j(graphId, processId);
     return ResponseEntity.ok(
         conceptGraphsService.getConceptGraphForIdAndProcess(graphId, processId));
   }

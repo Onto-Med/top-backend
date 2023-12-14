@@ -1,6 +1,9 @@
 package care.smith.top.backend.model.neo4j;
 
 import java.util.List;
+import java.util.Set;
+
+import care.smith.top.model.Phrase;
 import org.springframework.data.neo4j.core.schema.*;
 
 @Node("Phrase")
@@ -19,8 +22,8 @@ public class PhraseNodeEntity {
   private final String phraseId;
 
   @Id @GeneratedValue private Long id;
-  //    @Relationship(type = "PARENT_OF")
-  private List<PhraseNodeEntity> phrases;
+  @Relationship(type = "NEIGHBOR_OF")
+  private Set<PhraseNodeEntity> phrases;
 
   public PhraseNodeEntity(
       List<String> phraseAttributes, Boolean isExemplar, String phraseText, String phraseId) {
@@ -61,5 +64,23 @@ public class PhraseNodeEntity {
 
   public Long nodeId() {
     return this.id;
+  }
+
+  public PhraseNodeEntity addNeighbor(PhraseNodeEntity phraseNode){
+    this.phrases.add(phraseNode);
+    return this;
+  }
+
+  public PhraseNodeEntity removeNeighbor(PhraseNodeEntity phraseNode){
+    this.phrases.remove(phraseNode);
+    return this;
+  }
+
+  public Phrase toApiModel(){
+    return new Phrase()
+        .id(this.phraseId)
+        .text(this.phraseText)
+        .isExemplar(this.isExemplar)
+        .attributes(this.phraseAttributes);
   }
 }

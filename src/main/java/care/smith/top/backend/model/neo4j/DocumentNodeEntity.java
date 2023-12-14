@@ -16,7 +16,7 @@ public class DocumentNodeEntity {
   private final String documentName;
 
   @Id @GeneratedValue private Long id;
-   @Relationship(type = "HAS_PHRASE", direction = Relationship.Direction.OUTGOING)
+  @Relationship(type = "HAS_PHRASE", direction = Relationship.Direction.OUTGOING)
   private Set<PhraseNodeEntity> documentPhrases;
 
   public DocumentNodeEntity(String documentId, String documentName, Set<PhraseNodeEntity> documentPhrases) {
@@ -46,6 +46,16 @@ public class DocumentNodeEntity {
 
   public Set<PhraseNodeEntity> documentPhrases() {
     return documentPhrases;
+  }
+
+  public DocumentNodeEntity addPhrase(PhraseNodeEntity phraseNode) {
+    this.documentPhrases.add(phraseNode);
+    return this;
+  }
+
+  public DocumentNodeEntity removePhrase(PhraseNodeEntity phraseNode) {
+    this.documentPhrases.remove(phraseNode);
+    return this;
   }
 
   public Document toApiModel() {

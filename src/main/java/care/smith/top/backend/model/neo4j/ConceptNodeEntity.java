@@ -2,6 +2,10 @@ package care.smith.top.backend.model.neo4j;
 
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+
+import care.smith.top.model.Concept;
+import care.smith.top.model.ConceptCluster;
 import org.springframework.data.neo4j.core.schema.*;
 
 @Node("Concept")
@@ -47,5 +51,21 @@ public class ConceptNodeEntity {
 
   public Set<PhraseNodeEntity> conceptPhrases() {
     return this.conceptPhrases;
+  }
+
+  public ConceptNodeEntity addPhrase(PhraseNodeEntity phraseNode) {
+    this.conceptPhrases.add(phraseNode);
+    return this;
+  }
+
+  public ConceptNodeEntity removePhrase(PhraseNodeEntity phraseNode) {
+    this.conceptPhrases.remove(phraseNode);
+    return this;
+  }
+
+  public ConceptCluster toApiModel(){
+    return new ConceptCluster()
+        .id(this.conceptId)
+        .labels(String.join(";", this.labels));
   }
 }
