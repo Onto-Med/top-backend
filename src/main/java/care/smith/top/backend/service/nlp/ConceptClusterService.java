@@ -1,6 +1,7 @@
 package care.smith.top.backend.service.nlp;
 
 import care.smith.top.backend.model.conceptgraphs.ConceptGraphEntity;
+import care.smith.top.backend.model.conceptgraphs.PhraseNodeNeighbors;
 import care.smith.top.backend.model.conceptgraphs.PhraseNodeObject;
 import care.smith.top.backend.model.neo4j.ConceptNodeEntity;
 import care.smith.top.backend.model.neo4j.DocumentNodeEntity;
@@ -16,6 +17,8 @@ import care.smith.top.model.ConceptCluster;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import com.google.common.collect.Lists;
 import org.neo4j.cypherdsl.core.Cypher;
 import org.neo4j.cypherdsl.core.Node;
 import org.neo4j.cypherdsl.core.Statement;
@@ -71,45 +74,64 @@ public class ConceptClusterService implements ContentService {
   }
 
   public void createGraphInNeo4j(String graphId, String processName) {
-    Set<String> documentSet = new HashSet<>();
-    Map<PhraseNodeObject, Integer> phrasesDocumentCount = new HashMap<>();
+    Map<String, List<String>> documentId2PhraseIdMap = new HashMap<>();
+    Map<String, Integer> phrasesDocumentCount = new HashMap<>();
+    Map<String, PhraseNodeEntity> phraseNodeEntityMap = new HashMap<>();
     ConceptGraphEntity conceptGraph = conceptGraphsRepository.getGraphForIdAndProcess(graphId, processName);
 
-    // Save Phrase Nodes
-    Arrays.stream(conceptGraph.getNodes()).forEach(
+    Arrays.stream(conceptGraph.getNodes())
+        .forEach(
             phraseNodeObject -> {
-                Set<String> documents = Arrays.stream(phraseNodeObject.getDocuments()).collect(Collectors.toSet());
-                documentSet.addAll(documents);
-                phrasesDocumentCount.put(phraseNodeObject, documentSet.size());
-              if (!phraseNodeRepository.phraseNodeExists(phraseNodeObject.getId())) {
-                phraseNodeRepository.save(phraseNodeObject.toPhraseNodeEntity());
-              }
-            }
-    );
+              Arrays.stream(phraseNodeObject.getDocuments())
+                  .forEach(
+                      documentId -> {
+                        if (!documentId2PhraseIdMap.containsKey(documentId)) {
+                          documentId2PhraseIdMap.put(documentId, Lists.newArrayList(phraseNodeObject.getId()));
+                        } else {
+                          documentId2PhraseIdMap.get(documentId).add(phraseNodeObject.getId());
+                        }
+                      });
+              phraseNodeEntityMap.put(
+                  phraseNodeObject.getId(), phraseNodeObject.toPhraseNodeEntity());
+              phrasesDocumentCount.put(
+                  phraseNodeObject.getId(), phraseNodeObject.getDocuments().length);
+            });
 
-    Set<PhraseNodeEntity> currentPhrases =
-        phrasesDocumentCount.keySet().stream()
-            .map(PhraseNodeObject::toPhraseNodeEntity)
-            .collect(Collectors.toSet());
-
-    // Save Concept Nodes and by extension create relationships 'PHRASE-IN_CONCEPT->CONCEPT'
+    // Save Concept Nodes (and by extension create relationships 'PHRASE--IN_CONCEPT->CONCEPT' as well as Phrase nodes)
     if (!conceptNodeRepository.conceptNodeExists(graphId)) {
       List<String> labels = phrasesDocumentCount.entrySet().stream()
           .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
-          .map(nodeEntry -> nodeEntry.getKey().getLabel())
+          .filter(nodeEntry -> phraseNodeEntityMap.containsKey(nodeEntry.getKey()))
+          .map(nodeEntry -> phraseNodeEntityMap.get(nodeEntry.getKey()).phraseText())
           .limit(3)
           .collect(Collectors.toList());
-      conceptNodeRepository.save(new ConceptNodeEntity(graphId, labels, currentPhrases));
+      conceptNodeRepository.save(new ConceptNodeEntity(graphId, labels, new HashSet<>(phraseNodeEntityMap.values())));
     }
+
+    // Create Relations between Phrases
+    Arrays.stream(conceptGraph.getAdjacency())
+        .forEach(
+            adjacencyObject -> {
+              phraseNodeEntityMap
+                  .get(adjacencyObject.getId())
+                  .addNeighbors(
+                      Arrays.stream(adjacencyObject.getNeighbors())
+                          .map(neighbor -> phraseNodeEntityMap.get(neighbor.getId()))
+                          .collect(Collectors.toSet()));
+              phraseNodeRepository.save(phraseNodeEntityMap.get(adjacencyObject.getId()));
+            });
 
     // Save Document Nodes
     documentRepository
-        .findAllById(documentSet)
+        .findAllById(documentId2PhraseIdMap.keySet())
         .forEach(
             documentEntity -> {
               if (!documentNodeRepository.documentNodeExists(documentEntity.getId())) {
                 documentNodeRepository.save(
-                    new DocumentNodeEntity(documentEntity.getId(), documentEntity.getDocumentName(), currentPhrases));
+                    new DocumentNodeEntity(documentEntity.getId(), documentEntity.getDocumentName(),
+                        documentId2PhraseIdMap.get(documentEntity.getId()).stream()
+                            .map(phraseNodeEntityMap::get).collect(Collectors.toSet())
+                    ));
               }
             });
   }
