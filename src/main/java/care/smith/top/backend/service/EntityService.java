@@ -33,6 +33,8 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 @Transactional
 public class EntityService implements ContentService {
+  private static final String PLUGIN_PACKAGE = "care.smith.top";
+
   @Value("${spring.paging.page-size:10}")
   private int pageSize;
 
@@ -627,15 +629,15 @@ public class EntityService implements ContentService {
   }
 
   public Set<Class<? extends PhenotypeExporter>> getPhenotypeExporterImplementations() {
-    Reflections reflections =
-        new Reflections(new ConfigurationBuilder().forPackage("care.smith.top"));
-    return new HashSet<>(reflections.getSubTypesOf(PhenotypeExporter.class));
+    return getPluginReflections().getSubTypesOf(PhenotypeExporter.class);
   }
 
   public Set<Class<? extends PhenotypeImporter>> getPhenotypeImporterImplementations() {
-    Reflections reflections =
-        new Reflections(new ConfigurationBuilder().forPackage("care.smith.top"));
-    return new HashSet<>(reflections.getSubTypesOf(PhenotypeImporter.class));
+    return getPluginReflections().getSubTypesOf(PhenotypeImporter.class);
+  }
+
+  private Reflections getPluginReflections() {
+    return new Reflections(new ConfigurationBuilder().forPackage(PLUGIN_PACKAGE));
   }
 
   /**
