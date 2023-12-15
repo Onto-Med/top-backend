@@ -10,7 +10,8 @@ COPY .mvn-ci.xml /root/.m2/settings.xml
 RUN --mount=type=cache,target=/root/.m2/repository mvn package -B -DskipTests=true
 
 FROM openjdk:11-jdk-slim AS production-stage
+ENV LOADER_PATH=/plugins
 COPY --from=build-stage /app/target/*.jar /usr/src/top-backend/top-backend.jar
 WORKDIR /usr/src/top-backend
 EXPOSE 8080
-ENTRYPOINT ["java", "-cp", "top-backend.jar:/plugins/*", "org.springframework.boot.loader.PropertiesLauncher"]
+ENTRYPOINT ["java", "-cp", "top-backend.jar", "org.springframework.boot.loader.PropertiesLauncher"]
