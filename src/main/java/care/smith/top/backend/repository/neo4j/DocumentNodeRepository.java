@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface DocumentNodeRepository
-    extends Neo4jRepository<DocumentNodeEntity, Long>,
+    extends Neo4jRepository<DocumentNodeEntity, String>,
         CypherdslStatementExecutor<DocumentNodeEntity> {
 
   @Query(

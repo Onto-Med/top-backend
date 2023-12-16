@@ -9,31 +9,20 @@ import org.springframework.data.neo4j.core.schema.*;
 @Node("Document")
 public class DocumentNodeEntity {
 
+  @Id
   @Property("docId")
   private final String documentId;
 
   @Property("name")
   private final String documentName;
 
-  @Id @GeneratedValue private Long id;
   @Relationship(type = "HAS_PHRASE", direction = Relationship.Direction.OUTGOING)
   private Set<PhraseNodeEntity> documentPhrases;
 
   public DocumentNodeEntity(String documentId, String documentName, Set<PhraseNodeEntity> documentPhrases) {
-    this.id = null;
     this.documentName = documentName;
     this.documentId = documentId;
     this.documentPhrases = documentPhrases;
-  }
-
-  public DocumentNodeEntity withId(Long id) {
-    if (this.id.equals(id)) {
-      return this;
-    } else {
-      DocumentNodeEntity newObj = new DocumentNodeEntity(this.documentId, this.documentName, this.documentPhrases);
-      newObj.id = id;
-      return newObj;
-    }
   }
 
   public String documentId() {

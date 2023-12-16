@@ -106,7 +106,7 @@ public class ConceptClusterService implements ContentService {
       conceptNodeRepository.save(new ConceptNodeEntity(graphId, labels, new HashSet<>(phraseNodeEntityMap.values())));
     }
 
-    // Create Relations between Phrases
+    // Create Relations between Phrases 'PHRASE<-HAS_NEIGHBOR->PHRASE'
     Arrays.stream(conceptGraph.getAdjacency())
         .forEach(
             adjacencyObject -> {
@@ -119,18 +119,16 @@ public class ConceptClusterService implements ContentService {
               phraseNodeRepository.save(phraseNodeEntityMap.get(adjacencyObject.getId()));
             });
 
-    // Save Document Nodes
+    // Save Document Nodes and by extension relationships 'DOCUMENT--HAS_PHRASE->PHRASE'
     documentRepository
         .findAllById(documentId2PhraseIdMap.keySet())
         .forEach(
             documentEntity -> {
-              if (!documentNodeRepository.documentNodeExists(documentEntity.getId())) {
-                documentNodeRepository.save(
-                    new DocumentNodeEntity(documentEntity.getId(), documentEntity.getDocumentName(),
-                        documentId2PhraseIdMap.get(documentEntity.getId()).stream()
-                            .map(phraseNodeEntityMap::get).collect(Collectors.toSet())
-                    ));
-              }
+              documentNodeRepository.save(
+                  new DocumentNodeEntity(documentEntity.getId(), documentEntity.getDocumentName(),
+                      documentId2PhraseIdMap.get(documentEntity.getId()).stream()
+                          .map(phraseNodeEntityMap::get).collect(Collectors.toSet())
+                  ));
             });
   }
 

@@ -23,30 +23,15 @@ public class PhraseNodeEntity {
   @Property("phraseId")
   private final String phraseId;
 
-//  @Id @GeneratedValue
-  private Long id;
   @Relationship(type = "NEIGHBOR_OF")
   private Set<PhraseNodeEntity> phrases;
 
   public PhraseNodeEntity(
       List<String> phraseAttributes, Boolean isExemplar, String phraseText, String phraseId) {
-    this.id = null;
     this.phraseAttributes = phraseAttributes;
     this.isExemplar = isExemplar;
     this.phraseText = phraseText;
     this.phraseId = phraseId;
-  }
-
-  public PhraseNodeEntity withId(Long id) {
-    if (this.id.equals(id)) {
-      return this;
-    } else {
-      PhraseNodeEntity newObj =
-          new PhraseNodeEntity(
-              this.phraseAttributes, this.isExemplar, this.phraseText, this.phraseId);
-      newObj.id = id;
-      return newObj;
-    }
   }
 
   public List<String> phraseAttributes() {
@@ -63,10 +48,6 @@ public class PhraseNodeEntity {
 
   public String phraseId() {
     return this.phraseId;
-  }
-
-  public Long nodeId() {
-    return this.id;
   }
 
   public PhraseNodeEntity addNeighbor(PhraseNodeEntity phraseNode){
