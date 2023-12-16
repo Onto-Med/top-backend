@@ -22,6 +22,7 @@ import com.google.common.collect.Lists;
 import org.neo4j.cypherdsl.core.Cypher;
 import org.neo4j.cypherdsl.core.Node;
 import org.neo4j.cypherdsl.core.Statement;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
@@ -54,15 +55,12 @@ public class ConceptClusterService implements ContentService {
   }
 
   @Override
-  @Cacheable("conceptCount")
   public long count() {
-    return concepts().size();
+    return (concepts(false).isEmpty()) ? concepts(true).size() : concepts(false).size();
   }
 
-  @Cacheable("concepts")
-  public List<ConceptCluster> concepts() {
-    // ToDo: for late - when generating concept clusters from the frontend (as its intended) this
-    // cache needs to be recalculated
+  @CachePut(value = "concepts", condition = "#recalculateCache")
+  public List<ConceptCluster> concepts(Boolean recalculateCache) {
     return conceptNodeRepository.findAll().stream()
         .map(conceptEntityMapper)
         .collect(Collectors.toList());

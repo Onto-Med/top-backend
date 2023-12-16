@@ -60,10 +60,10 @@ class ConceptServiceTest extends AbstractNLPTest {
     populateNeo4j(conceptCount);
 
     // count the concepts
-    assertEquals(conceptCount, conceptService.concepts().size());
+    assertEquals(conceptCount, conceptService.concepts(true).size());
 
     // check if all concepts have the proper labels
-    for (ConceptCluster concept : conceptService.concepts()) {
+    for (ConceptCluster concept : conceptService.concepts(false)) {
       ConceptNodeEntity conceptNodeEntity =
           conceptList.get(Integer.parseInt(concept.getId().substring(1)));
       assertEquals(String.join(", ", conceptNodeEntity.lables()), concept.getLabels());

@@ -19,10 +19,12 @@ public class PhraseNodeEntity {
   @Property("phrase")
   private final String phraseText;
 
+  @Id
   @Property("phraseId")
   private final String phraseId;
 
-  @Id @GeneratedValue private Long id;
+//  @Id @GeneratedValue
+  private Long id;
   @Relationship(type = "NEIGHBOR_OF")
   private Set<PhraseNodeEntity> phrases;
 

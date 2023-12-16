@@ -61,13 +61,14 @@ If you run the TOP Framework with an OAuth2 server, the first user that is creat
 ## NLP/Document related configuration
 
 To utilize the document search of the framework, one needs three different services running: 
-1. Elasticsearch or something similar
-2. A Neo4j cluster
-3. And the [concept graphs service](https://github.com/Onto-Med/concept-graphs)
+1. Elasticsearch or something similar (default: `http://localhost:9008`)
+2. A Neo4j cluster (default: `bolt://localhost:7687`)
+3. And the [concept graphs service](https://github.com/Onto-Med/concept-graphs) (default: `http://localhost:9007`)
 
 The document search is adapter centric and one needs a working configuration file (yml) that specifies the addresses of said services
 under the folder declared with the environment variable `DOCUMENT_DATA_SOURCE_CONFIG_DIR`.
 If no `DOCUMENT_DEFAULT_ADAPTER` is specified, the first adapter found in the folder is used for setup.  
+If there is no such adapter present, or it's faulty in some other way, the framework uses default values for the connections (specified above).
 
 ## Plugins
 

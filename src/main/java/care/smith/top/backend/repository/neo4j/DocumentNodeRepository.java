@@ -25,7 +25,7 @@ public interface DocumentNodeRepository
   List<DocumentNodeEntity> getDocumentsForConcepts(List<String> conceptIds, Boolean exemplarOnly);
 
   @Query(
-      "OPTIONAL MATCH (n:Document {documentId: $documentId})\n" +
+      "OPTIONAL MATCH (n:Document {docId: $documentId})\n" +
           "RETURN n IS NOT NULL AS Predicate;"
   )
   Boolean documentNodeExists(String documentId);

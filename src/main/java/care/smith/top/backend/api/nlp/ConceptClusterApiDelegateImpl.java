@@ -40,6 +40,6 @@ public class ConceptClusterApiDelegateImpl implements ConceptclusterApiDelegate 
   @Override
   public ResponseEntity<List<ConceptCluster>> getConceptClusters(String phraseText) {
     // ToDo: filter by phraseText
-    return ResponseEntity.ok(conceptClusterService.concepts());
+    return ResponseEntity.ok(conceptClusterService.concepts(true));
   }
 }
