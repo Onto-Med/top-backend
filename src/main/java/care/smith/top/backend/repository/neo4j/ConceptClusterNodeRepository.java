@@ -8,11 +8,10 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ConceptClusterNodeRepository
-    extends Neo4jRepository<ConceptNodeEntity, String>, CypherdslStatementExecutor<ConceptNodeEntity> {
+    extends Neo4jRepository<ConceptNodeEntity, String>,
+        CypherdslStatementExecutor<ConceptNodeEntity> {
 
   @Query(
-      "OPTIONAL MATCH (n:Concept {conceptId: $conceptId})\n" +
-          "RETURN n IS NOT NULL AS Predicate;"
-  )
+      "OPTIONAL MATCH (n:Concept {conceptId: $conceptId})\n" + "RETURN n IS NOT NULL AS Predicate;")
   Boolean conceptNodeExists(String conceptId);
 }

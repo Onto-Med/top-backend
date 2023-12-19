@@ -23,9 +23,7 @@ public class ConceptGraphApiDelegateImpl implements ConceptgraphsApiDelegate {
   private final ConceptClusterService conceptClusterService;
 
   public ConceptGraphApiDelegateImpl(
-          ConceptGraphsService conceptGraphsService,
-          ConceptClusterService conceptClusterService
-  ) {
+      ConceptGraphsService conceptGraphsService, ConceptClusterService conceptClusterService) {
     this.conceptGraphsService = conceptGraphsService;
     this.conceptClusterService = conceptClusterService;
   }
@@ -33,14 +31,15 @@ public class ConceptGraphApiDelegateImpl implements ConceptgraphsApiDelegate {
   @Override
   public ResponseEntity<Map<String, ConceptGraphStat>> getConceptGraphStatistics(
       List<String> include, String process) {
-    Map<String, ConceptGraphStat> statistics = conceptGraphsService.getAllConceptGraphStatistics(process);
+    Map<String, ConceptGraphStat> statistics =
+        conceptGraphsService.getAllConceptGraphStatistics(process);
     if (statistics == null) return ResponseEntity.of(Optional.empty());
     return ResponseEntity.ok(statistics);
   }
 
   @Override
   public ResponseEntity<ConceptGraph> getConceptGraph(
-          List<String> include, String processId, String graphId) {
+      List<String> include, String processId, String graphId) {
     return ResponseEntity.ok(
         conceptGraphsService.getConceptGraphForIdAndProcess(graphId, processId));
   }

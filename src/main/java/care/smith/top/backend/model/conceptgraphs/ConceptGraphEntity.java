@@ -53,4 +53,3 @@ public class ConceptGraphEntity {
     return conceptGraph;
   }
 }
-

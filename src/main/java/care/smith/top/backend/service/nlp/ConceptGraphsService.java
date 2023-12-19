@@ -31,7 +31,8 @@ public class ConceptGraphsService implements ContentService {
   }
 
   public Map<String, ConceptGraphStat> getAllConceptGraphStatistics(String processName) {
-    ConceptGraphStatisticsEntity conceptGraphStatisticsEntity = conceptGraphsRepository.getGraphStatisticsForProcess(processName);
+    ConceptGraphStatisticsEntity conceptGraphStatisticsEntity =
+        conceptGraphsRepository.getGraphStatisticsForProcess(processName);
     if (conceptGraphStatisticsEntity.getConceptGraphs() == null) return null;
     return Arrays.stream(conceptGraphStatisticsEntity.getConceptGraphs())
         .map(GraphStatsEntity::toApiModel)

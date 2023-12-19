@@ -1,11 +1,8 @@
 package care.smith.top.backend.model.neo4j;
 
+import care.smith.top.model.ConceptCluster;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
-
-import care.smith.top.model.Concept;
-import care.smith.top.model.ConceptCluster;
 import org.springframework.data.neo4j.core.schema.*;
 
 @Node("Concept")
@@ -20,7 +17,7 @@ public class ConceptNodeEntity {
 
   // ToDo: this takes a long time to load; maybe it's not necessary bc I get the Phrases later with
   //  a Cypher query when needed
-   @Relationship(type = "IN_CONCEPT", direction = Relationship.Direction.INCOMING)
+  @Relationship(type = "IN_CONCEPT", direction = Relationship.Direction.INCOMING)
   private Set<PhraseNodeEntity> conceptPhrases;
 
   public ConceptNodeEntity(
@@ -52,9 +49,7 @@ public class ConceptNodeEntity {
     return this;
   }
 
-  public ConceptCluster toApiModel(){
-    return new ConceptCluster()
-        .id(this.conceptId)
-        .labels(String.join(";", this.labels));
+  public ConceptCluster toApiModel() {
+    return new ConceptCluster().id(this.conceptId).labels(String.join(";", this.labels));
   }
 }

@@ -1,10 +1,9 @@
 package care.smith.top.backend.model.neo4j;
 
+import care.smith.top.model.Phrase;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import care.smith.top.model.Phrase;
 import org.springframework.data.neo4j.core.schema.*;
 
 @Node("Phrase")
@@ -50,28 +49,28 @@ public class PhraseNodeEntity {
     return this.phraseId;
   }
 
-  public PhraseNodeEntity addNeighbor(PhraseNodeEntity phraseNode){
+  public PhraseNodeEntity addNeighbor(PhraseNodeEntity phraseNode) {
     if (this.phrases == null) this.phrases = new HashSet<>();
     this.phrases.add(phraseNode);
     return this;
   }
 
-  public PhraseNodeEntity addNeighbors(Iterable<PhraseNodeEntity> phraseNodes){
+  public PhraseNodeEntity addNeighbors(Iterable<PhraseNodeEntity> phraseNodes) {
     phraseNodes.forEach(this::addNeighbor);
     return this;
   }
 
-  public PhraseNodeEntity removeNeighbor(PhraseNodeEntity phraseNode){
+  public PhraseNodeEntity removeNeighbor(PhraseNodeEntity phraseNode) {
     this.phrases.remove(phraseNode);
     return this;
   }
 
-  public PhraseNodeEntity removeAllNeighbors(){
+  public PhraseNodeEntity removeAllNeighbors() {
     this.phrases.clear();
     return this;
   }
 
-  public Phrase toApiModel(){
+  public Phrase toApiModel() {
     return new Phrase()
         .id(this.phraseId)
         .text(this.phraseText)

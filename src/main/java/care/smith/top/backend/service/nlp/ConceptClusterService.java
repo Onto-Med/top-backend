@@ -1,8 +1,6 @@
 package care.smith.top.backend.service.nlp;
 
 import care.smith.top.backend.model.conceptgraphs.ConceptGraphEntity;
-import care.smith.top.backend.model.conceptgraphs.PhraseNodeNeighbors;
-import care.smith.top.backend.model.conceptgraphs.PhraseNodeObject;
 import care.smith.top.backend.model.neo4j.ConceptNodeEntity;
 import care.smith.top.backend.model.neo4j.DocumentNodeEntity;
 import care.smith.top.backend.model.neo4j.PhraseNodeEntity;
@@ -13,17 +11,14 @@ import care.smith.top.backend.repository.neo4j.DocumentNodeRepository;
 import care.smith.top.backend.repository.neo4j.PhraseNodeRepository;
 import care.smith.top.backend.service.ContentService;
 import care.smith.top.model.ConceptCluster;
-
+import com.google.common.collect.Lists;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import com.google.common.collect.Lists;
 import org.neo4j.cypherdsl.core.Cypher;
 import org.neo4j.cypherdsl.core.Node;
 import org.neo4j.cypherdsl.core.Statement;
 import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -41,12 +36,11 @@ public class ConceptClusterService implements ContentService {
               .labels(String.join(", ", conceptEntity.lables()));
 
   public ConceptClusterService(
-          ConceptClusterNodeRepository conceptNodeRepository,
-          PhraseNodeRepository phraseNodeRepository,
-          DocumentNodeRepository documentNodeRepository,
-          DocumentRepository documentRepository,
-          ConceptGraphsRepository conceptGraphsRepository
-  ) {
+      ConceptClusterNodeRepository conceptNodeRepository,
+      PhraseNodeRepository phraseNodeRepository,
+      DocumentNodeRepository documentNodeRepository,
+      DocumentRepository documentRepository,
+      ConceptGraphsRepository conceptGraphsRepository) {
     this.conceptNodeRepository = conceptNodeRepository;
     this.phraseNodeRepository = phraseNodeRepository;
     this.documentNodeRepository = documentNodeRepository;
@@ -75,7 +69,8 @@ public class ConceptClusterService implements ContentService {
     Map<String, List<String>> documentId2PhraseIdMap = new HashMap<>();
     Map<String, Integer> phrasesDocumentCount = new HashMap<>();
     Map<String, PhraseNodeEntity> phraseNodeEntityMap = new HashMap<>();
-    ConceptGraphEntity conceptGraph = conceptGraphsRepository.getGraphForIdAndProcess(graphId, processName);
+    ConceptGraphEntity conceptGraph =
+        conceptGraphsRepository.getGraphForIdAndProcess(graphId, processName);
 
     Arrays.stream(conceptGraph.getNodes())
         .forEach(
@@ -84,7 +79,8 @@ public class ConceptClusterService implements ContentService {
                   .forEach(
                       documentId -> {
                         if (!documentId2PhraseIdMap.containsKey(documentId)) {
-                          documentId2PhraseIdMap.put(documentId, Lists.newArrayList(phraseNodeObject.getId()));
+                          documentId2PhraseIdMap.put(
+                              documentId, Lists.newArrayList(phraseNodeObject.getId()));
                         } else {
                           documentId2PhraseIdMap.get(documentId).add(phraseNodeObject.getId());
                         }
@@ -95,15 +91,18 @@ public class ConceptClusterService implements ContentService {
                   phraseNodeObject.getId(), phraseNodeObject.getDocuments().length);
             });
 
-    // Save Concept Nodes (and by extension create relationships 'PHRASE--IN_CONCEPT->CONCEPT' as well as Phrase nodes)
+    // Save Concept Nodes (and by extension create relationships 'PHRASE--IN_CONCEPT->CONCEPT' as
+    // well as Phrase nodes)
     if (!conceptNodeRepository.conceptNodeExists(graphId)) {
-      List<String> labels = phrasesDocumentCount.entrySet().stream()
-          .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
-          .filter(nodeEntry -> phraseNodeEntityMap.containsKey(nodeEntry.getKey()))
-          .map(nodeEntry -> phraseNodeEntityMap.get(nodeEntry.getKey()).phraseText())
-          .limit(3)
-          .collect(Collectors.toList());
-      conceptNodeRepository.save(new ConceptNodeEntity(graphId, labels, new HashSet<>(phraseNodeEntityMap.values())));
+      List<String> labels =
+          phrasesDocumentCount.entrySet().stream()
+              .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
+              .filter(nodeEntry -> phraseNodeEntityMap.containsKey(nodeEntry.getKey()))
+              .map(nodeEntry -> phraseNodeEntityMap.get(nodeEntry.getKey()).phraseText())
+              .limit(3)
+              .collect(Collectors.toList());
+      conceptNodeRepository.save(
+          new ConceptNodeEntity(graphId, labels, new HashSet<>(phraseNodeEntityMap.values())));
     }
 
     // Create Relations between Phrases 'PHRASE<-HAS_NEIGHBOR->PHRASE'
@@ -125,24 +124,27 @@ public class ConceptClusterService implements ContentService {
         .forEach(
             documentEntity -> {
               documentNodeRepository.save(
-                  new DocumentNodeEntity(documentEntity.getId(), documentEntity.getDocumentName(),
+                  new DocumentNodeEntity(
+                      documentEntity.getId(),
+                      documentEntity.getDocumentName(),
                       documentId2PhraseIdMap.get(documentEntity.getId()).stream()
-                          .map(phraseNodeEntityMap::get).collect(Collectors.toSet())
-                  ));
+                          .map(phraseNodeEntityMap::get)
+                          .collect(Collectors.toSet())));
             });
   }
 
   public void createAllGraphsInNeo4j(String processName) {
-    Arrays.stream(conceptGraphsRepository.getGraphStatisticsForProcess(processName).getConceptGraphs()).forEach(
+    Arrays.stream(
+            conceptGraphsRepository.getGraphStatisticsForProcess(processName).getConceptGraphs())
+        .forEach(
             conceptGraph -> {
               createGraphInNeo4j(conceptGraph.getId(), processName);
-            }
-    );
+            });
   }
 
   static Statement conceptWithId(String id) {
     Node concept =
-            Cypher.node("Concept").named("concept").withProperties("conceptId", Cypher.literalOf(id));
+        Cypher.node("Concept").named("concept").withProperties("conceptId", Cypher.literalOf(id));
     return Cypher.match(concept).returning(concept).build();
   }
 }

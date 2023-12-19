@@ -1,16 +1,14 @@
 package care.smith.top.backend.service.nlp;
 
-import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.Test;
 
 class ConceptClusterServiceTest extends AbstractNLPTest {
 
-    @Test
-    void conceptById() {
-    }
+  @Test
+  void conceptById() {}
 
-    @Test
-    void createAllGraphsInNeo4j() {
-    }
+  @Test
+  void createAllGraphsInNeo4j() {}
 }

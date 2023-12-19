@@ -1,9 +1,7 @@
 package care.smith.top.backend.model.neo4j;
 
 import care.smith.top.model.Document;
-import java.util.List;
 import java.util.Set;
-
 import org.springframework.data.neo4j.core.schema.*;
 
 @Node("Document")
@@ -19,7 +17,8 @@ public class DocumentNodeEntity {
   @Relationship(type = "HAS_PHRASE", direction = Relationship.Direction.OUTGOING)
   private Set<PhraseNodeEntity> documentPhrases;
 
-  public DocumentNodeEntity(String documentId, String documentName, Set<PhraseNodeEntity> documentPhrases) {
+  public DocumentNodeEntity(
+      String documentId, String documentName, Set<PhraseNodeEntity> documentPhrases) {
     this.documentName = documentName;
     this.documentId = documentId;
     this.documentPhrases = documentPhrases;

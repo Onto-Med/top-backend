@@ -4,6 +4,7 @@ import care.smith.top.backend.api.ConceptclusterApiDelegate;
 import care.smith.top.backend.service.nlp.ConceptClusterService;
 import care.smith.top.model.ConceptCluster;
 import care.smith.top.model.ConceptClusterPage;
+import care.smith.top.model.PipelineResponse;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,21 @@ public class ConceptClusterApiDelegateImpl implements ConceptclusterApiDelegate 
       String documentId, List<String> include, String name, Integer page) {
     return ConceptclusterApiDelegate.super.getConceptClustersByDocumentId(
         documentId, include, name, page);
+  }
+
+  @Override
+  public ResponseEntity<PipelineResponse> createConceptClustersForProcessId(
+      String processId, List<String> include, List<String> graphId) {
+    // ToDo: refine response object with 'response' value depending on if clause
+    PipelineResponse response = new PipelineResponse().name(processId);
+    if (graphId != null) {
+      graphId.forEach(graph -> conceptClusterService.createGraphInNeo4j(graph, processId));
+    } else {
+      conceptClusterService.createAllGraphsInNeo4j(processId);
+    }
+    // ToDo: re-caching needs to be called from the frontend
+    conceptClusterService.concepts(true);
+    return ResponseEntity.ok(response);
   }
 
   @Override
