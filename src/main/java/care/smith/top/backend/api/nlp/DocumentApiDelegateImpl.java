@@ -60,7 +60,6 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
         }
         listOfSets.add(documentList.stream().map(Document::getId).collect(Collectors.toSet()));
       }
-
       return new ResponseEntity<>(
           listOfSets.stream()
               .skip(1)

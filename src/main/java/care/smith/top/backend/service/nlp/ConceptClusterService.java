@@ -18,7 +18,8 @@ import java.util.stream.Collectors;
 import org.neo4j.cypherdsl.core.Cypher;
 import org.neo4j.cypherdsl.core.Node;
 import org.neo4j.cypherdsl.core.Statement;
-import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -34,6 +35,7 @@ public class ConceptClusterService implements ContentService {
           new ConceptCluster()
               .id(conceptEntity.conceptId())
               .labels(String.join(", ", conceptEntity.lables()));
+  private long conceptCount;
 
   public ConceptClusterService(
       ConceptClusterNodeRepository conceptNodeRepository,
@@ -46,18 +48,24 @@ public class ConceptClusterService implements ContentService {
     this.documentNodeRepository = documentNodeRepository;
     this.documentRepository = documentRepository;
     this.conceptGraphsRepository = conceptGraphsRepository;
+    this.conceptCount = 0;
   }
 
   @Override
   public long count() {
-    return (concepts(false).isEmpty()) ? concepts(true).size() : concepts(false).size();
+    return conceptCount;
   }
 
-  @CachePut(value = "concepts", condition = "#recalculateCache")
-  public List<ConceptCluster> concepts(Boolean recalculateCache) {
-    return conceptNodeRepository.findAll().stream()
+  @CacheEvict(value = "concepts", allEntries = true)
+  public void evictConceptsFromCache() {}
+
+  @Cacheable(value = "concepts")
+  public List<ConceptCluster> concepts() {
+    List<ConceptCluster> conceptClusterList =  conceptNodeRepository.findAll().stream()
         .map(conceptEntityMapper)
         .collect(Collectors.toList());
+    this.conceptCount = conceptClusterList.size();
+    return conceptClusterList;
   }
 
   public ConceptCluster conceptById(String conceptId) {

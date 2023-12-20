@@ -35,8 +35,7 @@ public class ConceptClusterApiDelegateImpl implements ConceptclusterApiDelegate 
     } else {
       conceptClusterService.createAllGraphsInNeo4j(processId);
     }
-    // ToDo: re-caching needs to be called from the frontend
-    conceptClusterService.concepts(true);
+    conceptClusterService.evictConceptsFromCache();
     return ResponseEntity.ok(response);
   }
 
@@ -54,8 +53,9 @@ public class ConceptClusterApiDelegateImpl implements ConceptclusterApiDelegate 
   }
 
   @Override
-  public ResponseEntity<List<ConceptCluster>> getConceptClusters(String phraseText) {
+  public ResponseEntity<List<ConceptCluster>> getConceptClusters(String phraseText, Boolean recalculateCache) {
     // ToDo: filter by phraseText
-    return ResponseEntity.ok(conceptClusterService.concepts(true));
+    if (Boolean.TRUE.equals(recalculateCache)) conceptClusterService.evictConceptsFromCache();
+    return ResponseEntity.ok(conceptClusterService.concepts());
   }
 }
