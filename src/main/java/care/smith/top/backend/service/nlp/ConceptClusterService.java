@@ -1,6 +1,7 @@
 package care.smith.top.backend.service.nlp;
 
 import care.smith.top.backend.model.conceptgraphs.ConceptGraphEntity;
+import care.smith.top.backend.model.conceptgraphs.GraphStatsEntity;
 import care.smith.top.backend.model.neo4j.ConceptNodeEntity;
 import care.smith.top.backend.model.neo4j.DocumentNodeEntity;
 import care.smith.top.backend.model.neo4j.PhraseNodeEntity;
@@ -11,10 +12,19 @@ import care.smith.top.backend.repository.neo4j.DocumentNodeRepository;
 import care.smith.top.backend.repository.neo4j.PhraseNodeRepository;
 import care.smith.top.backend.service.ContentService;
 import care.smith.top.model.ConceptCluster;
+import care.smith.top.model.PipelineResponse;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.common.collect.Lists;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.neo4j.cypherdsl.core.Cypher;
 import org.neo4j.cypherdsl.core.Node;
 import org.neo4j.cypherdsl.core.Statement;
@@ -73,12 +83,10 @@ public class ConceptClusterService implements ContentService {
         conceptNodeRepository.findOne(conceptWithId(conceptId)).orElse(null));
   }
 
-  public void createGraphInNeo4j(String graphId, String processName) {
+  private void createGraphInNeo4j(String graphId, ConceptGraphEntity conceptGraph) {
     Map<String, List<String>> documentId2PhraseIdMap = new HashMap<>();
     Map<String, Integer> phrasesDocumentCount = new HashMap<>();
     Map<String, PhraseNodeEntity> phraseNodeEntityMap = new HashMap<>();
-    ConceptGraphEntity conceptGraph =
-        conceptGraphsRepository.getGraphForIdAndProcess(graphId, processName);
 
     Arrays.stream(conceptGraph.getNodes())
         .forEach(
@@ -141,18 +149,61 @@ public class ConceptClusterService implements ContentService {
             });
   }
 
-  public void createAllGraphsInNeo4j(String processName) {
-    Arrays.stream(
-            conceptGraphsRepository.getGraphStatisticsForProcess(processName).getConceptGraphs())
-        .forEach(
-            conceptGraph -> {
-              createGraphInNeo4j(conceptGraph.getId(), processName);
-            });
+  public Pair<String, Thread> createSpecificGraphsInNeo4j(String processName, List<String> graphIds) {
+    HashMap<String, ConceptGraphEntity> entities = new HashMap<>();
+    Stream<GraphStatsEntity> conceptGraphStream;
+
+    if (graphIds == null || graphIds.isEmpty()) {
+      Arrays.stream(conceptGraphsRepository.getGraphStatisticsForProcess(processName).getConceptGraphs())
+          .forEach(conceptGraph -> entities.put(
+              conceptGraph.getId(), conceptGraphsRepository.getGraphForIdAndProcess(conceptGraph.getId(), processName))
+          );
+      conceptGraphStream = Arrays.stream(
+          conceptGraphsRepository.getGraphStatisticsForProcess(processName).getConceptGraphs()
+      );
+    } else {
+      graphIds.forEach(graphId -> entities.put(
+          graphId, conceptGraphsRepository.getGraphForIdAndProcess(graphId, processName))
+      );
+      conceptGraphStream = Arrays.stream(
+              conceptGraphsRepository.getGraphStatisticsForProcess(processName).getConceptGraphs()
+          ).filter(conceptGraph -> graphIds.contains(conceptGraph.getId()));
+    }
+    Thread t = new Thread(() -> conceptGraphStream
+        .forEach(conceptGraph -> {
+          // ToDo: threading of single graph creation seems to be not working; throws sometimes 'NoSuchRecordException'
+//          Thread t = new Thread(() -> createGraphInNeo4j(conceptGraph.getId(), entities.get(conceptGraph.getId())));
+//          t.start();
+          createGraphInNeo4j(conceptGraph.getId(), entities.get(conceptGraph.getId()));
+        })
+    );
+    t.start();
+    return new ImmutablePair<>(processName, t);
   }
 
   static Statement conceptWithId(String id) {
     Node concept =
         Cypher.node("Concept").named("concept").withProperties("conceptId", Cypher.literalOf(id));
     return Cypher.match(concept).returning(concept).build();
+  }
+
+  public void setPipelineResponseStatus(PipelineResponse pipelineResponse, String statusStr, String msgStr) {
+    String response = "";
+    try {
+      ObjectMapper mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
+      response = mapper.writeValueAsString(new Object() {
+        private final String status = statusStr;
+        private final String message = msgStr;
+        public String getMessage() {
+          return message;
+        }
+        public String getStatus() {
+          return status;
+        }
+      });
+    } catch (JsonProcessingException e) {
+      e.printStackTrace();
+    }
+    pipelineResponse.response(response);
   }
 }

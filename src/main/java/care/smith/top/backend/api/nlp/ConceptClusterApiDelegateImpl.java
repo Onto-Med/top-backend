@@ -5,6 +5,8 @@ import care.smith.top.backend.service.nlp.ConceptClusterService;
 import care.smith.top.model.ConceptCluster;
 import care.smith.top.model.ConceptClusterPage;
 import care.smith.top.model.PipelineResponse;
+
+import java.util.HashMap;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -13,6 +15,7 @@ import org.springframework.stereotype.Service;
 public class ConceptClusterApiDelegateImpl implements ConceptclusterApiDelegate {
 
   private final ConceptClusterService conceptClusterService;
+  private HashMap<String, Thread> conceptClusterProcesses = new HashMap<>();
 
   public ConceptClusterApiDelegateImpl(ConceptClusterService conceptClusterService) {
     this.conceptClusterService = conceptClusterService;
@@ -27,15 +30,25 @@ public class ConceptClusterApiDelegateImpl implements ConceptclusterApiDelegate 
 
   @Override
   public ResponseEntity<PipelineResponse> createConceptClustersForProcessId(
-      String processId, List<String> include, List<String> graphId) {
-    // ToDo: refine response object with 'response' value depending on if clause
+      String processId, List<String> include, List<String> graphIds) {
     PipelineResponse response = new PipelineResponse().name(processId);
-    if (graphId != null) {
-      graphId.forEach(graph -> conceptClusterService.createGraphInNeo4j(graph, processId));
-    } else {
-      conceptClusterService.createAllGraphsInNeo4j(processId);
-    }
     conceptClusterService.evictConceptsFromCache();
+    if (!conceptClusterProcesses.containsKey(processId)) {
+      conceptClusterProcesses.put(
+          processId,
+          conceptClusterService.createSpecificGraphsInNeo4j(processId, graphIds).getRight()
+      );
+      conceptClusterService.setPipelineResponseStatus(
+          response,"STARTED", "Started Concept Clusters creation ...");
+    } else {
+      if (conceptClusterProcesses.get(processId).isAlive()) {
+        conceptClusterService.setPipelineResponseStatus(
+            response, "RUNNING","Concept Clusters creation is still running ...");
+      } else {
+        conceptClusterService.setPipelineResponseStatus(
+            response, "FINISHED","Finished Concept Cluster creation for this process.");
+      }
+    }
     return ResponseEntity.ok(response);
   }
 
