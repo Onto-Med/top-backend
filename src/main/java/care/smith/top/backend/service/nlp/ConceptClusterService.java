@@ -13,7 +13,6 @@ import care.smith.top.backend.repository.neo4j.PhraseNodeRepository;
 import care.smith.top.backend.service.ContentService;
 import care.smith.top.model.ConceptCluster;
 import care.smith.top.model.PipelineResponse;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -22,7 +21,6 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.neo4j.cypherdsl.core.Cypher;
@@ -71,9 +69,10 @@ public class ConceptClusterService implements ContentService {
 
   @Cacheable(value = "concepts")
   public List<ConceptCluster> concepts() {
-    List<ConceptCluster> conceptClusterList =  conceptNodeRepository.findAll().stream()
-        .map(conceptEntityMapper)
-        .collect(Collectors.toList());
+    List<ConceptCluster> conceptClusterList =
+        conceptNodeRepository.findAll().stream()
+            .map(conceptEntityMapper)
+            .collect(Collectors.toList());
     this.conceptCount = conceptClusterList.size();
     return conceptClusterList;
   }
@@ -149,34 +148,48 @@ public class ConceptClusterService implements ContentService {
             });
   }
 
-  public Pair<String, Thread> createSpecificGraphsInNeo4j(String processName, List<String> graphIds) {
+  public Pair<String, Thread> createSpecificGraphsInNeo4j(
+      String processName, List<String> graphIds) {
     HashMap<String, ConceptGraphEntity> entities = new HashMap<>();
     Stream<GraphStatsEntity> conceptGraphStream;
 
     if (graphIds == null || graphIds.isEmpty()) {
-      Arrays.stream(conceptGraphsRepository.getGraphStatisticsForProcess(processName).getConceptGraphs())
-          .forEach(conceptGraph -> entities.put(
-              conceptGraph.getId(), conceptGraphsRepository.getGraphForIdAndProcess(conceptGraph.getId(), processName))
-          );
-      conceptGraphStream = Arrays.stream(
-          conceptGraphsRepository.getGraphStatisticsForProcess(processName).getConceptGraphs()
-      );
+      Arrays.stream(
+              conceptGraphsRepository.getGraphStatisticsForProcess(processName).getConceptGraphs())
+          .forEach(
+              conceptGraph ->
+                  entities.put(
+                      conceptGraph.getId(),
+                      conceptGraphsRepository.getGraphForIdAndProcess(
+                          conceptGraph.getId(), processName)));
+      conceptGraphStream =
+          Arrays.stream(
+              conceptGraphsRepository.getGraphStatisticsForProcess(processName).getConceptGraphs());
     } else {
-      graphIds.forEach(graphId -> entities.put(
-          graphId, conceptGraphsRepository.getGraphForIdAndProcess(graphId, processName))
-      );
-      conceptGraphStream = Arrays.stream(
-              conceptGraphsRepository.getGraphStatisticsForProcess(processName).getConceptGraphs()
-          ).filter(conceptGraph -> graphIds.contains(conceptGraph.getId()));
+      graphIds.forEach(
+          graphId ->
+              entities.put(
+                  graphId, conceptGraphsRepository.getGraphForIdAndProcess(graphId, processName)));
+      conceptGraphStream =
+          Arrays.stream(
+                  conceptGraphsRepository
+                      .getGraphStatisticsForProcess(processName)
+                      .getConceptGraphs())
+              .filter(conceptGraph -> graphIds.contains(conceptGraph.getId()));
     }
-    Thread t = new Thread(() -> conceptGraphStream
-        .forEach(conceptGraph -> {
-          // ToDo: threading of single graph creation seems to be not working; throws sometimes 'NoSuchRecordException'
-//          Thread t = new Thread(() -> createGraphInNeo4j(conceptGraph.getId(), entities.get(conceptGraph.getId())));
-//          t.start();
-          createGraphInNeo4j(conceptGraph.getId(), entities.get(conceptGraph.getId()));
-        })
-    );
+    Thread t =
+        new Thread(
+            () ->
+                conceptGraphStream.forEach(
+                    conceptGraph -> {
+                      // ToDo: threading of single graph creation seems to be not working; throws
+                      // sometimes 'NoSuchRecordException'
+                      //          Thread t = new Thread(() ->
+                      // createGraphInNeo4j(conceptGraph.getId(),
+                      // entities.get(conceptGraph.getId())));
+                      //          t.start();
+                      createGraphInNeo4j(conceptGraph.getId(), entities.get(conceptGraph.getId()));
+                    }));
     t.start();
     return new ImmutablePair<>(processName, t);
   }
@@ -187,20 +200,25 @@ public class ConceptClusterService implements ContentService {
     return Cypher.match(concept).returning(concept).build();
   }
 
-  public void setPipelineResponseStatus(PipelineResponse pipelineResponse, String statusStr, String msgStr) {
+  public void setPipelineResponseStatus(
+      PipelineResponse pipelineResponse, String statusStr, String msgStr) {
     String response = "";
     try {
       ObjectMapper mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
-      response = mapper.writeValueAsString(new Object() {
-        private final String status = statusStr;
-        private final String message = msgStr;
-        public String getMessage() {
-          return message;
-        }
-        public String getStatus() {
-          return status;
-        }
-      });
+      response =
+          mapper.writeValueAsString(
+              new Object() {
+                private final String status = statusStr;
+                private final String message = msgStr;
+
+                public String getMessage() {
+                  return message;
+                }
+
+                public String getStatus() {
+                  return status;
+                }
+              });
     } catch (JsonProcessingException e) {
       e.printStackTrace();
     }

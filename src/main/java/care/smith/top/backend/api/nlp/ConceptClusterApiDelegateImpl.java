@@ -5,7 +5,6 @@ import care.smith.top.backend.service.nlp.ConceptClusterService;
 import care.smith.top.model.ConceptCluster;
 import care.smith.top.model.ConceptClusterPage;
 import care.smith.top.model.PipelineResponse;
-
 import java.util.HashMap;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
@@ -36,17 +35,16 @@ public class ConceptClusterApiDelegateImpl implements ConceptclusterApiDelegate 
     if (!conceptClusterProcesses.containsKey(processId)) {
       conceptClusterProcesses.put(
           processId,
-          conceptClusterService.createSpecificGraphsInNeo4j(processId, graphIds).getRight()
-      );
+          conceptClusterService.createSpecificGraphsInNeo4j(processId, graphIds).getRight());
       conceptClusterService.setPipelineResponseStatus(
-          response,"STARTED", "Started Concept Clusters creation ...");
+          response, "STARTED", "Started Concept Clusters creation ...");
     } else {
       if (conceptClusterProcesses.get(processId).isAlive()) {
         conceptClusterService.setPipelineResponseStatus(
-            response, "RUNNING","Concept Clusters creation is still running ...");
+            response, "RUNNING", "Concept Clusters creation is still running ...");
       } else {
         conceptClusterService.setPipelineResponseStatus(
-            response, "FINISHED","Finished Concept Cluster creation for this process.");
+            response, "FINISHED", "Finished Concept Cluster creation for this process.");
       }
     }
     return ResponseEntity.ok(response);
@@ -66,7 +64,8 @@ public class ConceptClusterApiDelegateImpl implements ConceptclusterApiDelegate 
   }
 
   @Override
-  public ResponseEntity<List<ConceptCluster>> getConceptClusters(String phraseText, Boolean recalculateCache) {
+  public ResponseEntity<List<ConceptCluster>> getConceptClusters(
+      String phraseText, Boolean recalculateCache) {
     // ToDo: filter by phraseText
     if (Boolean.TRUE.equals(recalculateCache)) conceptClusterService.evictConceptsFromCache();
     return ResponseEntity.ok(conceptClusterService.concepts());
