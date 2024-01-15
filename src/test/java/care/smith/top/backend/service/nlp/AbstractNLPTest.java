@@ -3,7 +3,6 @@ package care.smith.top.backend.service.nlp;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
 
-import care.smith.top.backend.AbstractTest;
 import care.smith.top.backend.repository.elasticsearch.DocumentRepository;
 import care.smith.top.backend.repository.neo4j.ConceptClusterNodeRepository;
 import care.smith.top.backend.repository.neo4j.DocumentNodeRepository;
@@ -119,8 +118,7 @@ public abstract class AbstractNLPTest {
 
   protected static void setUpNeo4jDB() {
     embeddedNeo4j = Neo4jBuilders.newInProcessBuilder().withDisabledServer().build();
-    try (
-        Driver driver = GraphDatabase.driver(embeddedNeo4j.boltURI());
+    try (Driver driver = GraphDatabase.driver(embeddedNeo4j.boltURI());
         Session session = driver.session()) {
       Map<String, String> typeMap = Map.of("d", "Document", "c", "Concept", "p", "Phrase");
       Map<String, String> idMap = Map.of("d", "documentId", "c", "conceptId", "p", "phraseId");
