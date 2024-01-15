@@ -43,7 +43,7 @@ import org.testcontainers.shaded.org.yaml.snakeyaml.Yaml;
 
 @SpringBootTest
 @Transactional(propagation = Propagation.NEVER)
-public abstract class AbstractNLPTest extends AbstractTest {
+public abstract class AbstractNLPTest {
 
   protected static final String[] ELASTIC_INDEX = new String[] {"test_documents"};
 
@@ -99,7 +99,6 @@ public abstract class AbstractNLPTest extends AbstractTest {
 
   @BeforeAll
   static void initializeDBs() {
-    embeddedNeo4j = Neo4jBuilders.newInProcessBuilder().withDisabledServer().build();
     setUpNeo4jDB();
     setUpESIndex();
   }
@@ -119,7 +118,9 @@ public abstract class AbstractNLPTest extends AbstractTest {
   }
 
   protected static void setUpNeo4jDB() {
-    try (Driver driver = GraphDatabase.driver(embeddedNeo4j.boltURI());
+    embeddedNeo4j = Neo4jBuilders.newInProcessBuilder().withDisabledServer().build();
+    try (
+        Driver driver = GraphDatabase.driver(embeddedNeo4j.boltURI());
         Session session = driver.session()) {
       Map<String, String> typeMap = Map.of("d", "Document", "c", "Concept", "p", "Phrase");
       Map<String, String> idMap = Map.of("d", "documentId", "c", "conceptId", "p", "phraseId");

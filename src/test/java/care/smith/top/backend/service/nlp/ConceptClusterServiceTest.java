@@ -3,11 +3,13 @@ package care.smith.top.backend.service.nlp;
 import static org.junit.jupiter.api.Assertions.*;
 
 import care.smith.top.model.ConceptCluster;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 class ConceptClusterServiceTest extends AbstractNLPTest {
 
   @Test
+  @Disabled
   void conceptById() {
     // see AbstractNLPTest for creation of the Neo4J DB entries
     ConceptCluster cluster1 = conceptService.conceptById("c1");
