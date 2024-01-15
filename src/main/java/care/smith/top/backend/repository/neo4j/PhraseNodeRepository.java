@@ -15,10 +15,8 @@ public interface PhraseNodeRepository
   @Query(
       "MATCH (d:Document)-[:HAS_PHRASE]-(p:Phrase)"
           + "WHERE (d.docId = $documentId)"
-          +
-          // "AND NOT (p.exemplar XOR $exemplarOnly)" +
-          // ToDo: implement check for whether all or only exemplars should be regarded
-          "RETURN DISTINCT p;")
+          + "AND (NOT $exemplarOnly OR NOT (p.exemplar XOR $exemplarOnly))"
+          + "RETURN DISTINCT p;")
   List<PhraseNodeEntity> getPhrasesForDocument(String documentId, Boolean exemplarOnly);
 
   @Query("OPTIONAL MATCH (n:Phrase {phraseId: $phraseId})\n" + "RETURN n IS NOT NULL AS Predicate;")
