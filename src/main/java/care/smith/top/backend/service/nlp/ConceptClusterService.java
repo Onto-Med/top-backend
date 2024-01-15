@@ -182,12 +182,6 @@ public class ConceptClusterService implements ContentService {
             () ->
                 conceptGraphStream.forEach(
                     conceptGraph -> {
-                      // ToDo: threading of single graph creation seems to be not working; throws
-                      // sometimes 'NoSuchRecordException'
-                      //          Thread t = new Thread(() ->
-                      // createGraphInNeo4j(conceptGraph.getId(),
-                      // entities.get(conceptGraph.getId())));
-                      //          t.start();
                       createGraphInNeo4j(conceptGraph.getId(), entities.get(conceptGraph.getId()));
                     }));
     t.start();

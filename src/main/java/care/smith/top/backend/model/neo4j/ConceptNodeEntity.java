@@ -15,8 +15,6 @@ public class ConceptNodeEntity {
   @Property("labels")
   private final List<String> labels;
 
-  // ToDo: this takes a long time to load; maybe it's not necessary bc I get the Phrases later with
-  //  a Cypher query when needed
   @Relationship(type = "IN_CONCEPT", direction = Relationship.Direction.INCOMING)
   private Set<PhraseNodeEntity> conceptPhrases;
 
