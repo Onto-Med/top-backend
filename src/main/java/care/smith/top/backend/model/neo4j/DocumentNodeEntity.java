@@ -1,36 +1,27 @@
 package care.smith.top.backend.model.neo4j;
 
 import care.smith.top.model.Document;
-import java.util.List;
+import java.util.Set;
 import org.springframework.data.neo4j.core.schema.*;
 
 @Node("Document")
 public class DocumentNodeEntity {
 
+  @Id
   @Property("docId")
   private final String documentId;
 
   @Property("name")
   private final String documentName;
 
-  @Id @GeneratedValue private Long id;
-  // @Relationship(type = "HAS_PHRASE", direction = Relationship.Direction.OUTGOING)
-  private List<PhraseNodeEntity> documentPhrases;
+  @Relationship(type = "HAS_PHRASE", direction = Relationship.Direction.OUTGOING)
+  private Set<PhraseNodeEntity> documentPhrases;
 
-  public DocumentNodeEntity(String documentId, String documentName) {
-    this.id = null;
+  public DocumentNodeEntity(
+      String documentId, String documentName, Set<PhraseNodeEntity> documentPhrases) {
     this.documentName = documentName;
     this.documentId = documentId;
-  }
-
-  public DocumentNodeEntity withId(Long id) {
-    if (this.id.equals(id)) {
-      return this;
-    } else {
-      DocumentNodeEntity newObj = new DocumentNodeEntity(this.documentId, this.documentName);
-      newObj.id = id;
-      return newObj;
-    }
+    this.documentPhrases = documentPhrases;
   }
 
   public String documentId() {
@@ -41,8 +32,18 @@ public class DocumentNodeEntity {
     return documentName;
   }
 
-  public List<PhraseNodeEntity> documentPhrases() {
+  public Set<PhraseNodeEntity> documentPhrases() {
     return documentPhrases;
+  }
+
+  public DocumentNodeEntity addPhrase(PhraseNodeEntity phraseNode) {
+    this.documentPhrases.add(phraseNode);
+    return this;
+  }
+
+  public DocumentNodeEntity removePhrase(PhraseNodeEntity phraseNode) {
+    this.documentPhrases.remove(phraseNode);
+    return this;
   }
 
   public Document toApiModel() {

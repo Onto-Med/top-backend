@@ -135,8 +135,6 @@ public class ConceptGraphsRepository extends ConceptGraphsApi {
                               "return_statistics", returnStatistics != null && returnStatistics)
                           .build())
               .body(BodyInserters.fromMultipartData(parts))
-              //          .retrieve()
-              //          .bodyToMono(ConceptGraphStatisticsEntity.class);
               .exchangeToMono(
                   response -> {
                     if (response.statusCode().equals(HttpStatus.OK)) {
@@ -147,8 +145,7 @@ public class ConceptGraphsRepository extends ConceptGraphsApi {
                       return response.bodyToMono(PipelineFailEntity.class);
                     }
                   });
-      return apiResponse
-          .block(); // ToDo: now I need some way of accessing the status of the pipeline...
+      return apiResponse.block();
     } catch (WebClientResponseException e) {
       LOGGER.warning(e.getResponseBodyAsString() + " -- " + e.getMessage());
       return null;

@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface DocumentNodeRepository
-    extends Neo4jRepository<DocumentNodeEntity, Long>,
+    extends Neo4jRepository<DocumentNodeEntity, String>,
         CypherdslStatementExecutor<DocumentNodeEntity> {
 
   @Query(
@@ -23,4 +23,8 @@ public interface DocumentNodeRepository
           + "AND returnBool\n"
           + "RETURN DISTINCT d;")
   List<DocumentNodeEntity> getDocumentsForConcepts(List<String> conceptIds, Boolean exemplarOnly);
+
+  @Query(
+      "OPTIONAL MATCH (n:Document {docId: $documentId})\n" + "RETURN n IS NOT NULL AS Predicate;")
+  Boolean documentNodeExists(String documentId);
 }

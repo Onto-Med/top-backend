@@ -8,7 +8,7 @@ import java.util.Arrays;
 
 public class ConceptGraphEntity {
   private AdjacencyObject[] adjacency;
-  private NodeObject[] nodes;
+  private PhraseNodeObject[] nodes;
 
   public AdjacencyObject[] getAdjacency() {
     return adjacency;
@@ -18,11 +18,11 @@ public class ConceptGraphEntity {
     this.adjacency = adjacency;
   }
 
-  public NodeObject[] getNodes() {
+  public PhraseNodeObject[] getNodes() {
     return nodes;
   }
 
-  public void setNodes(NodeObject[] nodes) {
+  public void setNodes(PhraseNodeObject[] nodes) {
     this.nodes = nodes;
   }
 
@@ -32,7 +32,7 @@ public class ConceptGraphEntity {
     for (AdjacencyObject adj : getAdjacency()) {
       ConceptGraphAdjacency conceptGraphAdjacency = new ConceptGraphAdjacency();
       conceptGraphAdjacency.setId(adj.getId());
-      for (Neighbors neighbors : adj.getNeighbors()) {
+      for (PhraseNodeNeighbors neighbors : adj.getNeighbors()) {
         conceptGraphAdjacency.addNeighborsItem(
             new ConceptGraphNeighbors()
                 .id(neighbors.getId())
@@ -42,7 +42,7 @@ public class ConceptGraphEntity {
       conceptGraph.addAdjacencyItem(conceptGraphAdjacency);
     }
 
-    for (NodeObject node : getNodes()) {
+    for (PhraseNodeObject node : getNodes()) {
       conceptGraph.addNodesItem(
           new ConceptGraphNodes()
               .id(node.getId())
@@ -51,86 +51,5 @@ public class ConceptGraphEntity {
     }
 
     return conceptGraph;
-  }
-}
-
-class AdjacencyObject {
-  private String id;
-  private Neighbors[] neighbors;
-
-  public String getId() {
-    return id;
-  }
-
-  public void setId(String id) {
-    this.id = id;
-  }
-
-  public Neighbors[] getNeighbors() {
-    return neighbors;
-  }
-
-  public void setNeighbors(Neighbors[] neighbors) {
-    this.neighbors = neighbors;
-  }
-}
-
-class NodeObject {
-  private String id;
-  private String label;
-  private String[] documents;
-
-  public String getId() {
-    return id;
-  }
-
-  public void setId(String id) {
-    this.id = id;
-  }
-
-  public String getLabel() {
-    return label;
-  }
-
-  public void setLabel(String label) {
-    this.label = label;
-  }
-
-  public String[] getDocuments() {
-    return documents;
-  }
-
-  public void setDocuments(String[] documents) {
-    this.documents = documents;
-  }
-}
-
-class Neighbors {
-  private String id;
-  private Float significance;
-  private Float weight;
-
-  public String getId() {
-    return id;
-  }
-
-  public void setId(String id) {
-    this.id = id;
-  }
-
-  public Float getSignificance() {
-    return significance;
-  }
-
-  public void setSignificance(Float significance) {
-    this.significance = significance;
-  }
-
-  public Float getWeight() {
-    return weight;
-  }
-
-  public void setWeight(Float weight) {
-    this.weight = weight;
   }
 }

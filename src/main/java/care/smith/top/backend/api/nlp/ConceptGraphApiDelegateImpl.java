@@ -1,6 +1,7 @@
 package care.smith.top.backend.api.nlp;
 
 import care.smith.top.backend.api.ConceptgraphsApiDelegate;
+import care.smith.top.backend.service.nlp.ConceptClusterService;
 import care.smith.top.backend.service.nlp.ConceptGraphsService;
 import care.smith.top.model.ConceptGraph;
 import care.smith.top.model.ConceptGraphProcess;
@@ -10,6 +11,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -18,15 +20,21 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 public class ConceptGraphApiDelegateImpl implements ConceptgraphsApiDelegate {
   private final ConceptGraphsService conceptGraphsService;
+  private final ConceptClusterService conceptClusterService;
 
-  public ConceptGraphApiDelegateImpl(ConceptGraphsService conceptGraphsService) {
+  public ConceptGraphApiDelegateImpl(
+      ConceptGraphsService conceptGraphsService, ConceptClusterService conceptClusterService) {
     this.conceptGraphsService = conceptGraphsService;
+    this.conceptClusterService = conceptClusterService;
   }
 
   @Override
   public ResponseEntity<Map<String, ConceptGraphStat>> getConceptGraphStatistics(
       List<String> include, String process) {
-    return ResponseEntity.ok(conceptGraphsService.getAllConceptGraphStatistics(process));
+    Map<String, ConceptGraphStat> statistics =
+        conceptGraphsService.getAllConceptGraphStatistics(process);
+    if (statistics == null) return ResponseEntity.of(Optional.empty());
+    return ResponseEntity.ok(statistics);
   }
 
   @Override
