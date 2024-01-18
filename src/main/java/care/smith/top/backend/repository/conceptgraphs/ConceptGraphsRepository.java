@@ -106,20 +106,17 @@ public class ConceptGraphsRepository extends ConceptGraphsApi {
         data, null, processName, language, skipPresent, returnStatistics, configs);
   }
 
-  public PipelineResponseEntity startPipelineForDataAndLabelsAndConfigs(
-      @Nonnull File data,
+  private PipelineResponseEntity callApi(
       File labels,
-      @Nullable String processName,
-      @Nullable String language,
-      @Nullable Boolean skipPresent,
-      @Nullable Boolean returnStatistics,
-      Map<String, File> configs) {
-    MultiValueMap<String, Object> parts = new LinkedMultiValueMap<>();
-    parts.add("data", new FileSystemResource(data));
+      String processName,
+      String language,
+      Boolean skipPresent,
+      Boolean returnStatistics,
+      Map<String, File> configs,
+      MultiValueMap<String, Object> parts) {
     if (labels != null) parts.add("labels", new FileSystemResource(labels));
     if (configs != null && !configs.isEmpty())
       configs.forEach((name, file) -> parts.add(name + "_config", new FileSystemResource(file)));
-
     try {
       Mono<PipelineResponseEntity> apiResponse =
           conceptGraphsApi
@@ -150,5 +147,30 @@ public class ConceptGraphsRepository extends ConceptGraphsApi {
       LOGGER.warning(e.getResponseBodyAsString() + " -- " + e.getMessage());
       return null;
     }
+  }
+
+  public PipelineResponseEntity startPipelineForDataAndLabelsAndConfigs(
+      @Nonnull File data,
+      File labels,
+      @Nullable String processName,
+      @Nullable String language,
+      @Nullable Boolean skipPresent,
+      @Nullable Boolean returnStatistics,
+      Map<String, File> configs) {
+    MultiValueMap<String, Object> parts = new LinkedMultiValueMap<>();
+    parts.add("data", new FileSystemResource(data));
+    return callApi(labels, processName, language, skipPresent, returnStatistics, configs, parts);
+  }
+
+  public PipelineResponseEntity startPipelineForDataServerAndLabelsAndConfigs(
+      File labels,
+      @Nullable String processName,
+      @Nullable String language,
+      @Nullable Boolean skipPresent,
+      @Nullable Boolean returnStatistics,
+      Map<String, File> configs) {
+    MultiValueMap<String, Object> parts = new LinkedMultiValueMap<>();
+    //TODO: check if dataServer is accessible and has data? Or is this better suited in concept-graphs API?
+    return callApi(labels, processName, language, skipPresent, returnStatistics, configs, parts);
   }
 }

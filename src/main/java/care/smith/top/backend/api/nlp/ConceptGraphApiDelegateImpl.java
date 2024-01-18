@@ -52,22 +52,31 @@ public class ConceptGraphApiDelegateImpl implements ConceptgraphsApiDelegate {
   @Override
   public ResponseEntity<PipelineResponse> startConceptGraphPipeline(
       String process,
-      MultipartFile data,
       List<String> include,
       String lang,
       Boolean skipPresent,
       Boolean returnStatistics,
+      MultipartFile data,
       MultipartFile labels,
       MultipartFile dataConfig,
       MultipartFile embeddingConfig,
       MultipartFile clusteringConfig,
-      MultipartFile graphConfig) {
+      MultipartFile graphConfig,
+      MultipartFile dataServerConfig) {
+    if (data == null && dataServerConfig == null) {
+      return ResponseEntity.badRequest().body(
+          new PipelineResponse()
+              .name(process != null ? process : "default")
+              .response("Neither data nor configuration for a data server were provided.")
+      );
+    }
     Map<String, File> configMap =
         Map.of(
                 "data", dataConfig,
                 "embedding", embeddingConfig,
                 "clustering", clusteringConfig,
-                "graph", graphConfig)
+                "graph", graphConfig,
+                "data_server", dataServerConfig)
             .entrySet()
             .stream()
             .filter(entry -> entry.getValue() != null)
@@ -83,15 +92,26 @@ public class ConceptGraphApiDelegateImpl implements ConceptgraphsApiDelegate {
                     }));
 
     try {
-      return ResponseEntity.ok(
-          conceptGraphsService.initPipelineWithConfigs(
-              data.getResource().getFile(),
-              labels != null ? labels.getResource().getFile() : null,
-              process,
-              lang,
-              skipPresent,
-              returnStatistics,
-              configMap));
+      if (data != null) {
+        return ResponseEntity.ok(
+            conceptGraphsService.initPipelineWithConfigs(
+                data.getResource().getFile(),
+                labels != null ? labels.getResource().getFile() : null,
+                process,
+                lang,
+                skipPresent,
+                returnStatistics,
+                configMap));
+      } else {
+        return ResponseEntity.ok(
+            conceptGraphsService.initPipelineWithoutDataUploadAndWithConfigs(
+                labels != null ? labels.getResource().getFile() : null,
+                process,
+                lang,
+                skipPresent,
+                returnStatistics,
+                configMap));
+      }
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

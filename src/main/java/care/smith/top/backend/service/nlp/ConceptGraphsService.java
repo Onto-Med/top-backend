@@ -75,4 +75,17 @@ public class ConceptGraphsService implements ContentService {
             data, labels, processName, language, skipPresent, returnStatistics, configs)
         .getSpecificResponse();
   }
+
+  public PipelineResponse initPipelineWithoutDataUploadAndWithConfigs(
+      File labels,
+      String process,
+      String lang,
+      Boolean skipPresent,
+      Boolean returnStatistics,
+      Map<String, File> configs) {
+    return conceptGraphsRepository
+        .startPipelineForDataServerAndLabelsAndConfigs(
+            labels, process, lang, skipPresent, returnStatistics, configs)
+        .getSpecificResponse();
+  }
 }

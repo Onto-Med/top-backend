@@ -88,4 +88,23 @@ public abstract class ConceptGraphsApi {
       this.endpoint = endpoint;
     }
   }
+
+  public enum API_STATUS {
+    SELF("/status"),
+    DOCUMENT_SERVER("/status/document-server");
+
+    private String endpoint;
+
+    API_STATUS(String endpoint) {
+      this.setEndpoint(endpoint);
+    }
+
+    public String getEndpoint() {
+      return endpoint;
+    }
+
+    public void setEndpoint(String endpoint) {
+      this.endpoint = endpoint;
+    }
+  }
 }
