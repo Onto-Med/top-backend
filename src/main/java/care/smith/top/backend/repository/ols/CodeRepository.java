@@ -74,10 +74,9 @@ public class CodeRepository extends OlsRepository {
           String.format("Code could not be found in terminology '%s'.", codeSystemId));
 
     String primaryLabel =
-            term.getSynonyms() != null && term.getSynonyms().size() != 0
-                    ? term.getSynonyms().get(0)
-                    : term.getLabel();
-
+        term.getSynonyms() != null && term.getSynonyms().size() != 0
+            ? term.getSynonyms().get(0)
+            : term.getLabel();
 
     return new Code()
         .code(term.getLabel())
