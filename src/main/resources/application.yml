@@ -53,6 +53,8 @@ org:
       enabled: true
 
 top:
+  appName: '@project.name@'
+  version: '@project.version@'
   result:
     dir: ${QUERY_RESULT_DIR:config/query_results}
     download-enabled: ${QUERY_RESULT_DOWNLOAD_ENABLED:true}
