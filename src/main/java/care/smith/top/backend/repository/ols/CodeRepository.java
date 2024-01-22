@@ -73,9 +73,15 @@ public class CodeRepository extends OlsRepository {
           HttpStatus.NOT_FOUND,
           String.format("Code could not be found in terminology '%s'.", codeSystemId));
 
+    String primaryLabel =
+            term.getSynonyms() != null && term.getSynonyms().size() != 0
+                    ? term.getSynonyms().get(0)
+                    : term.getLabel();
+
+
     return new Code()
-        .code(term.getShort_form())
-        .name(term.getLabel())
+        .code(term.getLabel())
+        .name(primaryLabel)
         .uri(URI.create(term.getIri()))
         .codeSystem(codeSystem)
         .synonyms(term.getSynonyms());
@@ -117,7 +123,7 @@ public class CodeRepository extends OlsRepository {
 
                   return new Code()
                       .name(primaryLabel)
-                      .code(responseItem.getShort_form())
+                      .code(responseItem.getLabel())
                       .uri(responseItem.getIri())
                       .synonyms(
                           responseItem.getSynonym() != null
