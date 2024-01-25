@@ -19,6 +19,8 @@ public class DocumentQueryConfigMap {
   private static final String DEFAULT_ES_PORT = "9008";
   private static final String DEFAULT_ES_INDEX = "documents";
   private static final String DEFAULT_ES_FIELD = "text";
+  private static final Integer DEFAULT_DOCUMENT_SERVER_BATCH_SIZE = 30;
+  private static final String DEFAULT_DOCUMENT_SERVER_FIELD_REPLACEMENT = "{'text': 'content'}";
   private static final String DEFAULT_NEO4J_URL = "bolt://localhost";
   private static final String DEFAULT_NEO4J_PORT = "7687";
   private static final String DEFAULT_CONCEPT_GRAPH_URL = "http://localhost";
@@ -43,6 +45,8 @@ public class DocumentQueryConfigMap {
   private static final String TOP_DATA_SOURCE_CONFIG_DIR_DOCUMENTS =
       "top.documents.data-source-config-dir";
   private static final String TOP_DEFAULT_ADAPTER_DOCUMENTS = "top.documents.default_adapter";
+  private static final String TOP_DOCUMENT_SERVER_BATCH_SIZE = "top.documents.document_server.batch_size";
+  private static final String TOP_DOCUMENT_SERVER_FIELD_REPLACEMENT = "top.documents.document_server.fields_replacement";
   private static final Logger LOGGER = Logger.getLogger(DocumentQueryConfigMap.class.getName());
   private Map<String, Object> configMap;
   private String name;
@@ -117,6 +121,16 @@ public class DocumentQueryConfigMap {
                     SPRING_CONCEPT_GRAPH_URI_PROP,
                     DEFAULT_CONCEPT_GRAPH_URL + ":" + DEFAULT_CONCEPT_GRAPH_PORT);
               }
+            }
+            if (config.getBatchSize() != null) {
+              put(TOP_DOCUMENT_SERVER_BATCH_SIZE, config.getBatchSize());
+            } else {
+              put(TOP_DOCUMENT_SERVER_BATCH_SIZE, DEFAULT_DOCUMENT_SERVER_BATCH_SIZE);
+            }
+            if (config.getReplaceFields() != null) {
+              put(TOP_DOCUMENT_SERVER_FIELD_REPLACEMENT, config.getReplaceFieldsAsString());
+            } else {
+              put(TOP_DOCUMENT_SERVER_FIELD_REPLACEMENT, DEFAULT_DOCUMENT_SERVER_FIELD_REPLACEMENT);
             }
           }
         };

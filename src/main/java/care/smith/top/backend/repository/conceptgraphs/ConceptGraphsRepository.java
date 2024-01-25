@@ -170,7 +170,6 @@ public class ConceptGraphsRepository extends ConceptGraphsApi {
       @Nullable Boolean returnStatistics,
       Map<String, File> configs) {
     MultiValueMap<String, Object> parts = new LinkedMultiValueMap<>();
-    //TODO: check if dataServer is accessible and has data? Or is this better suited in concept-graphs API?
     return callApi(labels, processName, language, skipPresent, returnStatistics, configs, parts);
   }
 }

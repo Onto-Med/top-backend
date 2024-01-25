@@ -61,7 +61,7 @@ public class ConceptGraphApiDelegateImpl implements ConceptgraphsApiDelegate {
       MultipartFile clusteringConfig,
       MultipartFile graphConfig,
       MultipartFile dataServerConfig) {
-    if (data == null && dataServerConfig == null) {
+    if (data == null && (dataServerConfig == null && conceptGraphsService.getDocumentServerAddress() == null)) {
       return ResponseEntity.badRequest().body(
           new PipelineResponse()
               .name(process != null ? process : "default")
@@ -73,8 +73,7 @@ public class ConceptGraphApiDelegateImpl implements ConceptgraphsApiDelegate {
                 "data", dataConfig,
                 "embedding", embeddingConfig,
                 "clustering", clusteringConfig,
-                "graph", graphConfig,
-                "data_server", dataServerConfig)
+                "graph", graphConfig)
             .entrySet()
             .stream()
             .filter(entry -> entry.getValue() != null)
@@ -88,6 +87,15 @@ public class ConceptGraphApiDelegateImpl implements ConceptgraphsApiDelegate {
                         throw new RuntimeException(ex);
                       }
                     }));
+    if (dataServerConfig != null) {
+      try {
+        configMap.put("data_server", dataServerConfig.getResource().getFile());
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+    } else if (data != null && conceptGraphsService.getDocumentServerAddress() != null) {
+      //ToDo: create File of data server specs from conceptGraphsService value'd fields and put it in configMap
+    }
 
     try {
       PipelineResponse pipelineResponse;

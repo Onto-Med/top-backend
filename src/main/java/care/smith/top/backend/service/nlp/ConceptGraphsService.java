@@ -13,15 +13,44 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
 public class ConceptGraphsService implements ContentService {
 
+  @Value("${spring.elasticsearch.uris}")
+  private String documentServerAddress;
+  @Value("${spring.elasticsearch.index.name}")
+  private String documentServerIndexName;
+  @Value("${top.documents.document_server.batch_size}")
+  private Integer documentServerBatchSize;
+  @Value("${top.documents.document_server.fields_replacement}")
+  private String documentServerFieldsReplacement;
+
   private final ConceptGraphsRepository conceptGraphsRepository;
 
   public ConceptGraphsService(ConceptGraphsRepository conceptGraphsRepository) {
     this.conceptGraphsRepository = conceptGraphsRepository;
+  }
+
+  public String getDocumentServerAddress() {
+    return documentServerAddress;
+  }
+
+  public String getDocumentServerIndexName() {
+    return documentServerIndexName;
+  }
+
+  public Integer getDocumentServerBatchSize() {
+    return documentServerBatchSize;
+  }
+
+  public Map<String, String> getDocumentServerFieldsReplacement() {
+    return Arrays.stream(documentServerFieldsReplacement.split(","))
+        .map(entry -> entry.split(":"))
+        .collect(Collectors.toMap(entry -> entry[0], entry -> entry[1]));
   }
 
   @Override
