@@ -2,12 +2,11 @@ package care.smith.top.backend.service.nlp;
 
 import care.smith.top.backend.model.conceptgraphs.ConceptGraphStatisticsEntity;
 import care.smith.top.backend.model.conceptgraphs.GraphStatsEntity;
+import care.smith.top.backend.model.conceptgraphs.PipelineResponseEntity;
 import care.smith.top.backend.repository.conceptgraphs.ConceptGraphsRepository;
 import care.smith.top.backend.service.ContentService;
-import care.smith.top.model.ConceptGraph;
-import care.smith.top.model.ConceptGraphProcess;
-import care.smith.top.model.ConceptGraphStat;
-import care.smith.top.model.PipelineResponse;
+import care.smith.top.model.*;
+
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
@@ -50,19 +49,19 @@ public class ConceptGraphsService implements ContentService {
   }
 
   public PipelineResponse initPipeline(File data, String processName) {
-    return conceptGraphsRepository
-        .startPipelineForData(data, processName, null, true, false)
-        .getSpecificResponse();
+    PipelineResponseEntity pre =  conceptGraphsRepository
+        .startPipelineForData(data, processName, null, true, false);
+    return addStatusToPipelineResponse(pre, processName);
   }
 
   public PipelineResponse initPipelineWithBooleans(
       File data, String processName, Boolean skipPresent, Boolean returnStatistics) {
-    return conceptGraphsRepository
-        .startPipelineForData(data, processName, null, skipPresent, returnStatistics)
-        .getSpecificResponse();
+    PipelineResponseEntity pre = conceptGraphsRepository
+        .startPipelineForData(data, processName, null, skipPresent, returnStatistics);
+    return addStatusToPipelineResponse(pre, processName);
   }
 
-  public PipelineResponse initPipelineWithConfigs(
+  public PipelineResponse initPipelineWithDataUploadAndWithConfigs(
       File data,
       File labels,
       String processName,
@@ -70,22 +69,30 @@ public class ConceptGraphsService implements ContentService {
       Boolean skipPresent,
       Boolean returnStatistics,
       Map<String, File> configs) {
-    return conceptGraphsRepository
+     PipelineResponseEntity pre = conceptGraphsRepository
         .startPipelineForDataAndLabelsAndConfigs(
-            data, labels, processName, language, skipPresent, returnStatistics, configs)
-        .getSpecificResponse();
+            data, labels, processName, language, skipPresent, returnStatistics, configs);
+    return addStatusToPipelineResponse(pre, processName);
   }
 
-  public PipelineResponse initPipelineWithoutDataUploadAndWithConfigs(
+  public PipelineResponse initPipelineWithDataServerAndWithConfigs(
       File labels,
-      String process,
+      String processName,
       String lang,
       Boolean skipPresent,
       Boolean returnStatistics,
       Map<String, File> configs) {
-    return conceptGraphsRepository
+    PipelineResponseEntity pre = conceptGraphsRepository
         .startPipelineForDataServerAndLabelsAndConfigs(
-            labels, process, lang, skipPresent, returnStatistics, configs)
-        .getSpecificResponse();
+            labels, processName, lang, skipPresent, returnStatistics, configs);
+    return addStatusToPipelineResponse(pre, processName);
+  }
+
+  private PipelineResponse addStatusToPipelineResponse(PipelineResponseEntity responseEntity, String processName) {
+    if (responseEntity == null) return new PipelineResponse()
+        .name(processName)
+        .response("Pipeline failed. Please consult the logs.")
+        .status(PipelineResponseStatus.FAILED);
+    return responseEntity.getSpecificResponse().status(PipelineResponseStatus.SUCCESSFUL);
   }
 }

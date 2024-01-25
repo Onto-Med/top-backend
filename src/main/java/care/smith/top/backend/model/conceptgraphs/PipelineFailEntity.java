@@ -1,6 +1,7 @@
 package care.smith.top.backend.model.conceptgraphs;
 
 import care.smith.top.model.PipelineResponse;
+import care.smith.top.model.PipelineResponseStatus;
 
 public class PipelineFailEntity implements PipelineResponseEntity {
   private String name;
@@ -15,6 +16,6 @@ public class PipelineFailEntity implements PipelineResponseEntity {
 
   @Override
   public PipelineResponse getSpecificResponse() {
-    return new PipelineResponse().name(this.getName()).response("Pipeline failed. Check the logs.");
+    return new PipelineResponse().name(this.getName()).response("Pipeline failed. Check the logs.").status(PipelineResponseStatus.FAILED);
   }
 }

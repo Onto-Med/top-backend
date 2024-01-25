@@ -3,10 +3,8 @@ package care.smith.top.backend.api.nlp;
 import care.smith.top.backend.api.ConceptgraphsApiDelegate;
 import care.smith.top.backend.service.nlp.ConceptClusterService;
 import care.smith.top.backend.service.nlp.ConceptGraphsService;
-import care.smith.top.model.ConceptGraph;
-import care.smith.top.model.ConceptGraphProcess;
-import care.smith.top.model.ConceptGraphStat;
-import care.smith.top.model.PipelineResponse;
+import care.smith.top.model.*;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -67,7 +65,7 @@ public class ConceptGraphApiDelegateImpl implements ConceptgraphsApiDelegate {
       return ResponseEntity.badRequest().body(
           new PipelineResponse()
               .name(process != null ? process : "default")
-              .response("Neither data nor configuration for a data server were provided.")
+              .response("Neither 'data' nor configuration for a data server ('dataServerConfig') were provided. One of either is needed.")
       );
     }
     Map<String, File> configMap =
@@ -92,26 +90,29 @@ public class ConceptGraphApiDelegateImpl implements ConceptgraphsApiDelegate {
                     }));
 
     try {
+      PipelineResponse pipelineResponse;
       if (data != null) {
-        return ResponseEntity.ok(
-            conceptGraphsService.initPipelineWithConfigs(
+        pipelineResponse = conceptGraphsService.initPipelineWithDataUploadAndWithConfigs(
                 data.getResource().getFile(),
                 labels != null ? labels.getResource().getFile() : null,
                 process,
                 lang,
                 skipPresent,
                 returnStatistics,
-                configMap));
+                configMap);
       } else {
-        return ResponseEntity.ok(
-            conceptGraphsService.initPipelineWithoutDataUploadAndWithConfigs(
+        pipelineResponse = conceptGraphsService.initPipelineWithDataServerAndWithConfigs(
                 labels != null ? labels.getResource().getFile() : null,
                 process,
                 lang,
                 skipPresent,
                 returnStatistics,
-                configMap));
+                configMap);
       }
+      if (pipelineResponse.getStatus().equals(PipelineResponseStatus.FAILED)) {
+        return ResponseEntity.of(Optional.of(pipelineResponse));
+      }
+      return ResponseEntity.ok(pipelineResponse);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
