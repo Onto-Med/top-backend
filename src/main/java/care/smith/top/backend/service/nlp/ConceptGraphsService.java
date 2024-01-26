@@ -2,6 +2,7 @@ package care.smith.top.backend.service.nlp;
 
 import care.smith.top.backend.model.conceptgraphs.ConceptGraphStatisticsEntity;
 import care.smith.top.backend.model.conceptgraphs.GraphStatsEntity;
+import care.smith.top.backend.model.conceptgraphs.PipelineFailEntity;
 import care.smith.top.backend.model.conceptgraphs.PipelineResponseEntity;
 import care.smith.top.backend.repository.conceptgraphs.ConceptGraphsRepository;
 import care.smith.top.backend.service.ContentService;
@@ -47,7 +48,11 @@ public class ConceptGraphsService implements ContentService {
     return documentServerBatchSize;
   }
 
-  public Map<String, String> getDocumentServerFieldsReplacement() {
+  public String getDocumentServerFieldsReplacement() {
+    return documentServerFieldsReplacement;
+  }
+
+  public Map<String, String> getDocumentServerFieldsReplacementAsMap() {
     return Arrays.stream(documentServerFieldsReplacement.split(","))
         .map(entry -> entry.split(":"))
         .collect(Collectors.toMap(entry -> entry[0], entry -> entry[1]));
@@ -118,10 +123,15 @@ public class ConceptGraphsService implements ContentService {
   }
 
   private PipelineResponse addStatusToPipelineResponse(PipelineResponseEntity responseEntity, String processName) {
-    if (responseEntity == null) return new PipelineResponse()
-        .name(processName)
-        .response("Pipeline failed. Please consult the logs.")
-        .status(PipelineResponseStatus.FAILED);
+    if (responseEntity == null) {
+      return new PipelineResponse()
+          .name(processName)
+          .response("Pipeline failed. Please consult the logs.")
+          .status(PipelineResponseStatus.FAILED);
+    } else if (responseEntity instanceof PipelineFailEntity) {
+      //ToDo: this needs to get more meaningful -> ConceptGraphsRepository.callApi should account for more HttpResponse Codes
+      return responseEntity.getSpecificResponse().status(PipelineResponseStatus.FAILED);
+    }
     return responseEntity.getSpecificResponse().status(PipelineResponseStatus.SUCCESSFUL);
   }
 }

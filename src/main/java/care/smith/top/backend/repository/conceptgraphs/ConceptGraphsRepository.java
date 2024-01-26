@@ -139,6 +139,8 @@ public class ConceptGraphsRepository extends ConceptGraphsApi {
                     } else if (response.statusCode().equals(HttpStatus.ACCEPTED)) {
                       return response.bodyToMono(PipelineStatusEntity.class);
                     } else {
+                      //ToDo: I have also responses FORBIDDEN (process with same name already running),
+                      // BAD REQUEST (neither data nor dataConfig provided) and NOT FOUND (no data server found)
                       return response.bodyToMono(PipelineFailEntity.class);
                     }
                   });
