@@ -131,13 +131,7 @@ public class PhenotypeQueryService extends QueryService {
             new QueryResultDao(queryDao, createdAt, 0L, OffsetDateTime.now(), QueryState.FINISHED)
                 .message("Query execution is disabled.");
       }
-
-      storeResult(
-          queryDao.getRepository().getOrganisation().getId(),
-          queryDao.getRepository().getId(),
-          queryId.toString(),
-          rs,
-          phenotypes);
+      storeResult(queryDao, rs, phenotypes);
     } catch (Throwable e) {
       LOGGER.log(Level.WARNING, e.getMessage(), e);
       result =
@@ -183,20 +177,23 @@ public class PhenotypeQueryService extends QueryService {
         .title(dataAdapterConfig.getId().replace('_', ' '));
   }
 
-  private void storeResult(
-      String organisationId,
-      String repositoryId,
-      String queryId,
-      ResultSet resultSet,
-      Entity[] phenotypes)
+  private void storeResult(QueryDao queryDao, ResultSet resultSet, Entity[] phenotypes)
       throws IOException {
-    ZipOutputStream zipStream = createZipStream(organisationId, repositoryId, queryId);
-
-    zipStream.putNextEntry(new ZipEntry("data.csv"));
-    csvConverter.write(resultSet, zipStream);
+    ZipOutputStream zipStream =
+        createZipStream(
+            queryDao.getRepository().getOrganisation().getId(),
+            queryDao.getRepository().getId(),
+            queryDao.getId());
 
     zipStream.putNextEntry(new ZipEntry("metadata.csv"));
-    csvConverter.write(phenotypes, zipStream);
+    csvConverter.writeMetadata(phenotypes, zipStream);
+
+    zipStream.putNextEntry(new ZipEntry("data_phenotypes.csv"));
+    csvConverter.writePhenotypes(resultSet, phenotypes, zipStream);
+
+    zipStream.putNextEntry(new ZipEntry("data_subjects.csv"));
+    csvConverter.writeSubjects(
+        resultSet, phenotypes, (PhenotypeQuery) queryDao.toApiModel(), zipStream);
 
     zipStream.close();
   }
