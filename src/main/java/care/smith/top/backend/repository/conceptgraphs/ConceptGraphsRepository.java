@@ -1,11 +1,16 @@
 package care.smith.top.backend.repository.conceptgraphs;
 
 import care.smith.top.backend.model.conceptgraphs.*;
+import care.smith.top.backend.model.conceptgraphs.pipelineresponses.PipelineFailEntity;
+import care.smith.top.backend.model.conceptgraphs.pipelineresponses.PipelineFailWithExplicit;
+import care.smith.top.backend.model.conceptgraphs.pipelineresponses.PipelineResponseEntity;
+import care.smith.top.backend.model.conceptgraphs.pipelineresponses.PipelineStatusEntity;
 import java.io.File;
 import java.util.Map;
 import java.util.logging.Logger;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpStatus;
@@ -138,9 +143,15 @@ public class ConceptGraphsRepository extends ConceptGraphsApi {
                       return response.bodyToMono(ConceptGraphStatisticsEntity.class);
                     } else if (response.statusCode().equals(HttpStatus.ACCEPTED)) {
                       return response.bodyToMono(PipelineStatusEntity.class);
+                    } else if (ArrayUtils.contains(
+                        new int[] {
+                          HttpStatus.FORBIDDEN.value(),
+                          HttpStatus.NOT_FOUND.value(),
+                          HttpStatus.BAD_REQUEST.value()
+                        },
+                        response.statusCode().value())) {
+                      return response.bodyToMono(PipelineFailWithExplicit.class);
                     } else {
-                      //ToDo: I have also responses FORBIDDEN (process with same name already running),
-                      // BAD REQUEST (neither data nor dataConfig provided) and NOT FOUND (no data server found)
                       return response.bodyToMono(PipelineFailEntity.class);
                     }
                   });

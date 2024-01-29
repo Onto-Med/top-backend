@@ -5,19 +5,16 @@ import care.smith.top.backend.repository.conceptgraphs.ConceptGraphsRepository;
 import care.smith.top.backend.service.nlp.ConceptClusterService;
 import care.smith.top.backend.service.nlp.ConceptGraphsService;
 import care.smith.top.model.*;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -27,12 +24,10 @@ import org.springframework.web.multipart.MultipartFile;
 public class ConceptGraphApiDelegateImpl implements ConceptgraphsApiDelegate {
   private static final Logger LOGGER = Logger.getLogger(ConceptGraphsRepository.class.getName());
   private final ConceptGraphsService conceptGraphsService;
-  private final ConceptClusterService conceptClusterService;
 
   public ConceptGraphApiDelegateImpl(
       ConceptGraphsService conceptGraphsService, ConceptClusterService conceptClusterService) {
     this.conceptGraphsService = conceptGraphsService;
-    this.conceptClusterService = conceptClusterService;
   }
 
   @Override
@@ -62,11 +57,20 @@ public class ConceptGraphApiDelegateImpl implements ConceptgraphsApiDelegate {
       List<String> include,
       String lang,
       Boolean skipPresent,
-      Boolean returnStatistics
-  ) {
+      Boolean returnStatistics) {
     return startConceptGraphPipeline(
-        process, include, lang, skipPresent, returnStatistics,
-        null, null, null, null, null, null, null);
+        process,
+        include,
+        lang,
+        skipPresent,
+        returnStatistics,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null);
   }
 
   @Override
@@ -82,25 +86,28 @@ public class ConceptGraphApiDelegateImpl implements ConceptgraphsApiDelegate {
       MultipartFile embeddingConfig,
       MultipartFile clusteringConfig,
       MultipartFile graphConfig,
-      MultipartFile dataServerConfig) {
-    System.out.println("");
-    if (data == null && (dataServerConfig == null && conceptGraphsService.getDocumentServerAddress() == null)) {
-      return ResponseEntity.badRequest().body(
-          new PipelineResponse()
-              .name(process != null ? process : "default")
-              .response("Neither 'data' nor configuration for a data server ('dataServerConfig') were provided. " +
-                  "There also seems no default document server to be available. One of either is needed.")
-      );
+      MultipartFile documentServerConfig) {
+    if (data == null
+        && (documentServerConfig == null
+            && conceptGraphsService.getDocumentServerAddress() == null)) {
+      return ResponseEntity.badRequest()
+          .body(
+              new PipelineResponse()
+                  .name(process != null ? process : "default")
+                  .response(
+                      "Neither 'data' nor configuration for a document server ('documentServerConfig') were provided. "
+                          + "There also seems no default document server to be available. One of either is needed.")
+                  .status(PipelineResponseStatus.FAILED));
     }
     Map<String, File> configMap =
-      Stream.of(
-          Pair.of("data", dataConfig),
-          Pair.of("embedding", embeddingConfig),
-          Pair.of("clustering", clusteringConfig),
-          Pair.of("graph", graphConfig)
-      )
-          .filter(pair -> pair.getRight() != null)
-          .collect(Collectors.toMap(
+        Stream.of(
+                Pair.of("data", dataConfig),
+                Pair.of("embedding", embeddingConfig),
+                Pair.of("clustering", clusteringConfig),
+                Pair.of("graph", graphConfig))
+            .filter(pair -> pair.getRight() != null)
+            .collect(
+                Collectors.toMap(
                     Map.Entry::getKey,
                     e -> {
                       try {
@@ -110,11 +117,12 @@ public class ConceptGraphApiDelegateImpl implements ConceptgraphsApiDelegate {
                       }
                     }));
 
-    if (dataServerConfig != null) {
+    if (documentServerConfig != null) {
       try {
-        configMap.put("document_server", dataServerConfig.getResource().getFile());
+        configMap.put("document_server", documentServerConfig.getResource().getFile());
       } catch (IOException e) {
-        LOGGER.severe("Couldn't access document_server_config file. Something went wrong with the upload.");
+        LOGGER.severe(
+            "Couldn't access document_server_config file. Something went wrong with the upload.");
         throw new RuntimeException(e);
       }
     } else if (data == null && conceptGraphsService.getDocumentServerAddress() != null) {
@@ -129,7 +137,8 @@ public class ConceptGraphApiDelegateImpl implements ConceptgraphsApiDelegate {
     try {
       PipelineResponse pipelineResponse;
       if (data != null) {
-        pipelineResponse = conceptGraphsService.initPipelineWithDataUploadAndWithConfigs(
+        pipelineResponse =
+            conceptGraphsService.initPipelineWithDataUploadAndWithConfigs(
                 data.getResource().getFile(),
                 labels != null ? labels.getResource().getFile() : null,
                 process,
@@ -138,7 +147,8 @@ public class ConceptGraphApiDelegateImpl implements ConceptgraphsApiDelegate {
                 returnStatistics,
                 configMap);
       } else {
-        pipelineResponse = conceptGraphsService.initPipelineWithDataServerAndWithConfigs(
+        pipelineResponse =
+            conceptGraphsService.initPipelineWithDataServerAndWithConfigs(
                 labels != null ? labels.getResource().getFile() : null,
                 process,
                 lang,
@@ -167,11 +177,16 @@ public class ConceptGraphApiDelegateImpl implements ConceptgraphsApiDelegate {
     FileWriter fileWriter = new FileWriter(dataServerConfig);
     PrintWriter printWriter = new PrintWriter(fileWriter);
     int lastIndexOfColon = conceptGraphsService.getDocumentServerAddress().lastIndexOf(":");
-    printWriter.printf("url: %s\n", conceptGraphsService.getDocumentServerAddress().substring(0, lastIndexOfColon));
-    printWriter.printf("port: %s\n", conceptGraphsService.getDocumentServerAddress().substring(lastIndexOfColon + 1));
+    printWriter.printf(
+        "url: %s\n",
+        conceptGraphsService.getDocumentServerAddress().substring(0, lastIndexOfColon));
+    printWriter.printf(
+        "port: %s\n",
+        conceptGraphsService.getDocumentServerAddress().substring(lastIndexOfColon + 1));
     printWriter.printf("index: %s\n", conceptGraphsService.getDocumentServerIndexName());
     printWriter.printf("size: %s\n", conceptGraphsService.getDocumentServerBatchSize());
-    printWriter.printf("replace_keys: %s\n", conceptGraphsService.getDocumentServerFieldsReplacement());
+    printWriter.printf(
+        "replace_keys: %s\n", conceptGraphsService.getDocumentServerFieldsReplacement());
     printWriter.close();
     return dataServerConfig;
   }

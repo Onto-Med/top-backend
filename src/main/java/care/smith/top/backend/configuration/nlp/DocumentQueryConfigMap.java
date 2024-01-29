@@ -45,8 +45,10 @@ public class DocumentQueryConfigMap {
   private static final String TOP_DATA_SOURCE_CONFIG_DIR_DOCUMENTS =
       "top.documents.data-source-config-dir";
   private static final String TOP_DEFAULT_ADAPTER_DOCUMENTS = "top.documents.default_adapter";
-  private static final String TOP_DOCUMENT_SERVER_BATCH_SIZE = "top.documents.document_server.batch_size";
-  private static final String TOP_DOCUMENT_SERVER_FIELD_REPLACEMENT = "top.documents.document_server.fields_replacement";
+  private static final String TOP_DOCUMENT_SERVER_BATCH_SIZE =
+      "top.documents.document_server.batch_size";
+  private static final String TOP_DOCUMENT_SERVER_FIELD_REPLACEMENT =
+      "top.documents.document_server.fields_replacement";
   private static final Logger LOGGER = Logger.getLogger(DocumentQueryConfigMap.class.getName());
   private Map<String, Object> configMap;
   private String name;
