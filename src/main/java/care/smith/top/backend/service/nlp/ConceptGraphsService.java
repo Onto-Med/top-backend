@@ -25,10 +25,10 @@ public class ConceptGraphsService implements ContentService {
   @Value("${spring.elasticsearch.index.name}")
   private String documentServerIndexName;
 
-  @Value("${top.documents.document_server.batch_size}")
+  @Value("${top.documents.document-server.batch-size:30}")
   private Integer documentServerBatchSize;
 
-  @Value("${top.documents.document_server.fields_replacement}")
+  @Value("${top.documents.document-server.fields-replacement:{'text': 'content'}}")
   private String documentServerFieldsReplacement;
 
   private final ConceptGraphsRepository conceptGraphsRepository;

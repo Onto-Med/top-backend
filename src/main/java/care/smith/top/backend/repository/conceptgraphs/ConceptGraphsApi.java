@@ -13,7 +13,8 @@ public abstract class ConceptGraphsApi {
 
   @Autowired
   public void setConceptGraphApiEndpoint(
-      @Value("${top.documents.concept-graphs-api.uri}") String conceptGraphApiEndpoint) {
+      @Value("${top.documents.concept-graphs-api.uri:http://localhost:9007}")
+          String conceptGraphApiEndpoint) {
     int size = 16 * 1024 * 1024;
     ExchangeStrategies exchangeStrategies =
         ExchangeStrategies.builder()
