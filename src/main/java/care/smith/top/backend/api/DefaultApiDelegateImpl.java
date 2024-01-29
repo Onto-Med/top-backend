@@ -22,7 +22,7 @@ public class DefaultApiDelegateImpl implements DefaultApiDelegate {
   @Autowired DocumentService documentService;
 
   @Override
-  public ResponseEntity<Void> ping() {
+  public ResponseEntity<AppDescription> ping() {
     return new ResponseEntity<>(HttpStatus.OK);
   }
 
