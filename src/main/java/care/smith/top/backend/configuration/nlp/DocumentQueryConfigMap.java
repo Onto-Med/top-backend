@@ -253,6 +253,33 @@ public class DocumentQueryConfigMap {
     conceptGraph.setConnection(conceptGraphConnection);
     config.setConceptGraph(conceptGraph);
 
+    config.setBatchSize(DEFAULT_DOCUMENT_SERVER_BATCH_SIZE);
+    if (env.getProperty(TOP_DOCUMENT_SERVER_BATCH_SIZE) != null) {
+      config.setBatchSize(
+          Integer.valueOf(Objects.requireNonNull(env.getProperty(TOP_DOCUMENT_SERVER_BATCH_SIZE))));
+    }
+
+    config.setReplaceFields(stringToMap(DEFAULT_DOCUMENT_SERVER_FIELD_REPLACEMENT));
+    if (env.getProperty(TOP_DOCUMENT_SERVER_FIELD_REPLACEMENT) != null) {
+      config.setReplaceFields(
+          stringToMap(
+              Objects.requireNonNull(env.getProperty(TOP_DOCUMENT_SERVER_FIELD_REPLACEMENT))));
+    }
+
     return config;
+  }
+
+  private Map<String, String> stringToMap(String mapAsString) {
+    Map<String, String> stringMap = new HashMap<>();
+    Arrays.stream(
+            mapAsString
+                .substring(1, DEFAULT_DOCUMENT_SERVER_FIELD_REPLACEMENT.length() - 1)
+                .split(","))
+        .forEach(
+            pair -> {
+              String[] mapPair = pair.split(":");
+              stringMap.put(mapPair[0], mapPair[1]);
+            });
+    return stringMap;
   }
 }
