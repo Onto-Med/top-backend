@@ -23,6 +23,8 @@ public class DocumentQueryConfigMap {
   private static final String DEFAULT_DOCUMENT_SERVER_FIELD_REPLACEMENT = "{'text': 'content'}";
   private static final String DEFAULT_NEO4J_URL = "bolt://localhost";
   private static final String DEFAULT_NEO4J_PORT = "7687";
+  private static final String DEFAULT_GRAPHDB_USER = "neo4j";
+  private static final String DEFAULT_ES_USER = "elastic";
   private static final String DEFAULT_CONCEPT_GRAPH_URL = "http://localhost";
   private static final String DEFAULT_CONCEPT_GRAPH_PORT = "9007";
   private static final String SPRING_ES_URI_PROP = "spring.elasticsearch.uris";
@@ -98,13 +100,13 @@ public class DocumentQueryConfigMap {
                   SPRING_NEO4J_USERNAME_PROP,
                   (config.getGraphDB().getAuthentication() == null
                           || config.getGraphDB().getAuthentication().getUsername() == null)
-                      ? environment.getProperty(TOP_SECURITY_GRAPHDB_USERNAME)
+                      ? environment.getProperty(TOP_SECURITY_GRAPHDB_USERNAME, DEFAULT_GRAPHDB_USER)
                       : config.getGraphDB().getAuthentication().getUsername());
               put(
                   SPRING_NEO4J_PASSWORD_PROP,
                   (config.getGraphDB().getAuthentication() == null
                           || config.getGraphDB().getAuthentication().getPassword() == null)
-                      ? environment.getProperty(TOP_SECURITY_GRAPHDB_PASSWORD)
+                      ? environment.getProperty(TOP_SECURITY_GRAPHDB_PASSWORD, "")
                       : config.getGraphDB().getAuthentication().getPassword());
             }
             if (config.getConceptGraph() != null) {
@@ -150,7 +152,7 @@ public class DocumentQueryConfigMap {
     String srcPath = environment.getProperty(TOP_DATA_SOURCE_CONFIG_DIR_DOCUMENTS);
     String defaultAdapter = environment.getProperty(TOP_DEFAULT_ADAPTER_DOCUMENTS);
     TextAdapterConfig config =
-        !Objects.equals(defaultAdapter, "#{null}")
+        !(Objects.equals(defaultAdapter, "#{null}") || defaultAdapter == null)
             ? toTextAdapterConfig(
                 Path.of(
                     srcPath != null ? srcPath : Paths.get("").toAbsolutePath().toString(),

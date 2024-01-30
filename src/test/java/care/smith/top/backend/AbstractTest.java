@@ -1,6 +1,7 @@
 package care.smith.top.backend;
 
 import care.smith.top.backend.api.OrganisationApiDelegateImpl;
+import care.smith.top.backend.configuration.TopBackendContextInitializer;
 import care.smith.top.backend.repository.jpa.*;
 import care.smith.top.backend.service.EntityService;
 import care.smith.top.backend.service.OrganisationService;
@@ -18,8 +19,10 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ContextConfiguration;
 
 @SpringBootTest
+@ContextConfiguration(initializers = TopBackendContextInitializer.class)
 public abstract class AbstractTest {
   static HttpServer olsServer;
   @Autowired protected OrganisationApiDelegateImpl organisationApiDelegate;
