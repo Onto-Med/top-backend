@@ -4,8 +4,8 @@ import care.smith.top.top_document_query.adapter.config.ConceptGraphConfig;
 import care.smith.top.top_document_query.adapter.config.Connection;
 import care.smith.top.top_document_query.adapter.config.GraphDBConfig;
 import care.smith.top.top_document_query.adapter.config.TextAdapterConfig;
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -202,15 +202,15 @@ public class DocumentQueryConfigMap {
     elasticConnection.setUrl(DEFAULT_ES_URL);
     elasticConnection.setPort(DEFAULT_ES_PORT);
     if (env.getProperty(SPRING_ES_URI_PROP) != null) {
-      URL url;
+      URI uri;
       try {
-        url = new URL(env.getProperty(SPRING_ES_URI_PROP));
-      } catch (MalformedURLException e) {
+        uri = new URI(env.getProperty(SPRING_ES_URI_PROP));
+      } catch (URISyntaxException e) {
         throw new RuntimeException(e);
       }
-      elasticConnection.setUrl(url.getHost());
+      elasticConnection.setUrl(uri.getHost());
       elasticConnection.setPort(
-          url.getPort() != -1 ? String.valueOf(url.getPort()) : DEFAULT_ES_PORT);
+          uri.getPort() != -1 ? String.valueOf(uri.getPort()) : DEFAULT_ES_PORT);
     }
     config.setConnection(elasticConnection);
 
@@ -223,15 +223,15 @@ public class DocumentQueryConfigMap {
     neo4JConnection.setUrl(DEFAULT_NEO4J_URL);
     neo4JConnection.setPort(DEFAULT_NEO4J_PORT);
     if (env.getProperty(SPRING_NEO4J_URI_PROP) != null) {
-      URL url;
+      URI uri;
       try {
-        url = new URL(env.getProperty(SPRING_NEO4J_URI_PROP));
-      } catch (MalformedURLException e) {
+        uri = new URI(env.getProperty(SPRING_NEO4J_URI_PROP));
+      } catch (URISyntaxException e) {
         throw new RuntimeException(e);
       }
-      neo4JConnection.setUrl(url.getHost());
+      neo4JConnection.setUrl(uri.getHost());
       neo4JConnection.setPort(
-          url.getPort() != -1 ? String.valueOf(url.getPort()) : DEFAULT_NEO4J_PORT);
+          uri.getPort() != -1 ? String.valueOf(uri.getPort()) : DEFAULT_NEO4J_PORT);
     }
     GraphDBConfig neo4j = new GraphDBConfig();
     neo4j.setConnection(neo4JConnection);
@@ -241,15 +241,15 @@ public class DocumentQueryConfigMap {
     conceptGraphConnection.setUrl(DEFAULT_CONCEPT_GRAPH_URL);
     conceptGraphConnection.setPort(DEFAULT_CONCEPT_GRAPH_PORT);
     if (env.getProperty(SPRING_CONCEPT_GRAPH_URI_PROP) != null) {
-      URL url;
+      URI uri;
       try {
-        url = new URL(env.getProperty(SPRING_CONCEPT_GRAPH_URI_PROP));
-      } catch (MalformedURLException e) {
+        uri = new URI(env.getProperty(SPRING_CONCEPT_GRAPH_URI_PROP));
+      } catch (URISyntaxException e) {
         throw new RuntimeException(e);
       }
-      conceptGraphConnection.setUrl(url.getHost());
+      conceptGraphConnection.setUrl(uri.getHost());
       conceptGraphConnection.setPort(
-          url.getPort() != -1 ? String.valueOf(url.getPort()) : DEFAULT_CONCEPT_GRAPH_PORT);
+          uri.getPort() != -1 ? String.valueOf(uri.getPort()) : DEFAULT_CONCEPT_GRAPH_PORT);
     }
     ConceptGraphConfig conceptGraph = new ConceptGraphConfig();
     conceptGraph.setConnection(conceptGraphConnection);
