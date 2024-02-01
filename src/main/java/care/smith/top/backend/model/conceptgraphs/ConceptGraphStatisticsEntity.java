@@ -1,6 +1,8 @@
 package care.smith.top.backend.model.conceptgraphs;
 
+import care.smith.top.backend.model.conceptgraphs.pipelineresponses.PipelineResponseEntity;
 import care.smith.top.model.PipelineResponse;
+import care.smith.top.model.PipelineResponseStatus;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -37,7 +39,12 @@ public class ConceptGraphStatisticsEntity implements PipelineResponseEntity {
 
   @Override
   public PipelineResponse getSpecificResponse() {
-    // ToDo: catch null conceptGraphs/numberOfGraphs
+    if (numberOfGraphs == 0 || conceptGraphs == null || conceptGraphs.length == 0) {
+      return new PipelineResponse()
+          .name(this.getName())
+          .response("There seem to be no concept graphs available.")
+          .status(PipelineResponseStatus.FAILED);
+    }
     String status = "";
     try {
       ObjectMapper mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
@@ -49,6 +56,9 @@ public class ConceptGraphStatisticsEntity implements PipelineResponseEntity {
     } catch (JsonProcessingException e) {
       e.printStackTrace();
     }
-    return new PipelineResponse().name(this.getName()).response(status);
+    return new PipelineResponse()
+        .name(this.getName())
+        .response(status)
+        .status(PipelineResponseStatus.SUCCESSFUL);
   }
 }

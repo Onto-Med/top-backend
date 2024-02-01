@@ -4,8 +4,8 @@ import care.smith.top.top_document_query.adapter.config.ConceptGraphConfig;
 import care.smith.top.top_document_query.adapter.config.Connection;
 import care.smith.top.top_document_query.adapter.config.GraphDBConfig;
 import care.smith.top.top_document_query.adapter.config.TextAdapterConfig;
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -19,8 +19,12 @@ public class DocumentQueryConfigMap {
   private static final String DEFAULT_ES_PORT = "9008";
   private static final String DEFAULT_ES_INDEX = "documents";
   private static final String DEFAULT_ES_FIELD = "text";
+  private static final Integer DEFAULT_DOCUMENT_SERVER_BATCH_SIZE = 30;
+  private static final String DEFAULT_DOCUMENT_SERVER_FIELD_REPLACEMENT = "{'text': 'content'}";
   private static final String DEFAULT_NEO4J_URL = "bolt://localhost";
   private static final String DEFAULT_NEO4J_PORT = "7687";
+  private static final String DEFAULT_GRAPHDB_USER = "neo4j";
+  private static final String DEFAULT_ES_USER = "elastic";
   private static final String DEFAULT_CONCEPT_GRAPH_URL = "http://localhost";
   private static final String DEFAULT_CONCEPT_GRAPH_PORT = "9007";
   private static final String SPRING_ES_URI_PROP = "spring.elasticsearch.uris";
@@ -42,7 +46,11 @@ public class DocumentQueryConfigMap {
       "top.documents.security.documentdb.password";
   private static final String TOP_DATA_SOURCE_CONFIG_DIR_DOCUMENTS =
       "top.documents.data-source-config-dir";
-  private static final String TOP_DEFAULT_ADAPTER_DOCUMENTS = "top.documents.default_adapter";
+  private static final String TOP_DEFAULT_ADAPTER_DOCUMENTS = "top.documents.default-adapter";
+  private static final String TOP_DOCUMENT_SERVER_BATCH_SIZE =
+      "top.documents.document-server.batch-size";
+  private static final String TOP_DOCUMENT_SERVER_FIELD_REPLACEMENT =
+      "top.documents.document-server.fields-replacement";
   private static final Logger LOGGER = Logger.getLogger(DocumentQueryConfigMap.class.getName());
   private Map<String, Object> configMap;
   private String name;
@@ -92,13 +100,13 @@ public class DocumentQueryConfigMap {
                   SPRING_NEO4J_USERNAME_PROP,
                   (config.getGraphDB().getAuthentication() == null
                           || config.getGraphDB().getAuthentication().getUsername() == null)
-                      ? environment.getProperty(TOP_SECURITY_GRAPHDB_USERNAME)
+                      ? environment.getProperty(TOP_SECURITY_GRAPHDB_USERNAME, DEFAULT_GRAPHDB_USER)
                       : config.getGraphDB().getAuthentication().getUsername());
               put(
                   SPRING_NEO4J_PASSWORD_PROP,
                   (config.getGraphDB().getAuthentication() == null
                           || config.getGraphDB().getAuthentication().getPassword() == null)
-                      ? environment.getProperty(TOP_SECURITY_GRAPHDB_PASSWORD)
+                      ? environment.getProperty(TOP_SECURITY_GRAPHDB_PASSWORD, "")
                       : config.getGraphDB().getAuthentication().getPassword());
             }
             if (config.getConceptGraph() != null) {
@@ -118,6 +126,16 @@ public class DocumentQueryConfigMap {
                     DEFAULT_CONCEPT_GRAPH_URL + ":" + DEFAULT_CONCEPT_GRAPH_PORT);
               }
             }
+            if (config.getBatchSize() != null) {
+              put(TOP_DOCUMENT_SERVER_BATCH_SIZE, config.getBatchSize().toString());
+            } else {
+              put(TOP_DOCUMENT_SERVER_BATCH_SIZE, DEFAULT_DOCUMENT_SERVER_BATCH_SIZE.toString());
+            }
+            if (config.getReplaceFields() != null) {
+              put(TOP_DOCUMENT_SERVER_FIELD_REPLACEMENT, config.getReplaceFieldsAsString());
+            } else {
+              put(TOP_DOCUMENT_SERVER_FIELD_REPLACEMENT, DEFAULT_DOCUMENT_SERVER_FIELD_REPLACEMENT);
+            }
           }
         };
   }
@@ -134,7 +152,7 @@ public class DocumentQueryConfigMap {
     String srcPath = environment.getProperty(TOP_DATA_SOURCE_CONFIG_DIR_DOCUMENTS);
     String defaultAdapter = environment.getProperty(TOP_DEFAULT_ADAPTER_DOCUMENTS);
     TextAdapterConfig config =
-        !Objects.equals(defaultAdapter, "#{null}")
+        !(Objects.equals(defaultAdapter, "#{null}") || defaultAdapter == null)
             ? toTextAdapterConfig(
                 Path.of(
                     srcPath != null ? srcPath : Paths.get("").toAbsolutePath().toString(),
@@ -184,15 +202,15 @@ public class DocumentQueryConfigMap {
     elasticConnection.setUrl(DEFAULT_ES_URL);
     elasticConnection.setPort(DEFAULT_ES_PORT);
     if (env.getProperty(SPRING_ES_URI_PROP) != null) {
-      URL url;
+      URI uri;
       try {
-        url = new URL(env.getProperty(SPRING_ES_URI_PROP));
-      } catch (MalformedURLException e) {
+        uri = new URI(env.getProperty(SPRING_ES_URI_PROP));
+      } catch (URISyntaxException e) {
         throw new RuntimeException(e);
       }
-      elasticConnection.setUrl(url.getHost());
+      elasticConnection.setUrl(uri.getHost());
       elasticConnection.setPort(
-          url.getPort() != -1 ? String.valueOf(url.getPort()) : DEFAULT_ES_PORT);
+          uri.getPort() != -1 ? String.valueOf(uri.getPort()) : DEFAULT_ES_PORT);
     }
     config.setConnection(elasticConnection);
 
@@ -205,15 +223,15 @@ public class DocumentQueryConfigMap {
     neo4JConnection.setUrl(DEFAULT_NEO4J_URL);
     neo4JConnection.setPort(DEFAULT_NEO4J_PORT);
     if (env.getProperty(SPRING_NEO4J_URI_PROP) != null) {
-      URL url;
+      URI uri;
       try {
-        url = new URL(env.getProperty(SPRING_NEO4J_URI_PROP));
-      } catch (MalformedURLException e) {
+        uri = new URI(env.getProperty(SPRING_NEO4J_URI_PROP));
+      } catch (URISyntaxException e) {
         throw new RuntimeException(e);
       }
-      neo4JConnection.setUrl(url.getHost());
+      neo4JConnection.setUrl(uri.getHost());
       neo4JConnection.setPort(
-          url.getPort() != -1 ? String.valueOf(url.getPort()) : DEFAULT_NEO4J_PORT);
+          uri.getPort() != -1 ? String.valueOf(uri.getPort()) : DEFAULT_NEO4J_PORT);
     }
     GraphDBConfig neo4j = new GraphDBConfig();
     neo4j.setConnection(neo4JConnection);
@@ -223,20 +241,47 @@ public class DocumentQueryConfigMap {
     conceptGraphConnection.setUrl(DEFAULT_CONCEPT_GRAPH_URL);
     conceptGraphConnection.setPort(DEFAULT_CONCEPT_GRAPH_PORT);
     if (env.getProperty(SPRING_CONCEPT_GRAPH_URI_PROP) != null) {
-      URL url;
+      URI uri;
       try {
-        url = new URL(env.getProperty(SPRING_CONCEPT_GRAPH_URI_PROP));
-      } catch (MalformedURLException e) {
+        uri = new URI(env.getProperty(SPRING_CONCEPT_GRAPH_URI_PROP));
+      } catch (URISyntaxException e) {
         throw new RuntimeException(e);
       }
-      conceptGraphConnection.setUrl(url.getHost());
+      conceptGraphConnection.setUrl(uri.getHost());
       conceptGraphConnection.setPort(
-          url.getPort() != -1 ? String.valueOf(url.getPort()) : DEFAULT_CONCEPT_GRAPH_PORT);
+          uri.getPort() != -1 ? String.valueOf(uri.getPort()) : DEFAULT_CONCEPT_GRAPH_PORT);
     }
     ConceptGraphConfig conceptGraph = new ConceptGraphConfig();
     conceptGraph.setConnection(conceptGraphConnection);
     config.setConceptGraph(conceptGraph);
 
+    config.setBatchSize(DEFAULT_DOCUMENT_SERVER_BATCH_SIZE);
+    if (env.getProperty(TOP_DOCUMENT_SERVER_BATCH_SIZE) != null) {
+      config.setBatchSize(
+          Integer.valueOf(Objects.requireNonNull(env.getProperty(TOP_DOCUMENT_SERVER_BATCH_SIZE))));
+    }
+
+    config.setReplaceFields(stringToMap(DEFAULT_DOCUMENT_SERVER_FIELD_REPLACEMENT));
+    if (env.getProperty(TOP_DOCUMENT_SERVER_FIELD_REPLACEMENT) != null) {
+      config.setReplaceFields(
+          stringToMap(
+              Objects.requireNonNull(env.getProperty(TOP_DOCUMENT_SERVER_FIELD_REPLACEMENT))));
+    }
+
     return config;
+  }
+
+  private Map<String, String> stringToMap(String mapAsString) {
+    Map<String, String> stringMap = new HashMap<>();
+    Arrays.stream(
+            mapAsString
+                .substring(1, DEFAULT_DOCUMENT_SERVER_FIELD_REPLACEMENT.length() - 1)
+                .split(","))
+        .forEach(
+            pair -> {
+              String[] mapPair = pair.split(":");
+              stringMap.put(mapPair[0], mapPair[1]);
+            });
+    return stringMap;
   }
 }

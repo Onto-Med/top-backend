@@ -1,6 +1,7 @@
-package care.smith.top.backend.model.conceptgraphs;
+package care.smith.top.backend.model.conceptgraphs.pipelineresponses;
 
 import care.smith.top.model.PipelineResponse;
+import care.smith.top.model.PipelineResponseStatus;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -28,7 +29,10 @@ public class PipelineStatusEntity implements PipelineResponseEntity {
 
   @Override
   public PipelineResponse getSpecificResponse() {
-    return new PipelineResponse().name(this.getName()).response(this.getStatus().toJsonString());
+    return new PipelineResponse()
+        .name(this.getName())
+        .response(this.getStatus().toJsonString())
+        .status(PipelineResponseStatus.SUCCESSFUL);
   }
 }
 

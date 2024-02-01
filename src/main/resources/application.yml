@@ -65,10 +65,10 @@ top:
     security:
       graphdb:
         username: ${DB_NEO4J_USER:neo4j}
-        password: ${DB_NEO4J_PASS}
+        password: ${DB_NEO4J_PASS:#{null}}
       documentdb:
         username: ${DB_ELASTIC_USER:elastic}
-        password: ${DB_ELASTIC_PASS}
+        password: ${DB_ELASTIC_PASS:#{null}}
 
 coding:
   terminology-service: ${TERMINOLOGY_SERVICE_ENDPOINT:http://localhost:9000/api}

@@ -1,4 +1,4 @@
-package care.smith.top.backend.model.conceptgraphs;
+package care.smith.top.backend.model.conceptgraphs.pipelineresponses;
 
 import care.smith.top.model.PipelineResponse;
 

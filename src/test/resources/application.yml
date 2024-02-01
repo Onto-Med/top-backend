@@ -9,16 +9,10 @@ logging:
 
 spring:
   neo4j:
-    uri: bolt://${DB_NEO4J_HOST:localhost}:${DB_NEO4J_PORT:7687}
-    authentication:
-      username: ${DB_NEO4J_USER:neo4j}
-      password: ${DB_NEO4J_PASS}
+    connection-timeout: ${DB_NEO4J_CONNECTION_TIMEOUT:30}s
   elasticsearch:
-    uris: http://${DB_ELASTIC_HOST:localhost}:${DB_ELASTIC_PORT:9200}
     connection-timeout: ${DB_ELASTIC_CONNECTION_TIMEOUT:1}s
     socket-timeout: ${DB_ELASTIC_SOCKET_TIMEOUT:30}s
-    index:
-      name: ${DB_ELASTIC_INDEX:test_documents}
   liquibase:
     drop-first: true
   jpa:
@@ -54,9 +48,15 @@ top:
     data-source-config-dir: src/test/resources/config/data_sources
     execute-queries: false
   documents:
-    concept-graphs-api:
-      uri: http://localhost:9007
     data-source-config-dir: src/test/resources/config/data_sources/nlp
+    default_adapter: ${DOCUMENT_DEFAULT_ADAPTER:#{null}}
+    security:
+      graphdb:
+        username: ${DB_NEO4J_USER:neo4j}
+        password: ${DB_NEO4J_PASS:#{null}}
+      documentdb:
+        username: ${DB_ELASTIC_USER:elastic}
+        password: ${DB_ELASTIC_PASS:#{null}}
 
 coding:
   terminology-service: ${TERMINOLOGY_SERVICE_ENDPOINT:http://localhost:9000/api}

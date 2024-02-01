@@ -3,6 +3,7 @@ package care.smith.top.backend.service.nlp;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
 
+import care.smith.top.backend.configuration.TopBackendContextInitializer;
 import care.smith.top.backend.repository.elasticsearch.DocumentRepository;
 import care.smith.top.backend.repository.neo4j.ConceptClusterNodeRepository;
 import care.smith.top.backend.repository.neo4j.DocumentNodeRepository;
@@ -30,8 +31,8 @@ import org.neo4j.driver.Session;
 import org.neo4j.harness.Neo4j;
 import org.neo4j.harness.Neo4jBuilders;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.transaction.annotation.Propagation;
@@ -41,6 +42,7 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.shaded.org.yaml.snakeyaml.Yaml;
 
 @SpringBootTest
+@ContextConfiguration(initializers = TopBackendContextInitializer.class)
 @Transactional(propagation = Propagation.NEVER)
 public abstract class AbstractNLPTest {
 
@@ -92,9 +94,6 @@ public abstract class AbstractNLPTest {
   @Autowired DocumentNodeRepository documentNodeRepository;
   @Autowired PhraseService phraseService;
   @Autowired PhraseNodeRepository phraseRepository;
-
-  @Value("spring.elasticsearch.index.name")
-  String elasticIndex;
 
   @BeforeAll
   static void initializeDBs() {
@@ -173,14 +172,14 @@ public abstract class AbstractNLPTest {
     assertNotNull(esClient);
 
     try {
-      String elasticIndexName = getIndexName();
+      //      String elasticIndexName = getIndexName();
       int count = 0;
       for (Map.Entry<String, String> entry : documents.entrySet()) {
         String esId = String.format("%02d", ++count);
         esClient.index(
             i ->
                 i.id(esId)
-                    .index(elasticIndexName)
+                    .index(ELASTIC_INDEX[0])
                     .document(new TextDocument(entry.getKey(), entry.getValue())));
       }
       await().until(() -> esClient.count().count() == 3);

@@ -1,8 +1,7 @@
 package care.smith.top.backend;
 
 import care.smith.top.backend.configuration.InfrastructureConfig;
-import care.smith.top.backend.configuration.nlp.DocumentQueryConfigMap;
-import care.smith.top.backend.configuration.nlp.DocumentQueryPropertySource;
+import care.smith.top.backend.configuration.TopBackendContextInitializer;
 import java.util.*;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.data.elasticsearch.ReactiveElasticsearchRepositoriesAutoConfiguration;
@@ -33,14 +32,7 @@ public class TopBackendApplication {
   public static void main(String[] args) {
     new SpringApplicationBuilder()
         .sources(TopBackendApplication.class)
-        .initializers(
-            context ->
-                context
-                    .getEnvironment()
-                    .getPropertySources()
-                    .addLast(
-                        new DocumentQueryPropertySource(
-                            new DocumentQueryConfigMap(context.getEnvironment()))))
+        .initializers(new TopBackendContextInitializer())
         .run(args);
   }
 }

@@ -13,7 +13,8 @@ public abstract class ConceptGraphsApi {
 
   @Autowired
   public void setConceptGraphApiEndpoint(
-      @Value("${top.documents.concept-graphs-api.uri}") String conceptGraphApiEndpoint) {
+      @Value("${top.documents.concept-graphs-api.uri:http://localhost:9007}")
+          String conceptGraphApiEndpoint) {
     int size = 16 * 1024 * 1024;
     ExchangeStrategies exchangeStrategies =
         ExchangeStrategies.builder()
@@ -77,6 +78,25 @@ public abstract class ConceptGraphsApi {
     private String endpoint;
 
     API_PIPELINE_METHODS(String endpoint) {
+      this.setEndpoint(endpoint);
+    }
+
+    public String getEndpoint() {
+      return endpoint;
+    }
+
+    public void setEndpoint(String endpoint) {
+      this.endpoint = endpoint;
+    }
+  }
+
+  public enum API_STATUS {
+    SELF("/status"),
+    DOCUMENT_SERVER("/status/document-server");
+
+    private String endpoint;
+
+    API_STATUS(String endpoint) {
       this.setEndpoint(endpoint);
     }
 
