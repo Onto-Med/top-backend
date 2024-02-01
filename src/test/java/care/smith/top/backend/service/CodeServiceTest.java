@@ -3,8 +3,7 @@ package care.smith.top.backend.service;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import care.smith.top.backend.AbstractTest;
-import care.smith.top.model.CodePage;
-import care.smith.top.model.CodeSystemPage;
+import care.smith.top.model.*;
 import java.util.Collections;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,5 +23,20 @@ public class CodeServiceTest extends AbstractTest {
   void getCodeSystems() {
     CodeSystemPage codeSystems = codeService.getCodeSystems(null, null, null, 1);
     assertThat(codeSystems).isNotNull().satisfies(cs -> assertThat(cs.getContent()).isNotEmpty());
+  }
+
+  @Test
+  void collectSubCodes() {
+    Entity entity =
+        new Phenotype()
+            .id("phen")
+            .entityType(EntityType.SINGLE_PHENOTYPE)
+            .addCodesItem(
+                new Code()
+                    .code("AGRO:00000370")
+                    .scope(CodeScope.SUBTREE)
+                    .codeSystem(new CodeSystem().externalId("AGRO")));
+
+    assertThat(codeService.collectSubCodes(entity)).size().isGreaterThanOrEqualTo(2);
   }
 }

@@ -3,10 +3,7 @@ package care.smith.top.backend.service;
 import care.smith.top.backend.repository.ols.CodeRepository;
 import care.smith.top.backend.repository.ols.CodeSystemRepository;
 import care.smith.top.backend.repository.ols.OlsRepository;
-import care.smith.top.model.Code;
-import care.smith.top.model.CodePage;
-import care.smith.top.model.CodeSystem;
-import care.smith.top.model.CodeSystemPage;
+import care.smith.top.model.*;
 import java.net.URI;
 import java.util.*;
 import java.util.function.Predicate;
@@ -88,5 +85,16 @@ public class OLSCodeService {
             .totalElements((long) filteredCodeSystems.size())
             .number(requestedPage)
             .totalPages(filteredCodeSystems.size() / ontologyPageSize + 1);
+  }
+
+  public List<Code> collectSubCodes(Entity entity) {
+    if (entity.getCodes() != null)
+      return entity.getCodes().stream()
+          .filter(c -> c.getScope() != null && !c.getScope().equals(CodeScope.SELF))
+          .flatMap(c -> codeRepository.collectSubCodes(c).stream())
+          .distinct()
+          .sorted()
+          .collect(Collectors.toList());
+    return new ArrayList<>();
   }
 }

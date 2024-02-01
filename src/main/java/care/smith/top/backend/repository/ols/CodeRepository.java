@@ -74,7 +74,7 @@ public class CodeRepository extends OlsRepository {
           String.format("Code could not be found in terminology '%s'.", codeSystemId));
 
     String primaryLabel =
-        term.getSynonyms() != null && term.getSynonyms().size() != 0
+        term.getSynonyms() != null && !term.getSynonyms().isEmpty()
             ? term.getSynonyms().get(0)
             : term.getLabel();
 
@@ -116,7 +116,7 @@ public class CodeRepository extends OlsRepository {
             .map(
                 responseItem -> {
                   String primaryLabel =
-                      responseItem.getSynonym() != null && responseItem.getSynonym().size() != 0
+                      responseItem.getSynonym() != null && !responseItem.getSynonym().isEmpty()
                           ? responseItem.getSynonym().get(0)
                           : responseItem.getLabel();
 
@@ -133,17 +133,18 @@ public class CodeRepository extends OlsRepository {
                               : null)
                       .highlightLabel(
                           responseItem.getAutoSuggestion().getLabel_autosuggest() != null
-                                  && responseItem.getAutoSuggestion().getLabel_autosuggest().size()
-                                      != 0
+                                  && !responseItem
+                                      .getAutoSuggestion()
+                                      .getLabel_autosuggest()
+                                      .isEmpty()
                               ? responseItem.getAutoSuggestion().getLabel_autosuggest().get(0)
                               : null)
                       .highlightSynonym(
                           responseItem.getAutoSuggestion().getSynonym_autosuggest() != null
-                                  && responseItem
-                                          .getAutoSuggestion()
-                                          .getSynonym_autosuggest()
-                                          .size()
-                                      != 0
+                                  && !responseItem
+                                      .getAutoSuggestion()
+                                      .getSynonym_autosuggest()
+                                      .isEmpty()
                               ? responseItem.getAutoSuggestion().getSynonym_autosuggest().get(0)
                               : null)
                       .codeSystem(getCodeSystem(responseItem.getOntology_name()).orElse(null));
@@ -157,6 +158,12 @@ public class CodeRepository extends OlsRepository {
             .totalElements((long) response.getNumFound())
             .number(page)
             .totalPages(totalPages);
+  }
+
+  public List<Code> collectSubCodes(Code code) {
+    // TODO: reload the code (and it's label) if scope is null or SELF
+    // TODO: remove intermediate codes if scope is LEAVES
+    return new ArrayList<>();
   }
 
   public Optional<CodeSystem> getCodeSystem(String externalId) {
