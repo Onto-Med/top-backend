@@ -69,6 +69,9 @@ The document search is adapter centric and one needs a working configuration fil
 under the folder declared with the environment variable `DOCUMENT_DATA_SOURCE_CONFIG_DIR`.
 If no `DOCUMENT_DEFAULT_ADAPTER` is specified, the first adapter found in the folder is used for setup.  
 If there is no such adapter present, or it's faulty in some other way, the framework uses default values for the connections (specified above).
+You can find more information about the adapter specification under [top-document-query](https://github.com/Onto-Med/top-document-query).  
+The [concept graphs service](https://github.com/Onto-Med/concept-graphs) is responsible for generating graphs of related phrases from a document source (either via upload or an external data/document server like the one used for the framework).
+These graphs in turn are then represented as `concept nodes`, `phrase nodes` and `document nodes` on a Neo4j cluster where they serve as a way to search/explore documents.  
 
 ## Plugins
 
