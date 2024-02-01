@@ -7,6 +7,7 @@ import care.smith.top.backend.service.nlp.DocumentService;
 import care.smith.top.model.*;
 import java.util.logging.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -21,9 +22,15 @@ public class DefaultApiDelegateImpl implements DefaultApiDelegate {
 
   @Autowired DocumentService documentService;
 
+  @Value("${top.appName:TOP Backend}")
+  String appName;
+
+  @Value("${top.version:unknown}")
+  String version;
+
   @Override
   public ResponseEntity<AppDescription> ping() {
-    return new ResponseEntity<>(HttpStatus.OK);
+    return ResponseEntity.ok(new AppDescription().appName(appName).version(version));
   }
 
   @Override
