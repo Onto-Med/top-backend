@@ -1,7 +1,6 @@
 package care.smith.top.backend.api.nlp;
 
 import care.smith.top.backend.api.ConceptgraphsApiDelegate;
-import care.smith.top.backend.repository.conceptgraphs.ConceptGraphsRepository;
 import care.smith.top.backend.service.nlp.ConceptClusterService;
 import care.smith.top.backend.service.nlp.ConceptGraphsService;
 import care.smith.top.model.*;
@@ -22,7 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class ConceptGraphApiDelegateImpl implements ConceptgraphsApiDelegate {
-  private static final Logger LOGGER = Logger.getLogger(ConceptGraphsRepository.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(ConceptGraphApiDelegateImpl.class.getName());
   private final ConceptGraphsService conceptGraphsService;
 
   public ConceptGraphApiDelegateImpl(
