@@ -1,11 +1,8 @@
 package care.smith.top.backend.service.nlp;
 
-import care.smith.top.backend.model.conceptgraphs.ConceptGraphEntity;
-import care.smith.top.backend.model.conceptgraphs.GraphStatsEntity;
 import care.smith.top.backend.model.neo4j.ConceptNodeEntity;
 import care.smith.top.backend.model.neo4j.DocumentNodeEntity;
 import care.smith.top.backend.model.neo4j.PhraseNodeEntity;
-import care.smith.top.backend.repository.conceptgraphs.ConceptGraphsRepository;
 import care.smith.top.backend.repository.elasticsearch.DocumentRepository;
 import care.smith.top.backend.repository.neo4j.ConceptClusterNodeRepository;
 import care.smith.top.backend.repository.neo4j.DocumentNodeRepository;
@@ -13,6 +10,8 @@ import care.smith.top.backend.repository.neo4j.PhraseNodeRepository;
 import care.smith.top.backend.service.ContentService;
 import care.smith.top.model.ConceptCluster;
 import care.smith.top.model.PipelineResponse;
+import care.smith.top.top_document_query.concept_cluster.ConceptPipelineManager;
+import care.smith.top.top_document_query.concept_cluster.model.ConceptGraphEntity;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -20,48 +19,38 @@ import com.google.common.collect.Lists;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.neo4j.cypherdsl.core.Cypher;
 import org.neo4j.cypherdsl.core.Node;
 import org.neo4j.cypherdsl.core.Statement;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 @Service
 public class ConceptClusterService implements ContentService {
-
-  private final ConceptClusterNodeRepository conceptNodeRepository;
-  private final PhraseNodeRepository phraseNodeRepository;
-  private final DocumentNodeRepository documentNodeRepository;
-  private final DocumentRepository documentRepository;
-  private final ConceptGraphsRepository conceptGraphsRepository;
+  @Autowired private ConceptClusterNodeRepository conceptNodeRepository;
+  @Autowired private PhraseNodeRepository phraseNodeRepository;
+  @Autowired private DocumentNodeRepository documentNodeRepository;
+  @Autowired private DocumentRepository documentRepository;
   private final Function<ConceptNodeEntity, ConceptCluster> conceptEntityMapper =
       conceptEntity ->
           new ConceptCluster()
               .id(conceptEntity.conceptId())
               .labels(String.join(", ", conceptEntity.lables()));
-  private long conceptCount;
 
-  public ConceptClusterService(
-      ConceptClusterNodeRepository conceptNodeRepository,
-      PhraseNodeRepository phraseNodeRepository,
-      DocumentNodeRepository documentNodeRepository,
-      DocumentRepository documentRepository,
-      ConceptGraphsRepository conceptGraphsRepository) {
-    this.conceptNodeRepository = conceptNodeRepository;
-    this.phraseNodeRepository = phraseNodeRepository;
-    this.documentNodeRepository = documentNodeRepository;
-    this.documentRepository = documentRepository;
-    this.conceptGraphsRepository = conceptGraphsRepository;
-    this.conceptCount = 0;
-  }
+  @Value("${top.documents.concept-graphs-api.uri:http://localhost:9007}")
+  private String conceptGraphsApiUri;
+
+  private final ConceptPipelineManager pipelineManager =
+      new ConceptPipelineManager(conceptGraphsApiUri);
 
   @Override
   public long count() {
-    return conceptCount;
+    return conceptNodeRepository.count();
   }
 
   @CacheEvict(value = "concepts", allEntries = true)
@@ -69,12 +58,9 @@ public class ConceptClusterService implements ContentService {
 
   @Cacheable(value = "concepts")
   public List<ConceptCluster> concepts() {
-    List<ConceptCluster> conceptClusterList =
-        conceptNodeRepository.findAll().stream()
-            .map(conceptEntityMapper)
-            .collect(Collectors.toList());
-    this.conceptCount = conceptClusterList.size();
-    return conceptClusterList;
+    return conceptNodeRepository.findAll().stream()
+        .map(conceptEntityMapper)
+        .collect(Collectors.toList());
   }
 
   public ConceptCluster conceptById(String conceptId) {
@@ -101,7 +87,9 @@ public class ConceptClusterService implements ContentService {
                         }
                       });
               phraseNodeEntityMap.put(
-                  phraseNodeObject.getId(), phraseNodeObject.toPhraseNodeEntity());
+                  phraseNodeObject.getId(),
+                  new PhraseNodeEntity(
+                      null, false, phraseNodeObject.getLabel(), phraseNodeObject.getId()));
               phrasesDocumentCount.put(
                   phraseNodeObject.getId(), phraseNodeObject.getDocuments().length);
             });
@@ -150,40 +138,9 @@ public class ConceptClusterService implements ContentService {
 
   public Pair<String, Thread> createSpecificGraphsInNeo4j(
       String processName, List<String> graphIds) {
-    HashMap<String, ConceptGraphEntity> entities = new HashMap<>();
-    Stream<GraphStatsEntity> conceptGraphStream;
-
-    if (graphIds == null || graphIds.isEmpty()) {
-      Arrays.stream(
-              conceptGraphsRepository.getGraphStatisticsForProcess(processName).getConceptGraphs())
-          .forEach(
-              conceptGraph ->
-                  entities.put(
-                      conceptGraph.getId(),
-                      conceptGraphsRepository.getGraphForIdAndProcess(
-                          conceptGraph.getId(), processName)));
-      conceptGraphStream =
-          Arrays.stream(
-              conceptGraphsRepository.getGraphStatisticsForProcess(processName).getConceptGraphs());
-    } else {
-      graphIds.forEach(
-          graphId ->
-              entities.put(
-                  graphId, conceptGraphsRepository.getGraphForIdAndProcess(graphId, processName)));
-      conceptGraphStream =
-          Arrays.stream(
-                  conceptGraphsRepository
-                      .getGraphStatisticsForProcess(processName)
-                      .getConceptGraphs())
-              .filter(conceptGraph -> graphIds.contains(conceptGraph.getId()));
-    }
-    Thread t =
-        new Thread(
-            () ->
-                conceptGraphStream.forEach(
-                    conceptGraph -> {
-                      createGraphInNeo4j(conceptGraph.getId(), entities.get(conceptGraph.getId()));
-                    }));
+    Map<String, ConceptGraphEntity> graphs =
+        pipelineManager.getConceptGraphs(processName, graphIds);
+    Thread t = new Thread(() -> graphs.forEach(this::createGraphInNeo4j));
     t.start();
     return new ImmutablePair<>(processName, t);
   }

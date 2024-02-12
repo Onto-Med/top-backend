@@ -1,12 +1,12 @@
 package care.smith.top.backend.service.nlp;
 
-import care.smith.top.backend.model.conceptgraphs.ConceptGraphStatisticsEntity;
-import care.smith.top.backend.model.conceptgraphs.GraphStatsEntity;
-import care.smith.top.backend.model.conceptgraphs.pipelineresponses.PipelineFailEntity;
-import care.smith.top.backend.model.conceptgraphs.pipelineresponses.PipelineResponseEntity;
-import care.smith.top.backend.repository.conceptgraphs.ConceptGraphsRepository;
 import care.smith.top.backend.service.ContentService;
 import care.smith.top.model.*;
+import care.smith.top.top_document_query.concept_cluster.ConceptPipelineManager;
+import care.smith.top.top_document_query.concept_cluster.model.ConceptGraphStatisticsEntity;
+import care.smith.top.top_document_query.concept_cluster.model.GraphStatsEntity;
+import care.smith.top.top_document_query.concept_cluster.model.pipeline_response.PipelineFailEntity;
+import care.smith.top.top_document_query.concept_cluster.model.pipeline_response.PipelineResponseEntity;
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
@@ -31,11 +31,11 @@ public class ConceptGraphsService implements ContentService {
   @Value("${top.documents.document-server.fields-replacement:{'text': 'content'}}")
   private String documentServerFieldsReplacement;
 
-  private final ConceptGraphsRepository conceptGraphsRepository;
+  @Value("${top.documents.concept-graphs-api.uri:http://localhost:9007}")
+  private String conceptGraphsApiUri;
 
-  public ConceptGraphsService(ConceptGraphsRepository conceptGraphsRepository) {
-    this.conceptGraphsRepository = conceptGraphsRepository;
-  }
+  private final ConceptPipelineManager pipelineManager =
+      new ConceptPipelineManager(conceptGraphsApiUri);
 
   public String getDocumentServerAddress() {
     return documentServerAddress;
@@ -61,12 +61,12 @@ public class ConceptGraphsService implements ContentService {
 
   @Override
   public long count() {
-    return Arrays.stream(conceptGraphsRepository.getAllStoredProcesses().getProcesses()).count();
+    return pipelineManager.count();
   }
 
   public Map<String, ConceptGraphStat> getAllConceptGraphStatistics(String processName) {
     ConceptGraphStatisticsEntity conceptGraphStatisticsEntity =
-        conceptGraphsRepository.getGraphStatisticsForProcess(processName);
+        pipelineManager.getGraphStatisticsForProcess(processName);
     if (conceptGraphStatisticsEntity.getConceptGraphs() == null) return null;
     return Arrays.stream(conceptGraphStatisticsEntity.getConceptGraphs())
         .map(GraphStatsEntity::toApiModel)
@@ -76,23 +76,23 @@ public class ConceptGraphsService implements ContentService {
   }
 
   public ConceptGraph getConceptGraphForIdAndProcess(String id, String process) {
-    return conceptGraphsRepository.getGraphForIdAndProcess(id, process).toApiModel();
+    return pipelineManager.getGraphForIdAndProcess(id, process).toApiModel();
   }
 
   public List<ConceptGraphProcess> getAllStoredProcesses() {
-    return conceptGraphsRepository.getAllStoredProcesses().toApiModel();
+    return pipelineManager.getAllStoredProcesses();
   }
 
   public PipelineResponse initPipeline(File data, String processName) {
     PipelineResponseEntity pre =
-        conceptGraphsRepository.startPipelineForData(data, processName, null, true, false);
+        pipelineManager.startPipelineForData(data, processName, null, true, false);
     return addStatusToPipelineResponse(pre, processName);
   }
 
   public PipelineResponse initPipelineWithBooleans(
       File data, String processName, Boolean skipPresent, Boolean returnStatistics) {
     PipelineResponseEntity pre =
-        conceptGraphsRepository.startPipelineForData(
+        pipelineManager.startPipelineForData(
             data, processName, null, skipPresent, returnStatistics);
     return addStatusToPipelineResponse(pre, processName);
   }
@@ -106,7 +106,7 @@ public class ConceptGraphsService implements ContentService {
       Boolean returnStatistics,
       Map<String, File> configs) {
     PipelineResponseEntity pre =
-        conceptGraphsRepository.startPipelineForDataAndLabelsAndConfigs(
+        pipelineManager.startPipelineForDataAndLabelsAndConfigs(
             data, labels, processName, language, skipPresent, returnStatistics, configs);
     return addStatusToPipelineResponse(pre, processName);
   }
@@ -119,7 +119,7 @@ public class ConceptGraphsService implements ContentService {
       Boolean returnStatistics,
       Map<String, File> configs) {
     PipelineResponseEntity pre =
-        conceptGraphsRepository.startPipelineForDataServerAndLabelsAndConfigs(
+        pipelineManager.startPipelineForDataServerAndLabelsAndConfigs(
             labels, processName, lang, skipPresent, returnStatistics, configs);
     return addStatusToPipelineResponse(pre, processName);
   }
