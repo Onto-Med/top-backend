@@ -21,7 +21,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class ConceptGraphApiDelegateImpl implements ConceptgraphsApiDelegate {
-  private static final Logger LOGGER = Logger.getLogger(ConceptGraphApiDelegateImpl.class.getName());
+  private static final Logger LOGGER =
+      Logger.getLogger(ConceptGraphApiDelegateImpl.class.getName());
   private final ConceptGraphsService conceptGraphsService;
 
   public ConceptGraphApiDelegateImpl(
@@ -134,27 +135,15 @@ public class ConceptGraphApiDelegateImpl implements ConceptgraphsApiDelegate {
     }
 
     try {
-      PipelineResponse pipelineResponse;
-      if (data != null) {
-        pipelineResponse =
-            conceptGraphsService.initPipelineWithDataUploadAndWithConfigs(
-                data.getResource().getFile(),
-                labels != null ? labels.getResource().getFile() : null,
-                process,
-                lang,
-                skipPresent,
-                returnStatistics,
-                configMap);
-      } else {
-        pipelineResponse =
-            conceptGraphsService.initPipelineWithDataServerAndWithConfigs(
-                labels != null ? labels.getResource().getFile() : null,
-                process,
-                lang,
-                skipPresent,
-                returnStatistics,
-                configMap);
-      }
+      PipelineResponse pipelineResponse =
+          conceptGraphsService.initPipeline(
+              data != null ? data.getResource().getFile() : null,
+              labels != null ? labels.getResource().getFile() : null,
+              configMap,
+              process,
+              lang,
+              skipPresent,
+              returnStatistics);
       if (pipelineResponse.getStatus().equals(PipelineResponseStatus.FAILED)) {
         return ResponseEntity.of(Optional.of(pipelineResponse));
       }

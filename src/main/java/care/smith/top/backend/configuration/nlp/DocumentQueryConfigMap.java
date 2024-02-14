@@ -2,7 +2,6 @@ package care.smith.top.backend.configuration.nlp;
 
 import care.smith.top.top_document_query.adapter.config.ConceptGraphConfig;
 import care.smith.top.top_document_query.adapter.config.Connection;
-import care.smith.top.top_document_query.adapter.config.GraphDBConfig;
 import care.smith.top.top_document_query.adapter.config.TextAdapterConfig;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -81,33 +80,6 @@ public class DocumentQueryConfigMap {
                   Arrays.stream(config.getIndex()).findFirst().orElse(DEFAULT_ES_INDEX));
             } else {
               put(SPRING_ES_INDEX_PROP, DEFAULT_ES_INDEX);
-            }
-            if (config.getGraphDB() != null) {
-              if (config.getGraphDB().getConnection() != null) {
-                String url =
-                    config.getGraphDB().getConnection().getUrl() != null
-                        ? config.getGraphDB().getConnection().getUrl()
-                        : DEFAULT_NEO4J_URL;
-                String port =
-                    config.getGraphDB().getConnection().getPort() != null
-                        ? config.getGraphDB().getConnection().getPort()
-                        : DEFAULT_NEO4J_PORT;
-                put(SPRING_NEO4J_URI_PROP, url + ":" + port);
-              } else {
-                put(SPRING_NEO4J_URI_PROP, DEFAULT_NEO4J_URL + ":" + DEFAULT_NEO4J_PORT);
-              }
-              put(
-                  SPRING_NEO4J_USERNAME_PROP,
-                  (config.getGraphDB().getAuthentication() == null
-                          || config.getGraphDB().getAuthentication().getUsername() == null)
-                      ? environment.getProperty(TOP_SECURITY_GRAPHDB_USERNAME, DEFAULT_GRAPHDB_USER)
-                      : config.getGraphDB().getAuthentication().getUsername());
-              put(
-                  SPRING_NEO4J_PASSWORD_PROP,
-                  (config.getGraphDB().getAuthentication() == null
-                          || config.getGraphDB().getAuthentication().getPassword() == null)
-                      ? environment.getProperty(TOP_SECURITY_GRAPHDB_PASSWORD, "")
-                      : config.getGraphDB().getAuthentication().getPassword());
             }
             if (config.getConceptGraph() != null) {
               if (config.getConceptGraph().getConnection() != null) {
@@ -233,9 +205,6 @@ public class DocumentQueryConfigMap {
       neo4JConnection.setPort(
           uri.getPort() != -1 ? String.valueOf(uri.getPort()) : DEFAULT_NEO4J_PORT);
     }
-    GraphDBConfig neo4j = new GraphDBConfig();
-    neo4j.setConnection(neo4JConnection);
-    config.setGraphDB(neo4j);
 
     Connection conceptGraphConnection = new Connection();
     conceptGraphConnection.setUrl(DEFAULT_CONCEPT_GRAPH_URL);
