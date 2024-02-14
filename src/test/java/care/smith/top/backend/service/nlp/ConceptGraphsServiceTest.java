@@ -44,11 +44,14 @@ class ConceptGraphsServiceTest extends AbstractNLPTest {
   void initPipeline() {
     try {
       PipelineResponse stats =
-          conceptGraphsService.initPipelineWithBooleans(
+          conceptGraphsService.initPipeline(
               new File(
                   Objects.requireNonNull(getClass().getClassLoader().getResource("test_files.zip"))
                       .toURI()),
+              null,
+              null,
               "test",
+              null,
               false,
               false);
       System.out.println(stats);

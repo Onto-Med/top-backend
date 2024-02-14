@@ -3,14 +3,12 @@ package care.smith.top.backend.service.nlp;
 import care.smith.top.backend.service.ContentService;
 import care.smith.top.model.*;
 import care.smith.top.top_document_query.concept_cluster.ConceptPipelineManager;
-import care.smith.top.top_document_query.concept_cluster.model.ConceptGraphStatisticsEntity;
+import care.smith.top.top_document_query.concept_cluster.model.ConceptGraphEntity;
 import care.smith.top.top_document_query.concept_cluster.model.GraphStatsEntity;
 import care.smith.top.top_document_query.concept_cluster.model.pipeline_response.PipelineFailEntity;
 import care.smith.top.top_document_query.concept_cluster.model.pipeline_response.PipelineResponseEntity;
 import java.io.File;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Value;
@@ -65,62 +63,45 @@ public class ConceptGraphsService implements ContentService {
   }
 
   public Map<String, ConceptGraphStat> getAllConceptGraphStatistics(String processName) {
-    ConceptGraphStatisticsEntity conceptGraphStatisticsEntity =
-        pipelineManager.getGraphStatisticsForProcess(processName);
-    if (conceptGraphStatisticsEntity.getConceptGraphs() == null) return null;
-    return Arrays.stream(conceptGraphStatisticsEntity.getConceptGraphs())
-        .map(GraphStatsEntity::toApiModel)
-        .collect(
-            Collectors.toMap(
-                ConceptGraphStat::getId, Function.identity(), (existing, replacement) -> existing));
+    return pipelineManager
+        .getGraphStatisticsForProcess(processName)
+        .map(
+            statistics -> {
+              if (statistics.getConceptGraphs() == null)
+                return new HashMap<String, ConceptGraphStat>();
+              return Arrays.stream(statistics.getConceptGraphs())
+                  .map(GraphStatsEntity::toApiModel)
+                  .collect(
+                      Collectors.toMap(
+                          ConceptGraphStat::getId,
+                          Function.identity(),
+                          (existing, replacement) -> existing));
+            })
+        .orElseGet(HashMap::new);
   }
 
   public ConceptGraph getConceptGraphForIdAndProcess(String id, String process) {
-    return pipelineManager.getGraphForIdAndProcess(id, process).toApiModel();
+    return pipelineManager
+        .getGraphForIdAndProcess(id, process)
+        .map(ConceptGraphEntity::toApiModel)
+        .orElse(null);
   }
 
   public List<ConceptGraphProcess> getAllStoredProcesses() {
     return pipelineManager.getAllStoredProcesses();
   }
 
-  public PipelineResponse initPipeline(File data, String processName) {
-    PipelineResponseEntity pre =
-        pipelineManager.startPipelineForData(data, processName, null, true, false);
-    return addStatusToPipelineResponse(pre, processName);
-  }
-
-  public PipelineResponse initPipelineWithBooleans(
-      File data, String processName, Boolean skipPresent, Boolean returnStatistics) {
-    PipelineResponseEntity pre =
-        pipelineManager.startPipelineForData(
-            data, processName, null, skipPresent, returnStatistics);
-    return addStatusToPipelineResponse(pre, processName);
-  }
-
-  public PipelineResponse initPipelineWithDataUploadAndWithConfigs(
+  public PipelineResponse initPipeline(
       File data,
       File labels,
+      Map<String, File> configs,
       String processName,
       String language,
       Boolean skipPresent,
-      Boolean returnStatistics,
-      Map<String, File> configs) {
+      Boolean returnStatistics) {
     PipelineResponseEntity pre =
-        pipelineManager.startPipelineForDataAndLabelsAndConfigs(
-            data, labels, processName, language, skipPresent, returnStatistics, configs);
-    return addStatusToPipelineResponse(pre, processName);
-  }
-
-  public PipelineResponse initPipelineWithDataServerAndWithConfigs(
-      File labels,
-      String processName,
-      String lang,
-      Boolean skipPresent,
-      Boolean returnStatistics,
-      Map<String, File> configs) {
-    PipelineResponseEntity pre =
-        pipelineManager.startPipelineForDataServerAndLabelsAndConfigs(
-            labels, processName, lang, skipPresent, returnStatistics, configs);
+        pipelineManager.startPipeline(
+            data, configs, labels, processName, language, skipPresent, returnStatistics);
     return addStatusToPipelineResponse(pre, processName);
   }
 
