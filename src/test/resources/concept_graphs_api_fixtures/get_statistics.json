@@ -1,0 +1,120 @@
+{
+  "conceptGraphs": [
+    {
+      "edges": 3,
+      "id": 0,
+      "nodes": 4
+    },
+    {
+      "edges": 1081,
+      "id": 1,
+      "nodes": 72
+    },
+    {
+      "edges": 257,
+      "id": 2,
+      "nodes": 48
+    },
+    {
+      "edges": 266,
+      "id": 3,
+      "nodes": 50
+    },
+    {
+      "edges": 80,
+      "id": 4,
+      "nodes": 19
+    },
+    {
+      "edges": 49,
+      "id": 5,
+      "nodes": 21
+    },
+    {
+      "edges": 20,
+      "id": 6,
+      "nodes": 10
+    },
+    {
+      "edges": 71,
+      "id": 7,
+      "nodes": 23
+    },
+    {
+      "edges": 32,
+      "id": 8,
+      "nodes": 14
+    },
+    {
+      "edges": 634,
+      "id": 9,
+      "nodes": 74
+    },
+    {
+      "edges": 63,
+      "id": 10,
+      "nodes": 17
+    },
+    {
+      "edges": 342,
+      "id": 11,
+      "nodes": 50
+    },
+    {
+      "edges": 59,
+      "id": 12,
+      "nodes": 19
+    },
+    {
+      "edges": 7,
+      "id": 13,
+      "nodes": 7
+    },
+    {
+      "edges": 210,
+      "id": 14,
+      "nodes": 42
+    },
+    {
+      "edges": 65,
+      "id": 15,
+      "nodes": 25
+    },
+    {
+      "edges": 20,
+      "id": 16,
+      "nodes": 13
+    },
+    {
+      "edges": 78,
+      "id": 17,
+      "nodes": 29
+    },
+    {
+      "edges": 5,
+      "id": 18,
+      "nodes": 6
+    },
+    {
+      "edges": 38,
+      "id": 19,
+      "nodes": 22
+    },
+    {
+      "edges": 686,
+      "id": 20,
+      "nodes": 76
+    },
+    {
+      "edges": 41,
+      "id": 21,
+      "nodes": 19
+    },
+    {
+      "edges": 9,
+      "id": 22,
+      "nodes": 9
+    }
+  ],
+  "numberOfGraphs": 23
+}

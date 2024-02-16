@@ -1,0 +1,29 @@
+{
+  "processes": [
+    {
+      "finished_steps": [
+        {
+          "name": "data",
+          "rank": 1
+        },
+        {
+          "name": "embedding",
+          "rank": 2
+        },
+        {
+          "name": "clustering",
+          "rank": 3
+        },
+        {
+          "name": "graph",
+          "rank": 4
+        }
+      ],
+      "name": "process_id"
+    },
+    {
+      "finished_steps": [],
+      "name": "default"
+    }
+  ]
+}

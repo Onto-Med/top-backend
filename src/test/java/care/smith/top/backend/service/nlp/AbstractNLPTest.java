@@ -1,28 +1,15 @@
 package care.smith.top.backend.service.nlp;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
-
 import care.smith.top.backend.configuration.TopBackendContextInitializer;
-import care.smith.top.backend.repository.elasticsearch.DocumentRepository;
 import care.smith.top.backend.repository.neo4j.ConceptClusterNodeRepository;
-import care.smith.top.backend.repository.neo4j.DocumentNodeRepository;
 import care.smith.top.backend.repository.neo4j.PhraseNodeRepository;
-import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.json.jackson.JacksonJsonpMapper;
-import co.elastic.clients.transport.ElasticsearchTransport;
-import co.elastic.clients.transport.rest_client.RestClientTransport;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import care.smith.top.backend.util.ResourceHttpHandler;
+import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
-import java.net.URISyntaxException;
+import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.http.HttpHost;
-import org.elasticsearch.client.RestClient;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.neo4j.driver.Driver;
@@ -37,27 +24,11 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import org.testcontainers.elasticsearch.ElasticsearchContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.shaded.org.yaml.snakeyaml.Yaml;
 
 @SpringBootTest
 @ContextConfiguration(initializers = TopBackendContextInitializer.class)
 @Transactional(propagation = Propagation.NEVER)
 public abstract class AbstractNLPTest {
-
-  protected static final String[] ELASTIC_INDEX = new String[] {"test_documents"};
-
-  @Container
-  protected static final ElasticsearchContainer elasticsearchContainer =
-      new DocumentElasticsearchContainer();
-
-  private static final Map<String, String> documents =
-      Map.of(
-          "test01", "What do we have here? A test document. With an entity. Nice.",
-          "test02", "Another document is here. It has two entities.",
-          "test03", "And a third document; but this one features nothing");
-
   private static final Map<String, Map<String, String>> documentNodes =
       Map.of(
           "d1", Map.of("docId", "d1", "name", "Document 1"),
@@ -85,20 +56,28 @@ public abstract class AbstractNLPTest {
           "p2", List.of(Pair.of(IN_CONCEPT_REL, "c2"), Pair.of(NEIGHBOR_OF_REL, "p1")));
 
   protected static Neo4j embeddedNeo4j;
+  protected static HttpServer conceptGraphsApiService;
   protected static Session neo4jSession;
-  protected static ElasticsearchClient esClient;
   @Autowired ConceptClusterService conceptService;
   @Autowired ConceptClusterNodeRepository conceptClusterNodeRepository;
   @Autowired DocumentService documentService;
-  @Autowired DocumentRepository documentRepository;
-  @Autowired DocumentNodeRepository documentNodeRepository;
-  @Autowired PhraseService phraseService;
   @Autowired PhraseNodeRepository phraseRepository;
 
   @BeforeAll
-  static void initializeDBs() {
+  static void setup() throws IOException {
     setUpNeo4jDB();
-    setUpESIndex();
+
+    conceptGraphsApiService = HttpServer.create(new InetSocketAddress(9007), 0);
+    conceptGraphsApiService.createContext(
+            "/processes",
+            new ResourceHttpHandler("/concept_graphs_api_fixtures/get_processes.json"));
+    conceptGraphsApiService.createContext(
+        "/graph/statistics",
+        new ResourceHttpHandler("/concept_graphs_api_fixtures/get_statistics.json"));
+    conceptGraphsApiService.createContext(
+        "/graph/0",
+        new ResourceHttpHandler("/concept_graphs_api_fixtures/get_concept_graph.json"));
+    conceptGraphsApiService.start();
   }
 
   @DynamicPropertySource
@@ -109,10 +88,9 @@ public abstract class AbstractNLPTest {
   }
 
   @AfterAll
-  static void stopDBs() {
+  static void cleanup() {
     embeddedNeo4j.close();
-    esClient.shutdown();
-    elasticsearchContainer.stop();
+    conceptGraphsApiService.stop(0);
   }
 
   protected static void setUpNeo4jDB() {
@@ -156,71 +134,6 @@ public abstract class AbstractNLPTest {
                   neo4jSession.run(query);
                 });
           });
-    }
-  }
-
-  protected static void setUpESIndex() {
-    elasticsearchContainer.start();
-
-    RestClient restClient =
-        RestClient.builder(HttpHost.create(elasticsearchContainer.getHttpHostAddress())).build();
-
-    ElasticsearchTransport transport =
-        new RestClientTransport(restClient, new JacksonJsonpMapper());
-
-    esClient = new ElasticsearchClient(transport);
-    assertNotNull(esClient);
-
-    try {
-      //      String elasticIndexName = getIndexName();
-      int count = 0;
-      for (Map.Entry<String, String> entry : documents.entrySet()) {
-        String esId = String.format("%02d", ++count);
-        esClient.index(
-            i ->
-                i.id(esId)
-                    .index(ELASTIC_INDEX[0])
-                    .document(new TextDocument(entry.getKey(), entry.getValue())));
-      }
-      await().until(() -> esClient.count().count() == 3);
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  static String getIndexName() {
-    Yaml yaml = new Yaml();
-    try {
-      Map<String, Object> data =
-          yaml.load(
-              new FileInputStream(
-                  new File(
-                      Objects.requireNonNull(
-                              elasticsearchContainer
-                                  .getClass()
-                                  .getClassLoader()
-                                  .getResource("application.yml"))
-                          .toURI())));
-      String elasticTestIndexYaml =
-          ((Map<String, String>)
-                  ((Map<String, Object>)
-                          ((Map<String, Object>) data.get("spring")).get("elasticsearch"))
-                      .get("index"))
-              .get("name");
-      return elasticTestIndexYaml.substring(
-          "${DB_ELASTIC_INDEX:".length(), elasticTestIndexYaml.length() - 1);
-    } catch (FileNotFoundException | URISyntaxException | ClassCastException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  static class TextDocument {
-    public String name;
-    public String text;
-
-    public TextDocument(String name, String text) {
-      this.name = name;
-      this.text = text;
     }
   }
 }

@@ -42,11 +42,12 @@ public class ConceptClusterService implements ContentService {
               .id(conceptEntity.conceptId())
               .labels(String.join(", ", conceptEntity.lables()));
 
-  @Value("${top.documents.concept-graphs-api.uri:http://localhost:9007}")
-  private String conceptGraphsApiUri;
+  private final ConceptPipelineManager pipelineManager;
 
-  private final ConceptPipelineManager pipelineManager =
-      new ConceptPipelineManager(conceptGraphsApiUri);
+  public ConceptClusterService(
+      @Value("${top.documents.concept-graphs-api.uri}") String conceptGraphsApiUri) {
+    pipelineManager = new ConceptPipelineManager(conceptGraphsApiUri);
+  }
 
   @Override
   public long count() {

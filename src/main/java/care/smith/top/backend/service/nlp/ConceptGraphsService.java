@@ -16,45 +16,11 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class ConceptGraphsService implements ContentService {
+  private final ConceptPipelineManager pipelineManager;
 
-  @Value("${spring.elasticsearch.uris}")
-  private String documentServerAddress;
-
-  @Value("${spring.elasticsearch.index.name}")
-  private String documentServerIndexName;
-
-  @Value("${top.documents.document-server.batch-size:30}")
-  private Integer documentServerBatchSize;
-
-  @Value("${top.documents.document-server.fields-replacement:{'text': 'content'}}")
-  private String documentServerFieldsReplacement;
-
-  @Value("${top.documents.concept-graphs-api.uri:http://localhost:9007}")
-  private String conceptGraphsApiUri;
-
-  private final ConceptPipelineManager pipelineManager =
-      new ConceptPipelineManager(conceptGraphsApiUri);
-
-  public String getDocumentServerAddress() {
-    return documentServerAddress;
-  }
-
-  public String getDocumentServerIndexName() {
-    return documentServerIndexName;
-  }
-
-  public Integer getDocumentServerBatchSize() {
-    return documentServerBatchSize;
-  }
-
-  public String getDocumentServerFieldsReplacement() {
-    return documentServerFieldsReplacement;
-  }
-
-  public Map<String, String> getDocumentServerFieldsReplacementAsMap() {
-    return Arrays.stream(documentServerFieldsReplacement.split(","))
-        .map(entry -> entry.split(":"))
-        .collect(Collectors.toMap(entry -> entry[0], entry -> entry[1]));
+  public ConceptGraphsService(
+      @Value("${top.documents.concept-graphs-api.uri}") String conceptGraphsApiUri) {
+    pipelineManager = new ConceptPipelineManager(conceptGraphsApiUri);
   }
 
   @Override
