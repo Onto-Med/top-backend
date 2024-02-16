@@ -1,0 +1,84 @@
+{
+  "adjacency": [
+    {
+      "id": 632,
+      "neighbors": [
+        {
+          "id": 3102,
+          "significance": 54.1663512886644,
+          "weight": 0.5851269178390502
+        }
+      ]
+    },
+    {
+      "id": 1719,
+      "neighbors": [
+        {
+          "id": 4307,
+          "significance": 56.51388596723889,
+          "weight": 0.6231559414863587
+        }
+      ]
+    },
+    {
+      "id": 3102,
+      "neighbors": [
+        {
+          "id": 632,
+          "significance": 54.1663512886644,
+          "weight": 0.5851269178390502
+        },
+        {
+          "id": 4307,
+          "significance": 16.63806935157468,
+          "weight": 0.5028897914886474
+        }
+      ]
+    },
+    {
+      "id": 4307,
+      "neighbors": [
+        {
+          "id": 1719,
+          "significance": 56.51388596723889,
+          "weight": 0.6231559414863587
+        },
+        {
+          "id": 3102,
+          "significance": 16.63806935157468,
+          "weight": 0.5028897914886474
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "documents": [
+        "edd9dc6c-df8d-4ce2-ac48-61909c392003"
+      ],
+      "id": 632,
+      "label": "extension kraftgrad"
+    },
+    {
+      "documents": [
+        "3b17eefb-757d-472d-ae85-ec04476fa6d6"
+      ],
+      "id": 1719,
+      "label": "aktiver beweglichkeit"
+    },
+    {
+      "documents": [
+        "87c53af9-667b-47f5-9d5a-cd2a1ec74995"
+      ],
+      "id": 3102,
+      "label": "dosierten belastungssteigerung"
+    },
+    {
+      "documents": [
+        "0b492c1d-be2e-411e-824c-24913288ff71"
+      ],
+      "id": 4307,
+      "label": "bewegungs\u00fcbungen"
+    }
+  ]
+}

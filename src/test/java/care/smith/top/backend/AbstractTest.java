@@ -7,12 +7,9 @@ import care.smith.top.backend.service.EntityService;
 import care.smith.top.backend.service.OrganisationService;
 import care.smith.top.backend.service.RepositoryService;
 import care.smith.top.backend.service.UserService;
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
+import care.smith.top.backend.util.ResourceHttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -44,8 +41,8 @@ public abstract class AbstractTest {
   static void initializeOLS() throws IOException {
     olsServer = HttpServer.create(new InetSocketAddress(9000), 0);
     olsServer.createContext(
-        "/api/ontologies", new OlsHttpHandler("/ols4_fixtures/ontologies.json"));
-    olsServer.createContext("/api/select", new OlsHttpHandler("/ols4_fixtures/select.json"));
+        "/api/ontologies", new ResourceHttpHandler("/ols4_fixtures/ontologies.json"));
+    olsServer.createContext("/api/select", new ResourceHttpHandler("/ols4_fixtures/select.json"));
     olsServer.start();
   }
 
@@ -58,25 +55,5 @@ public abstract class AbstractTest {
   public void resetState() {
     organisationRepository.deleteAll();
     userRepository.deleteAll();
-  }
-
-  static class OlsHttpHandler implements HttpHandler {
-    private final String resourcePath;
-
-    public OlsHttpHandler(String resourcePath) {
-      this.resourcePath = resourcePath;
-    }
-
-    @Override
-    public void handle(HttpExchange exchange) throws IOException {
-      try (InputStream resource = AbstractTest.class.getResourceAsStream(resourcePath)) {
-        assert resource != null;
-        byte[] response = resource.readAllBytes();
-        exchange.getResponseHeaders().set("Content-Type", "application/json");
-        exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, response.length);
-        exchange.getResponseBody().write(response);
-      }
-      exchange.close();
-    }
   }
 }

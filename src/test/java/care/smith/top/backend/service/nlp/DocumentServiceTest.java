@@ -16,12 +16,6 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @Testcontainers
 @ExtendWith(SpringExtension.class)
 class DocumentServiceTest extends AbstractNLPTest {
-
-  @BeforeEach
-  void testIsContainerRunning() {
-    assertTrue(elasticsearchContainer.isRunning());
-  }
-
   @Test
   void getDocumentByName() {
     List<String> documentName =

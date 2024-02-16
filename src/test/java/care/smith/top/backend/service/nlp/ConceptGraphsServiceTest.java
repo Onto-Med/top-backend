@@ -1,5 +1,7 @@
 package care.smith.top.backend.service.nlp;
 
+import static org.assertj.core.api.Assertions.*;
+
 import care.smith.top.model.ConceptGraph;
 import care.smith.top.model.ConceptGraphProcess;
 import care.smith.top.model.ConceptGraphStat;
@@ -18,27 +20,30 @@ import org.springframework.boot.test.context.SpringBootTest;
 class ConceptGraphsServiceTest extends AbstractNLPTest {
   @Autowired ConceptGraphsService conceptGraphsService;
 
-  // ToDo: build test zip here to use
-
   @Test
-  @Disabled
   void getAllConceptGraphStatistics() {
     Map<String, ConceptGraphStat> conceptGraphStatMap =
-        conceptGraphsService.getAllConceptGraphStatistics("grassco");
+        conceptGraphsService.getAllConceptGraphStatistics("process_id");
+    assertThat(conceptGraphStatMap).hasSize(23);
   }
 
   @Test
-  @Disabled
   void getConceptGraphForIdAndProcess() {
-    ConceptGraph conceptGraph = conceptGraphsService.getConceptGraphForIdAndProcess("0", "grassco");
+    ConceptGraph conceptGraph =
+        conceptGraphsService.getConceptGraphForIdAndProcess("0", "process_id");
+    assertThat(conceptGraph).isNotNull().satisfies(c -> {
+      assertThat(c.getAdjacency()).hasSize(4);
+      assertThat(c.getNodes()).hasSize(4);
+    });
   }
 
   @Test
-  @Disabled
-  void getStoredProcesses() {
+  void getAllStoredProcesses() {
     List<ConceptGraphProcess> processes = conceptGraphsService.getAllStoredProcesses();
+    assertThat(processes).hasSize(2);
   }
 
+  // ToDo: build test zip here to use
   @Test
   @Disabled
   void initPipeline() {
