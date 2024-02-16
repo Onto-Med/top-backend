@@ -1,5 +1,5 @@
 id: Test_Data_Source_3
-adapter: care.smith.top.top_document_query.adapter.lucene.LuceneAdapter
+adapter: care.smith.top.top_document_query.adapter.elasticsearch.ElasticsearchAdapter
 connection:
   url: http://localhost
   port: 9008
@@ -9,11 +9,3 @@ field:
   - text
 batchSize: 30
 replaceFields: {'text': 'content'}
-graphDB:
-  connection:
-    url: bolt://localhost
-    port: 7687
-conceptGraph:
-  connection:
-    url: http://localhost
-    port: 9007
