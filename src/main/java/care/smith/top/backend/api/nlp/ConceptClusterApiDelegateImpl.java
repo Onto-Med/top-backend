@@ -7,18 +7,15 @@ import care.smith.top.model.ConceptClusterPage;
 import care.smith.top.model.PipelineResponse;
 import java.util.HashMap;
 import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 @Service
 public class ConceptClusterApiDelegateImpl implements ConceptclusterApiDelegate {
-
-  private final ConceptClusterService conceptClusterService;
-  private HashMap<String, Thread> conceptClusterProcesses = new HashMap<>();
-
-  public ConceptClusterApiDelegateImpl(ConceptClusterService conceptClusterService) {
-    this.conceptClusterService = conceptClusterService;
-  }
+  private final HashMap<String, Thread> conceptClusterProcesses = new HashMap<>();
+  @Autowired
+  private ConceptClusterService   conceptClusterService;
 
   @Override
   public ResponseEntity<ConceptClusterPage> getConceptClustersByDocumentId(

@@ -1,7 +1,6 @@
 package care.smith.top.backend.api.nlp;
 
 import care.smith.top.backend.api.ConceptgraphsApiDelegate;
-import care.smith.top.backend.service.nlp.ConceptClusterService;
 import care.smith.top.backend.service.nlp.ConceptGraphsService;
 import care.smith.top.model.*;
 import java.io.File;
@@ -13,6 +12,7 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.commons.lang3.tuple.Pair;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -21,12 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class ConceptGraphApiDelegateImpl implements ConceptgraphsApiDelegate {
   private static final Logger LOGGER =
       Logger.getLogger(ConceptGraphApiDelegateImpl.class.getName());
-  private final ConceptGraphsService conceptGraphsService;
-
-  public ConceptGraphApiDelegateImpl(
-      ConceptGraphsService conceptGraphsService, ConceptClusterService conceptClusterService) {
-    this.conceptGraphsService = conceptGraphsService;
-  }
+  @Autowired private ConceptGraphsService conceptGraphsService;
 
   @Override
   public ResponseEntity<Map<String, ConceptGraphStat>> getConceptGraphStatistics(
