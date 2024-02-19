@@ -21,8 +21,8 @@ for additional documentation.
     * `QUERY_RESULT_DIR`: location where query results are stored to, defaults to `config/query_results`
     * `QUERY_RESULT_DOWNLOAD_ENABLED`: whether users with write permission for a repository can download query results
       or not, defaults to true
-    * `TERMINOLOGY_SERVICE_ENDPOINT`: endpoint of the Ontology Lookup Service to be used for code search, default
-      to http://localhost:9000/api (OLS3 is currently supported)  
+    * `TERMINOLOGY_SERVICE_ENDPOINT`: endpoint of the Ontology Lookup Service to be used for code search, defaults
+      to https://www.ebi.ac.uk/ols4/api (OLS4 is currently supported)  
 
    Document related:  
    *(The following variables will be overwritten by their respective adapter values if specified)*  
