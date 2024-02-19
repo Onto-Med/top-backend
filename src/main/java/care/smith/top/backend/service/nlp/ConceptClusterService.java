@@ -3,7 +3,6 @@ package care.smith.top.backend.service.nlp;
 import care.smith.top.backend.model.neo4j.ConceptNodeEntity;
 import care.smith.top.backend.model.neo4j.DocumentNodeEntity;
 import care.smith.top.backend.model.neo4j.PhraseNodeEntity;
-import care.smith.top.backend.repository.elasticsearch.DocumentRepository;
 import care.smith.top.backend.repository.neo4j.ConceptClusterNodeRepository;
 import care.smith.top.backend.repository.neo4j.DocumentNodeRepository;
 import care.smith.top.backend.repository.neo4j.PhraseNodeRepository;
@@ -35,7 +34,7 @@ public class ConceptClusterService implements ContentService {
   @Autowired private ConceptClusterNodeRepository conceptNodeRepository;
   @Autowired private PhraseNodeRepository phraseNodeRepository;
   @Autowired private DocumentNodeRepository documentNodeRepository;
-  @Autowired private DocumentRepository documentRepository;
+
   private final Function<ConceptNodeEntity, ConceptCluster> conceptEntityMapper =
       conceptEntity ->
           new ConceptCluster()
@@ -122,19 +121,19 @@ public class ConceptClusterService implements ContentService {
               phraseNodeRepository.save(phraseNodeEntityMap.get(adjacencyObject.getId()));
             });
 
-    // Save Document Nodes and by extension relationships 'DOCUMENT--HAS_PHRASE->PHRASE'
-    documentRepository
-        .findAllById(documentId2PhraseIdMap.keySet())
-        .forEach(
-            documentEntity -> {
-              documentNodeRepository.save(
-                  new DocumentNodeEntity(
-                      documentEntity.getId(),
-                      documentEntity.getDocumentName(),
-                      documentId2PhraseIdMap.get(documentEntity.getId()).stream()
-                          .map(phraseNodeEntityMap::get)
-                          .collect(Collectors.toSet())));
-            });
+    // TODO: Save Document Nodes and by extension relationships 'DOCUMENT--HAS_PHRASE->PHRASE'
+//    documentRepository
+//        .findAllById(documentId2PhraseIdMap.keySet())
+//        .forEach(
+//            documentEntity -> {
+//              documentNodeRepository.save(
+//                  new DocumentNodeEntity(
+//                      documentEntity.getId(),
+//                      documentEntity.getDocumentName(),
+//                      documentId2PhraseIdMap.get(documentEntity.getId()).stream()
+//                          .map(phraseNodeEntityMap::get)
+//                          .collect(Collectors.toSet())));
+//            });
   }
 
   public Pair<String, Thread> createSpecificGraphsInNeo4j(

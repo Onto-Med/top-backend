@@ -1,42 +1,24 @@
 package care.smith.top.backend.api.nlp;
 
 import care.smith.top.backend.api.DocumentApiDelegate;
-import care.smith.top.backend.service.nlp.ConceptClusterService;
 import care.smith.top.backend.service.nlp.DocumentQueryService;
 import care.smith.top.backend.service.nlp.DocumentService;
-import care.smith.top.backend.service.nlp.PhraseService;
 import care.smith.top.backend.util.ApiModelMapper;
 import care.smith.top.model.Document;
 import care.smith.top.model.DocumentPage;
-import care.smith.top.model.Phrase;
 import java.io.IOException;
 import java.util.*;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import org.springframework.data.domain.Page;
+import org.apache.commons.lang3.NotImplementedException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 @Service
 public class DocumentApiDelegateImpl implements DocumentApiDelegate {
-  private final Logger LOGGER = Logger.getLogger(DocumentApiDelegateImpl.class.getName());
-
-  private DocumentService documentService;
-  private final PhraseService phraseService;
-  private final ConceptClusterService conceptClusterService;
-  private final DocumentQueryService documentQueryService;
-
-  public DocumentApiDelegateImpl(
-      DocumentService documentService,
-      PhraseService phraseService,
-      ConceptClusterService conceptClusterService,
-      DocumentQueryService documentQueryService) {
-    this.documentService = documentService;
-    this.phraseService = phraseService;
-    this.conceptClusterService = conceptClusterService;
-    this.documentQueryService = documentQueryService;
-  }
+  @Autowired private DocumentService documentService;
+  @Autowired private DocumentQueryService documentQueryService;
 
   @Override
   public ResponseEntity<List<Document>> getDocumentIdsByConceptClusterIds(
@@ -77,9 +59,12 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
     try {
       return ResponseEntity.ok(
           ApiModelMapper.toDocumentPage(
-              documentService.getDocumentsByIds(
-                  documentQueryService.getDocumentIds(organisationId, repositoryId, queryId),
-                  page)));
+              documentQueryService
+                  .getTextAdapter(organisationId, repositoryId, queryId)
+                  .orElseThrow()
+                  .getDocumentsByIds(
+                      documentQueryService.getDocumentIds(organisationId, repositoryId, queryId),
+                      page)));
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -88,37 +73,39 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
   @Override
   public ResponseEntity<Document> getDocumentById(
       String documentId, List<String> conceptIds, List<String> include) {
+    throw new NotImplementedException();
     // Todo: just testing
-    if (conceptIds != null) {
-      String[] conceptPhrases =
-          conceptIds.stream()
-              .map(
-                  cid ->
-                      phraseService.getPhrasesForConcept(cid).stream()
-                          .map(Phrase::getText)
-                          .collect(Collectors.joining("|")))
-              .collect(Collectors.joining("|"))
-              .split("\\|");
-
-      String[] shouldTerms =
-          phraseService.getPhrasesForDocument(documentId, false).stream()
-              .map(Phrase::getText)
-              .filter(s -> Arrays.asList(conceptPhrases).contains(s))
-              //                            .filter(s -> s.matches("[a-zA-Z]+"))
-              .toArray(String[]::new);
-
-      List<Document> documents =
-          documentService.getDocumentsByPhrases(shouldTerms, new String[] {"text"});
-
-      Optional<Document> document =
-          documents.stream().filter(d -> d.getId().equals(documentId)).findFirst();
-      return document
-          .map(value -> new ResponseEntity<>(value, HttpStatus.OK))
-          .orElseGet(
-              () ->
-                  new ResponseEntity<>(documentService.getDocumentById(documentId), HttpStatus.OK));
-    }
-    return new ResponseEntity<>(documentService.getDocumentById(documentId), HttpStatus.OK);
+    //    if (conceptIds != null) {
+    //      String[] conceptPhrases =
+    //          conceptIds.stream()
+    //              .map(
+    //                  cid ->
+    //                      phraseService.getPhrasesForConcept(cid).stream()
+    //                          .map(Phrase::getText)
+    //                          .collect(Collectors.joining("|")))
+    //              .collect(Collectors.joining("|"))
+    //              .split("\\|");
+    //
+    //      String[] shouldTerms =
+    //          phraseService.getPhrasesForDocument(documentId, false).stream()
+    //              .map(Phrase::getText)
+    //              .filter(s -> Arrays.asList(conceptPhrases).contains(s))
+    //              //                            .filter(s -> s.matches("[a-zA-Z]+"))
+    //              .toArray(String[]::new);
+    //
+    //      List<Document> documents =
+    //          documentService.getDocumentsByPhrases(shouldTerms, new String[] {"text"});
+    //
+    //      Optional<Document> document =
+    //          documents.stream().filter(d -> d.getId().equals(documentId)).findFirst();
+    //      return document
+    //          .map(value -> new ResponseEntity<>(value, HttpStatus.OK))
+    //          .orElseGet(
+    //              () ->
+    //                  new ResponseEntity<>(documentService.getDocumentById(documentId),
+    // HttpStatus.OK));
+    //    }
+    //    return new ResponseEntity<>(documentService.getDocumentById(documentId), HttpStatus.OK);
   }
 
   @Override
@@ -130,24 +117,25 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
   @Override
   public ResponseEntity<DocumentPage> getDocuments(
       List<String> include, List<String> phraseText, List<String> documentIds, Integer page) {
-    Page<Document> documentPage;
-    if (!(documentIds == null || documentIds.isEmpty())
-        && (phraseText == null || phraseText.isEmpty())) {
-      documentPage = documentService.getDocumentsByIds(documentIds, page);
-    } else if ((documentIds == null || documentIds.isEmpty())
-        && !(phraseText == null || phraseText.isEmpty())) {
-      documentPage = documentService.getDocumentsByPhrases(phraseText, page);
-    } else if (!(documentIds == null || documentIds.isEmpty())
-        && !(phraseText == null || phraseText.isEmpty())) {
-      documentPage = documentService.getDocumentsByIdsAndPhrases(documentIds, phraseText, page);
-    } else {
-      documentPage = documentService.getAllDocuments(page);
-    }
-
-    if (documentPage == null) {
-      return ResponseEntity.noContent().build();
-    }
-
-    return ResponseEntity.ok(ApiModelMapper.toDocumentPage(documentPage));
+    throw new NotImplementedException();
+    //    Page<Document> documentPage;
+    //    if (!(documentIds == null || documentIds.isEmpty())
+    //        && (phraseText == null || phraseText.isEmpty())) {
+    //      documentPage = documentService.getDocumentsByIds(documentIds, page);
+    //    } else if ((documentIds == null || documentIds.isEmpty())
+    //        && !(phraseText == null || phraseText.isEmpty())) {
+    //      documentPage = documentService.getDocumentsByPhrases(phraseText, page);
+    //    } else if (!(documentIds == null || documentIds.isEmpty())) {
+    //      documentPage = documentService.getDocumentsByIdsAndPhrases(documentIds, phraseText,
+    // page);
+    //    } else {
+    //      documentPage = documentService.getAllDocuments(page);
+    //    }
+    //
+    //    if (documentPage == null) {
+    //      return ResponseEntity.noContent().build();
+    //    }
+    //
+    //    return ResponseEntity.ok(ApiModelMapper.toDocumentPage(documentPage));
   }
 }
