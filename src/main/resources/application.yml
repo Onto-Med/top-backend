@@ -73,4 +73,4 @@ top:
         password: ${DB_ELASTIC_PASS:#{null}}
 
 coding:
-  terminology-service: ${TERMINOLOGY_SERVICE_ENDPOINT:http://localhost:9000/api}
+  terminology-service: ${TERMINOLOGY_SERVICE_ENDPOINT:https://www.ebi.ac.uk/ols4/api}

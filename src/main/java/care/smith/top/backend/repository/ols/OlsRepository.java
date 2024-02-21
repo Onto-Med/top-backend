@@ -4,8 +4,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.netty.http.client.HttpClient;
 
 public abstract class OlsRepository {
   protected WebClient terminologyService;
@@ -23,6 +25,8 @@ public abstract class OlsRepository {
             .baseUrl(terminologyServiceEndpoint)
             .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
             .exchangeStrategies(exchangeStrategies)
+            .clientConnector(
+                new ReactorClientHttpConnector(HttpClient.create().followRedirect(true)))
             .build();
   }
 
