@@ -22,7 +22,9 @@ for additional documentation.
     * `QUERY_RESULT_DOWNLOAD_ENABLED`: whether users with write permission for a repository can download query results
       or not, defaults to true
     * `TERMINOLOGY_SERVICE_ENDPOINT`: endpoint of the Ontology Lookup Service to be used for code search, defaults
-      to https://www.ebi.ac.uk/ols4/api (OLS4 is currently supported)  
+      to https://www.ebi.ac.uk/ols4/api (OLS4 is currently supported)
+    * `IMPORT_DEMO_DATA`: whether a demo organisation with a small BMI phenotype model should be imported on startup,
+      defaults to false
 
    Document related:  
    *(The following variables will be overwritten by their respective adapter values if specified)*  
