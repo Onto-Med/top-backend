@@ -11,7 +11,6 @@ import care.smith.top.top_phenotypic_query.search.PhenotypeFinder;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.logging.Level;
