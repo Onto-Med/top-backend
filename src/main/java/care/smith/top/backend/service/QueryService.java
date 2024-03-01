@@ -211,8 +211,14 @@ public abstract class QueryService {
    * @param queryId ID of the query for which results shall be deleted.
    * @throws Exception If some result artifacts could not be deleted.
    */
-  protected abstract void clearResults(String organisationId, String repositoryId, String queryId)
-      throws Exception;
+  protected void clearResults(String organisationId, String repositoryId, String queryId)
+      throws Exception {
+    Path queryPath =
+        Paths.get(resultDir, organisationId, repositoryId, String.format("%s.zip", queryId));
+    if (!queryPath.startsWith(Paths.get(resultDir)))
+      LOGGER.severe(String.format("Query file '%s' is invalid and cannot be deleted!", queryPath));
+    Files.deleteIfExists(queryPath);
+  }
 
   /**
    * Extracts the state of a job.
