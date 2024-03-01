@@ -157,7 +157,7 @@ public class PhenotypeQueryService extends QueryService {
           .sorted(Comparator.comparing(DataAdapterConfig::getId))
           .collect(Collectors.toList());
     } catch (Exception e) {
-      LOGGER.warning(
+      LOGGER.fine(
           String.format("Could not load data adapter configs from dir '%s'.", dataSourceConfigDir));
     }
     return Collections.emptyList();
@@ -209,14 +209,5 @@ public class PhenotypeQueryService extends QueryService {
               path.toString(), e.getMessage()));
     }
     return null;
-  }
-
-  protected void clearResults(String organisationId, String repositoryId, String queryId)
-      throws IOException {
-    Path queryPath =
-        Paths.get(resultDir, organisationId, repositoryId, String.format("%s.zip", queryId));
-    if (!queryPath.startsWith(Paths.get(resultDir)))
-      LOGGER.severe(String.format("Query file '%s' is invalid and cannot be deleted!", queryPath));
-    Files.deleteIfExists(queryPath);
   }
 }

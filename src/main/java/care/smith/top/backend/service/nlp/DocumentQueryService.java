@@ -174,7 +174,7 @@ public class DocumentQueryService extends QueryService {
           .sorted(Comparator.comparing(TextAdapterConfig::getId))
           .collect(Collectors.toList());
     } catch (Exception e) {
-      LOGGER.warning(
+      LOGGER.fine(
           String.format("Could not load text adapter configs from dir '%s'.", dataSourceConfigDir));
     }
     return Collections.emptyList();
@@ -224,15 +224,5 @@ public class DocumentQueryService extends QueryService {
     csvConverter.write(results, zipStream);
 
     zipStream.close();
-  }
-
-  @Override
-  protected void clearResults(String organisationId, String repositoryId, String queryId)
-      throws IOException {
-    Path queryPath =
-        Paths.get(resultDir, organisationId, repositoryId, String.format("%s.zip", queryId));
-    if (!queryPath.startsWith(Paths.get(resultDir)))
-      LOGGER.severe(String.format("Query file '%s' is invalid and cannot be deleted!", queryPath));
-    Files.deleteIfExists(queryPath);
   }
 }
