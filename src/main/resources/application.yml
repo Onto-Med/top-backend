@@ -55,6 +55,7 @@ org:
 top:
   appName: '@project.name@'
   version: '@project.version@'
+  demo-data: ${IMPORT_DEMO_DATA:false}
   result:
     dir: ${QUERY_RESULT_DIR:config/query_results}
     download-enabled: ${QUERY_RESULT_DOWNLOAD_ENABLED:true}

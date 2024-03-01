@@ -1,0 +1,533 @@
+[
+  {
+    "entityType": "single_restriction",
+    "id": "demo-weight-100",
+    "titles": [
+      {
+        "lang": "de",
+        "text": "≥ 100 Kilogramm"
+      },
+      {
+        "lang": "en",
+        "text": "≥ 100 kilogram"
+      }
+    ],
+    "synonyms": [],
+    "descriptions": [],
+    "codes": [],
+    "dataType": "boolean",
+    "restriction": {
+      "type": "number",
+      "quantifier": "min",
+      "cardinality": 1,
+      "minOperator": ">=",
+      "values": [
+        100,
+        null
+      ]
+    },
+    "superPhenotype": {
+      "entityType": "single_phenotype",
+      "id": "demo-weight"
+    }
+  },
+  {
+    "entityType": "single_restriction",
+    "id": "demo-height-150",
+    "titles": [
+      {
+        "lang": "de",
+        "text": "≥ 150 Centimeter"
+      },
+      {
+        "lang": "en",
+        "text": "≥ 150 centimeters"
+      }
+    ],
+    "synonyms": [],
+    "descriptions": [],
+    "codes": [],
+    "dataType": "boolean",
+    "restriction": {
+      "type": "number",
+      "quantifier": "min",
+      "cardinality": 1,
+      "minOperator": ">=",
+      "values": [
+        150,
+        null
+      ]
+    },
+    "superPhenotype": {
+      "entityType": "single_phenotype",
+      "id": "demo-height"
+    }
+  },
+  {
+    "entityType": "single_phenotype",
+    "id": "demo-height",
+    "titles": [
+      {
+        "lang": "de",
+        "text": "Größe"
+      },
+      {
+        "lang": "en",
+        "text": "Height"
+      }
+    ],
+    "synonyms": [
+      {
+        "lang": "de",
+        "text": "Länge"
+      },
+      {
+        "lang": "en",
+        "text": "Length"
+      }
+    ],
+    "descriptions": [],
+    "codes": [
+      {
+        "uri": "http://loinc.org/3137-7",
+        "codeSystem": {
+          "uri": "http://loinc.org",
+          "name": "Logical Observation Identifier Names and Codes",
+          "shortName": "LOINC",
+          "externalId": "loinc"
+        },
+        "code": "3137-7",
+        "scope": "self",
+        "name": "Body height Measured"
+      },
+      {
+        "uri": "http://loinc.org/8302-2",
+        "codeSystem": {
+          "uri": "http://loinc.org",
+          "name": "Logical Observation Identifier Names and Codes",
+          "shortName": "LOINC",
+          "externalId": "loinc"
+        },
+        "code": "8302-2",
+        "scope": "self",
+        "name": "Body height"
+      }
+    ],
+    "superCategories": [],
+    "dataType": "number",
+    "itemType": "observation",
+    "unit": "cm"
+  },
+  {
+    "entityType": "single_phenotype",
+    "id": "demo-age",
+    "titles": [
+      {
+        "lang": "de",
+        "text": "Alter"
+      },
+      {
+        "lang": "en",
+        "text": "Age"
+      }
+    ],
+    "synonyms": [],
+    "descriptions": [],
+    "codes": [
+      {
+        "uri": "http://loinc.org/30525-0",
+        "codeSystem": {
+          "uri": "http://loinc.org",
+          "name": "Logical Observation Identifier Names and Codes",
+          "shortName": "LOINC",
+          "externalId": "loinc"
+        },
+        "code": "30525-0",
+        "scope": "self",
+        "name": "Age"
+      }
+    ],
+    "superCategories": [],
+    "dataType": "number",
+    "itemType": "subject_age",
+    "unit": "a"
+  },
+  {
+    "entityType": "single_phenotype",
+    "id": "demo-sex",
+    "titles": [
+      {
+        "lang": "de",
+        "text": "Geschlecht"
+      },
+      {
+        "lang": "en",
+        "text": "Sex"
+      }
+    ],
+    "synonyms": [],
+    "descriptions": [],
+    "codes": [
+      {
+        "uri": "http://loinc.org/46098-0",
+        "codeSystem": {
+          "uri": "http://loinc.org",
+          "name": "Logical Observation Identifier Names and Codes",
+          "shortName": "LOINC",
+          "externalId": "loinc"
+        },
+        "code": "46098-0",
+        "scope": "self",
+        "name": "Sex"
+      }
+    ],
+    "superCategories": [],
+    "dataType": "string",
+    "itemType": "subject_sex"
+  },
+  {
+    "entityType": "single_phenotype",
+    "id": "demo-weight",
+    "titles": [
+      {
+        "lang": "de",
+        "text": "Gewicht"
+      },
+      {
+        "lang": "en",
+        "text": "Weight"
+      }
+    ],
+    "synonyms": [],
+    "descriptions": [],
+    "codes": [
+      {
+        "uri": "http://loinc.org/3141-9",
+        "codeSystem": {
+          "uri": "http://loinc.org",
+          "name": "Logical Observation Identifier Names and Codes",
+          "shortName": "LOINC",
+          "externalId": "loinc"
+        },
+        "code": "3141-9",
+        "scope": "self",
+        "name": "Body weight Measured"
+      }
+    ],
+    "superCategories": [],
+    "dataType": "number",
+    "itemType": "observation",
+    "unit": "kg"
+  },
+  {
+    "entityType": "single_restriction",
+    "id": "demo-sex-female",
+    "titles": [
+      {
+        "lang": "de",
+        "text": "Weiblich"
+      },
+      {
+        "lang": "en",
+        "text": "Female"
+      }
+    ],
+    "synonyms": [],
+    "descriptions": [],
+    "codes": [],
+    "dataType": "boolean",
+    "restriction": {
+      "type": "string",
+      "quantifier": "min",
+      "cardinality": 1,
+      "values": [
+        "female"
+      ]
+    },
+    "superPhenotype": {
+      "entityType": "single_phenotype",
+      "id": "demo-sex"
+    }
+  },
+  {
+    "entityType": "single_restriction",
+    "id": "demo-age-18-below",
+    "titles": [
+      {
+        "lang": "de",
+        "text": "< 18 Jahre"
+      },
+      {
+        "lang": "en",
+        "text": "< 18 years"
+      }
+    ],
+    "synonyms": [],
+    "descriptions": [],
+    "codes": [],
+    "dataType": "boolean",
+    "restriction": {
+      "type": "number",
+      "quantifier": "min",
+      "cardinality": 1,
+      "maxOperator": "<",
+      "values": [
+        null,
+        18
+      ]
+    },
+    "superPhenotype": {
+      "entityType": "single_phenotype",
+      "id": "demo-age"
+    }
+  },
+  {
+    "entityType": "single_restriction",
+    "id": "demo-age-18-above",
+    "titles": [
+      {
+        "lang": "de",
+        "text": "≥ 18 Jahre"
+      },
+      {
+        "lang": "en",
+        "text": "≥ 18 years"
+      }
+    ],
+    "synonyms": [],
+    "descriptions": [],
+    "codes": [],
+    "dataType": "boolean",
+    "restriction": {
+      "type": "number",
+      "quantifier": "min",
+      "cardinality": 1,
+      "minOperator": ">=",
+      "values": [
+        18,
+        null
+      ]
+    },
+    "superPhenotype": {
+      "entityType": "single_phenotype",
+      "id": "demo-age"
+    }
+  },
+  {
+    "entityType": "composite_restriction",
+    "id": "demo-bmi-25-30",
+    "titles": [
+      {
+        "lang": "de",
+        "text": "25-30"
+      },
+      {
+        "lang": "en",
+        "text": "25-30"
+      }
+    ],
+    "synonyms": [],
+    "descriptions": [],
+    "codes": [],
+    "dataType": "boolean",
+    "restriction": {
+      "type": "number",
+      "quantifier": "min",
+      "cardinality": 1,
+      "minOperator": ">=",
+      "maxOperator": "<",
+      "values": [
+        25,
+        30
+      ]
+    },
+    "superPhenotype": {
+      "entityType": "composite_phenotype",
+      "id": "demo-bmi"
+    }
+  },
+  {
+    "entityType": "composite_restriction",
+    "id": "demo-bmi-27-30",
+    "titles": [
+      {
+        "lang": "de",
+        "text": "27-30"
+      },
+      {
+        "lang": "en",
+        "text": "27-30"
+      }
+    ],
+    "synonyms": [],
+    "descriptions": [],
+    "codes": [],
+    "dataType": "boolean",
+    "restriction": {
+      "type": "number",
+      "quantifier": "min",
+      "cardinality": 1,
+      "minOperator": ">=",
+      "maxOperator": "<",
+      "values": [
+        27,
+        30
+      ]
+    },
+    "superPhenotype": {
+      "entityType": "composite_phenotype",
+      "id": "demo-bmi"
+    }
+  },
+  {
+    "entityType": "composite_phenotype",
+    "id": "demo-bmi",
+    "titles": [
+      {
+        "lang": "de",
+        "text": "BMI"
+      },
+      {
+        "lang": "en",
+        "text": "BMI"
+      }
+    ],
+    "synonyms": [
+      {
+        "lang": "de",
+        "text": "Körper-Masse-Index"
+      },
+      {
+        "lang": "en",
+        "text": "Body mass index"
+      }
+    ],
+    "descriptions": [],
+    "codes": [
+      {
+        "uri": "https://loinc.org/39156-5",
+        "codeSystem": {
+          "uri": "http://loinc.org",
+          "name": "Logical Observation Identifier Names and Codes",
+          "shortName": "LOINC",
+          "externalId": "loinc"
+        },
+        "code": "39156-5",
+        "scope": "self",
+        "name": "Body mass index"
+      }
+    ],
+    "superCategories": [],
+    "dataType": "number",
+    "expression": {
+      "functionId": "Divide",
+      "arguments": [
+        {
+          "entityId": "demo-weight",
+          "arguments": [],
+          "values": []
+        },
+        {
+          "functionId": "Power",
+          "arguments": [
+            {
+              "functionId": "Divide",
+              "arguments": [
+                {
+                  "entityId": "demo-height",
+                  "arguments": [],
+                  "values": []
+                },
+                {
+                  "arguments": [],
+                  "values": [
+                    {
+                      "dataType": "number",
+                      "value": 100
+                    }
+                  ]
+                }
+              ],
+              "values": []
+            },
+            {
+              "arguments": [],
+              "values": [
+                {
+                  "dataType": "number",
+                  "value": 2
+                }
+              ]
+            }
+          ],
+          "values": []
+        }
+      ],
+      "values": []
+    },
+    "unit": "kg/m2"
+  },
+  {
+    "entityType": "single_restriction",
+    "id": "demo-male",
+    "titles": [
+      {
+        "lang": "de",
+        "text": "Männlich"
+      },
+      {
+        "lang": "en",
+        "text": "Male"
+      }
+    ],
+    "synonyms": [],
+    "descriptions": [],
+    "codes": [],
+    "dataType": "boolean",
+    "restriction": {
+      "type": "string",
+      "quantifier": "min",
+      "cardinality": 1,
+      "values": [
+        "male"
+      ]
+    },
+    "superPhenotype": {
+      "entityType": "single_phenotype",
+      "id": "demo-sex"
+    }
+  },
+  {
+    "entityType": "composite_restriction",
+    "id": "demo-bmi-30-35",
+    "titles": [
+      {
+        "lang": "de",
+        "text": "30-35"
+      },
+      {
+        "lang": "en",
+        "text": "30-35"
+      }
+    ],
+    "synonyms": [],
+    "descriptions": [],
+    "codes": [],
+    "dataType": "boolean",
+    "restriction": {
+      "type": "number",
+      "quantifier": "min",
+      "cardinality": 1,
+      "minOperator": ">=",
+      "maxOperator": "<",
+      "values": [
+        30,
+        35
+      ]
+    },
+    "superPhenotype": {
+      "entityType": "composite_phenotype",
+      "id": "demo-bmi"
+    }
+  }
+]
