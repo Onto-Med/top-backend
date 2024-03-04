@@ -172,7 +172,7 @@ public class DocumentQueryConfigMap {
           .min(Comparator.comparing(TextAdapterConfig::getId))
           .orElseThrow();
     } catch (Exception e) {
-      LOGGER.warning(
+      LOGGER.fine(
           String.format(
               "Could not load text adapter configs from dir '%s'. Using default adapter settings.",
               dataSourceConfigDir));
@@ -185,7 +185,7 @@ public class DocumentQueryConfigMap {
       TextAdapterConfig textAdapterConfig = TextAdapterConfig.getInstance(path.toString());
       return textAdapterConfig.getId() == null ? null : textAdapterConfig;
     } catch (Exception e) {
-      LOGGER.warning(
+      LOGGER.fine(
           String.format(
               "Text adapter config could not be loaded from file '%s'. Error: %s",
               path.toString(), e.getMessage()));
