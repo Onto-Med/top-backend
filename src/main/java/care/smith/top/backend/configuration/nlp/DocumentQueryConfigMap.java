@@ -187,7 +187,7 @@ public class DocumentQueryConfigMap {
     } catch (Exception e) {
       LOGGER.fine(
           String.format(
-              "Text adapter config could not be loaded from file '%s'. Error: %s",
+              "Text adapter config could not be loaded from file '%s'. Using default adapter settings. Error: %s",
               path.toString(), e.getMessage()));
     }
     return null;
