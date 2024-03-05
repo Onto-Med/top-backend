@@ -34,7 +34,7 @@ public class DocumentService implements ContentService {
   }
 
   public List<Document> getDocumentsForConcepts(Set<String> conceptIds, Boolean exemplarOnly) {
-    if (conceptIds.isEmpty()) {
+    if (conceptIds == null || conceptIds.isEmpty()) {
       return List.of();
     }
     return documentNodeRepository
