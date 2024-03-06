@@ -44,69 +44,55 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
     }
 
     // Neo4j filters are 'phraseIds', 'conceptClusterIds', 'phraseText'
-    boolean neo4jFilter = false;
-    Set<String> phraseIdFilter = Set.of();
-    boolean phraseFilterOn = false;
+    boolean neo4jFilterOn = false;
+    HashSet<String> finalDocumentIds = new HashSet<>();
     if (phraseIds != null && !phraseIds.isEmpty()) {
-      phraseIdFilter = documentService
+      finalDocumentIds.addAll(
+        documentService
           .getDocumentsForPhraseIds(Set.copyOf(phraseIds), exemplarOnly).stream()
           .map(Document::getId)
-          .collect(Collectors.toSet());
-      neo4jFilter = true;
-      phraseFilterOn = true;
+          .collect(Collectors.toSet())
+      );
+      neo4jFilterOn = true;
     }
-    Set<String> conceptClusterIdFilter = Set.of();
-    boolean conceptClusterFilterOn = false;
     if (conceptClusterIds != null && !conceptClusterIds.isEmpty()) {
       // 'gatheringMode' is only relevant for getting documents by 'conceptClusterIds'
-      conceptClusterIdFilter = documentService
+      Set<String> conceptClusterIdSet = documentService
           .getDocumentsForConceptIds(Set.copyOf(conceptClusterIds), exemplarOnly, gatheringMode).stream()
           .map(Document::getId)
           .collect(Collectors.toSet());
-      neo4jFilter = true;
-      conceptClusterFilterOn = true;
+      if (neo4jFilterOn) {
+        finalDocumentIds.retainAll(conceptClusterIdSet);
+      } else { finalDocumentIds.addAll(conceptClusterIdSet); }
+      neo4jFilterOn = true;
     }
-    Set<String> phraseTextFilter = Set.of();
-    boolean phraseTextFilterOn = false;
     if (phraseText != null && !phraseText.isEmpty()) {
-      phraseTextFilter = documentService
+      Set<String> phraseTextSet = documentService
           .getDocumentsForPhraseTexts(Set.copyOf(phraseText), exemplarOnly).stream()
           .map(Document::getId)
           .collect(Collectors.toSet());
-      neo4jFilter = true;
-      phraseTextFilterOn = true;
+      if (neo4jFilterOn) {
+        finalDocumentIds.retainAll(phraseTextSet);
+      } else { finalDocumentIds.addAll(phraseTextSet); }
+      neo4jFilterOn = true;
     }
 
-    boolean esFilter = false;
-    Set<String> finalDocumentIds;
-    if (neo4jFilter) {
-      finalDocumentIds = adapter.getAllDocumentsBatched(20).forEach(dList -> dList.stream().map(Document::getId)
-          .filter(conceptClusterIdFilter::contains)
-          .filter(phraseTextFilter::contains)
-          .filter((documentIds == null || documentIds.isEmpty()) ? e -> true : documentIds::contains)
-          .collect(Collectors.toSet());
-    } else {
-      if (documentIds == null || documentIds.isEmpty()) {
-        finalDocumentIds = Set.of();
-      } else {
-        finalDocumentIds = Set.copyOf(documentIds);
-        esFilter = true;
-      }
-    }
-
+    boolean esFilterOn = !(documentIds == null || documentIds.isEmpty());
     Page<Document> documentPage = Page.empty();
     try {
-      if (!esFilter && !neo4jFilter) {
+      if (!neo4jFilterOn && !esFilterOn) {
         if (name == null || name.trim().isEmpty()) {
           documentPage = adapter.getAllDocuments(page);
         } else {
           //ToDo: should the wildcard be optional?
           documentPage = adapter.getDocumentsByName(name + "*", page);
         }
+      } else if (!neo4jFilterOn) {
+        documentPage = adapter.getDocumentsByIds(documentIds, page);
+      } else if (!esFilterOn) {
+        documentPage = adapter.getDocumentsByIds(finalDocumentIds, page);
       } else {
-        // At this point, there should be ids in finalDocumentIds, since it's than either
-        // - just a copy of a non-empty 'documentIds' ==> esFilter == true
-        // - or a set filtered by all ('documentIds', 'phraseIds', 'conceptClusterIds', 'phraseText') ==> neo4jFilter == true
+        finalDocumentIds.retainAll(documentIds);
         documentPage = adapter.getDocumentsByIds(finalDocumentIds, page);
       }
     } catch (IOException e) {
