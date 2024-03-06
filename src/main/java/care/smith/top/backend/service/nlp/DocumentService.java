@@ -4,6 +4,7 @@ import care.smith.top.backend.model.neo4j.DocumentNodeEntity;
 import care.smith.top.backend.repository.neo4j.DocumentNodeRepository;
 import care.smith.top.backend.service.ContentService;
 import care.smith.top.model.Document;
+import care.smith.top.model.DocumentGatheringMode;
 import care.smith.top.top_document_query.adapter.TextAdapter;
 import java.util.*;
 import java.util.Set;
@@ -33,12 +34,65 @@ public class DocumentService implements ContentService {
         .orElse(0L);
   }
 
-  public List<Document> getDocumentsForConcepts(Set<String> conceptIds, Boolean exemplarOnly) {
+  public List<Document> getDocumentsForConceptIds(Set<String> conceptIds, Boolean exemplarOnly) {
     if (conceptIds == null || conceptIds.isEmpty()) {
       return List.of();
     }
     return documentNodeRepository
-        .getDocumentsForConcepts(List.copyOf(conceptIds), exemplarOnly)
+        .getDocumentsForConceptIds(List.copyOf(conceptIds), exemplarOnly)
+        .stream()
+        .map(DocumentNodeEntity::toApiModel)
+        .collect(Collectors.toList());
+  }
+
+  public List<Document> getDocumentsForConceptIds(Set<String> conceptIds, Boolean exemplarOnly, DocumentGatheringMode gatheringMode) {
+    if (conceptIds == null || conceptIds.isEmpty()) {
+      return List.of();
+    }
+
+    if (Objects.equals(gatheringMode, DocumentGatheringMode.INTERSECTION)) {
+      Map<String, DocumentNodeEntity> hashMapDocuments = new HashMap<>();
+      List<Set<String>> listOfSets = new ArrayList<>();
+      conceptIds.forEach(
+          conceptId -> {
+            List<DocumentNodeEntity> dneList = documentNodeRepository.getDocumentsForConceptIds(List.of(conceptId), exemplarOnly);
+            listOfSets.add(dneList.stream().map(DocumentNodeEntity::documentId).collect(Collectors.toSet()));
+            dneList.forEach(dne -> hashMapDocuments.put(dne.documentId(), dne));
+          }
+      );
+      return listOfSets.stream()
+              .skip(1)
+              .collect(() -> listOfSets.get(0), Set::retainAll, Set::retainAll)
+              .stream()
+              .map(hashMapDocuments::get)
+              .map(DocumentNodeEntity::toApiModel)
+              .collect(Collectors.toList());
+    } else {
+      return documentNodeRepository
+          .getDocumentsForConceptIds(List.copyOf(conceptIds), exemplarOnly)
+          .stream()
+          .map(DocumentNodeEntity::toApiModel)
+          .collect(Collectors.toList());
+    }
+  }
+
+  public List<Document> getDocumentsForPhraseIds(Set<String> phraseIds, Boolean exemplarOnly) {
+    if (phraseIds == null || phraseIds.isEmpty()) {
+      return List.of();
+    }
+    return documentNodeRepository
+        .getDocumentsForPhraseIds(List.copyOf(phraseIds), exemplarOnly)
+        .stream()
+        .map(DocumentNodeEntity::toApiModel)
+        .collect(Collectors.toList());
+  }
+
+  public List<Document> getDocumentsForPhraseTexts(Set<String> phraseTexts, Boolean exemplarOnly) {
+    if (phraseTexts == null || phraseTexts.isEmpty()) {
+      return List.of();
+    }
+    return documentNodeRepository
+        .getDocumentsForPhrasesText(List.copyOf(phraseTexts), exemplarOnly)
         .stream()
         .map(DocumentNodeEntity::toApiModel)
         .collect(Collectors.toList());
