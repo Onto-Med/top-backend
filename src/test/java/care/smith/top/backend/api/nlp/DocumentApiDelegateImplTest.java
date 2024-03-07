@@ -27,6 +27,12 @@ import static org.mockito.Mockito.when;
 
 class DocumentApiDelegateImplTest extends AbstractNLPTest {
   private DocumentApiDelegateImpl documentApi;
+  Set<Document> documents1 = Set.of(
+      new Document().id("d1").name("Document 1"));
+  Set<Document> documents2 = Set.of(
+      new Document().id("d2").name("Document 2"));
+  Set<Document> documents1_2 = Set.of(
+      new Document().id("d1").name("Document 1"), new Document().id("d2").name("Document 2"));
 
   @BeforeEach
   void setUp() throws IOException, InstantiationException {
@@ -35,13 +41,6 @@ class DocumentApiDelegateImplTest extends AbstractNLPTest {
 
   @Test
   void getDocuments() {
-    Set<Document> documents1 = Set.of(
-        new Document().id("d1").name("Document 1"));
-    Set<Document> documents2 = Set.of(
-        new Document().id("d2").name("Document 2"));
-    Set<Document> documents1_2 = Set.of(
-        new Document().id("d1").name("Document 1"), new Document().id("d2").name("Document 2"));
-
     ResponseEntity<DocumentPage> response1 =  documentApi.getDocuments(
         "exampleDataSource", null, null, null, null, null,
         null, null, 0, null);
@@ -80,6 +79,12 @@ class DocumentApiDelegateImplTest extends AbstractNLPTest {
 
   @Test
   void getSingleDocumentById() {
+    ResponseEntity<Document> response1 =  documentApi.getSingleDocumentById(
+        "d1", "exampleDataSource", null);
+    Assertions.assertEquals(documents1, Set.of(Objects.requireNonNull(response1.getBody())));
+    ResponseEntity<Document> response2 =  documentApi.getSingleDocumentById(
+        "d2", "exampleDataSource", null);
+    Assertions.assertEquals(documents2, Set.of(Objects.requireNonNull(response2.getBody())));
   }
 
   @Test
