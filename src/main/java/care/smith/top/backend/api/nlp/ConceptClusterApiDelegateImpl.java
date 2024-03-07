@@ -2,6 +2,7 @@ package care.smith.top.backend.api.nlp;
 
 import care.smith.top.backend.api.ConceptclusterApiDelegate;
 import care.smith.top.backend.service.nlp.ConceptClusterService;
+import care.smith.top.backend.util.ApiModelMapper;
 import care.smith.top.model.ConceptCluster;
 import care.smith.top.model.ConceptClusterPage;
 import care.smith.top.model.PipelineResponse;
@@ -14,14 +15,13 @@ import org.springframework.stereotype.Service;
 @Service
 public class ConceptClusterApiDelegateImpl implements ConceptclusterApiDelegate {
   private final HashMap<String, Thread> conceptClusterProcesses = new HashMap<>();
-  @Autowired
-  private ConceptClusterService   conceptClusterService;
+  @Autowired private ConceptClusterService conceptClusterService;
 
   @Override
-  public ResponseEntity<ConceptClusterPage> getConceptClustersByDocumentId(
-      String documentId, List<String> include, String name, Integer page) {
-    return ConceptclusterApiDelegate.super.getConceptClustersByDocumentId(
-        documentId, include, name, page);
+  public ResponseEntity<ConceptClusterPage> getConceptClusterByDocumentId(
+      String documentId, String dataSource, List<String> include, Integer page) {
+    return ConceptclusterApiDelegate.super.getConceptClusterByDocumentId(
+        documentId, dataSource, include, page);
   }
 
   @Override
@@ -54,17 +54,14 @@ public class ConceptClusterApiDelegateImpl implements ConceptclusterApiDelegate 
   }
 
   @Override
-  public ResponseEntity<ConceptClusterPage> getConceptClustersByPhraseId(
-      String phraseId, List<String> include, String name, Integer page) {
-    return ConceptclusterApiDelegate.super.getConceptClustersByPhraseId(
-        phraseId, include, name, page);
-  }
-
-  @Override
-  public ResponseEntity<List<ConceptCluster>> getConceptClusters(
-      String phraseText, Boolean recalculateCache) {
+  public ResponseEntity<ConceptClusterPage> getConceptClusters(
+      List<String> labelsText,
+      List<String> phraseId,
+      Boolean recalculateCache,
+      Integer page,
+      List<String> include) {
     // ToDo: filter by phraseText
     if (Boolean.TRUE.equals(recalculateCache)) conceptClusterService.evictConceptsFromCache();
-    return ResponseEntity.ok(conceptClusterService.concepts());
+    return ResponseEntity.ok(ApiModelMapper.toConceptClusterPage(conceptClusterService.concepts()));
   }
 }

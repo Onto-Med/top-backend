@@ -3,6 +3,7 @@ package care.smith.top.backend.util;
 import care.smith.top.model.*;
 import java.util.*;
 import java.util.stream.Collectors;
+import javax.validation.constraints.NotNull;
 import org.springframework.data.domain.Page;
 
 public abstract class ApiModelMapper {
@@ -56,68 +57,36 @@ public abstract class ApiModelMapper {
 
   public static EntityPage toEntityPage(Page<Entity> page) {
     return (EntityPage)
-        new EntityPage()
-            .content(page.getContent())
-            .type("entity")
-            .number(page.getNumber() + 1)
-            .size(page.getSize())
-            .totalElements(page.getTotalElements())
-            .totalPages(page.getTotalPages());
+        setPageMetadata(new EntityPage().content(page.getContent()), page, "entity");
   }
 
   public static OrganisationPage toOrganisationPage(Page<Organisation> page) {
     return (OrganisationPage)
-        new OrganisationPage()
-            .content(page.getContent())
-            .type("organisation")
-            .number(page.getNumber() + 1)
-            .size(page.getSize())
-            .totalElements(page.getTotalElements())
-            .totalPages(page.getTotalPages());
+        setPageMetadata(new OrganisationPage().content(page.getContent()), page, "organisation");
   }
 
   public static QueryPage toQueryPage(Page<Query> page) {
-    return (QueryPage)
-        new QueryPage()
-            .content(page.getContent())
-            .type("query")
-            .number(page.getNumber() + 1)
-            .size(page.getSize())
-            .totalElements(page.getTotalElements())
-            .totalPages(page.getTotalPages());
+    return (QueryPage) setPageMetadata(new QueryPage().content(page.getContent()), page, "query");
   }
 
   public static RepositoryPage toRepositoryPage(Page<Repository> page) {
     return (RepositoryPage)
-        new RepositoryPage()
-            .content(page.getContent())
-            .type("repository")
-            .number(page.getNumber() + 1)
-            .size(page.getSize())
-            .totalElements(page.getTotalElements())
-            .totalPages(page.getTotalPages());
+        setPageMetadata(new RepositoryPage().content(page.getContent()), page, "repository");
   }
 
   public static UserPage toUserPage(Page<User> page) {
-    return (UserPage)
-        new UserPage()
-            .content(page.getContent())
-            .type("user")
-            .number(page.getNumber() + 1)
-            .size(page.getSize())
-            .totalElements(page.getTotalElements())
-            .totalPages(page.getTotalPages());
+    return (UserPage) setPageMetadata(new UserPage().content(page.getContent()), page, "user");
   }
 
   public static DocumentPage toDocumentPage(Page<Document> page) {
     return (DocumentPage)
-        new DocumentPage()
-            .content(page.getContent())
-            .type("document")
-            .number(page.getNumber() + 1)
-            .size(page.getSize())
-            .totalElements(page.getTotalElements())
-            .totalPages(page.getTotalPages());
+        setPageMetadata(new DocumentPage().content(page.getContent()), page, "document");
+  }
+
+  public static ConceptClusterPage toConceptClusterPage(Page<ConceptCluster> page) {
+    return (ConceptClusterPage)
+        setPageMetadata(
+            new ConceptClusterPage().content(page.getContent()), page, "conceptCluster");
   }
 
   public static EntityType toRestrictedEntityType(EntityType entityType) {
@@ -282,5 +251,15 @@ public abstract class ApiModelMapper {
   public static boolean expressionContains(Expression expression, Entity entity) {
     if (expression == null || entity == null) return false;
     return getEntityIdsFromExpression(expression).contains(entity.getId());
+  }
+
+  private static <T> care.smith.top.model.Page setPageMetadata(
+      @NotNull care.smith.top.model.Page apiPage, @NotNull Page<T> page, @NotNull String type) {
+    return apiPage
+        .type(type)
+        .number(page.getNumber() + 1)
+        .size(page.getSize())
+        .totalElements(page.getTotalElements())
+        .totalPages(page.getTotalPages());
   }
 }

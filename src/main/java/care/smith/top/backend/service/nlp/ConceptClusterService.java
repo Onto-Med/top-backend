@@ -1,7 +1,6 @@
 package care.smith.top.backend.service.nlp;
 
 import care.smith.top.backend.model.neo4j.ConceptNodeEntity;
-import care.smith.top.backend.model.neo4j.DocumentNodeEntity;
 import care.smith.top.backend.model.neo4j.PhraseNodeEntity;
 import care.smith.top.backend.repository.neo4j.ConceptClusterNodeRepository;
 import care.smith.top.backend.repository.neo4j.DocumentNodeRepository;
@@ -27,25 +26,31 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.stereotype.Service;
 
 @Service
 public class ConceptClusterService implements ContentService {
-  @Autowired private ConceptClusterNodeRepository conceptNodeRepository;
-  @Autowired private PhraseNodeRepository phraseNodeRepository;
-  @Autowired private DocumentNodeRepository documentNodeRepository;
-
   private final Function<ConceptNodeEntity, ConceptCluster> conceptEntityMapper =
       conceptEntity ->
           new ConceptCluster()
               .id(conceptEntity.conceptId())
               .labels(String.join(", ", conceptEntity.lables()));
-
   private final ConceptPipelineManager pipelineManager;
+  @Autowired private ConceptClusterNodeRepository conceptNodeRepository;
+  @Autowired private PhraseNodeRepository phraseNodeRepository;
+  @Autowired private DocumentNodeRepository documentNodeRepository;
 
   public ConceptClusterService(
       @Value("${top.documents.concept-graphs-api.uri}") String conceptGraphsApiUri) {
     pipelineManager = new ConceptPipelineManager(conceptGraphsApiUri);
+  }
+
+  static Statement conceptWithId(String id) {
+    Node concept =
+        Cypher.node("Concept").named("concept").withProperties("conceptId", Cypher.literalOf(id));
+    return Cypher.match(concept).returning(concept).build();
   }
 
   @Override
@@ -57,15 +62,50 @@ public class ConceptClusterService implements ContentService {
   public void evictConceptsFromCache() {}
 
   @Cacheable(value = "concepts")
-  public List<ConceptCluster> concepts() {
-    return conceptNodeRepository.findAll().stream()
-        .map(conceptEntityMapper)
-        .collect(Collectors.toList());
+  public Page<ConceptCluster> concepts() {
+    return new PageImpl<>(
+        conceptNodeRepository.findAll().stream()
+            .map(conceptEntityMapper)
+            .collect(Collectors.toList()));
   }
 
   public ConceptCluster conceptById(String conceptId) {
     return conceptEntityMapper.apply(
         conceptNodeRepository.findOne(conceptWithId(conceptId)).orElse(null));
+  }
+
+  public Pair<String, Thread> createSpecificGraphsInNeo4j(
+      String processName, List<String> graphIds) {
+    Map<String, ConceptGraphEntity> graphs =
+        pipelineManager.getConceptGraphs(processName, graphIds);
+    Thread t = new Thread(() -> graphs.forEach(this::createGraphInNeo4j));
+    t.start();
+    return new ImmutablePair<>(processName, t);
+  }
+
+  public void setPipelineResponseStatus(
+      PipelineResponse pipelineResponse, String statusStr, String msgStr) {
+    String response = "";
+    try {
+      ObjectMapper mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
+      response =
+          mapper.writeValueAsString(
+              new Object() {
+                private final String status = statusStr;
+                private final String message = msgStr;
+
+                public String getMessage() {
+                  return message;
+                }
+
+                public String getStatus() {
+                  return status;
+                }
+              });
+    } catch (JsonProcessingException e) {
+      e.printStackTrace();
+    }
+    pipelineResponse.response(response);
   }
 
   private void createGraphInNeo4j(String graphId, ConceptGraphEntity conceptGraph) {
@@ -122,57 +162,17 @@ public class ConceptClusterService implements ContentService {
             });
 
     // TODO: Save Document Nodes and by extension relationships 'DOCUMENT--HAS_PHRASE->PHRASE'
-//    documentRepository
-//        .findAllById(documentId2PhraseIdMap.keySet())
-//        .forEach(
-//            documentEntity -> {
-//              documentNodeRepository.save(
-//                  new DocumentNodeEntity(
-//                      documentEntity.getId(),
-//                      documentEntity.getDocumentName(),
-//                      documentId2PhraseIdMap.get(documentEntity.getId()).stream()
-//                          .map(phraseNodeEntityMap::get)
-//                          .collect(Collectors.toSet())));
-//            });
-  }
-
-  public Pair<String, Thread> createSpecificGraphsInNeo4j(
-      String processName, List<String> graphIds) {
-    Map<String, ConceptGraphEntity> graphs =
-        pipelineManager.getConceptGraphs(processName, graphIds);
-    Thread t = new Thread(() -> graphs.forEach(this::createGraphInNeo4j));
-    t.start();
-    return new ImmutablePair<>(processName, t);
-  }
-
-  static Statement conceptWithId(String id) {
-    Node concept =
-        Cypher.node("Concept").named("concept").withProperties("conceptId", Cypher.literalOf(id));
-    return Cypher.match(concept).returning(concept).build();
-  }
-
-  public void setPipelineResponseStatus(
-      PipelineResponse pipelineResponse, String statusStr, String msgStr) {
-    String response = "";
-    try {
-      ObjectMapper mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
-      response =
-          mapper.writeValueAsString(
-              new Object() {
-                private final String status = statusStr;
-                private final String message = msgStr;
-
-                public String getMessage() {
-                  return message;
-                }
-
-                public String getStatus() {
-                  return status;
-                }
-              });
-    } catch (JsonProcessingException e) {
-      e.printStackTrace();
-    }
-    pipelineResponse.response(response);
+    //    documentRepository
+    //        .findAllById(documentId2PhraseIdMap.keySet())
+    //        .forEach(
+    //            documentEntity -> {
+    //              documentNodeRepository.save(
+    //                  new DocumentNodeEntity(
+    //                      documentEntity.getId(),
+    //                      documentEntity.getDocumentName(),
+    //                      documentId2PhraseIdMap.get(documentEntity.getId()).stream()
+    //                          .map(phraseNodeEntityMap::get)
+    //                          .collect(Collectors.toSet())));
+    //            });
   }
 }
