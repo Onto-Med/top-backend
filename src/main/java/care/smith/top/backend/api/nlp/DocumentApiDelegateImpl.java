@@ -42,6 +42,7 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
       LOGGER.severe("The text adapter '" + dataSource + "' could not be initialized.");
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
     }
+    exemplarOnly = (exemplarOnly != null) ? exemplarOnly : false;
 
     // Neo4j filters are 'phraseIds', 'conceptClusterIds', 'phraseText'
     boolean neo4jFilterOn = false;
@@ -88,7 +89,7 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
           documentPage = adapter.getDocumentsByName(name + "*", page);
         }
       } else if (!neo4jFilterOn) {
-        documentPage = adapter.getDocumentsByIds(documentIds, page);
+        documentPage = adapter.getDocumentsByIds(Set.copyOf(documentIds), page);
       } else if (!esFilterOn) {
         documentPage = adapter.getDocumentsByIds(finalDocumentIds, page);
       } else {
