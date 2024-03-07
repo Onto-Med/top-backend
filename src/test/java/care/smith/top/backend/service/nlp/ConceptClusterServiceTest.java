@@ -2,6 +2,7 @@ package care.smith.top.backend.service.nlp;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import care.smith.top.backend.AbstractNLPTest;
 import care.smith.top.model.ConceptCluster;
 import org.junit.jupiter.api.Test;
 

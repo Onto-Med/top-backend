@@ -13,7 +13,7 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import care.smith.top.top_document_query.adapter.TextAdapter;
-import org.springframework.beans.factory.annotation.Autowired;
+import care.smith.top.top_document_query.elasticsearch.DocumentEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,8 +23,11 @@ import org.springframework.stereotype.Service;
 public class DocumentApiDelegateImpl implements DocumentApiDelegate {
   private final Logger LOGGER = Logger.getLogger(DocumentApiDelegateImpl.class.getName());
 
-  @Autowired private DocumentService documentService;
-  @Autowired private DocumentQueryService documentQueryService;
+  private final DocumentService documentService;
+
+  public DocumentApiDelegateImpl(DocumentService documentService) {
+    this.documentService = documentService;
+  }
 
   @Override
   public ResponseEntity<DocumentPage> getDocuments(
@@ -34,10 +37,7 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
   {
     TextAdapter adapter;
     try {
-      adapter = TextAdapter.getInstance(
-          documentQueryService
-              .getTextAdapterConfig(dataSource)
-              .orElseThrow());
+      adapter = documentService.getAdapterForDataSource(dataSource);
     } catch (InstantiationException e) {
       LOGGER.severe("The text adapter '" + dataSource + "' could not be initialized.");
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -103,34 +103,44 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
 
   @Override
   public ResponseEntity<Document> getSingleDocumentById(String documentId, String dataSource, List<String> include) {
+    TextAdapter adapter;
     try {
-      return ResponseEntity.ok(
-          TextAdapter.getInstance(
-            documentQueryService
-                .getTextAdapterConfig(dataSource)
-                .orElseThrow())
-              .getDocumentById(documentId)
-              .orElseThrow()
-      );
-    } catch (InstantiationException | IOException e) {
-      throw new RuntimeException(e);
+      adapter = documentService.getAdapterForDataSource(dataSource);
+    } catch (InstantiationException e) {
+      LOGGER.severe("The text adapter '" + dataSource + "' could not be initialized.");
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    }
+    try {
+      return ResponseEntity.ok(adapter.getDocumentById(documentId).orElseThrow());
+    } catch (IOException e) {
+      LOGGER.severe("Server Instance could not be reached/queried.");
+      return ResponseEntity.of(Optional.ofNullable(DocumentEntity.nullDocument()));
     }
   }
 
   @Override
   public ResponseEntity<DocumentPage> getDocumentsForQuery(
       String organisationId, String repositoryId, UUID queryId, Integer page) {
+    TextAdapter adapter;
+    try {
+      adapter = documentService.getAdapterFromQuery(organisationId, repositoryId, queryId);
+    } catch (NoSuchElementException e) {
+      LOGGER.severe(String.format(
+          "The text adapter for 'organisation: %s', 'repository: %s' and 'query: %s' could not be found.",
+          organisationId, repositoryId, queryId.toString())
+      );
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    }
     try {
       return ResponseEntity.ok(
           ApiModelMapper.toDocumentPage(
-              documentQueryService
-                  .getTextAdapter(organisationId, repositoryId, queryId)
-                  .orElseThrow()
-                  .getDocumentsByIds(
-                      documentQueryService.getDocumentIds(organisationId, repositoryId, queryId),  //ToDo: should be cached?
-                      page)));
+              adapter.getDocumentsByIds(
+                  documentService.getDocumentIdsForQuery(organisationId, repositoryId, queryId), page)
+          )
+      );
     } catch (IOException e) {
-      throw new RuntimeException(e);
+      LOGGER.fine("Server Instance could not be reached/queried.");
+      return ResponseEntity.ok(new DocumentPage());
     }
   }
 

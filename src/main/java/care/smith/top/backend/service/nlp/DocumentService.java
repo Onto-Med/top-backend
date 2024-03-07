@@ -6,6 +6,8 @@ import care.smith.top.backend.service.ContentService;
 import care.smith.top.model.Document;
 import care.smith.top.model.DocumentGatheringMode;
 import care.smith.top.top_document_query.adapter.TextAdapter;
+
+import java.io.IOException;
 import java.util.*;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -96,5 +98,20 @@ public class DocumentService implements ContentService {
         .stream()
         .map(DocumentNodeEntity::toApiModel)
         .collect(Collectors.toList());
+  }
+
+  @Cacheable("dataSourceAdapter")
+  public TextAdapter getAdapterForDataSource(String dataSource) throws InstantiationException {
+    return TextAdapter.getInstance(documentQueryService.getTextAdapterConfig(dataSource).orElseThrow());
+  }
+
+  @Cacheable("queryAdapter")
+  public TextAdapter getAdapterFromQuery(String organisationId, String repositoryId, UUID queryId) throws NoSuchElementException {
+    return documentQueryService.getTextAdapter(organisationId, repositoryId, queryId).orElseThrow();
+  }
+
+  public List<String> getDocumentIdsForQuery(String organisationId, String repositoryId, UUID queryId) throws IOException {
+    //ToDo: should this be cached?
+    return documentQueryService.getDocumentIds(organisationId, repositoryId, queryId);
   }
 }
