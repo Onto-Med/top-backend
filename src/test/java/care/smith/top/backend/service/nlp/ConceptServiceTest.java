@@ -2,6 +2,7 @@ package care.smith.top.backend.service.nlp;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import care.smith.top.backend.AbstractNLPTest;
 import care.smith.top.backend.model.neo4j.ConceptNodeEntity;
 import care.smith.top.backend.model.neo4j.PhraseNodeEntity;
 import care.smith.top.model.ConceptCluster;
@@ -60,7 +61,7 @@ class ConceptServiceTest extends AbstractNLPTest {
     populateNeo4j(conceptCount);
 
     // count the concepts
-    assertEquals(conceptCount, conceptService.concepts().size());
+    assertEquals(conceptCount, Long.valueOf(conceptService.concepts().getTotalElements()).intValue());
 
     // check if all concepts have the proper labels
     for (ConceptCluster concept : conceptService.concepts()) {

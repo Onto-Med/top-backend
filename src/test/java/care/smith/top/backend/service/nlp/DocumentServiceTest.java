@@ -1,15 +1,8 @@
 package care.smith.top.backend.service.nlp;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-import care.smith.top.model.Document;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.stream.Collectors;
+import care.smith.top.backend.AbstractNLPTest;
 
 import org.apache.commons.lang3.NotImplementedException;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.test.context.junit.jupiter.SpringExtension;

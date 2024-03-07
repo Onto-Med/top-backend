@@ -1,14 +1,20 @@
-package care.smith.top.backend.service.nlp;
+package care.smith.top.backend;
 
 import care.smith.top.backend.configuration.TopBackendContextInitializer;
 import care.smith.top.backend.repository.neo4j.ConceptClusterNodeRepository;
 import care.smith.top.backend.repository.neo4j.PhraseNodeRepository;
+import care.smith.top.backend.service.nlp.ConceptClusterService;
+import care.smith.top.backend.service.nlp.DocumentService;
 import care.smith.top.backend.util.ResourceHttpHandler;
+import care.smith.top.model.Document;
+import care.smith.top.model.DocumentGatheringMode;
 import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -24,6 +30,9 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @ContextConfiguration(initializers = TopBackendContextInitializer.class)
@@ -58,10 +67,11 @@ public abstract class AbstractNLPTest {
   protected static Neo4j embeddedNeo4j;
   protected static HttpServer conceptGraphsApiService;
   protected static Session neo4jSession;
-  @Autowired ConceptClusterService conceptService;
-  @Autowired ConceptClusterNodeRepository conceptClusterNodeRepository;
-  @Autowired DocumentService documentService;
-  @Autowired PhraseNodeRepository phraseRepository;
+
+  @Autowired protected DocumentService documentService;
+  @Autowired protected ConceptClusterService conceptService;
+  @Autowired protected ConceptClusterNodeRepository conceptClusterNodeRepository;
+  @Autowired protected PhraseNodeRepository phraseRepository;
 
   @BeforeAll
   static void setup() throws IOException {
@@ -69,8 +79,8 @@ public abstract class AbstractNLPTest {
 
     conceptGraphsApiService = HttpServer.create(new InetSocketAddress(9007), 0);
     conceptGraphsApiService.createContext(
-            "/processes",
-            new ResourceHttpHandler("/concept_graphs_api_fixtures/get_processes.json"));
+        "/processes",
+        new ResourceHttpHandler("/concept_graphs_api_fixtures/get_processes.json"));
     conceptGraphsApiService.createContext(
         "/graph/statistics",
         new ResourceHttpHandler("/concept_graphs_api_fixtures/get_statistics.json"));

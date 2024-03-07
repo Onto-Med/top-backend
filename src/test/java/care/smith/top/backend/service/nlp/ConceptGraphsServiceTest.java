@@ -2,6 +2,7 @@ package care.smith.top.backend.service.nlp;
 
 import static org.assertj.core.api.Assertions.*;
 
+import care.smith.top.backend.AbstractNLPTest;
 import care.smith.top.model.ConceptGraph;
 import care.smith.top.model.ConceptGraphProcess;
 import care.smith.top.model.ConceptGraphStat;
