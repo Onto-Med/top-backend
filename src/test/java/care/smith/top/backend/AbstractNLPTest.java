@@ -1,19 +1,19 @@
 package care.smith.top.backend;
 
 import care.smith.top.backend.configuration.TopBackendContextInitializer;
+import care.smith.top.backend.model.neo4j.DocumentNodeEntity;
 import care.smith.top.backend.repository.neo4j.ConceptClusterNodeRepository;
+import care.smith.top.backend.repository.neo4j.DocumentNodeRepository;
 import care.smith.top.backend.repository.neo4j.PhraseNodeRepository;
 import care.smith.top.backend.service.nlp.ConceptClusterService;
 import care.smith.top.backend.service.nlp.DocumentService;
 import care.smith.top.backend.util.ResourceHttpHandler;
 import care.smith.top.model.Document;
-import care.smith.top.model.DocumentGatheringMode;
+import care.smith.top.top_document_query.adapter.TextAdapter;
 import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.AfterAll;
@@ -25,12 +25,15 @@ import org.neo4j.harness.Neo4j;
 import org.neo4j.harness.Neo4jBuilders;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -68,13 +71,13 @@ public abstract class AbstractNLPTest {
   protected static HttpServer conceptGraphsApiService;
   protected static Session neo4jSession;
 
-  @Autowired protected DocumentService documentService;
-  @Autowired protected ConceptClusterService conceptService;
+  @Autowired protected ConceptClusterService conceptClusterService;
   @Autowired protected ConceptClusterNodeRepository conceptClusterNodeRepository;
   @Autowired protected PhraseNodeRepository phraseRepository;
+  @Autowired protected DocumentNodeRepository documentNodeRepository;
 
   @BeforeAll
-  static void setup() throws IOException {
+  static void setup() throws IOException, InstantiationException {
     setUpNeo4jDB();
 
     conceptGraphsApiService = HttpServer.create(new InetSocketAddress(9007), 0);

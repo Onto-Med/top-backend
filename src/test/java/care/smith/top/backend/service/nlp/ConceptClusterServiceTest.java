@@ -11,11 +11,11 @@ class ConceptClusterServiceTest extends AbstractNLPTest {
   @Test
   void conceptById() {
     // see AbstractNLPTest for creation of the Neo4J DB entries
-    ConceptCluster cluster1 = conceptService.conceptById("c1");
+    ConceptCluster cluster1 = conceptClusterService.conceptById("c1");
     assertEquals("c1", cluster1.getId());
     assertEquals("phrase, here, another", cluster1.getLabels());
 
-    ConceptCluster cluster2 = conceptService.conceptById("c2");
+    ConceptCluster cluster2 = conceptClusterService.conceptById("c2");
     assertEquals("c2", cluster2.getId());
     assertEquals("something, good", cluster2.getLabels());
   }

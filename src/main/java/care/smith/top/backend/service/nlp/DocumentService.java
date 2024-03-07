@@ -17,12 +17,33 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class DocumentService implements ContentService {
-  @Autowired private DocumentNodeRepository documentNodeRepository;
-  @Autowired private DocumentQueryService documentQueryService;
+  private DocumentNodeRepository documentNodeRepository;
+  private DocumentQueryService documentQueryService;
+
+  public DocumentService(DocumentNodeRepository documentNodeRepository, DocumentQueryService documentQueryService) {
+    this.documentNodeRepository = documentNodeRepository;
+    this.documentQueryService = documentQueryService;
+  }
+
+  public void setDocumentQueryService(DocumentQueryService documentQueryService) {
+    this.documentQueryService = documentQueryService;
+  }
+
+  public void setDocumentNodeRepository(DocumentNodeRepository documentNodeRepository) {
+    this.documentNodeRepository = documentNodeRepository;
+  }
+
+  public DocumentNodeRepository getDocumentNodeRepository() {
+    return documentNodeRepository;
+  }
+
+  public DocumentQueryService getDocumentQueryService() {
+    return documentQueryService;
+  }
 
   @Cacheable("documentCount")
   public long count() {
-    return documentQueryService.getTextAdapterConfigs().stream()
+    return getDocumentQueryService().getTextAdapterConfigs().stream()
         .map(
             c -> {
               try {
@@ -40,8 +61,8 @@ public class DocumentService implements ContentService {
     if (conceptIds == null || conceptIds.isEmpty()) {
       return List.of();
     }
-    return documentNodeRepository
-        .getDocumentsForConceptIds(List.copyOf(conceptIds), exemplarOnly)
+    return getDocumentNodeRepository()
+        .getDocumentsForConceptIds(conceptIds, exemplarOnly)
         .stream()
         .map(DocumentNodeEntity::toApiModel)
         .collect(Collectors.toList());
@@ -52,12 +73,14 @@ public class DocumentService implements ContentService {
       return List.of();
     }
 
+    gatheringMode = (gatheringMode != null) ? gatheringMode : DocumentGatheringMode.UNION;
+
     if (Objects.equals(gatheringMode, DocumentGatheringMode.INTERSECTION)) {
       Map<String, DocumentNodeEntity> hashMapDocuments = new HashMap<>();
       List<Set<String>> listOfSets = new ArrayList<>();
       conceptIds.forEach(
           conceptId -> {
-            List<DocumentNodeEntity> dneList = documentNodeRepository.getDocumentsForConceptIds(List.of(conceptId), exemplarOnly);
+            List<DocumentNodeEntity> dneList = getDocumentNodeRepository().getDocumentsForConceptIds(Set.of(conceptId), exemplarOnly);
             listOfSets.add(dneList.stream().map(DocumentNodeEntity::documentId).collect(Collectors.toSet()));
             dneList.forEach(dne -> hashMapDocuments.put(dne.documentId(), dne));
           }
@@ -69,9 +92,15 @@ public class DocumentService implements ContentService {
               .map(hashMapDocuments::get)
               .map(DocumentNodeEntity::toApiModel)
               .collect(Collectors.toList());
+    } else if (Objects.equals(gatheringMode, DocumentGatheringMode.EXCLUSIVE)) {
+      return getDocumentNodeRepository()
+          .getDocumentsForConceptIds(Collections.singleton(conceptIds.iterator().next()), exemplarOnly)
+          .stream()
+          .map(DocumentNodeEntity::toApiModel)
+          .collect(Collectors.toList());
     } else {
-      return documentNodeRepository
-          .getDocumentsForConceptIds(List.copyOf(conceptIds), exemplarOnly)
+      return getDocumentNodeRepository()
+          .getDocumentsForConceptIds(conceptIds, exemplarOnly)
           .stream()
           .map(DocumentNodeEntity::toApiModel)
           .collect(Collectors.toList());
@@ -82,8 +111,8 @@ public class DocumentService implements ContentService {
     if (phraseIds == null || phraseIds.isEmpty()) {
       return List.of();
     }
-    return documentNodeRepository
-        .getDocumentsForPhraseIds(List.copyOf(phraseIds), exemplarOnly)
+    return getDocumentNodeRepository()
+        .getDocumentsForPhraseIds(phraseIds, exemplarOnly)
         .stream()
         .map(DocumentNodeEntity::toApiModel)
         .collect(Collectors.toList());
@@ -93,8 +122,8 @@ public class DocumentService implements ContentService {
     if (phraseTexts == null || phraseTexts.isEmpty()) {
       return List.of();
     }
-    return documentNodeRepository
-        .getDocumentsForPhrasesText(List.copyOf(phraseTexts), exemplarOnly)
+    return getDocumentNodeRepository()
+        .getDocumentsForPhrasesText(phraseTexts, exemplarOnly)
         .stream()
         .map(DocumentNodeEntity::toApiModel)
         .collect(Collectors.toList());
@@ -102,16 +131,16 @@ public class DocumentService implements ContentService {
 
   @Cacheable("dataSourceAdapter")
   public TextAdapter getAdapterForDataSource(String dataSource) throws InstantiationException {
-    return TextAdapter.getInstance(documentQueryService.getTextAdapterConfig(dataSource).orElseThrow());
+    return TextAdapter.getInstance(getDocumentQueryService().getTextAdapterConfig(dataSource).orElseThrow());
   }
 
   @Cacheable("queryAdapter")
   public TextAdapter getAdapterFromQuery(String organisationId, String repositoryId, UUID queryId) throws NoSuchElementException {
-    return documentQueryService.getTextAdapter(organisationId, repositoryId, queryId).orElseThrow();
+    return getDocumentQueryService().getTextAdapter(organisationId, repositoryId, queryId).orElseThrow();
   }
 
   public List<String> getDocumentIdsForQuery(String organisationId, String repositoryId, UUID queryId) throws IOException {
     //ToDo: should this be cached?
-    return documentQueryService.getDocumentIds(organisationId, repositoryId, queryId);
+    return getDocumentQueryService().getDocumentIds(organisationId, repositoryId, queryId);
   }
 }
