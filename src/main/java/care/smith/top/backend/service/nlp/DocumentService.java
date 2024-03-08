@@ -43,6 +43,10 @@ public class DocumentService implements ContentService {
 
   @Cacheable("documentCount")
   public long count() {
+    return documentNodeRepository.count();
+  }
+
+  public long textAdaptersDocumentCount() {
     return getDocumentQueryService().getTextAdapterConfigs().stream()
         .map(
             c -> {
