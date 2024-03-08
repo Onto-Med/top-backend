@@ -89,6 +89,12 @@ public abstract class ApiModelMapper {
             new ConceptClusterPage().content(page.getContent()), page, "conceptCluster");
   }
 
+  public static PhrasePage toPhrasePage(Page<Phrase> page) {
+      return (PhrasePage)
+          setPageMetadata(
+              new PhrasePage().content(page.getContent()), page, "phrase");
+    }
+
   public static EntityType toRestrictedEntityType(EntityType entityType) {
     if (EntityType.SINGLE_PHENOTYPE.equals(entityType)) return EntityType.SINGLE_RESTRICTION;
     if (EntityType.COMPOSITE_PHENOTYPE.equals(entityType)) return EntityType.COMPOSITE_RESTRICTION;
