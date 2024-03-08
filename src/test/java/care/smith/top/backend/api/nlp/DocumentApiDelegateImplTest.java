@@ -87,10 +87,6 @@ class DocumentApiDelegateImplTest extends AbstractNLPTest {
     Assertions.assertEquals(documents2, Set.of(Objects.requireNonNull(response2.getBody())));
   }
 
-  @Test
-  void getDocumentsForQuery() {
-  }
-
   private static DocumentService mockedDocumentService() throws IOException, InstantiationException {
     PageImpl<Document> page1 = new PageImpl<>(List.of(new Document().id("d1").name("Document 1")));
     PageImpl<Document> page2 = new PageImpl<>(List.of(new Document().id("d2").name("Document 2")));
