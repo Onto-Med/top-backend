@@ -53,7 +53,7 @@ public class ConceptGraphsService implements ContentService {
         .orElse(null);
   }
 
-  public List<ConceptGraphProcess> getAllStoredProcesses() {
+  public List<ConceptGraphPipeline> getAllStoredProcesses() {
     return pipelineManager.getAllStoredProcesses();
   }
 
@@ -75,7 +75,7 @@ public class ConceptGraphsService implements ContentService {
       PipelineResponseEntity responseEntity, String processName) {
     if (responseEntity == null) {
       return new PipelineResponse()
-          .name(processName)
+          .pipelineId(processName)
           .response("Pipeline failed. Please consult the logs.")
           .status(PipelineResponseStatus.FAILED);
     } else if (responseEntity instanceof PipelineFailEntity) {

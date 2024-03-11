@@ -1,6 +1,6 @@
 package care.smith.top.backend.api.nlp;
 
-import care.smith.top.backend.api.ConceptgraphsApiDelegate;
+import care.smith.top.backend.api.ConceptPipelineApiDelegate;
 import care.smith.top.backend.service.nlp.ConceptGraphsService;
 import care.smith.top.model.*;
 import java.io.File;
@@ -18,73 +18,49 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
-public class ConceptGraphApiDelegateImpl implements ConceptgraphsApiDelegate {
+public class ConceptGraphApiDelegateImpl implements ConceptPipelineApiDelegate {
   private static final Logger LOGGER =
       Logger.getLogger(ConceptGraphApiDelegateImpl.class.getName());
   @Autowired private ConceptGraphsService conceptGraphsService;
 
   @Override
   public ResponseEntity<Map<String, ConceptGraphStat>> getConceptGraphStatistics(
-      List<String> include, String process) {
+      String pipelineId) {
     Map<String, ConceptGraphStat> statistics =
-        conceptGraphsService.getAllConceptGraphStatistics(process);
+        conceptGraphsService.getAllConceptGraphStatistics(pipelineId);
     if (statistics == null) return ResponseEntity.of(Optional.empty());
     return ResponseEntity.ok(statistics);
   }
 
   @Override
-  public ResponseEntity<ConceptGraph> getConceptGraph(
-      String processId, String graphId, List<String> include) {
+  public ResponseEntity<ConceptGraph> getConceptGraph(String pipelineId, String graphId) {
     return ResponseEntity.ok(
-        conceptGraphsService.getConceptGraphForIdAndProcess(graphId, processId));
+        conceptGraphsService.getConceptGraphForIdAndProcess(graphId, pipelineId));
   }
 
   @Override
-  public ResponseEntity<List<ConceptGraphProcess>> getStoredProcesses(List<String> include) {
+  public ResponseEntity<List<ConceptGraphPipeline>> getConceptPipelines() {
     return ResponseEntity.ok(conceptGraphsService.getAllStoredProcesses());
   }
 
   @Override
-  public ResponseEntity<PipelineResponse> startConceptGraphPipelineWithoutUpload(
-      String process,
-      List<String> include,
-      String lang,
-      Boolean skipPresent,
-      Boolean returnStatistics) {
-    return startConceptGraphPipeline(
-        process,
-        include,
-        lang,
-        skipPresent,
-        returnStatistics,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null);
-  }
-
-  @Override
   public ResponseEntity<PipelineResponse> startConceptGraphPipeline(
-      String process,
-      List<String> include,
-      String lang,
+      String pipelineId,
+      String dataSourceId,
       Boolean skipPresent,
       Boolean returnStatistics,
+      String language,
       MultipartFile data,
       MultipartFile labels,
       MultipartFile dataConfig,
       MultipartFile embeddingConfig,
       MultipartFile clusteringConfig,
-      MultipartFile graphConfig,
-      MultipartFile documentServerConfig) {
-    if (data == null && documentServerConfig == null) {
+      MultipartFile graphConfig) {
+    if (data == null && dataSourceId == null) {
       return ResponseEntity.badRequest()
           .body(
               new PipelineResponse()
-                  .name(process != null ? process : "default")
+                  .pipelineId(pipelineId != null ? pipelineId : "default")
                   .response(
                       "Neither 'data' nor configuration for a document server ('documentServerConfig') were provided. "
                           + "There also seems no default document server to be available. One of either is needed.")
@@ -108,14 +84,16 @@ public class ConceptGraphApiDelegateImpl implements ConceptgraphsApiDelegate {
                       }
                     }));
 
-    if (documentServerConfig != null) {
-      try {
-        configMap.put("document_server", documentServerConfig.getResource().getFile());
-      } catch (IOException e) {
-        LOGGER.severe(
-            "Couldn't access document_server_config file. Something went wrong with the upload.");
-        throw new RuntimeException(e);
-      }
+    if (dataSourceId != null) {
+      // TODO: handle data source, if given
+      //      try {
+      //        configMap.put("document_server", documentServerConfig.getResource().getFile());
+      //      } catch (IOException e) {
+      //        LOGGER.severe(
+      //                "Couldn't access document_server_config file. Something went wrong with the
+      // upload.");
+      //        throw new RuntimeException(e);
+      //      }
     }
 
     try {
@@ -124,8 +102,9 @@ public class ConceptGraphApiDelegateImpl implements ConceptgraphsApiDelegate {
               data != null ? data.getResource().getFile() : null,
               labels != null ? labels.getResource().getFile() : null,
               configMap,
-              process,
-              lang,
+              pipelineId,
+              // TODO: if language is null, get lang from data source
+              language,
               skipPresent,
               returnStatistics);
       if (pipelineResponse.getStatus().equals(PipelineResponseStatus.FAILED)) {
