@@ -25,18 +25,18 @@ public class ConceptClusterApiDelegateImpl implements ConceptclusterApiDelegate 
   }
 
   @Override
-  public ResponseEntity<PipelineResponse> createConceptClustersForProcessId(
-      String processId, List<String> include, List<String> graphIds) {
-    PipelineResponse response = new PipelineResponse().name(processId);
+  public ResponseEntity<PipelineResponse> createConceptClustersForPipelineId(
+      String pipelineId, List<String> graphIds) {
+    PipelineResponse response = new PipelineResponse().pipelineId(pipelineId);
     conceptClusterService.evictConceptsFromCache();
-    if (!conceptClusterProcesses.containsKey(processId)) {
+    if (!conceptClusterProcesses.containsKey(pipelineId)) {
       conceptClusterProcesses.put(
-          processId,
-          conceptClusterService.createSpecificGraphsInNeo4j(processId, graphIds).getRight());
+          pipelineId,
+          conceptClusterService.createSpecificGraphsInNeo4j(pipelineId, graphIds).getRight());
       conceptClusterService.setPipelineResponseStatus(
           response, "STARTED", "Started Concept Clusters creation ...");
     } else {
-      if (conceptClusterProcesses.get(processId).isAlive()) {
+      if (conceptClusterProcesses.get(pipelineId).isAlive()) {
         conceptClusterService.setPipelineResponseStatus(
             response, "RUNNING", "Concept Clusters creation is still running ...");
       } else {
