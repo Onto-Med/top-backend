@@ -64,7 +64,7 @@ top:
     execute-queries: ${EXECUTE_QUERIES:true}
   documents:
     data-source-config-dir: ${DOCUMENT_DATA_SOURCE_CONFIG_DIR:config/data_sources/nlp}
-    default_adapter: ${DOCUMENT_DEFAULT_ADAPTER:#{null}}
+    default-adapter: ${DOCUMENT_DEFAULT_ADAPTER:#{null}}
     concept-graphs-api:
       uri: ${CONCEPT_GRAPHS_API_ENDPOINT:http://localhost:9007}
     security:
