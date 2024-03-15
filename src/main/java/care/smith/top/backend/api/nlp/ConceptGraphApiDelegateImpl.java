@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,6 +23,9 @@ public class ConceptGraphApiDelegateImpl implements ConceptPipelineApiDelegate {
   private static final Logger LOGGER =
       Logger.getLogger(ConceptGraphApiDelegateImpl.class.getName());
   @Autowired private ConceptGraphsService conceptGraphsService;
+
+  @Value("top.documents.default-adapter")
+  private String defaultDataSourceId;
 
   @Override
   public ResponseEntity<Map<String, ConceptGraphStat>> getConceptGraphStatistics(
@@ -56,13 +60,13 @@ public class ConceptGraphApiDelegateImpl implements ConceptPipelineApiDelegate {
       MultipartFile embeddingConfig,
       MultipartFile clusteringConfig,
       MultipartFile graphConfig) {
-    if (data == null && dataSourceId == null) {
+    if (data == null && dataSourceId == null && defaultDataSourceId == null) {
       return ResponseEntity.badRequest()
           .body(
               new PipelineResponse()
                   .pipelineId(pipelineId != null ? pipelineId : "default")
                   .response(
-                      "Neither 'data' nor configuration for a document server ('documentServerConfig') were provided. "
+                      "Neither 'data' nor configuration for a document server ('dataSourceId') were provided. "
                           + "There also seems no default document server to be available. One of either is needed.")
                   .status(PipelineResponseStatus.FAILED));
     }
@@ -84,16 +88,20 @@ public class ConceptGraphApiDelegateImpl implements ConceptPipelineApiDelegate {
                       }
                     }));
 
-    if (dataSourceId != null) {
-      // TODO: handle data source, if given
-      //      try {
-      //        configMap.put("document_server", documentServerConfig.getResource().getFile());
-      //      } catch (IOException e) {
-      //        LOGGER.severe(
-      //                "Couldn't access document_server_config file. Something went wrong with the
-      // upload.");
-      //        throw new RuntimeException(e);
-      //      }
+    if (data == null) {
+      if (dataSourceId != null) {
+        // TODO: handle data source, if given
+        //      try {
+        //        configMap.put("document_server", documentServerConfig.getResource().getFile());
+        //      } catch (IOException e) {
+        //        LOGGER.severe(
+        //                "Couldn't access document_server_config file. Something went wrong with the
+        // upload.");
+        //        throw new RuntimeException(e);
+        //      }
+      } else {
+        // TODO: use default adapter
+      }
     }
 
     try {
@@ -103,7 +111,7 @@ public class ConceptGraphApiDelegateImpl implements ConceptPipelineApiDelegate {
               labels != null ? labels.getResource().getFile() : null,
               configMap,
               pipelineId,
-              // TODO: if language is null, get lang from data source
+              // TODO: if language is null, get lang from data source adapter
               language,
               skipPresent,
               returnStatistics);
