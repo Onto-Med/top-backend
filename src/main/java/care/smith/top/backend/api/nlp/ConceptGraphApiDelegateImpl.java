@@ -2,15 +2,16 @@ package care.smith.top.backend.api.nlp;
 
 import care.smith.top.backend.api.ConceptPipelineApiDelegate;
 import care.smith.top.backend.service.nlp.ConceptGraphsService;
+import care.smith.top.backend.service.nlp.DocumentQueryService;
 import care.smith.top.model.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,9 +21,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class ConceptGraphApiDelegateImpl implements ConceptPipelineApiDelegate {
-  private static final Logger LOGGER =
-      Logger.getLogger(ConceptGraphApiDelegateImpl.class.getName());
   @Autowired private ConceptGraphsService conceptGraphsService;
+  @Autowired private DocumentQueryService documentQueryService;
 
   @Value("top.documents.default-adapter")
   private String defaultDataSourceId;
@@ -89,19 +89,9 @@ public class ConceptGraphApiDelegateImpl implements ConceptPipelineApiDelegate {
                     }));
 
     if (data == null) {
-      if (dataSourceId != null) {
-        // TODO: handle data source, if given
-        //      try {
-        //        configMap.put("document_server", documentServerConfig.getResource().getFile());
-        //      } catch (IOException e) {
-        //        LOGGER.severe(
-        //                "Couldn't access document_server_config file. Something went wrong with the
-        // upload.");
-        //        throw new RuntimeException(e);
-        //      }
-      } else {
-        // TODO: use default adapter
-      }
+      documentQueryService
+          .getTextAdapterConfigPath(StringUtils.defaultString(dataSourceId, defaultDataSourceId))
+          .ifPresent(p -> configMap.put("document_Server", p.toFile()));
     }
 
     try {
@@ -111,7 +101,6 @@ public class ConceptGraphApiDelegateImpl implements ConceptPipelineApiDelegate {
               labels != null ? labels.getResource().getFile() : null,
               configMap,
               pipelineId,
-              // TODO: if language is null, get lang from data source adapter
               language,
               skipPresent,
               returnStatistics);
