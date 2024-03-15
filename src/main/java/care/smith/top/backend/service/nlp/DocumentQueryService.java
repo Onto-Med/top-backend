@@ -162,14 +162,15 @@ public class DocumentQueryService extends QueryService {
     return ids;
   }
 
-  public Optional<TextAdapter> getTextAdapter(String organisationId, String repositoryId, UUID queryId) {
+  public Optional<TextAdapter> getTextAdapter(
+      String organisationId, String repositoryId, UUID queryId) {
     Query query = getQueryById(organisationId, repositoryId, queryId);
     TextAdapterConfig config = getTextAdapterConfig(query.getDataSource()).orElseThrow();
-      try {
-          return Optional.of(TextAdapter.getInstance(config));
-      } catch (InstantiationException e) {
-          return Optional.empty();
-      }
+    try {
+      return Optional.of(TextAdapter.getInstance(config));
+    } catch (InstantiationException e) {
+      return Optional.empty();
+    }
   }
 
   public List<TextAdapterConfig> getTextAdapterConfigs() {
@@ -185,6 +186,21 @@ public class DocumentQueryService extends QueryService {
           String.format("Could not load text adapter configs from dir '%s'.", dataSourceConfigDir));
     }
     return Collections.emptyList();
+  }
+
+  public Optional<Path> getTextAdapterConfigPath(String id) {
+    if (id == null) return Optional.empty();
+    try (Stream<Path> paths =
+        Files.list(Path.of(dataSourceConfigDir)).filter(f -> !Files.isDirectory(f))) {
+      for (Path path : paths.collect(Collectors.toList())) {
+        TextAdapterConfig config = toTextAdapterConfig(path);
+        if (config != null && id.equals(config.getId())) return Optional.of(path);
+      }
+    } catch (Exception e) {
+      LOGGER.fine(
+          String.format("Could not load text adapter configs from dir '%s'.", dataSourceConfigDir));
+    }
+    return Optional.empty();
   }
 
   public List<DataSource> getDataSources() {
