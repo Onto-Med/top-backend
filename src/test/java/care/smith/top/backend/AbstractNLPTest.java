@@ -111,7 +111,7 @@ public abstract class AbstractNLPTest {
     try (Driver driver = GraphDatabase.driver(embeddedNeo4j.boltURI());
         Session session = driver.session()) {
       Map<String, String> typeMap = Map.of("d", "Document", "c", "Concept", "p", "Phrase");
-      Map<String, String> idMap = Map.of("d", "documentId", "c", "conceptId", "p", "phraseId");
+      Map<String, String> idMap = Map.of("d", "docId", "c", "conceptId", "p", "phraseId");
       neo4jSession = session;
       documentNodes.forEach(
           (key, value) ->
@@ -131,6 +131,7 @@ public abstract class AbstractNLPTest {
                   String.format(
                       "CREATE (:Phrase {phraseId: '%s', phrase: '%s', exemplar: %s})",
                       value.get("phraseId"), value.get("phrase"), value.get("exemplar"))));
+
       relations.forEach(
           (key, list) -> {
             String sId = idMap.get(key.substring(0, 1));
@@ -143,10 +144,59 @@ public abstract class AbstractNLPTest {
                   String query =
                       String.format(
                           "MATCH (s:%s), (t:%s) WHERE s.%s = '%s' AND t.%s = '%s' CREATE (s)-[:%s]->(t)",
-                          sType, tType, sId, key, tId, pair.getLeft(), rType);
+                          sType, tType, sId, key, tId, pair.getRight(), rType);
                   neo4jSession.run(query);
                 });
           });
     }
+  }
+
+  protected static DocumentService mockedDocumentService() throws IOException, InstantiationException {
+    PageImpl<Document> page1 = new PageImpl<>(List.of(new Document().id("d1").name("Document 1")));
+    PageImpl<Document> page2 = new PageImpl<>(List.of(new Document().id("d2").name("Document 2")));
+    PageImpl<Document> page1_2 = new PageImpl<>(
+        List.of(new Document().id("d1").name("Document 1"), new Document().id("d2").name("Document 2")));
+    DocumentNodeEntity d1 = new DocumentNodeEntity("d1", "Document 1", Set.of());
+    DocumentNodeEntity d2 = new DocumentNodeEntity("d2", "Document 2", Set.of());
+
+    TextAdapter adapter = mock(TextAdapter.class);
+    when(adapter.getDocumentById("d1"))
+        .thenReturn(Optional.ofNullable(new Document().id("d1").name("Document 1")));
+    when(adapter.getDocumentById("d2"))
+        .thenReturn(Optional.ofNullable(new Document().id("d2").name("Document 2")));
+    when(adapter.getDocumentsByIds(eq(Set.of("d1", "d2")), anyInt())).thenReturn(page1_2);
+    when(adapter.getDocumentsByIds(eq(Set.of("d1")), anyInt())).thenReturn(page1);
+    when(adapter.getDocumentsByIds(eq(Set.of("d2")), anyInt())).thenReturn(page2);
+    when(adapter.getAllDocuments(anyInt())).thenReturn(page1_2);
+    when(adapter.getDocumentsByName(eq("Document 1"), anyInt())).thenReturn(page1);
+    when(adapter.getDocumentsByName(eq("Document 2"), anyInt())).thenReturn(page2);
+    when(adapter.getDocumentsByName(eq("Document*"), anyInt())).thenReturn(page1_2);
+
+    DocumentNodeRepository documentNodeRepository = mock(DocumentNodeRepository.class);
+    when(documentNodeRepository.getDocumentsForPhraseIds(Set.of("p1", "p2"), false))
+        .thenReturn(List.of(d1, d2));
+    when(documentNodeRepository.getDocumentsForPhraseIds(Set.of("p1", "p2"), true))
+        .thenReturn(List.of(d2));
+    when(documentNodeRepository.getDocumentsForConceptIds(Set.of("c1", "c2"), false))
+        .thenReturn(List.of(d1, d2));
+    when(documentNodeRepository.getDocumentsForConceptIds(Set.of("c1"), false))
+        .thenReturn(List.of(d2));
+    when(documentNodeRepository.getDocumentsForConceptIds(Set.of("c2"), false))
+        .thenReturn(List.of(d1, d2));
+
+    DocumentService documentService = mock(DocumentService.class);
+    when(documentService.getDocumentNodeRepository()).thenReturn(documentNodeRepository);
+    when(documentService.getAdapterFromQuery(anyString(), anyString(), any()))
+        .thenReturn(adapter);
+    when(documentService.getAdapterForDataSource(anyString()))
+        .thenReturn(adapter);
+    when(documentService.getDocumentIdsForQuery(anyString(), anyString(), any()))
+        .thenReturn(List.of("d1", "d2"));
+    when(documentService.getDocumentsForConceptIds(anySet(), anyBoolean())).thenCallRealMethod();
+    when(documentService.getDocumentsForConceptIds(anySet(), anyBoolean(), any())).thenCallRealMethod();
+    when(documentService.getDocumentsForPhraseIds(anySet(), anyBoolean())).thenCallRealMethod();
+    when(documentService.getDocumentsForPhraseTexts(anySet(), anyBoolean())).thenCallRealMethod();
+
+    return documentService;
   }
 }

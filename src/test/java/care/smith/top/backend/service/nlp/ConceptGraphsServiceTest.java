@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.*;
 
 import care.smith.top.backend.AbstractNLPTest;
 import care.smith.top.model.ConceptGraph;
-import care.smith.top.model.ConceptGraphProcess;
+import care.smith.top.model.ConceptGraphPipeline;
 import care.smith.top.model.ConceptGraphStat;
 import care.smith.top.model.PipelineResponse;
 import java.io.*;
@@ -40,7 +40,7 @@ class ConceptGraphsServiceTest extends AbstractNLPTest {
 
   @Test
   void getAllStoredProcesses() {
-    List<ConceptGraphProcess> processes = conceptGraphsService.getAllStoredProcesses();
+    List<ConceptGraphPipeline> processes = conceptGraphsService.getAllStoredProcesses();
     assertThat(processes).hasSize(2);
   }
 

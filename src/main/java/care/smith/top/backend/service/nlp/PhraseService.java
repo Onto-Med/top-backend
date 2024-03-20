@@ -64,7 +64,7 @@ public class PhraseService implements ContentService {
   static Statement phraseWithTextExactMatch(String text) {
       Node phrase =
           Cypher.node("Phrase")
-              .withProperties("phrase", text)
+              .withProperties("phrase", Cypher.literalOf(text))
               .named("phrase");
       return Cypher.match(phrase)
           .returning(phrase)
@@ -74,7 +74,7 @@ public class PhraseService implements ContentService {
   static Statement phraseWithExactId(String phraseId) {
     Node phrase =
         Cypher.node("Phrase")
-            .withProperties("phraseId", phraseId)
+            .withProperties("phraseId", Cypher.literalOf(phraseId))
             .named("phrase");
     return Cypher.match(phrase)
         .returning(phrase)
@@ -85,6 +85,7 @@ public class PhraseService implements ContentService {
       new Phrase()
           .id(phraseNodeEntity.phraseId())
           .text(phraseNodeEntity.phraseText())
+          .exemplar(phraseNodeEntity.exemplar())
           .attributes(phraseNodeEntity.phraseAttributes());
 
   @Override
