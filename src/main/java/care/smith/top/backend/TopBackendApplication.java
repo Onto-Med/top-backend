@@ -29,7 +29,6 @@ public class TopBackendApplication {
   public static void main(String[] args) {
     new SpringApplicationBuilder()
         .sources(TopBackendApplication.class)
-        .initializers(new TopBackendContextInitializer())
         .run(args);
   }
 }
