@@ -27,7 +27,7 @@ public interface DocumentNodeRepository
   List<DocumentNodeEntity> getDocumentsForConceptIds(Set<String> conceptIds, Boolean exemplarOnly);
 
   @Query(
-      "MATCH (d:Document)->[:HAS_PHRASE]->(p:Phrase)\n"
+      "MATCH (d:Document)-[:HAS_PHRASE]->(p:Phrase)\n"
           + "WITH d, p,\n"
           + "CASE $exemplarOnly\n"
           + "  WHEN true  THEN (p.exemplar AND $exemplarOnly)\n"
@@ -39,8 +39,8 @@ public interface DocumentNodeRepository
   List<DocumentNodeEntity> getDocumentsForPhraseIds(Set<String> phraseIds, Boolean exemplarOnly);
 
   @Query(
-      "UNWIND $phraseTexts as labels"
-          + "MATCH (d:Document)->[:HAS_PHRASE]->(p:Phrase)\n"
+      "UNWIND $phraseTexts as labels\n"
+          + "MATCH (d:Document)-[:HAS_PHRASE]->(p:Phrase)\n"
           + "WITH d, p,\n"
           + "CASE $exemplarOnly\n"
           + "  WHEN true  THEN (p.exemplar AND $exemplarOnly)\n"

@@ -21,10 +21,6 @@ class PhraseApiDelegateImplTest extends AbstractNLPTest {
   private PhraseApiDelegateImpl phraseApi;
   private PhraseService phraseService;
 
-  List<Phrase> phrases1 = List.of(new Phrase().id("p1").text("one phrase here").exemplar(true));
-  List<Phrase> phrases2 = List.of(new Phrase().id("p2").text("another phrase there").exemplar(false));
-  List<Phrase> phrases1_2 = List.of(phrases1.get(0), phrases2.get(0));
-
   @BeforeEach
   void setUp() throws IOException, InstantiationException {
     phraseService = new PhraseService(phraseRepository);

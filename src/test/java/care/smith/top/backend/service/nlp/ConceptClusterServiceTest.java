@@ -6,17 +6,28 @@ import care.smith.top.backend.AbstractNLPTest;
 import care.smith.top.model.ConceptCluster;
 import org.junit.jupiter.api.Test;
 
+import java.util.Set;
+import java.util.stream.Collectors;
+
 class ConceptClusterServiceTest extends AbstractNLPTest {
 
   @Test
   void conceptById() {
-    // see AbstractNLPTest for creation of the Neo4J DB entries
-    ConceptCluster cluster1 = conceptClusterService.conceptById("c1");
-    assertEquals("c1", cluster1.getId());
-    assertEquals("phrase, here, another", cluster1.getLabels());
+    ConceptCluster response1 = conceptClusterService.conceptById("c1");
+    assertEquals(concepts1.get(0), response1);
 
-    ConceptCluster cluster2 = conceptClusterService.conceptById("c2");
-    assertEquals("c2", cluster2.getId());
-    assertEquals("something, good", cluster2.getLabels());
+    ConceptCluster response2 = conceptClusterService.conceptById("c2");
+    assertEquals(concepts2.get(0), response2);
+  }
+
+  @Test
+  void concepts() {
+    assertEquals(
+        Set.copyOf(concepts1_2), conceptClusterService.concepts().stream().collect(Collectors.toSet()));
+  }
+
+  @Test
+  void count() {
+    assertEquals(Long.valueOf(2), conceptClusterService.count());
   }
 }
