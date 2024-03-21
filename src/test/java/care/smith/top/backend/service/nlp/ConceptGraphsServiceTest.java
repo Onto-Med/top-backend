@@ -44,25 +44,8 @@ class ConceptGraphsServiceTest extends AbstractNLPTest {
     assertThat(processes).hasSize(2);
   }
 
-  // ToDo: build test zip here to use
   @Test
-  @Disabled
-  void initPipeline() {
-    try {
-      PipelineResponse stats =
-          conceptGraphsService.initPipeline(
-              new File(
-                  Objects.requireNonNull(getClass().getClassLoader().getResource("test_files.zip"))
-                      .toURI()),
-              null,
-              null,
-              "test",
-              null,
-              false,
-              false);
-      System.out.println(stats);
-    } catch (URISyntaxException e) {
-      throw new RuntimeException(e);
-    }
+  void count() {
+    assertThat(conceptGraphsService.count()).isEqualTo(2);
   }
 }

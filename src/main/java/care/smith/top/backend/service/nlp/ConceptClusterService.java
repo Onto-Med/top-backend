@@ -70,6 +70,7 @@ public class ConceptClusterService implements ContentService {
   }
 
   public ConceptCluster conceptById(String conceptId) {
+    System.out.println("");
     return conceptEntityMapper.apply(
         conceptNodeRepository.findOne(conceptWithId(conceptId)).orElse(null));
   }

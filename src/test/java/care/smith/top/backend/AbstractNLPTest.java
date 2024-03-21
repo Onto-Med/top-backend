@@ -8,12 +8,15 @@ import care.smith.top.backend.repository.neo4j.PhraseNodeRepository;
 import care.smith.top.backend.service.nlp.ConceptClusterService;
 import care.smith.top.backend.service.nlp.DocumentService;
 import care.smith.top.backend.util.ResourceHttpHandler;
+import care.smith.top.model.ConceptCluster;
 import care.smith.top.model.Document;
+import care.smith.top.model.Phrase;
 import care.smith.top.top_document_query.adapter.TextAdapter;
 import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.AfterAll;
@@ -39,22 +42,18 @@ import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @ContextConfiguration(initializers = TopBackendContextInitializer.class)
-@Transactional(propagation = Propagation.NEVER)
 public abstract class AbstractNLPTest {
-  private static final Map<String, Map<String, String>> documentNodes =
-      Map.of(
-          "d1", Map.of("docId", "d1", "name", "Document 1"),
-          "d2", Map.of("docId", "d2", "name", "Document 2"));
+  protected static Set<Document> documents1 = Set.of(new Document().id("d1").name("Document 1"));
+  protected static Set<Document> documents2 = Set.of(new Document().id("d2").name("Document 2"));
+  protected static Set<Document> documents1_2 = Set.of(documents1.iterator().next(), documents2.iterator().next());
 
-  private static final Map<String, Map<String, String>> conceptNodes =
-      Map.of(
-          "c1", Map.of("conceptId", "c1", "labels", "['phrase','here','another']"),
-          "c2", Map.of("conceptId", "c2", "labels", "['something','good']"));
+  protected static List<ConceptCluster> concepts1 = List.of(new ConceptCluster().id("c1").labels("phrase, here, another"));
+  protected static List<ConceptCluster> concepts2 = List.of(new ConceptCluster().id("c2").labels("something, good"));
+  protected static List<ConceptCluster> concepts1_2 = List.of(concepts1.get(0), concepts2.get(0));
 
-  private static final Map<String, Map<String, String>> phraseNodes =
-      Map.of(
-          "p1", Map.of("phraseId", "p1", "phrase", "one phrase here", "exemplar", "true"),
-          "p2", Map.of("phraseId", "p2", "phrase", "another phrase there", "exemplar", "false"));
+  protected static List<Phrase> phrases1 = List.of(new Phrase().id("p1").text("one phrase here").exemplar(true));
+  protected static List<Phrase> phrases2 = List.of(new Phrase().id("p2").text("another phrase there").exemplar(false));
+  protected static List<Phrase> phrases1_2 = List.of(phrases1.get(0), phrases2.get(0));
 
   private static final String HAS_PHRASE_REL = "HAS_PHRASE";
   private static final String IN_CONCEPT_REL = "IN_CONCEPT";
@@ -113,24 +112,27 @@ public abstract class AbstractNLPTest {
       Map<String, String> typeMap = Map.of("d", "Document", "c", "Concept", "p", "Phrase");
       Map<String, String> idMap = Map.of("d", "docId", "c", "conceptId", "p", "phraseId");
       neo4jSession = session;
-      documentNodes.forEach(
-          (key, value) ->
+      documents1_2.forEach(
+          document ->
               neo4jSession.run(
                   String.format(
                       "CREATE (:Document {docId: '%s', name: '%s'})",
-                      value.get("docId"), value.get("name"))));
-      conceptNodes.forEach(
-          (key, value) ->
+                      document.getId(), document.getName())));
+      concepts1_2.forEach(
+          concept -> {
+              String labels = Arrays.stream(concept.getLabels().split(","))
+                  .map(s -> String.format("'%s'", s.trim())).collect(Collectors.joining(","));
               neo4jSession.run(
                   String.format(
                       "CREATE (:Concept {conceptId: '%s', labels: %s})",
-                      value.get("conceptId"), value.get("labels"))));
-      phraseNodes.forEach(
-          (key, value) ->
+                      concept.getId(), String.format("[%s]", labels)));
+          });
+      phrases1_2.forEach(
+          phrase ->
               neo4jSession.run(
                   String.format(
                       "CREATE (:Phrase {phraseId: '%s', phrase: '%s', exemplar: %s})",
-                      value.get("phraseId"), value.get("phrase"), value.get("exemplar"))));
+                      phrase.getId(), phrase.getText(), phrase.isExemplar())));
 
       relations.forEach(
           (key, list) -> {

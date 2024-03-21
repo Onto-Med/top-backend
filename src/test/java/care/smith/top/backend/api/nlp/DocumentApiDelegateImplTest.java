@@ -19,12 +19,6 @@ import static org.mockito.Mockito.mock;
 
 class DocumentApiDelegateImplTest extends AbstractNLPTest {
   private static DocumentApiDelegateImpl documentApi;
-  Set<Document> documents1 = Set.of(
-      new Document().id("d1").name("Document 1"));
-  Set<Document> documents2 = Set.of(
-      new Document().id("d2").name("Document 2"));
-  Set<Document> documents1_2 = Set.of(
-      new Document().id("d1").name("Document 1"), new Document().id("d2").name("Document 2"));
 
   @BeforeAll
   static void setUp() throws IOException, InstantiationException {
