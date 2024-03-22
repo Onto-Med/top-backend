@@ -17,6 +17,8 @@ import org.neo4j.driver.Session;
 import org.neo4j.harness.Neo4j;
 import org.neo4j.harness.Neo4jBuilders;
 
+import static care.smith.top.backend.AbstractNLPTest.*;
+
 public class Neo4JExtension implements BeforeAllCallback, ExtensionContext.Store.CloseableResource {
   private static final String HAS_PHRASE_REL = "HAS_PHRASE";
   private static final String IN_CONCEPT_REL = "IN_CONCEPT";
@@ -27,20 +29,6 @@ public class Neo4JExtension implements BeforeAllCallback, ExtensionContext.Store
           "d2", List.of(Pair.of(HAS_PHRASE_REL, "p1"), Pair.of(HAS_PHRASE_REL, "p2")),
           "p1", List.of(Pair.of(IN_CONCEPT_REL, "c1"), Pair.of(NEIGHBOR_OF_REL, "p2")),
           "p2", List.of(Pair.of(IN_CONCEPT_REL, "c2"), Pair.of(NEIGHBOR_OF_REL, "p1")));
-  protected static Set<Document> documents1 = Set.of(new Document().id("d1").name("Document 1"));
-  protected static Set<Document> documents2 = Set.of(new Document().id("d2").name("Document 2"));
-  protected static Set<Document> documents1_2 =
-      Set.of(documents1.iterator().next(), documents2.iterator().next());
-  protected static List<ConceptCluster> concepts1 =
-      List.of(new ConceptCluster().id("c1").labels("phrase, here, another"));
-  protected static List<ConceptCluster> concepts2 =
-      List.of(new ConceptCluster().id("c2").labels("something, good"));
-  protected static List<ConceptCluster> concepts1_2 = List.of(concepts1.get(0), concepts2.get(0));
-  protected static List<Phrase> phrases1 =
-      List.of(new Phrase().id("p1").text("one phrase here").exemplar(true));
-  protected static List<Phrase> phrases2 =
-      List.of(new Phrase().id("p2").text("another phrase there").exemplar(false));
-  protected static List<Phrase> phrases1_2 = List.of(phrases1.get(0), phrases2.get(0));
   private static boolean started = false;
   private static Neo4j embeddedNeo4j;
   private static Session neo4jSession;

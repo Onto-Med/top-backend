@@ -15,7 +15,7 @@ import org.springframework.data.neo4j.repository.config.EnableNeo4jRepositories;
 
 @SpringBootApplication(
     exclude = {
-      ReactiveElasticsearchRepositoriesAutoConfiguration.class,
+      ReactiveElasticsearchRepositoriesAutoConfiguration.class, //ToDo: do we need this anymore?
       Neo4jReactiveRepositoriesAutoConfiguration.class
     })
 @Import(InfrastructureConfig.class)

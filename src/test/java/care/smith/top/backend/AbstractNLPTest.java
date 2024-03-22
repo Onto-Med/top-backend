@@ -5,13 +5,11 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import care.smith.top.backend.configuration.TopBackendContextInitializer;
 import care.smith.top.backend.extension.Neo4JExtension;
 import care.smith.top.backend.model.neo4j.DocumentNodeEntity;
 import care.smith.top.backend.repository.neo4j.ConceptClusterNodeRepository;
 import care.smith.top.backend.repository.neo4j.DocumentNodeRepository;
 import care.smith.top.backend.repository.neo4j.PhraseNodeRepository;
-import care.smith.top.backend.service.nlp.ConceptClusterService;
 import care.smith.top.backend.service.nlp.DocumentService;
 import care.smith.top.backend.util.ResourceHttpHandler;
 import care.smith.top.model.ConceptCluster;
@@ -28,30 +26,27 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 
 @SpringBootTest
-@ContextConfiguration(initializers = TopBackendContextInitializer.class)
 public abstract class AbstractNLPTest {
   protected static Set<Document> documents1 = Set.of(new Document().id("d1").name("Document 1"));
   protected static Set<Document> documents2 = Set.of(new Document().id("d2").name("Document 2"));
-  protected static Set<Document> documents1_2 =
+  public static Set<Document> documents1_2 =
       Set.of(documents1.iterator().next(), documents2.iterator().next());
   protected static List<ConceptCluster> concepts1 =
       List.of(new ConceptCluster().id("c1").labels("phrase, here, another"));
   protected static List<ConceptCluster> concepts2 =
       List.of(new ConceptCluster().id("c2").labels("something, good"));
-  protected static List<ConceptCluster> concepts1_2 = List.of(concepts1.get(0), concepts2.get(0));
+  public static List<ConceptCluster> concepts1_2 = List.of(concepts1.get(0), concepts2.get(0));
   protected static List<Phrase> phrases1 =
       List.of(new Phrase().id("p1").text("one phrase here").exemplar(true));
   protected static List<Phrase> phrases2 =
       List.of(new Phrase().id("p2").text("another phrase there").exemplar(false));
-  protected static List<Phrase> phrases1_2 = List.of(phrases1.get(0), phrases2.get(0));
+  public static List<Phrase> phrases1_2 = List.of(phrases1.get(0), phrases2.get(0));
   protected static HttpServer conceptGraphsApiService;
   @RegisterExtension static Neo4JExtension neo4JExtension = new Neo4JExtension();
-  @Autowired protected ConceptClusterService conceptClusterService;
   @Autowired protected ConceptClusterNodeRepository conceptClusterNodeRepository;
   @Autowired protected PhraseNodeRepository phraseRepository;
   @Autowired protected DocumentNodeRepository documentNodeRepository;
