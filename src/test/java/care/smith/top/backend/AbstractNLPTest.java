@@ -92,12 +92,12 @@ public abstract class AbstractNLPTest {
     conceptGraphsApiService.start();
   }
 
-  @DynamicPropertySource
-  static void dbProperties(DynamicPropertyRegistry registry) {
-    registry.add("spring.neo4j.uri", embeddedNeo4j::boltURI);
-    registry.add("spring.neo4j.authentication.username", () -> "neo4j");
-    registry.add("spring.neo4j.authentication.password", () -> null);
-  }
+//  @DynamicPropertySource
+//  static void dbProperties(DynamicPropertyRegistry registry) {
+//    registry.add("spring.neo4j.uri", embeddedNeo4j::boltURI);
+//    registry.add("spring.neo4j.authentication.username", () -> "neo4j");
+//    registry.add("spring.neo4j.authentication.password", () -> null);
+//  }
 
   @AfterAll
   static void cleanup() {
