@@ -18,7 +18,7 @@ logging:
           neo4j: ERROR
 
 spring:
-  max-batch-size: 100
+  max-batch-size: ${MAX_BATCH_SIZE:100}
   neo4j:
     connection-timeout: ${DB_NEO4J_CONNECTION_TIMEOUT:30}s
   elasticsearch:

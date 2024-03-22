@@ -25,6 +25,7 @@ for additional documentation.
       to https://www.ebi.ac.uk/ols4/api (OLS4 is currently supported)
     * `IMPORT_DEMO_DATA`: whether a demo organisation with a small BMI phenotype model should be imported on startup,
       defaults to false
+    * `MAX_BATCH_SIZE`: max number of entities that can be uploaded to the server in one batch
 
    Document related:  
    *(The following variables will be overwritten by their respective adapter values if specified)*  
