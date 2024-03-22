@@ -28,10 +28,15 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Service
 public class ConceptClusterService implements ContentService {
+
+  @Value("${spring.paging.page-size:10}")
+  private int pageSize = 10;
   private final Function<ConceptNodeEntity, ConceptCluster> conceptEntityMapper =
       conceptEntity ->
           new ConceptCluster()
@@ -63,16 +68,25 @@ public class ConceptClusterService implements ContentService {
 
   @Cacheable(value = "concepts")
   public Page<ConceptCluster> concepts() {
-    return new PageImpl<>(
-        conceptNodeRepository.findAll().stream()
-            .map(conceptEntityMapper)
-            .collect(Collectors.toList()));
+    return conceptsForPage(null);
+  }
+  public Page<ConceptCluster> conceptsForPage(Integer page) {
+    List<ConceptCluster> conceptClusterList = conceptNodeRepository.findAll().stream()
+        .map(conceptEntityMapper)
+        .collect(Collectors.toList());
+    return new PageImpl<>(conceptClusterList, getPageRequestOf(page), conceptClusterList.size());
   }
 
   public ConceptCluster conceptById(String conceptId) {
-    System.out.println("");
     return conceptEntityMapper.apply(
         conceptNodeRepository.findOne(conceptWithId(conceptId)).orElse(null));
+  }
+
+  public Page<ConceptCluster> conceptsByDocumentId(String documentId, Integer page) {
+    List<ConceptCluster> conceptClusterList = conceptNodeRepository.getConceptNodesByDocumentId(documentId).stream()
+        .map(conceptEntityMapper)
+        .collect(Collectors.toList());
+    return new PageImpl<>(conceptClusterList, getPageRequestOf(page), conceptClusterList.size());
   }
 
   public Pair<String, Thread> createSpecificGraphsInNeo4j(
@@ -175,5 +189,10 @@ public class ConceptClusterService implements ContentService {
     //                          .map(phraseNodeEntityMap::get)
     //                          .collect(Collectors.toSet())));
     //            });
+  }
+
+  private Pageable getPageRequestOf(Integer page) {
+    if (page == null) return Pageable.unpaged();
+    return PageRequest.of(page, pageSize);
   }
 }
