@@ -5,12 +5,14 @@ import static org.junit.jupiter.api.Assertions.*;
 import care.smith.top.backend.AbstractNLPTest;
 import care.smith.top.model.ConceptCluster;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Set;
 import java.util.stream.Collectors;
 
 class ConceptClusterServiceTest extends AbstractNLPTest {
-
+  @Autowired
+  protected ConceptClusterService conceptClusterService;
   @Test
   void conceptById() {
     ConceptCluster response1 = conceptClusterService.conceptById("c1");
