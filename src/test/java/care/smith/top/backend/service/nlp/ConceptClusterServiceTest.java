@@ -7,6 +7,7 @@ import care.smith.top.model.ConceptCluster;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -26,6 +27,11 @@ class ConceptClusterServiceTest extends AbstractNLPTest {
   void concepts() {
     assertEquals(
         Set.copyOf(concepts1_2), conceptClusterService.concepts().stream().collect(Collectors.toSet()));
+  }
+
+  @Test
+  void conceptsByDocumentId() {
+    assertEquals(Set.copyOf(concepts1_2), new HashSet<>(conceptClusterService.conceptsByDocumentId("d2", 0).getContent()));
   }
 
   @Test
