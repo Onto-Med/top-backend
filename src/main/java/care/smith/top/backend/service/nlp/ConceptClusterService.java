@@ -37,19 +37,15 @@ public class ConceptClusterService implements ContentService {
 
   @Value("${spring.paging.page-size:10}")
   private int pageSize = 10;
-  private final Function<ConceptNodeEntity, ConceptCluster> conceptEntityMapper =
-      conceptEntity ->
-          new ConceptCluster()
-              .id(conceptEntity.conceptId())
-              .labels(String.join(", ", conceptEntity.lables()));
   private final ConceptPipelineManager pipelineManager;
-  @Autowired private ConceptClusterNodeRepository conceptNodeRepository;
-  @Autowired private PhraseNodeRepository phraseNodeRepository;
-  @Autowired private DocumentNodeRepository documentNodeRepository;
+  private final ConceptClusterNodeRepository conceptNodeRepository;
+  private final PhraseNodeRepository phraseNodeRepository;
 
   public ConceptClusterService(
-      @Value("${top.documents.concept-graphs-api.uri}") String conceptGraphsApiUri) {
+      @Value("${top.documents.concept-graphs-api.uri}") String conceptGraphsApiUri, ConceptClusterNodeRepository conceptNodeRepository, PhraseNodeRepository phraseNodeRepository) {
     pipelineManager = new ConceptPipelineManager(conceptGraphsApiUri);
+    this.conceptNodeRepository = conceptNodeRepository;
+    this.phraseNodeRepository = phraseNodeRepository;
   }
 
   static Statement conceptWithId(String id) {
@@ -72,21 +68,50 @@ public class ConceptClusterService implements ContentService {
   }
   public Page<ConceptCluster> conceptsForPage(Integer page) {
     List<ConceptCluster> conceptClusterList = conceptNodeRepository.findAll().stream()
-        .map(conceptEntityMapper)
+        .sorted(Comparator.comparing(ConceptNodeEntity::conceptId))
+        .map(ConceptNodeEntity::toApiModel)
         .collect(Collectors.toList());
     return new PageImpl<>(conceptClusterList, getPageRequestOf(page), conceptClusterList.size());
   }
 
   public ConceptCluster conceptById(String conceptId) {
-    return conceptEntityMapper.apply(
-        conceptNodeRepository.findOne(conceptWithId(conceptId)).orElse(null));
+    return conceptNodeRepository.findOne(conceptWithId(conceptId)).orElse(ConceptNodeEntity.nullConceptNode()).toApiModel();
   }
 
   public Page<ConceptCluster> conceptsByDocumentId(String documentId, Integer page) {
     List<ConceptCluster> conceptClusterList = conceptNodeRepository.getConceptNodesByDocumentId(documentId).stream()
-        .map(conceptEntityMapper)
+        .sorted(Comparator.comparing(ConceptNodeEntity::conceptId))
+        .map(ConceptNodeEntity::toApiModel)
         .collect(Collectors.toList());
     return new PageImpl<>(conceptClusterList, getPageRequestOf(page), conceptClusterList.size());
+  }
+
+  public Page<ConceptCluster> conceptsByLabels(List<String> labels, Integer page) {
+    List<ConceptCluster> conceptClusterList = conceptNodeRepository.getConceptNodesByLabels(labels).stream()
+        .sorted(Comparator.comparing(ConceptNodeEntity::conceptId))
+        .map(ConceptNodeEntity::toApiModel)
+        .collect(Collectors.toList());
+    return new PageImpl<>(conceptClusterList, getPageRequestOf(page), conceptClusterList.size());
+  }
+
+  public Page<ConceptCluster> conceptsByPhraseIds(List<String> phraseIds, Integer page) {
+      List<ConceptCluster> conceptClusterList = conceptNodeRepository.getConceptNodesByPhrases(phraseIds).stream()
+          .sorted(Comparator.comparing(ConceptNodeEntity::conceptId))
+          .map(ConceptNodeEntity::toApiModel)
+          .collect(Collectors.toList());
+      return new PageImpl<>(conceptClusterList, getPageRequestOf(page), conceptClusterList.size());
+    }
+
+  public Page<ConceptCluster> conceptsByLabelsAndPhrases(List<String> labels, List<String> phraseIds, Integer page) {
+    Set<String> retainIds = conceptNodeRepository.getConceptNodesByLabels(labels).stream()
+        .map(ConceptNodeEntity::conceptId)
+        .collect(Collectors.toSet());
+    List<ConceptCluster> conceptClusterPhraseList = conceptNodeRepository.getConceptNodesByPhrases(phraseIds).stream()
+        .sorted(Comparator.comparing(ConceptNodeEntity::conceptId))
+        .filter(conceptNodeEntity -> retainIds.contains(conceptNodeEntity.conceptId()))
+        .map(ConceptNodeEntity::toApiModel)
+        .collect(Collectors.toList());
+    return new PageImpl<>(conceptClusterPhraseList, getPageRequestOf(page), conceptClusterPhraseList.size());
   }
 
   public Pair<String, Thread> createSpecificGraphsInNeo4j(
@@ -193,6 +218,6 @@ public class ConceptClusterService implements ContentService {
 
   private Pageable getPageRequestOf(Integer page) {
     if (page == null) return Pageable.unpaged();
-    return PageRequest.of(page, pageSize);
+    return PageRequest.of(page <= 0 ? 0 : page - 1, pageSize);
   }
 }

@@ -36,9 +36,9 @@ public abstract class AbstractNLPTest {
   public static Set<Document> documents1_2 =
       Set.of(documents1.iterator().next(), documents2.iterator().next());
   protected static List<ConceptCluster> concepts1 =
-      List.of(new ConceptCluster().id("c1").labels("phrase, here, another"));
+      List.of(new ConceptCluster().id("c1").labels(List.of("phrase", "here", "another")));
   protected static List<ConceptCluster> concepts2 =
-      List.of(new ConceptCluster().id("c2").labels("something, good"));
+      List.of(new ConceptCluster().id("c2").labels(List.of("something", "good")));
   public static List<ConceptCluster> concepts1_2 = List.of(concepts1.get(0), concepts2.get(0));
   protected static List<Phrase> phrases1 =
       List.of(new Phrase().id("p1").text("one phrase here").exemplar(true));

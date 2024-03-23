@@ -49,7 +49,7 @@ public class Neo4JExtension implements BeforeAllCallback, ExtensionContext.Store
       concepts1_2.forEach(
           concept -> {
             String labels =
-                Arrays.stream(concept.getLabels().split(","))
+                concept.getLabels().stream()
                     .map(s -> String.format("'%s'", s.trim()))
                     .collect(Collectors.joining(","));
             neo4jSession.run(

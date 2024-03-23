@@ -20,4 +20,12 @@ public interface ConceptClusterNodeRepository
   @Query(
       "MATCH (d:Document {docId: $documentId})-[:HAS_PHRASE]->(p:Phrase)-[:IN_CONCEPT]->(c:Concept) RETURN c;")
       List<ConceptNodeEntity> getConceptNodesByDocumentId(String documentId);
+
+  @Query(
+      "UNWIND $labels as l MATCH (c:Concept) WHERE (l in c.labels) RETURN DISTINCT c;")
+      List<ConceptNodeEntity> getConceptNodesByLabels(List<String> labels);
+
+  @Query(
+      "UNWIND $phraseIds as pid MATCH (c:Concept)<-[:IN_CONCEPT]-(p:Phrase {phraseId: pid}) RETURN DISTINCT c;")
+      List<ConceptNodeEntity> getConceptNodesByPhrases(List<String> phraseIds);
 }
