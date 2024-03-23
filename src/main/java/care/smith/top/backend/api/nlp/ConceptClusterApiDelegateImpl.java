@@ -26,8 +26,13 @@ import org.springframework.stereotype.Service;
 public class ConceptClusterApiDelegateImpl implements ConceptclusterApiDelegate {
   private final Logger LOGGER = Logger.getLogger(ConceptClusterApiDelegateImpl.class.getName());
   private final HashMap<String, Thread> conceptClusterProcesses = new HashMap<>();
-  @Autowired private ConceptClusterService conceptClusterService;
-  @Autowired private DocumentService documentService;
+  private final ConceptClusterService conceptClusterService;
+  private final DocumentService documentService;
+
+  public ConceptClusterApiDelegateImpl(DocumentService documentService, ConceptClusterService conceptClusterService) {
+    this.conceptClusterService = conceptClusterService;
+    this.documentService = documentService;
+  }
 
   @Override
   public ResponseEntity<ConceptClusterPage> getConceptClusterByDocumentId(
@@ -48,6 +53,37 @@ public class ConceptClusterApiDelegateImpl implements ConceptclusterApiDelegate 
     }
     return ResponseEntity.ok(
         ApiModelMapper.toConceptClusterPage(conceptClusterService.conceptsByDocumentId(document.getId(), page)));
+  }
+
+  @Override
+  public ResponseEntity<ConceptCluster> getConceptClusterById(
+      String conceptId, List<String> include) {
+    return ResponseEntity.ok(conceptClusterService.conceptById(conceptId));
+  }
+
+  @Override
+  public ResponseEntity<ConceptClusterPage> getConceptClusters(
+      List<String> labelsText,
+      List<String> phraseId,
+      Boolean recalculateCache,
+      Integer page,
+      List<String> include) {
+    if (Boolean.TRUE.equals(recalculateCache)) conceptClusterService.evictConceptsFromCache();
+
+    boolean labels = !(labelsText == null || labelsText.isEmpty());
+    boolean phrases = !(phraseId == null || phraseId.isEmpty());
+
+    Page<ConceptCluster> conceptClusterPage;
+    if (labels && phrases) {
+      conceptClusterPage = conceptClusterService.conceptsByLabelsAndPhrases(labelsText, phraseId, page);
+    } else if (labels) {
+      conceptClusterPage = conceptClusterService.conceptsByLabels(labelsText, page);
+    } else if (phrases) {
+      conceptClusterPage = conceptClusterService.conceptsByPhraseIds(phraseId, page);
+    } else {
+      conceptClusterPage = conceptClusterService.conceptsForPage(page);
+    }
+    return ResponseEntity.ok(ApiModelMapper.toConceptClusterPage(conceptClusterPage));
   }
 
   @Override
@@ -72,35 +108,4 @@ public class ConceptClusterApiDelegateImpl implements ConceptclusterApiDelegate 
     }
     return ResponseEntity.ok(response);
   }
-
-  @Override
-  public ResponseEntity<ConceptCluster> getConceptClusterById(
-      String conceptId, List<String> include) {
-    return ResponseEntity.ok(conceptClusterService.conceptById(conceptId));
-  }
-
-  @Override
-  public ResponseEntity<ConceptClusterPage> getConceptClusters(
-      List<String> labelsText,
-      List<String> phraseId,
-      Boolean recalculateCache,
-      Integer page,
-      List<String> include) {
-    if (Boolean.TRUE.equals(recalculateCache)) conceptClusterService.evictConceptsFromCache();
-    return ResponseEntity.ok(ApiModelMapper.toConceptClusterPage(conceptClusterService.concepts()));
-  }
-
-//  private Page<ConceptCluster> pageFromSet(Set<ConceptCluster> conceptClusterSet, Integer page) {
-//    if (conceptClusterSet.isEmpty()) return Page.empty();
-//
-//    Pageable pageRequest = PageRequest.of(page, pageSize);
-//    List<ConceptCluster> allConceptClusters = conceptClusterSet.stream()
-//        .sorted(Comparator.comparing(ConceptCluster::getId))
-//        .collect(Collectors.toList());
-//
-//    int start = (int) pageRequest.getOffset();
-//    int end = Math.min((start + pageRequest.getPageSize()), conceptClusterSet.size());
-//
-//    return new PageImpl<>(allConceptClusters.subList(start, end), pageRequest, allConceptClusters.size());
-//  }
 }

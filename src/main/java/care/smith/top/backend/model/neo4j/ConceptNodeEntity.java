@@ -48,6 +48,10 @@ public class ConceptNodeEntity {
   }
 
   public ConceptCluster toApiModel() {
-    return new ConceptCluster().id(this.conceptId).labels(String.join(";", this.labels));
+    return new ConceptCluster().id(this.conceptId).labels(this.labels);
+  }
+
+  public static ConceptNodeEntity nullConceptNode() {
+    return new ConceptNodeEntity(null, null, null);
   }
 }
