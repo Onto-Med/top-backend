@@ -85,8 +85,8 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
         if (name == null || name.trim().isEmpty()) {
           documentPage = adapter.getAllDocuments(page);
         } else {
-          //ToDo: should the wildcard be optional?
-          documentPage = adapter.getDocumentsByName(name + "*", page);
+          //ToDo: wildcard '*' is hard-coded into ElasticSearchAdapter method, so right now 'name' becomes 'name*'
+          documentPage = adapter.getDocumentsByName(name, page);
         }
       } else if (!neo4jFilterOn) {
         documentPage = adapter.getDocumentsByIds(Set.copyOf(documentIds), page);
