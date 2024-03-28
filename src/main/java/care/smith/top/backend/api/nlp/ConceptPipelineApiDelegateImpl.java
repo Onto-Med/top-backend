@@ -8,19 +8,24 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
-public class ConceptGraphApiDelegateImpl implements ConceptPipelineApiDelegate {
+public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegate {
+  private final Logger LOGGER = Logger.getLogger(ConceptPipelineApiDelegateImpl.class.getName());
+
   @Autowired private ConceptGraphsService conceptGraphsService;
   @Autowired private DocumentQueryService documentQueryService;
 
@@ -43,8 +48,27 @@ public class ConceptGraphApiDelegateImpl implements ConceptPipelineApiDelegate {
   }
 
   @Override
-  public ResponseEntity<List<ConceptGraphPipeline>> getConceptPipelines() {
+  public ResponseEntity<List<ConceptGraphPipeline>> getConceptGraphPipelines() {
     return ResponseEntity.ok(conceptGraphsService.getAllStoredProcesses());
+  }
+
+  @Override
+  public ResponseEntity<Void> deleteConceptPipelineById(String pipelineId) {
+    return ConceptPipelineApiDelegate.super.deleteConceptPipelineById(pipelineId);
+  }
+
+  @Override
+  public ResponseEntity<ConceptGraphPipeline> getConceptGraphPipelineById(String pipelineId) {
+    //ToDo: ?
+    ConceptGraphPipeline pipeline = new ConceptGraphPipeline();
+    try {
+       pipeline = conceptGraphsService.getAllStoredProcesses().stream()
+          .filter(conceptGraphPipeline -> conceptGraphPipeline.getPipelineId().equalsIgnoreCase(pipelineId))
+          .findFirst().orElseThrow();
+    } catch (NoSuchElementException e) {
+      LOGGER.fine(String.format("A pipeline with id '%s' was not found", pipelineId));
+    }
+    return ResponseEntity.ok(pipeline);
   }
 
   @Override
@@ -72,10 +96,10 @@ public class ConceptGraphApiDelegateImpl implements ConceptPipelineApiDelegate {
     }
     Map<String, File> configMap =
         Stream.of(
-                Pair.of("data", dataConfig),
-                Pair.of("embedding", embeddingConfig),
-                Pair.of("clustering", clusteringConfig),
-                Pair.of("graph", graphConfig))
+                Pair.of(ConceptGraphPipelineStepsEnum.DATA.getValue(), dataConfig),
+                Pair.of(ConceptGraphPipelineStepsEnum.EMBEDDING.getValue(), embeddingConfig),
+                Pair.of(ConceptGraphPipelineStepsEnum.CLUSTERING.getValue(), clusteringConfig),
+                Pair.of(ConceptGraphPipelineStepsEnum.GRAPH.getValue(), graphConfig))
             .filter(pair -> pair.getRight() != null)
             .collect(
                 Collectors.toMap(

@@ -21,9 +21,9 @@ spring:
   max-batch-size: 100
   neo4j:
     connection-timeout: ${DB_NEO4J_CONNECTION_TIMEOUT:30}s
-  elasticsearch:
-    connection-timeout: ${DB_ELASTIC_CONNECTION_TIMEOUT:1}s
-    socket-timeout: ${DB_ELASTIC_SOCKET_TIMEOUT:30}s
+    authentication:
+      username: neo4j
+      password: neo4jdb*
   jpa:
     hibernate:
       ddl-auto: validate
@@ -71,9 +71,6 @@ top:
       graphdb:
         username: ${DB_NEO4J_USER:neo4j}
         password: ${DB_NEO4J_PASS:#{null}}
-      documentdb:
-        username: ${DB_ELASTIC_USER:elastic}
-        password: ${DB_ELASTIC_PASS:#{null}}
 
 coding:
   terminology-service: ${TERMINOLOGY_SERVICE_ENDPOINT:https://www.ebi.ac.uk/ols4/api}

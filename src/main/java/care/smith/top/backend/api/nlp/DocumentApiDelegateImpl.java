@@ -35,6 +35,7 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
       List<String> phraseText, DocumentGatheringMode gatheringMode, Boolean exemplarOnly,
       Integer page, List<String> include)
   {
+    page -= 1;
     TextAdapter adapter;
     try {
       adapter = documentService.getAdapterForDataSource(dataSource);
@@ -79,7 +80,7 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
     }
 
     boolean esFilterOn = !(documentIds == null || documentIds.isEmpty());
-    Page<Document> documentPage = Page.empty();
+    Page<Document> documentPage;
     try {
       if (!neo4jFilterOn && !esFilterOn) {
         if (name == null || name.trim().isEmpty()) {
@@ -117,12 +118,16 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
     } catch (IOException e) {
       LOGGER.fine("Server Instance could not be reached/queried.");
       return ResponseEntity.of(Optional.ofNullable(DocumentEntity.nullDocument()));
+    } catch (NoSuchElementException e) {
+      LOGGER.fine(String.format("No document found with id: '%s'", documentId));
+      return ResponseEntity.of(Optional.ofNullable(DocumentEntity.nullDocument()));
     }
   }
 
   @Override
   public ResponseEntity<DocumentPage> getDocumentsForQuery(
       String organisationId, String repositoryId, UUID queryId, Integer page) {
+    page -= 1;
     TextAdapter adapter;
     try {
       adapter = documentService.getAdapterFromQuery(organisationId, repositoryId, queryId);
