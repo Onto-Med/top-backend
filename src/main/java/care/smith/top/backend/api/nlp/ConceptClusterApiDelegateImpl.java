@@ -108,4 +108,9 @@ public class ConceptClusterApiDelegateImpl implements ConceptclusterApiDelegate 
     }
     return ResponseEntity.ok(response);
   }
+
+  @Override
+  public ResponseEntity<Void> deleteConceptClustersForPipelineId(String pipelineId) {
+    return ConceptclusterApiDelegate.super.deleteConceptClustersForPipelineId(pipelineId);
+  }
 }

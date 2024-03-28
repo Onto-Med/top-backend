@@ -8,8 +8,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
-class ConceptGraphApiDelegateImplTest extends AbstractNLPTest {
-  @Autowired ConceptGraphApiDelegateImpl conceptGraphApi;
+class ConceptPipelineApiDelegateImplTest extends AbstractNLPTest {
+  @Autowired
+  ConceptPipelineApiDelegateImpl conceptGraphApi;
 
   @Test
   void getConceptGraphStatistics() {
@@ -29,6 +30,17 @@ class ConceptGraphApiDelegateImplTest extends AbstractNLPTest {
   void getConceptPipelines() {
     // getConceptPipeline just calls conceptGraphService.conceptGraphsService.getAllStoredProcesses which is already tested
   }
+
+  @Test
+  @Disabled
+  void deleteConceptPipelineById() {
+  }
+
+  @Test
+  @Disabled
+  void getConceptPipelineById() {
+  }
+
 
   @Test
   @Disabled
