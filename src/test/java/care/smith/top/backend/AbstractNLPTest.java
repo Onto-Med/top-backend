@@ -99,7 +99,7 @@ public abstract class AbstractNLPTest {
     when(adapter.getAllDocuments(anyInt())).thenReturn(page1_2);
     when(adapter.getDocumentsByName(eq("Document 1"), anyInt())).thenReturn(page1);
     when(adapter.getDocumentsByName(eq("Document 2"), anyInt())).thenReturn(page2);
-    when(adapter.getDocumentsByName(eq("Document*"), anyInt())).thenReturn(page1_2);
+    when(adapter.getDocumentsByName(eq("Document"), anyInt())).thenReturn(page1_2);
 
     DocumentNodeRepository documentNodeRepository = mock(DocumentNodeRepository.class);
     when(documentNodeRepository.getDocumentsForPhraseIds(Set.of("p1", "p2"), false))
