@@ -101,7 +101,10 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
       LOGGER.fine("Server Instance could not be reached/queried.");
       return ResponseEntity.of(Optional.of(new DocumentPage()));
     }
-    return ResponseEntity.ok(ApiModelMapper.toDocumentPage(documentPage));
+    if (documentPage != null) {
+      return ResponseEntity.ok(ApiModelMapper.toDocumentPage(documentPage));
+    }
+    return ResponseEntity.ok(new DocumentPage());
   }
 
   @Override
