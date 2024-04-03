@@ -54,7 +54,9 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
 
   @Override
   public ResponseEntity<Void> deleteConceptPipelineById(String pipelineId) {
-    return ConceptPipelineApiDelegate.super.deleteConceptPipelineById(pipelineId);
+    //ToDo!
+    return ResponseEntity.ok().build();
+//    return ConceptPipelineApiDelegate.super.deleteConceptPipelineById(pipelineId);
   }
 
   @Override
