@@ -11,6 +11,9 @@ import java.io.File;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import care.smith.top.top_document_query.concept_cluster.model.pipeline_response.PipelineStatus;
+import care.smith.top.top_document_query.concept_cluster.model.pipeline_response.PipelineStatusEntity;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -55,6 +58,10 @@ public class ConceptGraphsService implements ContentService {
 
   public List<ConceptGraphPipeline> getAllStoredProcesses() {
     return pipelineManager.getAllStoredProcesses();
+  }
+
+  public PipelineResponseStatus getStatusOfPipeline(String process) {
+    return pipelineManager.getStatusOfProcess(process).orElseThrow().getSpecificResponse().getStatus();
   }
 
   public PipelineResponse initPipeline(

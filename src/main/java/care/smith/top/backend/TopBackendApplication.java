@@ -1,9 +1,7 @@
 package care.smith.top.backend;
 
 import care.smith.top.backend.configuration.InfrastructureConfig;
-import care.smith.top.backend.configuration.TopBackendContextInitializer;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.data.elasticsearch.ReactiveElasticsearchRepositoriesAutoConfiguration;
 import org.springframework.boot.autoconfigure.data.neo4j.Neo4jReactiveRepositoriesAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.cache.annotation.EnableCaching;
@@ -15,7 +13,6 @@ import org.springframework.data.neo4j.repository.config.EnableNeo4jRepositories;
 
 @SpringBootApplication(
     exclude = {
-      ReactiveElasticsearchRepositoriesAutoConfiguration.class, //ToDo: do we need this anymore?
       Neo4jReactiveRepositoriesAutoConfiguration.class
     })
 @Import(InfrastructureConfig.class)
