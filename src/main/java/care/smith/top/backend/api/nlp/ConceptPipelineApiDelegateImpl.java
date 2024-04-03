@@ -6,10 +6,8 @@ import care.smith.top.backend.service.nlp.DocumentQueryService;
 import care.smith.top.model.*;
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Optional;
+import java.nio.file.Files;
+import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -61,7 +59,8 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
 
   @Override
   public ResponseEntity<ConceptGraphPipeline> getConceptGraphPipelineById(String pipelineId) {
-    //ToDo: ?
+    //ToDo: add status check (ConceptGraphService.getStatusOfPipeline) here?; since this is what is called from the frontend
+    // maybe jump back to previous implementation but somewhere I need a check if clusters are available
     ConceptGraphPipeline pipeline = new ConceptGraphPipeline();
     try {
        pipeline = conceptGraphsService.getAllStoredProcesses().stream()
@@ -115,9 +114,33 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
                     }));
 
     if (data == null) {
+      //ToDo: this should go somewhere where it can be more easily adapted later;
+      // also index right now in the concept graphs api only supports one value
       documentQueryService
-          .getTextAdapterConfigPath(StringUtils.defaultString(dataSourceId, defaultDataSourceId))
-          .ifPresent(p -> configMap.put("document_Server", p.toFile()));
+          .getTextAdapterConfig(StringUtils.defaultString(dataSourceId, defaultDataSourceId))
+          .ifPresent(textAdapterConfig -> {
+            List<String> lines = new ArrayList<>(List.of(
+                String.format("\"url\": \"%s\"", textAdapterConfig.getConnection().getUrl()),
+                String.format("\"port\": \"%s\"", textAdapterConfig.getConnection().getPort()),
+                String.format("\"index\": \"%s\"", Arrays.stream(textAdapterConfig.getIndex()).findFirst().orElseThrow()),
+                String.format("\"size\": \"%s\"", textAdapterConfig.getBatchSize())
+            ));
+            if (textAdapterConfig.getReplaceFields() != null) {
+              lines.add(String.format("\"replace_keys\": \"%s\"",
+                  textAdapterConfig.getReplaceFields().keySet().stream()
+                      .map(key -> key + ": " + textAdapterConfig.getReplaceFields().get(key))
+                      .collect(Collectors.joining(", ", "{", "}"))));
+            }
+            File tempFile = null;
+            try {
+              tempFile = File.createTempFile("tmp-", "-document_server_config");
+              Files.write(tempFile.toPath(), lines);
+              tempFile.deleteOnExit();
+            } catch (IOException e) {
+              LOGGER.severe("Couldn't create temporary file to send to the concept graphs api as a document_server_config.");
+            }
+            configMap.put("document_server", tempFile);
+          });
     }
 
     try {
