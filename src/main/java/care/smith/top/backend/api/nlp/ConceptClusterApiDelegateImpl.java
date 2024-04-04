@@ -89,12 +89,18 @@ public class ConceptClusterApiDelegateImpl implements ConceptclusterApiDelegate 
   @Override
   public ResponseEntity<PipelineResponse> createConceptClustersForPipelineId(
       String pipelineId, List<String> graphIds) {
+    TextAdapter adapter = null;
+    try {
+      adapter = documentService.getAdapterForDataSource(pipelineId);
+    } catch (InstantiationException e) {
+      throw new RuntimeException(e);
+    }
     PipelineResponse response = new PipelineResponse().pipelineId(pipelineId);
     conceptClusterService.evictConceptsFromCache();
     if (!conceptClusterProcesses.containsKey(pipelineId)) {
       conceptClusterProcesses.put(
           pipelineId,
-          conceptClusterService.createSpecificGraphsInNeo4j(pipelineId, graphIds).getRight());
+          conceptClusterService.createSpecificGraphsInNeo4j(pipelineId, graphIds, adapter).getRight());
       conceptClusterService.setPipelineResponseStatus(
           response, "STARTED", "Started Concept Clusters creation ...");
     } else {

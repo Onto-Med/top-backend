@@ -1,6 +1,7 @@
 package care.smith.top.backend.api.nlp;
 
 import care.smith.top.backend.AbstractNLPTest;
+import care.smith.top.backend.repository.neo4j.DocumentNodeRepository;
 import care.smith.top.backend.service.nlp.ConceptClusterService;
 import care.smith.top.backend.service.nlp.DocumentService;
 import org.junit.jupiter.api.BeforeAll;
@@ -18,12 +19,11 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class ConceptClusterApiDelegateImplTest extends AbstractNLPTest {
 
-  private ConceptClusterService conceptClusterService;
   private ConceptClusterApiDelegateImpl conceptClusterApi;
 
   @BeforeEach
   void setUp() throws IOException, InstantiationException {
-    conceptClusterService = new ConceptClusterService(conceptGraphsApiService.getAddress().getHostString(), conceptClusterNodeRepository, phraseRepository);
+    ConceptClusterService conceptClusterService = new ConceptClusterService(conceptGraphsApiService.getAddress().getHostString(), conceptClusterNodeRepository, phraseRepository, documentNodeRepository);
     conceptClusterApi = new ConceptClusterApiDelegateImpl(mockedDocumentService(), conceptClusterService);
   }
 
