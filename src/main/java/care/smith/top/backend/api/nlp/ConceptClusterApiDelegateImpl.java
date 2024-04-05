@@ -9,23 +9,15 @@ import care.smith.top.model.*;
 import java.io.IOException;
 import java.util.*;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 import care.smith.top.top_document_query.adapter.TextAdapter;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 @Service
 public class ConceptClusterApiDelegateImpl implements ConceptclusterApiDelegate {
-  //ToDo: think about how to handle creation of neo4j clusters and the 'conceptClusterProcesses'
-  // -> is this map populated with the keys from existing neo4j Concept Nodes (their corpusId) when top-backend starts
   private final Logger LOGGER = Logger.getLogger(ConceptClusterApiDelegateImpl.class.getName());
   private final HashMap<String, Thread> conceptClusterProcesses = new HashMap<>();
   private final ConceptClusterService conceptClusterService;
@@ -90,6 +82,20 @@ public class ConceptClusterApiDelegateImpl implements ConceptclusterApiDelegate 
   }
 
   @Override
+  public ResponseEntity<List<String>> getCorpusIds() {
+    return ResponseEntity.of(Optional.ofNullable(conceptClusterService.getCorpusIdsInNeo4j()));
+  }
+
+  @Override
+  public ResponseEntity<PipelineResponse> getProcess(String pipelineId) {
+    PipelineResponse response = new PipelineResponse().pipelineId(pipelineId);
+    if (pipelineId == null || !conceptClusterProcesses.containsKey(pipelineId))
+      return ResponseEntity.of(Optional.of(
+          response.response(String.format("Process '%s' not found or no pipelineId provided.", pipelineId))));
+    return ResponseEntity.ok(checkConceptClusterProcess(pipelineId, response));
+  }
+
+  @Override
   public ResponseEntity<PipelineResponse> createConceptClustersForPipelineId(
       String pipelineId, List<String> graphIds) {
     PipelineResponse response = new PipelineResponse().pipelineId(pipelineId);
@@ -100,43 +106,38 @@ public class ConceptClusterApiDelegateImpl implements ConceptclusterApiDelegate 
     } catch (InstantiationException e) {
       String message = "No text adapter for '" + pipelineId + "' could be initialized.";
       LOGGER.severe(message);
-//      conceptClusterService.setPipelineResponseStatus(response, "FAILED", message);
       response.status(PipelineResponseStatus.FAILED).response(message);
       return ResponseEntity.of(Optional.of(response));
     }
 
-    conceptClusterService.evictConceptsFromCache(pipelineId);
     if (!conceptClusterProcesses.containsKey(pipelineId)) {
       conceptClusterProcesses.put(
           pipelineId,
           conceptClusterService.createSpecificGraphsInNeo4j(pipelineId, graphIds, adapter).getRight());
-//      conceptClusterService.setPipelineResponseStatus(
-//          response, "STARTED", "Started Concept Clusters creation ...");
       response.status(PipelineResponseStatus.RUNNING).response("Started Concept Clusters creation ...");
     } else {
-      if (conceptClusterProcesses.get(pipelineId).isAlive()) {
-//        conceptClusterService.setPipelineResponseStatus(
-//            response, "RUNNING", "Concept Clusters creation is still running ...");
-        response.status(PipelineResponseStatus.RUNNING).response("Concept Clusters creation is still running ...");
-      } else {
-//        conceptClusterService.setPipelineResponseStatus(
-//            response, "FINISHED", "Finished Concept Cluster creation for this process.");
-        response.status(PipelineResponseStatus.SUCCESSFUL).response("Finished Concept Cluster creation for this process.");
-      }
+      checkConceptClusterProcess(pipelineId, response);
     }
     return ResponseEntity.ok(response);
   }
 
   @Override
   public ResponseEntity<Void> deleteConceptClustersForPipelineId(String pipelineId) {
-    //ToDo: this needs to be worked on
     if (conceptClusterProcesses.containsKey(pipelineId)) {
       if (conceptClusterProcesses.get(pipelineId).isAlive()) conceptClusterProcesses.get(pipelineId).interrupt();
-      conceptClusterService.removeClustersForCorpusId(pipelineId);
       conceptClusterProcesses.remove(pipelineId);
-    } else {
-      LOGGER.warning(String.format("No mapping found "));
     }
-    return ConceptclusterApiDelegate.super.deleteConceptClustersForPipelineId(pipelineId);
+    conceptClusterService.evictConceptsFromCache(pipelineId);
+    conceptClusterService.removeClustersFromNeo4j(pipelineId);
+    return ResponseEntity.ok().build();
+  }
+
+  private PipelineResponse checkConceptClusterProcess(String pipelineId, PipelineResponse response) {
+    if (conceptClusterProcesses.get(pipelineId).isAlive()) {
+      response.status(PipelineResponseStatus.RUNNING).response("Concept Clusters creation is still running ...");
+    } else {
+      response.status(PipelineResponseStatus.SUCCESSFUL).response("Finished Concept Cluster creation for this process.");
+    }
+    return response;
   }
 }
