@@ -67,8 +67,16 @@ public class ConceptClusterService implements ContentService {
     return conceptNodeRepository.count();
   }
 
-  @CacheEvict(value = "concepts", key = "{#corpusId}", allEntries = false)
+  @CacheEvict(value = "concepts", allEntries = true)
+  public void evictAllConceptsFromCache() {}
+
+  @CacheEvict(value = "concepts", key = "{#corpusId}")
   public void evictConceptsFromCache(String corpusId) {}
+
+  @Cacheable(value = "concepts")
+  public Page<ConceptCluster> concepts() {
+    return conceptsForPage(null, null);
+  }
 
   @Cacheable(value = "concepts", key = "{#corpusId}")
   public Page<ConceptCluster> concepts(String corpusId) {
@@ -132,6 +140,11 @@ public class ConceptClusterService implements ContentService {
     return new PageImpl<>(conceptClusterPhraseList, getPageRequestOf(page), conceptClusterPhraseList.size());
   }
 
+
+  public List<String> getCorpusIdsInNeo4j() {
+    return conceptNodeRepository.getCorpusIds();
+  }
+
   public Pair<String, Thread> createSpecificGraphsInNeo4j(
       String processName, List<String> graphIds, TextAdapter adapter) {
     Map<String, ConceptGraphEntity> graphs =
@@ -141,8 +154,8 @@ public class ConceptClusterService implements ContentService {
     return new ImmutablePair<>(processName, t);
   }
 
-  public void removeClustersForCorpusId(String pipelineId) {
-    throw new NotImplementedException();
+  public void removeClustersFromNeo4j(String pipelineId) {
+    conceptNodeRepository.removeNodesByCorpusId(pipelineId);
   }
 
   public void setPipelineResponseStatus(

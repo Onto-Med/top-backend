@@ -18,14 +18,22 @@ public interface ConceptClusterNodeRepository
   Boolean conceptNodeExists(String conceptId);
 
   @Query(
+      "MATCH (n:Concept) WITH DISTINCT n.corpusId AS properties RETURN properties;")
+  List<String> getCorpusIds();
+
+  @Query(
+        "MATCH (n:Concept {corpusId: $corpusId}) DETACH DELETE n;")
+  void removeNodesByCorpusId(String corpusId);
+
+  @Query(
       "MATCH (d:Document {docId: $documentId})-[:HAS_PHRASE]->(p:Phrase)-[:IN_CONCEPT]->(c:Concept) RETURN c;")
-      List<ConceptNodeEntity> getConceptNodesByDocumentId(String documentId);
+  List<ConceptNodeEntity> getConceptNodesByDocumentId(String documentId);
 
   @Query(
       "UNWIND $labels as l MATCH (c:Concept) WHERE (l in c.labels) RETURN DISTINCT c;")
-      List<ConceptNodeEntity> getConceptNodesByLabels(List<String> labels);
+  List<ConceptNodeEntity> getConceptNodesByLabels(List<String> labels);
 
   @Query(
       "UNWIND $phraseIds as pid MATCH (c:Concept)<-[:IN_CONCEPT]-(p:Phrase {phraseId: pid}) RETURN DISTINCT c;")
-      List<ConceptNodeEntity> getConceptNodesByPhrases(List<String> phraseIds);
+  List<ConceptNodeEntity> getConceptNodesByPhrases(List<String> phraseIds);
 }
