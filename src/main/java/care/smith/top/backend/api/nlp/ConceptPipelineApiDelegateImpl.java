@@ -59,8 +59,6 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
 
   @Override
   public ResponseEntity<ConceptGraphPipeline> getConceptGraphPipelineById(String pipelineId) {
-    //ToDo: add status check (ConceptGraphService.getStatusOfPipeline) here?; since this is what is called from the frontend
-    // maybe jump back to previous implementation but somewhere I need a check if clusters are available
     ConceptGraphPipeline pipeline = new ConceptGraphPipeline();
     try {
        pipeline = conceptGraphsService.getAllStoredProcesses().stream()
