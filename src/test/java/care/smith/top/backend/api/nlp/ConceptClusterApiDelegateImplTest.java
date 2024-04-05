@@ -32,11 +32,11 @@ class ConceptClusterApiDelegateImplTest extends AbstractNLPTest {
     assertEquals(
         Set.copyOf(concepts2),
         Set.copyOf(conceptClusterApi.getConceptClusters(
-            List.of("something"), List.of("p1", "p2"), false, null, null).getBody().getContent()));
+            List.of("something"), List.of("p1", "p2"), false, null, null,null).getBody().getContent()));
     assertEquals(
         Set.copyOf(concepts1),
         Set.copyOf(conceptClusterApi.getConceptClusters(
-            List.of("another"), List.of("p1", "p2"), false, null, null).getBody().getContent()));
+            List.of("another"), List.of("p1", "p2"), false, null, null, null).getBody().getContent()));
 
   }
 
@@ -44,10 +44,10 @@ class ConceptClusterApiDelegateImplTest extends AbstractNLPTest {
   void getConceptClusterById() {
     assertEquals(
         concepts1.get(0),
-        conceptClusterApi.getConceptClusterById("c1", null).getBody());
+        conceptClusterApi.getConceptClusterById("c1", null, null).getBody());
     assertEquals(
         concepts2.get(0),
-        conceptClusterApi.getConceptClusterById("c2", null).getBody());
+        conceptClusterApi.getConceptClusterById("c2", null, null).getBody());
   }
 
   @Test
