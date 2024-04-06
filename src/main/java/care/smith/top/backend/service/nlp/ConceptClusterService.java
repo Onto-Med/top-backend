@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.neo4j.cypherdsl.core.Cypher;
@@ -155,7 +154,7 @@ public class ConceptClusterService implements ContentService {
   }
 
   public void removeClustersFromNeo4j(String pipelineId) {
-    conceptNodeRepository.removeNodesByCorpusId(pipelineId);
+    conceptNodeRepository.removeAllNodesForCorpusId(pipelineId);
   }
 
   public void setPipelineResponseStatus(
