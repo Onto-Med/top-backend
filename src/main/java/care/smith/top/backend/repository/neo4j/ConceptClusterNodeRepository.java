@@ -22,8 +22,11 @@ public interface ConceptClusterNodeRepository
   List<String> getCorpusIds();
 
   @Query(
-        "MATCH (n:Concept {corpusId: $corpusId}) DETACH DELETE n;")
-  void removeNodesByCorpusId(String corpusId);
+        "MATCH (c:Concept {corpusId: 'grassco'}) CALL { WITH c DETACH DELETE c}" +
+        "MATCH (p:Phrase) WHERE NOT (p)-[:IN_CONCEPT]->() CALL { WITH p DETACH DELETE p}" +
+        "MATCH (d:Document) WHERE NOT (d)-[:HAS_PHRASE]->() CALL { WITH d DETACH DELETE d}" +
+        "MATCH (p:Phrase) WHERE NOT (p)<-[:HAS_PHRASE]-() CALL { WITH p DETACH DELETE p}")
+  void removeAllNodesForCorpusId(String corpusId);
 
   @Query(
       "MATCH (d:Document {docId: $documentId})-[:HAS_PHRASE]->(p:Phrase)-[:IN_CONCEPT]->(c:Concept) RETURN c;")
