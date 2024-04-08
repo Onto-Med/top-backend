@@ -71,6 +71,12 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
   }
 
   @Override
+  public ResponseEntity<PipelineResponse> startConceptGraphPipelineWithJson(
+      ConceptPipelineConfigRequest conceptPipelineConfigRequest) {
+    return ConceptPipelineApiDelegate.super.startConceptGraphPipelineWithJson(conceptPipelineConfigRequest);
+  }
+
+  @Override
   public ResponseEntity<PipelineResponse> startConceptGraphPipeline(
       String pipelineId,
       String dataSourceId,
