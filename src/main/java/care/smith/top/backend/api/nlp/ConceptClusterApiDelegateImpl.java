@@ -87,7 +87,7 @@ public class ConceptClusterApiDelegateImpl implements ConceptclusterApiDelegate 
   }
 
   @Override
-  public ResponseEntity<PipelineResponse> getProcess(String pipelineId) {
+  public ResponseEntity<PipelineResponse> getConceptClusterProcess(String pipelineId) {
     PipelineResponse response = new PipelineResponse().pipelineId(pipelineId);
     if (pipelineId == null || !conceptClusterProcesses.containsKey(pipelineId))
       return ResponseEntity.of(Optional.of(
