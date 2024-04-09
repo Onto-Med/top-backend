@@ -10,9 +10,9 @@ logging:
 spring:
   neo4j:
     connection-timeout: ${DB_NEO4J_CONNECTION_TIMEOUT:30}s
-  elasticsearch:
-    connection-timeout: ${DB_ELASTIC_CONNECTION_TIMEOUT:1}s
-    socket-timeout: ${DB_ELASTIC_SOCKET_TIMEOUT:30}s
+#  elasticsearch:
+#    connection-timeout: ${DB_ELASTIC_CONNECTION_TIMEOUT:1}s
+#    socket-timeout: ${DB_ELASTIC_SOCKET_TIMEOUT:30}s
   liquibase:
     drop-first: true
   jpa:

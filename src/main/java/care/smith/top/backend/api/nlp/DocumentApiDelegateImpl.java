@@ -1,7 +1,6 @@
 package care.smith.top.backend.api.nlp;
 
 import care.smith.top.backend.api.DocumentApiDelegate;
-import care.smith.top.backend.service.nlp.DocumentQueryService;
 import care.smith.top.backend.service.nlp.DocumentService;
 import care.smith.top.backend.util.ApiModelMapper;
 import care.smith.top.model.Document;
