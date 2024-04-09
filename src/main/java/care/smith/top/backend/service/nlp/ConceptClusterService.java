@@ -1,3 +1,4 @@
+
 package care.smith.top.backend.service.nlp;
 
 import care.smith.top.backend.model.neo4j.ConceptNodeEntity;
@@ -9,6 +10,7 @@ import care.smith.top.backend.repository.neo4j.PhraseNodeRepository;
 import care.smith.top.backend.service.ContentService;
 import care.smith.top.model.ConceptCluster;
 import care.smith.top.model.PipelineResponse;
+import care.smith.top.model.PipelineResponseStatus;
 import care.smith.top.top_document_query.adapter.TextAdapter;
 import care.smith.top.top_document_query.concept_cluster.ConceptPipelineManager;
 import care.smith.top.top_document_query.concept_cluster.model.ConceptGraphEntity;
@@ -46,6 +48,7 @@ public class ConceptClusterService implements ContentService {
   private final ConceptClusterNodeRepository conceptNodeRepository;
   private final PhraseNodeRepository phraseNodeRepository;
   private final DocumentNodeRepository documentNodeRepository;
+  private final HashMap<String, Thread> conceptClusterProcesses;
 
   public ConceptClusterService(
       @Value("${top.documents.concept-graphs-api.uri}") String conceptGraphsApiUri, ConceptClusterNodeRepository conceptNodeRepository, PhraseNodeRepository phraseNodeRepository, DocumentNodeRepository documentNodeRepository) {
@@ -53,6 +56,48 @@ public class ConceptClusterService implements ContentService {
     this.conceptNodeRepository = conceptNodeRepository;
     this.phraseNodeRepository = phraseNodeRepository;
     this.documentNodeRepository = documentNodeRepository;
+    this.conceptClusterProcesses = new HashMap<>();
+  }
+
+  public HashMap<String, Thread> getConceptClusterProcesses() {
+    return conceptClusterProcesses;
+  }
+
+  public Thread getConceptClusterProcess(String pipelineId) {
+    return this.conceptClusterProcesses.get(pipelineId);
+  }
+
+  public Boolean conceptClusterProcessesContainsKey(String pipelineId) {
+    return this.conceptClusterProcesses.containsKey(pipelineId);
+  }
+
+  public HashMap<String, Thread> addToClusterProcesses(String pipelineId, Thread clusterCreationThread) {
+    this.conceptClusterProcesses.put(pipelineId, clusterCreationThread);
+    return conceptClusterProcesses;
+  }
+
+  public Thread removeFromClusterProcesses(String pipelineId) {
+    return this.conceptClusterProcesses.remove(pipelineId);
+  }
+
+  public PipelineResponse deleteCompletePipelineAndResults(String pipelineId) {
+    try {
+      if (this.conceptClusterProcessesContainsKey(pipelineId)) {
+        if (this.getConceptClusterProcess(pipelineId).isAlive()) this.getConceptClusterProcess(pipelineId).interrupt();
+        this.removeFromClusterProcesses(pipelineId);
+      }
+      this.evictConceptsFromCache(pipelineId);
+      this.removeClustersFromNeo4j(pipelineId);
+    } catch (Exception e) {
+      return new PipelineResponse()
+          .pipelineId(pipelineId)
+          .status(PipelineResponseStatus.FAILED)
+          .response("Pipeline could not be deleted. -- " + e.getMessage());
+    }
+    return new PipelineResponse()
+        .pipelineId(pipelineId)
+        .status(PipelineResponseStatus.SUCCESSFUL)
+        .response("Pipeline deleted.");
   }
 
   static Statement conceptWithId(String id) {
