@@ -1,6 +1,7 @@
 package care.smith.top.backend.api.nlp;
 
 import care.smith.top.backend.api.ConceptPipelineApiDelegate;
+import care.smith.top.backend.service.nlp.ConceptClusterService;
 import care.smith.top.backend.service.nlp.ConceptGraphsService;
 import care.smith.top.backend.service.nlp.DocumentQueryService;
 import care.smith.top.model.*;
@@ -25,6 +26,7 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
   private final Logger LOGGER = Logger.getLogger(ConceptPipelineApiDelegateImpl.class.getName());
 
   @Autowired private ConceptGraphsService conceptGraphsService;
+  @Autowired private ConceptClusterService conceptClusterService;
   @Autowired private DocumentQueryService documentQueryService;
 
   @Value("top.documents.default-adapter")
@@ -52,9 +54,12 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
 
   @Override
   public ResponseEntity<Void> deleteConceptPipelineById(String pipelineId) {
-    //ToDo: all set in the Service
-    return ResponseEntity.ok().build();
-//    return ConceptPipelineApiDelegate.super.deleteConceptPipelineById(pipelineId);
+    //ToDo: another response than void?
+    PipelineResponse clusterResponse = conceptClusterService.deleteCompletePipelineAndResults(pipelineId);
+    PipelineResponse graphResponse = conceptGraphsService.deletePipeline(pipelineId);
+    if (clusterResponse.getStatus().equals(PipelineResponseStatus.SUCCESSFUL) &&
+        graphResponse.getStatus().equals(PipelineResponseStatus.SUCCESSFUL)) return ResponseEntity.ok().build();
+    return ResponseEntity.internalServerError().build();
   }
 
   @Override
