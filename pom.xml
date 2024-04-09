@@ -73,14 +73,14 @@
                     <groupId>care.smith.top</groupId>
                     <artifactId>top-api</artifactId>
                 </exclusion>
-                <exclusion>
-                    <groupId>org.apache.lucene</groupId>
-                    <artifactId>lucene-core</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>co.elastic.clients</groupId>
-                    <artifactId>elasticsearch-java</artifactId>
-                </exclusion>
+<!--                <exclusion>-->
+<!--                    <groupId>org.apache.lucene</groupId>-->
+<!--                    <artifactId>lucene-core</artifactId>-->
+<!--                </exclusion>-->
+<!--                <exclusion>-->
+<!--                    <groupId>co.elastic.clients</groupId>-->
+<!--                    <artifactId>elasticsearch-java</artifactId>-->
+<!--                </exclusion>-->
             </exclusions>
         </dependency>
 
