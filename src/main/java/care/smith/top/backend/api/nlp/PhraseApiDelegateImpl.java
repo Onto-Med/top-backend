@@ -95,8 +95,9 @@ public class PhraseApiDelegateImpl implements PhraseApiDelegate {
 
   private Page<Phrase> pageFromSet(Set<Phrase> phraseSet, Integer page) {
     if (phraseSet.isEmpty()) return Page.empty();
+    if (page != null) page -= 1;
 
-    Pageable pageRequest = PageRequest.of(page, pageSize);
+    Pageable pageRequest = (page != null && page >= 0) ? PageRequest.of(page, pageSize) : Pageable.unpaged();
     List<Phrase> allPhrases = phraseSet.stream()
         .sorted(Comparator.comparing(Phrase::getId))
         .collect(Collectors.toList());

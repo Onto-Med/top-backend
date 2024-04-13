@@ -1,6 +1,7 @@
 package care.smith.top.backend.api.nlp;
 
 import care.smith.top.backend.AbstractNLPTest;
+import care.smith.top.backend.service.nlp.PhraseService;
 import care.smith.top.model.Document;
 import care.smith.top.model.DocumentGatheringMode;
 import care.smith.top.model.DocumentPage;
@@ -8,6 +9,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 
 import java.io.IOException;
@@ -19,6 +21,7 @@ import static org.mockito.Mockito.mock;
 
 class DocumentApiDelegateImplTest extends AbstractNLPTest {
   private static DocumentApiDelegateImpl documentApi;
+  @Autowired
 
   @BeforeAll
   static void setUp() throws IOException, InstantiationException {
@@ -66,10 +69,10 @@ class DocumentApiDelegateImplTest extends AbstractNLPTest {
   @Test
   void getSingleDocumentById() {
     ResponseEntity<Document> response1 =  documentApi.getSingleDocumentById(
-        "d1", "exampleDataSource", null);
+        "d1", "exampleDataSource", null, null);
     Assertions.assertEquals(documents1, Set.of(Objects.requireNonNull(response1.getBody())));
     ResponseEntity<Document> response2 =  documentApi.getSingleDocumentById(
-        "d2", "exampleDataSource", null);
+        "d2", "exampleDataSource", null, null);
     Assertions.assertEquals(documents2, Set.of(Objects.requireNonNull(response2.getBody())));
   }
 }
