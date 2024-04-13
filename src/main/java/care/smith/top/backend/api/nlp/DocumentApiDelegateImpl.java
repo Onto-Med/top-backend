@@ -1,7 +1,9 @@
 package care.smith.top.backend.api.nlp;
 
 import care.smith.top.backend.api.DocumentApiDelegate;
+import care.smith.top.backend.service.nlp.ConceptClusterService;
 import care.smith.top.backend.service.nlp.DocumentService;
+import care.smith.top.backend.service.nlp.PhraseService;
 import care.smith.top.backend.util.ApiModelMapper;
 import care.smith.top.model.Document;
 import care.smith.top.model.DocumentGatheringMode;
@@ -9,20 +11,28 @@ import care.smith.top.model.DocumentPage;
 import java.io.IOException;
 import java.util.*;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import care.smith.top.model.Phrase;
 import care.smith.top.top_document_query.adapter.TextAdapter;
 import care.smith.top.top_document_query.elasticsearch.DocumentEntity;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import static java.util.regex.Pattern.UNICODE_CASE;
+
+
 @Service
 public class DocumentApiDelegateImpl implements DocumentApiDelegate {
   private final Logger LOGGER = Logger.getLogger(DocumentApiDelegateImpl.class.getName());
-
+  @Autowired private ConceptClusterService conceptClusterService;
+  @Autowired private PhraseService phraseService;
   private final DocumentService documentService;
+  private final String MARK_LIST_ENTRY = "$color::";
 
   public DocumentApiDelegateImpl(DocumentService documentService) {
     this.documentService = documentService;
@@ -36,6 +46,7 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
   {
     page -= 1;
     TextAdapter adapter;
+//    HashSet<String> highlightedTerms = new HashSet<>();
     try {
       adapter = documentService.getAdapterForDataSource(dataSource);
     } catch (InstantiationException e) {
@@ -48,6 +59,12 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
     boolean neo4jFilterOn = false;
     HashSet<String> finalDocumentIds = new HashSet<>();
     if (phraseIds != null && !phraseIds.isEmpty()) {
+//      highlightedTerms.addAll(
+//          phraseService
+//              .getPhrasesByIds(phraseIds).stream()
+//              .map(Phrase::getText)
+//              .collect(Collectors.toSet())
+//      );
       finalDocumentIds.addAll(
         documentService
           .getDocumentsForPhraseIds(Set.copyOf(phraseIds), exemplarOnly).stream()
@@ -58,12 +75,14 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
     }
     if (conceptClusterIds != null && !conceptClusterIds.isEmpty()) {
       // 'gatheringMode' is only relevant for getting documents by 'conceptClusterIds'
+//      Set<String> conceptClusterHighlights = conceptClusterService.
       Set<String> conceptClusterIdSet = documentService
           .getDocumentsForConceptIds(Set.copyOf(conceptClusterIds), exemplarOnly, gatheringMode).stream()
           .map(Document::getId)
           .collect(Collectors.toSet());
       if (neo4jFilterOn) {
         finalDocumentIds.retainAll(conceptClusterIdSet);
+//        highlightedTerms.retainAll()
       } else { finalDocumentIds.addAll(conceptClusterIdSet); }
       neo4jFilterOn = true;
     }
@@ -107,7 +126,7 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
   }
 
   @Override
-  public ResponseEntity<Document> getSingleDocumentById(String documentId, String dataSource, List<String> include) {
+  public ResponseEntity<Document> getSingleDocumentById(String documentId, String dataSource, List<String> highlights, List<String> include) {
     TextAdapter adapter;
     try {
       adapter = documentService.getAdapterForDataSource(dataSource);
@@ -116,7 +135,24 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
     }
     try {
-      return ResponseEntity.ok(adapter.getDocumentById(documentId).orElseThrow());
+      Document document;
+      if (highlights != null && !highlights.isEmpty()) {
+        List<String> actualTerms = new ArrayList<>();
+        highlights.forEach(h -> {
+          if (h.startsWith(MARK_LIST_ENTRY)) {
+            actualTerms.add(h);
+          } else {
+            try {
+              actualTerms.add(phraseService.getPhraseById(h).map(Phrase::getText).orElseThrow());
+            } catch (NoSuchElementException ignored) {
+            }
+          }
+        });
+        document = adapter.getDocumentById(documentId).map(d -> buildTextWithHighlights(d, actualTerms)).orElseThrow();
+      } else {
+        document = adapter.getDocumentById(documentId).orElseThrow();
+      }
+      return ResponseEntity.ok(document);
     } catch (IOException e) {
       LOGGER.fine("Server Instance could not be reached/queried.");
       return ResponseEntity.of(Optional.ofNullable(DocumentEntity.nullDocument()));
@@ -151,5 +187,25 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
       LOGGER.fine("Server Instance could not be reached/queried.");
       return ResponseEntity.ok(new DocumentPage());
     }
+  }
+
+  private Document buildTextWithHighlights(Document document, List<String> terms) {
+    String markTag = "<span style=\"background: %s\">%s</span>";
+    if (terms == null) return document;
+    for (String mark : terms) {
+      String color = "yellow";
+      if (mark.startsWith(MARK_LIST_ENTRY)) {
+        color = mark.substring(MARK_LIST_ENTRY.length());
+        continue;
+      }
+      //ToDo: how to this?
+      String repl = Pattern
+          .compile(String.format("\\b%s\\b", mark), Pattern.CASE_INSENSITIVE | UNICODE_CASE)
+          .matcher(document.getHighlightedText())
+          .replaceAll(matchResult ->
+              String.format(markTag, color, document.getHighlightedText().substring(matchResult.start(), matchResult.end())));
+      document.highlightedText(repl);
+    }
+    return document;
   }
 }

@@ -110,6 +110,9 @@ public class PhraseService implements ContentService {
   public Optional<Phrase> getPhraseById(String phraseId) {
     return phraseRepository.findOne(phraseWithExactId(phraseId)).map(phraseMapper);
   }
+  public List<Phrase> getPhrasesByIds(List<String> phraseIds) {
+    return phraseRepository.getPhrasesForIds(phraseIds).stream().map(phraseMapper).collect(Collectors.toList());
+  }
 
   public List<Phrase> getPhraseByText(String text, boolean exactMatch) {
     Collection<PhraseNodeEntity> phrases = new ArrayList<>();

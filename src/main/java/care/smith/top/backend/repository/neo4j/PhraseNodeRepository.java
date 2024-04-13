@@ -21,4 +21,7 @@ public interface PhraseNodeRepository
 
   @Query("OPTIONAL MATCH (n:Phrase {phraseId: $phraseId})\n" + "RETURN n IS NOT NULL AS Predicate;")
   Boolean phraseNodeExists(String phraseId);
+
+  @Query("MATCH (n:Phrase WHERE n.phraseId IN $phraseIds) RETURN DISTINCT n")
+  List<PhraseNodeEntity> getPhrasesForIds(List<String> phraseIds);
 }

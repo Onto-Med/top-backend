@@ -5,6 +5,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -53,5 +55,10 @@ class PhraseServiceTest extends AbstractNLPTest {
     assertThat(phraseService.getPhrasesForDocument("d1", false)).isEqualTo(phrases2);
     assertThat(Set.copyOf(phraseService.getPhrasesForDocument("d2", false))).isEqualTo(Set.copyOf(phrases1_2));
     assertThat(phraseService.getPhrasesForDocument("d2", true)).isEqualTo(phrases1);
+  }
+
+  @Test
+  void getPhrasesByIds() {
+    assertThat(Set.copyOf(phraseService.getPhrasesByIds(List.of("p1", "p2")))).isEqualTo(Set.copyOf(phrases1_2));
   }
 }
