@@ -29,11 +29,19 @@ import static java.util.regex.Pattern.UNICODE_CASE;
 @Service
 public class DocumentApiDelegateImpl implements DocumentApiDelegate {
   private final Logger LOGGER = Logger.getLogger(DocumentApiDelegateImpl.class.getName());
-  @Autowired private ConceptClusterService conceptClusterService;
-  @Autowired private PhraseService phraseService;
+  @Autowired
+  private ConceptClusterService conceptClusterService;
+  @Autowired
+  private PhraseService phraseService;
   private final DocumentService documentService;
   private final String COLOR_PRE = "$color::";
   private final String COLOR_AFTER = "::color$";
+  private final Map<Character, String> REGEX_SPECIAL = Map.ofEntries(
+    Map.entry('.', "\\."), Map.entry('+', "\\+"), Map.entry('*', "\\*"), Map.entry('?', "\\?"),
+    Map.entry('^', "\\^"), Map.entry('$', "\\$"), Map.entry('(', "\\("), Map.entry(')', "\\)"),
+    Map.entry('[', "\\["), Map.entry(']', "\\]"), Map.entry('{', "\\{"), Map.entry('}', "\\}"),
+    Map.entry('|', "\\|"), Map.entry('\\', "\\\\"));
+
 
   public DocumentApiDelegateImpl(DocumentService documentService) {
     this.documentService = documentService;
@@ -43,8 +51,7 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
   public ResponseEntity<DocumentPage> getDocuments(
       String dataSource, String name, List<String> documentIds, List<String> phraseIds, List<String> conceptClusterIds,
       List<String> phraseText, DocumentGatheringMode gatheringMode, Boolean exemplarOnly,
-      Integer page, List<String> include)
-  {
+      Integer page, List<String> include) {
     page -= 1;
     TextAdapter adapter;
 //    HashSet<String> highlightedTerms = new HashSet<>();
@@ -67,10 +74,10 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
 //              .collect(Collectors.toSet())
 //      );
       finalDocumentIds.addAll(
-        documentService
-          .getDocumentsForPhraseIds(Set.copyOf(phraseIds), exemplarOnly).stream()
-          .map(Document::getId)
-          .collect(Collectors.toSet())
+          documentService
+              .getDocumentsForPhraseIds(Set.copyOf(phraseIds), exemplarOnly).stream()
+              .map(Document::getId)
+              .collect(Collectors.toSet())
       );
       neo4jFilterOn = true;
     }
@@ -84,7 +91,9 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
       if (neo4jFilterOn) {
         finalDocumentIds.retainAll(conceptClusterIdSet);
 //        highlightedTerms.retainAll()
-      } else { finalDocumentIds.addAll(conceptClusterIdSet); }
+      } else {
+        finalDocumentIds.addAll(conceptClusterIdSet);
+      }
       neo4jFilterOn = true;
     }
     if (phraseText != null && !phraseText.isEmpty()) {
@@ -94,7 +103,9 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
           .collect(Collectors.toSet());
       if (neo4jFilterOn) {
         finalDocumentIds.retainAll(phraseTextSet);
-      } else { finalDocumentIds.addAll(phraseTextSet); }
+      } else {
+        finalDocumentIds.addAll(phraseTextSet);
+      }
       neo4jFilterOn = true;
     }
 
@@ -138,28 +149,24 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
     try {
       Document document = adapter.getDocumentById(documentId).orElseThrow();
       if (highlightConcepts != null && !highlightConcepts.isEmpty()) {
-        String colorValue = "yellow";
+        String[] colors = new String[]{"yellow", "black"};
         String conceptId = null;
         for (String concept : highlightConcepts) {
           if (concept.startsWith(COLOR_PRE)) {
-            colorValue =
-                concept.substring(COLOR_PRE.length(), concept.length() - COLOR_AFTER.length() - 1);
+            colors =
+                concept.substring(COLOR_PRE.length(), concept.lastIndexOf(COLOR_AFTER)).split("\\|");
             conceptId =
-                concept.substring(COLOR_PRE.length() + colorValue.length() + COLOR_AFTER.length());
+                concept.substring(concept.lastIndexOf(COLOR_AFTER) + COLOR_AFTER.length());
           } else {
             conceptId = concept;
           }
-
-          String finalColorValue = colorValue;
           String finalConceptId = conceptId;
-          highlightConcepts.forEach(
-              h ->
-                  buildTextWithHighlights(
-                      document,
-                      finalColorValue,
-                      phraseService.getPhrasesForConcept(finalConceptId).stream()
-                          .map(Phrase::getText)
-                          .collect(Collectors.toList())));
+          buildTextWithHighlights(
+              document,
+              colors,
+              phraseService.getPhrasesForConcept(finalConceptId).stream()
+                  .map(Phrase::getText)
+                  .collect(Collectors.toList()));
         }
       }
       return ResponseEntity.ok(document);
@@ -199,15 +206,26 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
     }
   }
 
-  private void buildTextWithHighlights(Document document, String color, List<String> terms) {
-    String markTag = "<span style=\"background: %s\">%s</span>";
+  private void buildTextWithHighlights(Document document, String[] colors, List<String> terms) {
+    String colorBackgroundValue = colors[0];
+    String colorForegroundValue = colors.length > 1 ? colors[1] : "black";
+    String markTag = "<span style=\"background: %s; color: %s\">%s</span>";
     if (terms == null) return;
     for (String mark : terms) {
+      StringBuilder escapedString = new StringBuilder();
+      for (char character : mark.toCharArray()) {
+        if (REGEX_SPECIAL.containsKey(character)) {
+          escapedString.append(REGEX_SPECIAL.get(character));
+        }
+        else {
+          escapedString.append(character);
+        }
+      }
       String repl = Pattern
-          .compile(String.format("\\b%s\\b", mark), Pattern.CASE_INSENSITIVE | UNICODE_CASE)
+          .compile(String.format("\\b%s\\b", escapedString), Pattern.CASE_INSENSITIVE | UNICODE_CASE)
           .matcher(document.getHighlightedText())
           .replaceAll(matchResult ->
-              String.format(markTag, color, document.getHighlightedText().substring(matchResult.start(), matchResult.end())));
+                String.format(markTag, colorBackgroundValue, colorForegroundValue, document.getHighlightedText().substring(matchResult.start(), matchResult.end())));
       document.highlightedText(repl);
     }
   }
