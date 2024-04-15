@@ -32,7 +32,8 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
   @Autowired private ConceptClusterService conceptClusterService;
   @Autowired private PhraseService phraseService;
   private final DocumentService documentService;
-  private final String MARK_LIST_ENTRY = "$color::";
+  private final String COLOR_PRE = "$color::";
+  private final String COLOR_AFTER = "::color$";
 
   public DocumentApiDelegateImpl(DocumentService documentService) {
     this.documentService = documentService;
@@ -126,7 +127,7 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
   }
 
   @Override
-  public ResponseEntity<Document> getSingleDocumentById(String documentId, String dataSource, List<String> highlights, List<String> include) {
+  public ResponseEntity<Document> getSingleDocumentById(String documentId, String dataSource, List<String> highlightConcepts, List<String> include) {
     TextAdapter adapter;
     try {
       adapter = documentService.getAdapterForDataSource(dataSource);
@@ -135,22 +136,31 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
     }
     try {
-      Document document;
-      if (highlights != null && !highlights.isEmpty()) {
-        List<String> actualTerms = new ArrayList<>();
-        highlights.forEach(h -> {
-          if (h.startsWith(MARK_LIST_ENTRY)) {
-            actualTerms.add(h);
+      Document document = adapter.getDocumentById(documentId).orElseThrow();
+      if (highlightConcepts != null && !highlightConcepts.isEmpty()) {
+        String colorValue = "yellow";
+        String conceptId = null;
+        for (String concept : highlightConcepts) {
+          if (concept.startsWith(COLOR_PRE)) {
+            colorValue =
+                concept.substring(COLOR_PRE.length(), concept.length() - COLOR_AFTER.length() - 1);
+            conceptId =
+                concept.substring(COLOR_PRE.length() + colorValue.length() + COLOR_AFTER.length());
           } else {
-            try {
-              actualTerms.add(phraseService.getPhraseById(h).map(Phrase::getText).orElseThrow());
-            } catch (NoSuchElementException ignored) {
-            }
+            conceptId = concept;
           }
-        });
-        document = adapter.getDocumentById(documentId).map(d -> buildTextWithHighlights(d, actualTerms)).orElseThrow();
-      } else {
-        document = adapter.getDocumentById(documentId).orElseThrow();
+
+          String finalColorValue = colorValue;
+          String finalConceptId = conceptId;
+          highlightConcepts.forEach(
+              h ->
+                  buildTextWithHighlights(
+                      document,
+                      finalColorValue,
+                      phraseService.getPhrasesForConcept(finalConceptId).stream()
+                          .map(Phrase::getText)
+                          .collect(Collectors.toList())));
+        }
       }
       return ResponseEntity.ok(document);
     } catch (IOException e) {
@@ -189,16 +199,10 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
     }
   }
 
-  private Document buildTextWithHighlights(Document document, List<String> terms) {
+  private void buildTextWithHighlights(Document document, String color, List<String> terms) {
     String markTag = "<span style=\"background: %s\">%s</span>";
-    if (terms == null) return document;
+    if (terms == null) return;
     for (String mark : terms) {
-      String color = "yellow";
-      if (mark.startsWith(MARK_LIST_ENTRY)) {
-        color = mark.substring(MARK_LIST_ENTRY.length());
-        continue;
-      }
-      //ToDo: how to this?
       String repl = Pattern
           .compile(String.format("\\b%s\\b", mark), Pattern.CASE_INSENSITIVE | UNICODE_CASE)
           .matcher(document.getHighlightedText())
@@ -206,6 +210,5 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
               String.format(markTag, color, document.getHighlightedText().substring(matchResult.start(), matchResult.end())));
       document.highlightedText(repl);
     }
-    return document;
   }
 }
