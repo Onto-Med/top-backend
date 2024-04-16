@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface PhraseNodeRepository
-    extends Neo4jRepository<PhraseNodeEntity, String>,
+    extends Neo4jRepository<PhraseNodeEntity, Long>,
         CypherdslStatementExecutor<PhraseNodeEntity> {
 
   @Query(

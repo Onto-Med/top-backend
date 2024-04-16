@@ -18,7 +18,7 @@ public class PhraseNodeEntity {
   @Property("phrase")
   private final String phraseText;
 
-  @Id
+  @Id @GeneratedValue Long id;
   @Property("phraseId")
   private final String phraseId;
 
