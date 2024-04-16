@@ -10,19 +10,19 @@ import java.util.List;
 
 @Repository
 public interface ConceptClusterNodeRepository
-    extends Neo4jRepository<ConceptNodeEntity, String>,
+    extends Neo4jRepository<ConceptNodeEntity, Long>,
         CypherdslStatementExecutor<ConceptNodeEntity> {
 
   @Query(
-      "OPTIONAL MATCH (n:Concept {conceptId: $conceptId})\n" + "RETURN n IS NOT NULL AS Predicate;")
-  Boolean conceptNodeExists(String conceptId);
+      "OPTIONAL MATCH (n:Concept {conceptId: $conceptId, corpusId: $corpusId})\n" + "RETURN n IS NOT NULL AS Predicate;")
+  Boolean conceptNodeExists(String corpusId, String conceptId);
 
   @Query(
       "MATCH (n:Concept) WITH DISTINCT n.corpusId AS properties RETURN properties;")
   List<String> getCorpusIds();
 
   @Query(
-        "MATCH (c:Concept {corpusId: 'grassco'}) CALL { WITH c DETACH DELETE c}" +
+        "MATCH (c:Concept {corpusId: $corpusId}) CALL { WITH c DETACH DELETE c}" +
         "MATCH (p:Phrase) WHERE NOT (p)-[:IN_CONCEPT]->() CALL { WITH p DETACH DELETE p}" +
         "MATCH (d:Document) WHERE NOT (d)-[:HAS_PHRASE]->() CALL { WITH d DETACH DELETE d}" +
         "MATCH (p:Phrase) WHERE NOT (p)<-[:HAS_PHRASE]-() CALL { WITH p DETACH DELETE p}")

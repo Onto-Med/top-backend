@@ -8,7 +8,7 @@ import org.springframework.data.neo4j.core.schema.*;
 @Node("Concept")
 public class ConceptNodeEntity {
 
-  @Id
+  @Id @GeneratedValue Long id;
   @Property("conceptId")
   private final String conceptId;
 

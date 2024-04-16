@@ -255,7 +255,7 @@ public class ConceptClusterService implements ContentService {
 
     // Save Concept Nodes (and by extension create relationships 'PHRASE--IN_CONCEPT->CONCEPT' as
     // well as Phrase nodes)
-    if (!conceptNodeRepository.conceptNodeExists(graphId)) {
+    if (!conceptNodeRepository.conceptNodeExists(processId, graphId)) {
       List<String> labels =
           phrasesDocumentCount.entrySet().stream()
               .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))

@@ -58,8 +58,9 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
     // the second option could/should be checked in startPipeline
     PipelineResponse clusterResponse = conceptClusterService.deleteCompletePipelineAndResults(pipelineId);
     PipelineResponse graphResponse = conceptGraphsService.deletePipeline(pipelineId);
-    if (clusterResponse.getStatus().equals(PipelineResponseStatus.SUCCESSFUL) &&
-        graphResponse.getStatus().equals(PipelineResponseStatus.SUCCESSFUL)) return ResponseEntity.ok().build();
+    if ((clusterResponse.getStatus().equals(PipelineResponseStatus.SUCCESSFUL) &&
+        graphResponse.getStatus().equals(PipelineResponseStatus.SUCCESSFUL)) ||
+        graphResponse.getResponse().contains(String.format("no such process '%s'", pipelineId))) return ResponseEntity.ok().build();
     return ResponseEntity.internalServerError().build();
   }
 
@@ -79,6 +80,7 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
   @Override
   public ResponseEntity<PipelineResponse> startConceptGraphPipelineWithJson(
       ConceptPipelineConfigRequest conceptPipelineConfigRequest) {
+    //ToDo!!!
     return ConceptPipelineApiDelegate.super.startConceptGraphPipelineWithJson(conceptPipelineConfigRequest);
   }
 
