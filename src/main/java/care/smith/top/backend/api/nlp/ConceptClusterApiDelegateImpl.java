@@ -33,7 +33,7 @@ public class ConceptClusterApiDelegateImpl implements ConceptclusterApiDelegate 
     Document document;
     try {
       TextAdapter adapter = documentService.getAdapterForDataSource(dataSource);
-      document = adapter.getDocumentById(documentId).orElseThrow();
+      document = adapter.getDocumentById(documentId, true).orElseThrow();
     } catch (InstantiationException e) {
       LOGGER.severe("The text adapter '" + dataSource + "' could not be initialized.");
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
