@@ -70,7 +70,7 @@ public class PhraseApiDelegateImpl implements PhraseApiDelegate {
     Optional<Document> document;
     try {
       TextAdapter adapter = documentService.getAdapterForDataSource(dataSource);
-      document = adapter.getDocumentById(documentId);
+      document = adapter.getDocumentById(documentId, true);
     } catch (InstantiationException e) {
       LOGGER.severe("The text adapter '" + dataSource + "' could not be initialized.");
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();

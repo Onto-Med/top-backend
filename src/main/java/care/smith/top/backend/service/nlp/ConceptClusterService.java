@@ -239,8 +239,7 @@ public class ConceptClusterService implements ContentService {
                   .forEach(
                       documentId -> {
                         if (!documentId2PhraseIdMap.containsKey(documentId)) {
-                          documentId2PhraseIdMap.put(
-                              documentId, Lists.newArrayList(phraseNodeObject.getId()));
+                          documentId2PhraseIdMap.put(documentId, Lists.newArrayList(phraseNodeObject.getId()));
                         } else {
                           documentId2PhraseIdMap.get(documentId).add(phraseNodeObject.getId());
                         }
@@ -281,18 +280,20 @@ public class ConceptClusterService implements ContentService {
             });
 
     // Save Document Nodes and by extension relationships 'DOCUMENT--HAS_PHRASE->PHRASE'
+    System.out.println("");
     try {
-      adapter.getDocumentsByIds(documentId2PhraseIdMap.keySet(),null)
+      adapter.getDocumentsByIdsBatched(documentId2PhraseIdMap.keySet(),null, true)
           .forEach(
-              documentEntity -> {
-                documentNodeRepository.save(
-                    new DocumentNodeEntity(
-                        documentEntity.getId(),
-                        documentEntity.getName(),
-                        documentId2PhraseIdMap.get(documentEntity.getId()).stream()
-                            .map(phraseNodeEntityMap::get)
-                            .collect(Collectors.toSet())));
-              });
+              documentEntityList -> documentEntityList.forEach( documentEntity -> documentNodeRepository.save(
+                  new DocumentNodeEntity(
+                      documentEntity.getId(),
+                      documentEntity.getName(),
+                      documentId2PhraseIdMap.get(documentEntity.getId()).stream()
+                          .map(phraseNodeEntityMap::get)
+                          .collect(Collectors.toSet()))
+                  )
+              )
+          );
     } catch (IOException e) {
       //ToDo: !
       throw new RuntimeException(e);

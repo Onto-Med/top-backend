@@ -114,18 +114,18 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
     try {
       if (!neo4jFilterOn && !esFilterOn) {
         if (name == null || name.trim().isEmpty()) {
-          documentPage = adapter.getAllDocuments(page);
+          documentPage = adapter.getAllDocumentsPaged(page, true);
         } else {
           //ToDo: wildcard '*' is hard-coded into ElasticSearchAdapter method, so right now 'name' becomes 'name*'
-          documentPage = adapter.getDocumentsByName(name, page);
+          documentPage = adapter.getDocumentsByNamePaged(name, page, true);
         }
       } else if (!neo4jFilterOn) {
-        documentPage = adapter.getDocumentsByIds(Set.copyOf(documentIds), page);
+        documentPage = adapter.getDocumentsByIdsPaged(Set.copyOf(documentIds), page, true);
       } else if (!esFilterOn) {
-        documentPage = adapter.getDocumentsByIds(finalDocumentIds, page);
+        documentPage = adapter.getDocumentsByIdsPaged(finalDocumentIds, page, true);
       } else {
         finalDocumentIds.retainAll(documentIds);
-        documentPage = adapter.getDocumentsByIds(finalDocumentIds, page);
+        documentPage = adapter.getDocumentsByIdsPaged(finalDocumentIds, page, true);
       }
     } catch (IOException e) {
       LOGGER.fine("Server Instance could not be reached/queried.");
@@ -147,7 +147,7 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
     }
     try {
-      Document document = adapter.getDocumentById(documentId).orElseThrow();
+      Document document = adapter.getDocumentById(documentId, false).orElseThrow();
       if (highlightConcepts != null && !highlightConcepts.isEmpty()) {
         String[] colors = new String[]{"yellow", "black"};
         String conceptId = null;
@@ -196,8 +196,8 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
     try {
       return ResponseEntity.ok(
           ApiModelMapper.toDocumentPage(
-              adapter.getDocumentsByIds(
-                  documentService.getDocumentIdsForQuery(organisationId, repositoryId, queryId), page)
+              adapter.getDocumentsByIdsPaged(
+                  documentService.getDocumentIdsForQuery(organisationId, repositoryId, queryId), page, true)
           )
       );
     } catch (IOException e) {

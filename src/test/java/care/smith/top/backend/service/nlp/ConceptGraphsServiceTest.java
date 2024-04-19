@@ -35,7 +35,6 @@ class ConceptGraphsServiceTest extends AbstractNLPTest {
 
   @Test
   void getAllStoredProcesses() {
-    System.out.println("");
     List<ConceptGraphPipeline> processes = conceptGraphsService.getAllStoredProcesses();
     assertThat(processes).hasSize(2);
   }
