@@ -209,7 +209,7 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
   private void buildTextWithHighlights(Document document, String[] colors, List<String> terms) {
     String colorBackgroundValue = colors[0];
     String colorForegroundValue = colors.length > 1 ? colors[1] : "black";
-    String markTag = "<span style=\"background: %s; color: %s\">%s</span>";
+    String markTag = "<span style=\"background: %s; color: %s; padding: 2px; border-radius: 5px\">%s</span>";
     if (terms == null) return;
     for (String mark : terms) {
       StringBuilder escapedString = new StringBuilder();
