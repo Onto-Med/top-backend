@@ -60,7 +60,7 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
     PipelineResponse graphResponse = conceptGraphsService.deletePipeline(pipelineId);
     if ((clusterResponse.getStatus().equals(PipelineResponseStatus.SUCCESSFUL) &&
         graphResponse.getStatus().equals(PipelineResponseStatus.SUCCESSFUL)) ||
-        graphResponse.getResponse().contains(String.format("no such process '%s'", pipelineId))) return ResponseEntity.ok().build();
+        graphResponse.getResponse().contains(String.format("no such process '%s'", pipelineId.toLowerCase()))) return ResponseEntity.ok().build();
     return ResponseEntity.internalServerError().build();
   }
 
