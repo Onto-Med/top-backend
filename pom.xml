@@ -42,12 +42,22 @@
         </repository>
     </repositories>
 
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.elasticsearch.client</groupId>
+                <artifactId>elasticsearch-rest-client</artifactId>
+                <version>8.13.2</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
         <!-- TOP framework dependencies -->
         <dependency>
             <groupId>care.smith.top</groupId>
             <artifactId>top-api</artifactId>
-            <version>0.10.0-SNAPSHOT</version>
+            <version>0.10.0</version>
         </dependency>
         <dependency>
             <groupId>care.smith.top</groupId>
@@ -67,20 +77,12 @@
         <dependency>
             <groupId>care.smith.top</groupId>
             <artifactId>top-document-query</artifactId>
-            <version>0.8.0-SNAPSHOT</version>
+            <version>0.8.0</version>
             <exclusions>
                 <exclusion>
                     <groupId>care.smith.top</groupId>
                     <artifactId>top-api</artifactId>
                 </exclusion>
-<!--                <exclusion>-->
-<!--                    <groupId>org.apache.lucene</groupId>-->
-<!--                    <artifactId>lucene-core</artifactId>-->
-<!--                </exclusion>-->
-<!--                <exclusion>-->
-<!--                    <groupId>co.elastic.clients</groupId>-->
-<!--                    <artifactId>elasticsearch-java</artifactId>-->
-<!--                </exclusion>-->
             </exclusions>
         </dependency>
 
@@ -140,11 +142,6 @@
 
         <!-- Other non-testing dependencies -->
         <dependency>
-            <groupId>org.elasticsearch.client</groupId>
-            <artifactId>elasticsearch-rest-client</artifactId>
-            <version>8.13.2</version>
-        </dependency>
-        <dependency>
             <groupId>org.reflections</groupId>
             <artifactId>reflections</artifactId>
             <version>0.10.2</version>
@@ -155,11 +152,6 @@
             <version>2.0.1</version>
             <scope>runtime</scope>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>org.apache.lucene</groupId>-->
-<!--            <artifactId>lucene-core</artifactId>-->
-<!--            <version>8.11.1</version>-->
-<!--        </dependency>-->
 
         <!-- Test dependencies -->
         <dependency>
@@ -203,12 +195,6 @@
             <version>1.18.3</version>
             <scope>test</scope>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>org.testcontainers</groupId>-->
-<!--            <artifactId>elasticsearch</artifactId>-->
-<!--            <version>1.18.3</version>-->
-<!--            <scope>test</scope>-->
-<!--        </dependency>-->
     </dependencies>
 
     <build>
