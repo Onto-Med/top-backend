@@ -50,6 +50,11 @@ spring:
   jackson:
     default-property-inclusion: NON_NULL
 
+management:
+  health:
+    elasticsearch:
+      enabled: false
+
 org:
   jobrunr:
     background-job-server:
