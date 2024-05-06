@@ -27,7 +27,8 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class PhraseApiDelegateImpl implements PhraseApiDelegate {
-  //ToDo: check whether we want 'mostImportantOnly' and 'exactTextMatch' to be hardcoded boolean here or if we want
+  // ToDo: check whether we want 'mostImportantOnly' and 'exactTextMatch' to be hardcoded boolean
+  // here or if we want
   // to adapt the API accordingly
 
   private final Logger LOGGER = Logger.getLogger(PhraseApiDelegateImpl.class.getName());
@@ -62,8 +63,10 @@ public class PhraseApiDelegateImpl implements PhraseApiDelegate {
   }
 
   @Override
-  public ResponseEntity<PhrasePage> getPhrasesByDocumentId(String documentId, String dataSource, List<String> include, String text, Integer page) {
-    if ((documentId == null || documentId.trim().isEmpty()) || (dataSource == null || dataSource.trim().isEmpty())) {
+  public ResponseEntity<PhrasePage> getPhrasesByDocumentId(
+      String documentId, String dataSource, List<String> include, String text, Integer page) {
+    if ((documentId == null || documentId.trim().isEmpty())
+        || (dataSource == null || dataSource.trim().isEmpty())) {
       LOGGER.severe("Either 'documentId', 'dataSource' or both are missing.");
       return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
     }
@@ -82,8 +85,8 @@ public class PhraseApiDelegateImpl implements PhraseApiDelegate {
 
     boolean textFilter = !(text == null || text.trim().isEmpty());
 
-    HashSet<Phrase> phraseSet = new HashSet<>(
-        phraseService.getPhrasesForDocument(document.get().getId(), false));
+    HashSet<Phrase> phraseSet =
+        new HashSet<>(phraseService.getPhrasesForDocument(document.get().getId(), false));
     if (textFilter) phraseSet.retainAll(phraseService.getPhraseByText(text, false));
     return ResponseEntity.ok(ApiModelMapper.toPhrasePage(pageFromSet(phraseSet, page)));
   }
@@ -97,14 +100,18 @@ public class PhraseApiDelegateImpl implements PhraseApiDelegate {
     if (phraseSet.isEmpty()) return Page.empty();
     if (page != null) page -= 1;
 
-    Pageable pageRequest = (page != null && page >= 0) ? PageRequest.of(page, pageSize) : Pageable.unpaged();
-    List<Phrase> allPhrases = phraseSet.stream()
-        .sorted(Comparator.comparing(Phrase::getId))
-        .collect(Collectors.toList());
+    Pageable pageRequest =
+        (page != null && page >= 0) ? PageRequest.of(page, pageSize) : Pageable.unpaged();
+    List<Phrase> allPhrases =
+        phraseSet.stream().sorted(Comparator.comparing(Phrase::getId)).collect(Collectors.toList());
 
-    int start = (int) pageRequest.getOffset();
-    int end = Math.min((start + pageRequest.getPageSize()), phraseSet.size());
+    if (pageRequest.isPaged()) {
+      int start = (int) pageRequest.getOffset();
+      int end = Math.min((start + pageRequest.getPageSize()), phraseSet.size());
 
-    return new PageImpl<>(allPhrases.subList(start, end), pageRequest, allPhrases.size());
+      return new PageImpl<>(allPhrases.subList(start, end), pageRequest, allPhrases.size());
+    } else {
+      return new PageImpl<>(allPhrases, pageRequest, allPhrases.size());
+    }
   }
 }
