@@ -44,8 +44,8 @@ public class Neo4JExtension implements BeforeAllCallback, ExtensionContext.Store
           document ->
               neo4jSession.run(
                   String.format(
-                      "CREATE (:Document {docId: '%s', name: '%s'})",
-                      document.getId(), document.getName())));
+                      "CREATE (:Document {docId: '%s', name: '%s', corpusId: '%s'})",
+                      document.getId(), document.getName(), "exampleDatasource")));
       concepts1_2.forEach(
           concept -> {
             String labels =
@@ -54,15 +54,15 @@ public class Neo4JExtension implements BeforeAllCallback, ExtensionContext.Store
                     .collect(Collectors.joining(","));
             neo4jSession.run(
                 String.format(
-                    "CREATE (:Concept {conceptId: '%s', labels: %s})",
-                    concept.getId(), String.format("[%s]", labels)));
+                    "CREATE (:Concept {conceptId: '%s', labels: %s, corpusId: '%s'})",
+                    concept.getId(), String.format("[%s]", labels), "exampleDatasource"));
           });
       phrases1_2.forEach(
           phrase ->
               neo4jSession.run(
                   String.format(
-                      "CREATE (:Phrase {phraseId: '%s', phrase: '%s', exemplar: %s})",
-                      phrase.getId(), phrase.getText(), phrase.isExemplar())));
+                      "CREATE (:Phrase {phraseId: '%s', phrase: '%s', exemplar: %s, corpusId: '%s'})",
+                      phrase.getId(), phrase.getText(), phrase.isExemplar(), "exampleDatasource")));
 
       relations.forEach(
           (key, list) -> {
