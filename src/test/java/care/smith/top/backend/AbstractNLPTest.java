@@ -89,17 +89,18 @@ public abstract class AbstractNLPTest {
     DocumentNodeEntity d2 = new DocumentNodeEntity("d2", "Document 2", Set.of());
 
     TextAdapter adapter = mock(TextAdapter.class);
-    when(adapter.getDocumentById("d1"))
+    when(adapter.getDocumentById(eq("d1"), anyBoolean()))
         .thenReturn(Optional.ofNullable(new Document().id("d1").name("Document 1")));
-    when(adapter.getDocumentById("d2"))
+    when(adapter.getDocumentById(eq("d2"), anyBoolean()))
         .thenReturn(Optional.ofNullable(new Document().id("d2").name("Document 2")));
-    when(adapter.getDocumentsByIds(eq(Set.of("d1", "d2")), anyInt())).thenReturn(page1_2);
-    when(adapter.getDocumentsByIds(eq(Set.of("d1")), anyInt())).thenReturn(page1);
-    when(adapter.getDocumentsByIds(eq(Set.of("d2")), anyInt())).thenReturn(page2);
-    when(adapter.getAllDocuments(anyInt())).thenReturn(page1_2);
-    when(adapter.getDocumentsByName(eq("Document 1"), anyInt())).thenReturn(page1);
-    when(adapter.getDocumentsByName(eq("Document 2"), anyInt())).thenReturn(page2);
-    when(adapter.getDocumentsByName(eq("Document"), anyInt())).thenReturn(page1_2);
+    when(adapter.getDocumentsByIdsPaged(eq(Set.of("d1", "d2")), anyInt(), anyBoolean()))
+        .thenReturn(page1_2);
+    when(adapter.getDocumentsByIdsPaged(eq(Set.of("d1")), anyInt(), anyBoolean())).thenReturn(page1);
+    when(adapter.getDocumentsByIdsPaged(eq(Set.of("d2")), anyInt(), anyBoolean())).thenReturn(page2);
+    when(adapter.getAllDocumentsPaged(anyInt(), anyBoolean())).thenReturn(page1_2);
+    when(adapter.getDocumentsByNamePaged(eq("Document 1"), anyInt(), anyBoolean())).thenReturn(page1);
+    when(adapter.getDocumentsByNamePaged(eq("Document 2"), anyInt(), anyBoolean())).thenReturn(page2);
+    when(adapter.getDocumentsByNamePaged(eq("Document"), anyInt(), anyBoolean())).thenReturn(page1_2);
 
     DocumentNodeRepository documentNodeRepository = mock(DocumentNodeRepository.class);
     when(documentNodeRepository.getDocumentsForPhraseIds(Set.of("p1", "p2"), false))

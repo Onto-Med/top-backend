@@ -21,7 +21,6 @@ import static org.mockito.Mockito.mock;
 
 class DocumentApiDelegateImplTest extends AbstractNLPTest {
   private static DocumentApiDelegateImpl documentApi;
-  @Autowired
 
   @BeforeAll
   static void setUp() throws IOException, InstantiationException {
