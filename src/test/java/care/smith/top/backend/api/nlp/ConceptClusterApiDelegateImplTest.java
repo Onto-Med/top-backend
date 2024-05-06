@@ -55,7 +55,7 @@ class ConceptClusterApiDelegateImplTest extends AbstractNLPTest {
     assertEquals(
         Set.copyOf(concepts1_2),
         Set.copyOf(Objects.requireNonNull(conceptClusterApi.getConceptClusterByDocumentId(
-            "d2", "ExampleDatasource", null, 0).getBody()).getContent())
+            "d2", "exampleDatasource", null, 0).getBody()).getContent())
     );
   }
 
