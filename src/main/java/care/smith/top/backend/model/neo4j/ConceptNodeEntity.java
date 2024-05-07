@@ -9,6 +9,7 @@ import org.springframework.data.neo4j.core.schema.*;
 public class ConceptNodeEntity {
 
   @Id @GeneratedValue Long id;
+
   @Property("conceptId")
   private final String conceptId;
 
@@ -22,7 +23,10 @@ public class ConceptNodeEntity {
   private Set<PhraseNodeEntity> conceptPhrases;
 
   public ConceptNodeEntity(
-      String conceptId, String corpusId, List<String> labels, Set<PhraseNodeEntity> conceptPhrases) {
+      String conceptId,
+      String corpusId,
+      List<String> labels,
+      Set<PhraseNodeEntity> conceptPhrases) {
     this.conceptId = conceptId;
     this.corpusId = corpusId;
     this.labels = labels;

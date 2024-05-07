@@ -4,17 +4,16 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import care.smith.top.backend.AbstractNLPTest;
 import care.smith.top.model.ConceptCluster;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 class ConceptClusterServiceTest extends AbstractNLPTest {
-  @Autowired
-  protected ConceptClusterService conceptClusterService;
+  @Autowired protected ConceptClusterService conceptClusterService;
+
   @Test
   void count() {
     assertEquals(Long.valueOf(2), conceptClusterService.count());
@@ -23,15 +22,15 @@ class ConceptClusterServiceTest extends AbstractNLPTest {
   @Test
   void concepts() {
     assertEquals(
-        Set.copyOf(concepts1_2), conceptClusterService.concepts(null).stream().collect(Collectors.toSet()));
+        Set.copyOf(concepts1_2),
+        conceptClusterService.concepts(null).stream().collect(Collectors.toSet()));
   }
 
   @Test
   void conceptsForPage() {
     assertEquals(
         conceptClusterService.concepts(null).stream().collect(Collectors.toSet()),
-        conceptClusterService.conceptsForPage(null, null).stream().collect(Collectors.toSet())
-    );
+        conceptClusterService.conceptsForPage(null, null).stream().collect(Collectors.toSet()));
   }
 
   @Test
@@ -54,26 +53,35 @@ class ConceptClusterServiceTest extends AbstractNLPTest {
   void conceptsByLabels() {
     assertEquals(
         Set.copyOf(concepts1),
-        new HashSet<>(conceptClusterService.conceptsByLabels(List.of("phrase"), null, 0).getContent()));
+        new HashSet<>(
+            conceptClusterService.conceptsByLabels(List.of("phrase"), null, 0).getContent()));
     assertEquals(
         Set.copyOf(concepts1_2),
-        new HashSet<>(conceptClusterService.conceptsByLabels(List.of("phrase", "good"), null, 0).getContent()));
+        new HashSet<>(
+            conceptClusterService
+                .conceptsByLabels(List.of("phrase", "good"), null, 0)
+                .getContent()));
   }
 
   @Test
   void conceptsByPhraseIds() {
     assertEquals(
         Set.copyOf(concepts1),
-        new HashSet<>(conceptClusterService.conceptsByPhraseIds(List.of("p1"), null, 0).getContent()));
+        new HashSet<>(
+            conceptClusterService.conceptsByPhraseIds(List.of("p1"), null, 0).getContent()));
     assertEquals(
         Set.copyOf(concepts1_2),
-        new HashSet<>(conceptClusterService.conceptsByPhraseIds(List.of("p1", "p2"), null, 0).getContent()));
+        new HashSet<>(
+            conceptClusterService.conceptsByPhraseIds(List.of("p1", "p2"), null, 0).getContent()));
   }
 
   @Test
   void conceptsByLabelsAndPhrases() {
     assertEquals(
         Set.copyOf(concepts2),
-        new HashSet<>(conceptClusterService.conceptsByLabelsAndPhrases(List.of("good"), List.of("p1", "p2"), null, 0).getContent()));
+        new HashSet<>(
+            conceptClusterService
+                .conceptsByLabelsAndPhrases(List.of("good"), List.of("p1", "p2"), null, 0)
+                .getContent()));
   }
 }

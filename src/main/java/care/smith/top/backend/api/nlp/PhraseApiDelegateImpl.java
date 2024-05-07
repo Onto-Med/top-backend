@@ -5,17 +5,13 @@ import care.smith.top.backend.service.nlp.DocumentService;
 import care.smith.top.backend.service.nlp.PhraseService;
 import care.smith.top.backend.util.ApiModelMapper;
 import care.smith.top.model.Document;
-import care.smith.top.model.DocumentPage;
 import care.smith.top.model.Phrase;
 import care.smith.top.model.PhrasePage;
-
+import care.smith.top.top_document_query.adapter.TextAdapter;
 import java.io.IOException;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-
-import care.smith.top.top_document_query.adapter.TextAdapter;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;

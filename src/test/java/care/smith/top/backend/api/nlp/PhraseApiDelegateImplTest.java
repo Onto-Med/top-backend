@@ -1,20 +1,14 @@
 package care.smith.top.backend.api.nlp;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import care.smith.top.backend.AbstractNLPTest;
 import care.smith.top.backend.service.nlp.PhraseService;
-import care.smith.top.model.Phrase;
+import java.io.IOException;
+import java.util.Objects;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 class PhraseApiDelegateImplTest extends AbstractNLPTest {
   private DocumentApiDelegateImpl documentApi;
@@ -43,12 +37,18 @@ class PhraseApiDelegateImplTest extends AbstractNLPTest {
   void getPhrasesByDocumentId() {
     Assertions.assertEquals(
         phrases2,
-        Objects.requireNonNull(phraseApi.getPhrasesByDocumentId(
-            "d1", "exampleDataSource", null, null, 0).getBody()).getContent());
+        Objects.requireNonNull(
+                phraseApi
+                    .getPhrasesByDocumentId("d1", "exampleDataSource", null, null, 0)
+                    .getBody())
+            .getContent());
     Assertions.assertEquals(
         phrases1_2,
-        Objects.requireNonNull(phraseApi.getPhrasesByDocumentId(
-            "d2", "exampleDataSource", null, null, 0).getBody()).getContent());
+        Objects.requireNonNull(
+                phraseApi
+                    .getPhrasesByDocumentId("d2", "exampleDataSource", null, null, 0)
+                    .getBody())
+            .getContent());
   }
 
   @Test

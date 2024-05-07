@@ -27,10 +27,13 @@ class ConceptGraphsServiceTest extends AbstractNLPTest {
   void getConceptGraphForIdAndProcess() {
     ConceptGraph conceptGraph =
         conceptGraphsService.getConceptGraphForIdAndProcess("0", "process_id");
-    assertThat(conceptGraph).isNotNull().satisfies(c -> {
-      assertThat(c.getAdjacency()).hasSize(4);
-      assertThat(c.getNodes()).hasSize(4);
-    });
+    assertThat(conceptGraph)
+        .isNotNull()
+        .satisfies(
+            c -> {
+              assertThat(c.getAdjacency()).hasSize(4);
+              assertThat(c.getNodes()).hasSize(4);
+            });
   }
 
   @Test
@@ -40,8 +43,7 @@ class ConceptGraphsServiceTest extends AbstractNLPTest {
   }
 
   @Test
-  void getStatusOfPipeline() {
-  }
+  void getStatusOfPipeline() {}
 
   @Test
   void count() {

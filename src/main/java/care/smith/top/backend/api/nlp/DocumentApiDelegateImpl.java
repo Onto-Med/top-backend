@@ -1,5 +1,7 @@
 package care.smith.top.backend.api.nlp;
 
+import static java.util.regex.Pattern.UNICODE_CASE;
+
 import care.smith.top.backend.api.DocumentApiDelegate;
 import care.smith.top.backend.service.nlp.ConceptClusterService;
 import care.smith.top.backend.service.nlp.DocumentService;
@@ -8,40 +10,44 @@ import care.smith.top.backend.util.ApiModelMapper;
 import care.smith.top.model.Document;
 import care.smith.top.model.DocumentGatheringMode;
 import care.smith.top.model.DocumentPage;
+import care.smith.top.model.Phrase;
+import care.smith.top.top_document_query.adapter.TextAdapter;
+import care.smith.top.top_document_query.elasticsearch.DocumentEntity;
 import java.io.IOException;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
-import care.smith.top.model.Phrase;
-import care.smith.top.top_document_query.adapter.TextAdapter;
-import care.smith.top.top_document_query.elasticsearch.DocumentEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import static java.util.regex.Pattern.UNICODE_CASE;
-
-
 @Service
 public class DocumentApiDelegateImpl implements DocumentApiDelegate {
   private final Logger LOGGER = Logger.getLogger(DocumentApiDelegateImpl.class.getName());
-  @Autowired
-  private ConceptClusterService conceptClusterService;
-  @Autowired
-  private PhraseService phraseService;
+  @Autowired private ConceptClusterService conceptClusterService;
+  @Autowired private PhraseService phraseService;
   private final DocumentService documentService;
   private final String COLOR_PRE = "$color::";
   private final String COLOR_AFTER = "::color$";
-  private final Map<Character, String> REGEX_SPECIAL = Map.ofEntries(
-    Map.entry('.', "\\."), Map.entry('+', "\\+"), Map.entry('*', "\\*"), Map.entry('?', "\\?"),
-    Map.entry('^', "\\^"), Map.entry('$', "\\$"), Map.entry('(', "\\("), Map.entry(')', "\\)"),
-    Map.entry('[', "\\["), Map.entry(']', "\\]"), Map.entry('{', "\\{"), Map.entry('}', "\\}"),
-    Map.entry('|', "\\|"), Map.entry('\\', "\\\\"));
-
+  private final Map<Character, String> REGEX_SPECIAL =
+      Map.ofEntries(
+          Map.entry('.', "\\."),
+          Map.entry('+', "\\+"),
+          Map.entry('*', "\\*"),
+          Map.entry('?', "\\?"),
+          Map.entry('^', "\\^"),
+          Map.entry('$', "\\$"),
+          Map.entry('(', "\\("),
+          Map.entry(')', "\\)"),
+          Map.entry('[', "\\["),
+          Map.entry(']', "\\]"),
+          Map.entry('{', "\\{"),
+          Map.entry('}', "\\}"),
+          Map.entry('|', "\\|"),
+          Map.entry('\\', "\\\\"));
 
   public DocumentApiDelegateImpl(DocumentService documentService) {
     this.documentService = documentService;
@@ -49,12 +55,19 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
 
   @Override
   public ResponseEntity<DocumentPage> getDocuments(
-      String dataSource, String name, List<String> documentIds, List<String> phraseIds, List<String> conceptClusterIds,
-      List<String> phraseText, DocumentGatheringMode gatheringMode, Boolean exemplarOnly,
-      Integer page, List<String> include) {
+      String dataSource,
+      String name,
+      List<String> documentIds,
+      List<String> phraseIds,
+      List<String> conceptClusterIds,
+      List<String> phraseText,
+      DocumentGatheringMode gatheringMode,
+      Boolean exemplarOnly,
+      Integer page,
+      List<String> include) {
     page -= 1;
     TextAdapter adapter;
-//    HashSet<String> highlightedTerms = new HashSet<>();
+    //    HashSet<String> highlightedTerms = new HashSet<>();
     try {
       adapter = documentService.getAdapterForDataSource(dataSource);
     } catch (InstantiationException e) {
@@ -67,40 +80,40 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
     boolean neo4jFilterOn = false;
     HashSet<String> finalDocumentIds = new HashSet<>();
     if (phraseIds != null && !phraseIds.isEmpty()) {
-//      highlightedTerms.addAll(
-//          phraseService
-//              .getPhrasesByIds(phraseIds).stream()
-//              .map(Phrase::getText)
-//              .collect(Collectors.toSet())
-//      );
+      //      highlightedTerms.addAll(
+      //          phraseService
+      //              .getPhrasesByIds(phraseIds).stream()
+      //              .map(Phrase::getText)
+      //              .collect(Collectors.toSet())
+      //      );
       finalDocumentIds.addAll(
-          documentService
-              .getDocumentsForPhraseIds(Set.copyOf(phraseIds), exemplarOnly).stream()
+          documentService.getDocumentsForPhraseIds(Set.copyOf(phraseIds), exemplarOnly).stream()
               .map(Document::getId)
-              .collect(Collectors.toSet())
-      );
+              .collect(Collectors.toSet()));
       neo4jFilterOn = true;
     }
     if (conceptClusterIds != null && !conceptClusterIds.isEmpty()) {
       // 'gatheringMode' is only relevant for getting documents by 'conceptClusterIds'
-//      Set<String> conceptClusterHighlights = conceptClusterService.
-      Set<String> conceptClusterIdSet = documentService
-          .getDocumentsForConceptIds(Set.copyOf(conceptClusterIds), exemplarOnly, gatheringMode).stream()
-          .map(Document::getId)
-          .collect(Collectors.toSet());
+      //      Set<String> conceptClusterHighlights = conceptClusterService.
+      Set<String> conceptClusterIdSet =
+          documentService
+              .getDocumentsForConceptIds(Set.copyOf(conceptClusterIds), exemplarOnly, gatheringMode)
+              .stream()
+              .map(Document::getId)
+              .collect(Collectors.toSet());
       if (neo4jFilterOn) {
         finalDocumentIds.retainAll(conceptClusterIdSet);
-//        highlightedTerms.retainAll()
+        //        highlightedTerms.retainAll()
       } else {
         finalDocumentIds.addAll(conceptClusterIdSet);
       }
       neo4jFilterOn = true;
     }
     if (phraseText != null && !phraseText.isEmpty()) {
-      Set<String> phraseTextSet = documentService
-          .getDocumentsForPhraseTexts(Set.copyOf(phraseText), exemplarOnly).stream()
-          .map(Document::getId)
-          .collect(Collectors.toSet());
+      Set<String> phraseTextSet =
+          documentService.getDocumentsForPhraseTexts(Set.copyOf(phraseText), exemplarOnly).stream()
+              .map(Document::getId)
+              .collect(Collectors.toSet());
       if (neo4jFilterOn) {
         finalDocumentIds.retainAll(phraseTextSet);
       } else {
@@ -116,7 +129,8 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
         if (name == null || name.trim().isEmpty()) {
           documentPage = adapter.getAllDocumentsPaged(page, true);
         } else {
-          //ToDo: wildcard '*' is hard-coded into ElasticSearchAdapter method, so right now 'name' becomes 'name*'
+          // ToDo: wildcard '*' is hard-coded into ElasticSearchAdapter method, so right now 'name'
+          // becomes 'name*'
           documentPage = adapter.getDocumentsByNamePaged(name, page, true);
         }
       } else if (!neo4jFilterOn) {
@@ -138,7 +152,8 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
   }
 
   @Override
-  public ResponseEntity<Document> getSingleDocumentById(String documentId, String dataSource, List<String> highlightConcepts, List<String> include) {
+  public ResponseEntity<Document> getSingleDocumentById(
+      String documentId, String dataSource, List<String> highlightConcepts, List<String> include) {
     TextAdapter adapter;
     try {
       adapter = documentService.getAdapterForDataSource(dataSource);
@@ -149,14 +164,15 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
     try {
       Document document = adapter.getDocumentById(documentId, false).orElseThrow();
       if (highlightConcepts != null && !highlightConcepts.isEmpty()) {
-        String[] colors = new String[]{"yellow", "black"};
+        String[] colors = new String[] {"yellow", "black"};
         String conceptId = null;
         for (String concept : highlightConcepts) {
           if (concept.startsWith(COLOR_PRE)) {
             colors =
-                concept.substring(COLOR_PRE.length(), concept.lastIndexOf(COLOR_AFTER)).split("\\|");
-            conceptId =
-                concept.substring(concept.lastIndexOf(COLOR_AFTER) + COLOR_AFTER.length());
+                concept
+                    .substring(COLOR_PRE.length(), concept.lastIndexOf(COLOR_AFTER))
+                    .split("\\|");
+            conceptId = concept.substring(concept.lastIndexOf(COLOR_AFTER) + COLOR_AFTER.length());
           } else {
             conceptId = concept;
           }
@@ -187,19 +203,19 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
     try {
       adapter = documentService.getAdapterFromQuery(organisationId, repositoryId, queryId);
     } catch (NoSuchElementException e) {
-      LOGGER.severe(String.format(
-          "The text adapter for 'organisation: %s', 'repository: %s' and 'query: %s' could not be found.",
-          organisationId, repositoryId, queryId.toString())
-      );
+      LOGGER.severe(
+          String.format(
+              "The text adapter for 'organisation: %s', 'repository: %s' and 'query: %s' could not be found.",
+              organisationId, repositoryId, queryId.toString()));
       return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }
     try {
       return ResponseEntity.ok(
           ApiModelMapper.toDocumentPage(
               adapter.getDocumentsByIdsPaged(
-                  documentService.getDocumentIdsForQuery(organisationId, repositoryId, queryId), page, true)
-          )
-      );
+                  documentService.getDocumentIdsForQuery(organisationId, repositoryId, queryId),
+                  page,
+                  true)));
     } catch (IOException e) {
       LOGGER.fine("Server Instance could not be reached/queried.");
       return ResponseEntity.ok(new DocumentPage());
@@ -209,23 +225,31 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
   private void buildTextWithHighlights(Document document, String[] colors, List<String> terms) {
     String colorBackgroundValue = colors[0];
     String colorForegroundValue = colors.length > 1 ? colors[1] : "black";
-    String markTag = "<span style=\"background: %s; color: %s; padding: 2px; border-radius: 5px\">%s</span>";
+    String markTag =
+        "<span style=\"background: %s; color: %s; padding: 2px; border-radius: 5px\">%s</span>";
     if (terms == null) return;
     for (String mark : terms) {
       StringBuilder escapedString = new StringBuilder();
       for (char character : mark.toCharArray()) {
         if (REGEX_SPECIAL.containsKey(character)) {
           escapedString.append(REGEX_SPECIAL.get(character));
-        }
-        else {
+        } else {
           escapedString.append(character);
         }
       }
-      String repl = Pattern
-          .compile(String.format("\\b%s\\b", escapedString), Pattern.CASE_INSENSITIVE | UNICODE_CASE)
-          .matcher(document.getHighlightedText())
-          .replaceAll(matchResult ->
-                String.format(markTag, colorBackgroundValue, colorForegroundValue, document.getHighlightedText().substring(matchResult.start(), matchResult.end())));
+      String repl =
+          Pattern.compile(
+                  String.format("\\b%s\\b", escapedString), Pattern.CASE_INSENSITIVE | UNICODE_CASE)
+              .matcher(document.getHighlightedText())
+              .replaceAll(
+                  matchResult ->
+                      String.format(
+                          markTag,
+                          colorBackgroundValue,
+                          colorForegroundValue,
+                          document
+                              .getHighlightedText()
+                              .substring(matchResult.start(), matchResult.end())));
       document.highlightedText(repl);
     }
   }

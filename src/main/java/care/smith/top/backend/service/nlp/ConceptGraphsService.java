@@ -11,7 +11,6 @@ import java.io.File;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -59,18 +58,24 @@ public class ConceptGraphsService implements ContentService {
   }
 
   public PipelineResponseStatus getStatusOfPipeline(String process) {
-    return pipelineManager.getStatusOfProcess(process).orElseThrow().getSpecificResponse().getStatus();
+    return pipelineManager
+        .getStatusOfProcess(process)
+        .orElseThrow()
+        .getSpecificResponse()
+        .getStatus();
   }
 
   public PipelineResponse deletePipeline(String processId) {
-    //ToDo: need to implement proper checkable status in concept-graphs-api
+    // ToDo: need to implement proper checkable status in concept-graphs-api
     PipelineResponse pipelineResponse = new PipelineResponse().pipelineId(processId);
     String stringResponse = pipelineManager.deleteProcess(processId);
     if (stringResponse.toLowerCase().contains("no such process")) {
       return pipelineResponse.response(stringResponse).status(PipelineResponseStatus.FAILED);
     } else if (stringResponse.toLowerCase().contains("is currently running")) {
       return pipelineResponse.response(stringResponse).status(PipelineResponseStatus.RUNNING);
-    } else if (stringResponse.toLowerCase().contains(String.format("process '%s' deleted", processId.toLowerCase()))) {
+    } else if (stringResponse
+        .toLowerCase()
+        .contains(String.format("process '%s' deleted", processId.toLowerCase()))) {
       return pipelineResponse.response(stringResponse).status(PipelineResponseStatus.SUCCESSFUL);
     }
     return pipelineResponse.response(stringResponse).status(PipelineResponseStatus.FAILED);

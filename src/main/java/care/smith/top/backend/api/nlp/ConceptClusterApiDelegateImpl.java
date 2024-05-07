@@ -5,12 +5,10 @@ import care.smith.top.backend.service.nlp.ConceptClusterService;
 import care.smith.top.backend.service.nlp.DocumentService;
 import care.smith.top.backend.util.ApiModelMapper;
 import care.smith.top.model.*;
-
+import care.smith.top.top_document_query.adapter.TextAdapter;
 import java.io.IOException;
 import java.util.*;
 import java.util.logging.Logger;
-
-import care.smith.top.top_document_query.adapter.TextAdapter;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +20,8 @@ public class ConceptClusterApiDelegateImpl implements ConceptclusterApiDelegate 
   private final ConceptClusterService conceptClusterService;
   private final DocumentService documentService;
 
-  public ConceptClusterApiDelegateImpl(DocumentService documentService, ConceptClusterService conceptClusterService) {
+  public ConceptClusterApiDelegateImpl(
+      DocumentService documentService, ConceptClusterService conceptClusterService) {
     this.conceptClusterService = conceptClusterService;
     this.documentService = documentService;
   }
@@ -41,11 +40,13 @@ public class ConceptClusterApiDelegateImpl implements ConceptclusterApiDelegate 
       LOGGER.fine("Text DB Server Instance could not be reached/queried.");
       return ResponseEntity.of(Optional.of(new ConceptClusterPage()));
     } catch (NoSuchElementException e) {
-      LOGGER.fine(String.format("Document with id %s couldn't be found on Text DB Server.", documentId));
+      LOGGER.fine(
+          String.format("Document with id %s couldn't be found on Text DB Server.", documentId));
       return ResponseEntity.of(Optional.of(new ConceptClusterPage()));
     }
     return ResponseEntity.ok(
-        ApiModelMapper.toConceptClusterPage(conceptClusterService.conceptsByDocumentId(document.getId(), dataSource, page)));
+        ApiModelMapper.toConceptClusterPage(
+            conceptClusterService.conceptsByDocumentId(document.getId(), dataSource, page)));
   }
 
   @Override
@@ -62,14 +63,16 @@ public class ConceptClusterApiDelegateImpl implements ConceptclusterApiDelegate 
       String corpusId,
       Integer page,
       List<String> include) {
-    if (Boolean.TRUE.equals(recalculateCache)) conceptClusterService.evictConceptsFromCache(corpusId);
+    if (Boolean.TRUE.equals(recalculateCache))
+      conceptClusterService.evictConceptsFromCache(corpusId);
 
     boolean labels = !(labelsText == null || labelsText.isEmpty());
     boolean phrases = !(phraseId == null || phraseId.isEmpty());
 
     Page<ConceptCluster> conceptClusterPage;
     if (labels && phrases) {
-      conceptClusterPage = conceptClusterService.conceptsByLabelsAndPhrases(labelsText, phraseId, corpusId, page);
+      conceptClusterPage =
+          conceptClusterService.conceptsByLabelsAndPhrases(labelsText, phraseId, corpusId, page);
     } else if (labels) {
       conceptClusterPage = conceptClusterService.conceptsByLabels(labelsText, corpusId, page);
     } else if (phrases) {
@@ -89,8 +92,10 @@ public class ConceptClusterApiDelegateImpl implements ConceptclusterApiDelegate 
   public ResponseEntity<PipelineResponse> getConceptClusterProcess(String pipelineId) {
     PipelineResponse response = new PipelineResponse().pipelineId(pipelineId);
     if (pipelineId == null || !conceptClusterService.conceptClusterProcessesContainsKey(pipelineId))
-      return ResponseEntity.of(Optional.of(
-          response.response(String.format("Process '%s' not found or no pipelineId provided.", pipelineId))));
+      return ResponseEntity.of(
+          Optional.of(
+              response.response(
+                  String.format("Process '%s' not found or no pipelineId provided.", pipelineId))));
     return ResponseEntity.ok(checkConceptClusterProcess(pipelineId, response));
   }
 
@@ -112,8 +117,12 @@ public class ConceptClusterApiDelegateImpl implements ConceptclusterApiDelegate 
     if (!conceptClusterService.conceptClusterProcessesContainsKey(pipelineId)) {
       conceptClusterService.addToClusterProcesses(
           pipelineId,
-          conceptClusterService.createSpecificGraphsInNeo4j(pipelineId, graphIds, adapter).getRight());
-      response.status(PipelineResponseStatus.RUNNING).response("Started Concept Clusters creation ...");
+          conceptClusterService
+              .createSpecificGraphsInNeo4j(pipelineId, graphIds, adapter)
+              .getRight());
+      response
+          .status(PipelineResponseStatus.RUNNING)
+          .response("Started Concept Clusters creation ...");
     } else {
       checkConceptClusterProcess(pipelineId, response);
     }
@@ -122,17 +131,23 @@ public class ConceptClusterApiDelegateImpl implements ConceptclusterApiDelegate 
 
   @Override
   public ResponseEntity<Void> deleteConceptClustersForPipelineId(String pipelineId) {
-    //ToDo: another response than void?
+    // ToDo: another response than void?
     PipelineResponse response = conceptClusterService.deleteCompletePipelineAndResults(pipelineId);
-    if (response.getStatus().equals(PipelineResponseStatus.SUCCESSFUL)) return ResponseEntity.ok().build();
+    if (response.getStatus().equals(PipelineResponseStatus.SUCCESSFUL))
+      return ResponseEntity.ok().build();
     return ResponseEntity.internalServerError().build();
   }
 
-  private PipelineResponse checkConceptClusterProcess(String pipelineId, PipelineResponse response) {
+  private PipelineResponse checkConceptClusterProcess(
+      String pipelineId, PipelineResponse response) {
     if (conceptClusterService.getConceptClusterProcess(pipelineId).isAlive()) {
-      response.status(PipelineResponseStatus.RUNNING).response("Concept Clusters creation is still running ...");
+      response
+          .status(PipelineResponseStatus.RUNNING)
+          .response("Concept Clusters creation is still running ...");
     } else {
-      response.status(PipelineResponseStatus.SUCCESSFUL).response("Finished Concept Cluster creation for this process.");
+      response
+          .status(PipelineResponseStatus.SUCCESSFUL)
+          .response("Finished Concept Cluster creation for this process.");
     }
     return response;
   }

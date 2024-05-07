@@ -1,12 +1,9 @@
 package care.smith.top.backend.extension;
 
-import care.smith.top.model.ConceptCluster;
-import care.smith.top.model.Document;
-import care.smith.top.model.Phrase;
-import java.util.Arrays;
+import static care.smith.top.backend.AbstractNLPTest.*;
+
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
@@ -16,8 +13,6 @@ import org.neo4j.driver.GraphDatabase;
 import org.neo4j.driver.Session;
 import org.neo4j.harness.Neo4j;
 import org.neo4j.harness.Neo4jBuilders;
-
-import static care.smith.top.backend.AbstractNLPTest.*;
 
 public class Neo4JExtension implements BeforeAllCallback, ExtensionContext.Store.CloseableResource {
   private static final String HAS_PHRASE_REL = "HAS_PHRASE";

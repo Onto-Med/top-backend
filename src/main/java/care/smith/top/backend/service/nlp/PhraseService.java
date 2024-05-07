@@ -4,7 +4,6 @@ import care.smith.top.backend.model.neo4j.PhraseNodeEntity;
 import care.smith.top.backend.repository.neo4j.PhraseNodeRepository;
 import care.smith.top.backend.service.ContentService;
 import care.smith.top.model.Phrase;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -13,7 +12,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.neo4j.cypherdsl.core.Cypher;
 import org.neo4j.cypherdsl.core.Node;
-import org.neo4j.cypherdsl.core.Property;
 import org.neo4j.cypherdsl.core.Statement;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -53,8 +51,7 @@ public class PhraseService implements ContentService {
   }
 
   static Statement phraseWithText(String text) {
-    Node phrase =
-        Cypher.node("Phrase").named("phrase");
+    Node phrase = Cypher.node("Phrase").named("phrase");
     return Cypher.match(phrase)
         .where(phrase.property("phrase").matches(String.format("(?i).*%s.*", text)))
         .returningDistinct(phrase)
@@ -62,31 +59,26 @@ public class PhraseService implements ContentService {
   }
 
   static Statement phraseWithTextExactMatch(String text) {
-      Node phrase =
-          Cypher.node("Phrase")
-              .withProperties("phrase", Cypher.literalOf(text))
-              .named("phrase");
-      return Cypher.match(phrase)
-          .returning(phrase)
-          .build();
-    }
+    Node phrase =
+        Cypher.node("Phrase").withProperties("phrase", Cypher.literalOf(text)).named("phrase");
+    return Cypher.match(phrase).returning(phrase).build();
+  }
 
   static Statement phraseWithExactId(String phraseId) {
     Node phrase =
         Cypher.node("Phrase")
             .withProperties("phraseId", Cypher.literalOf(phraseId))
             .named("phrase");
-    return Cypher.match(phrase)
-        .returning(phrase)
-        .build();
+    return Cypher.match(phrase).returning(phrase).build();
   }
 
-  private final Function<PhraseNodeEntity, Phrase> phraseMapper = phraseNodeEntity ->
-      new Phrase()
-          .id(phraseNodeEntity.phraseId())
-          .text(phraseNodeEntity.phraseText())
-          .exemplar(phraseNodeEntity.exemplar())
-          .attributes(phraseNodeEntity.phraseAttributes());
+  private final Function<PhraseNodeEntity, Phrase> phraseMapper =
+      phraseNodeEntity ->
+          new Phrase()
+              .id(phraseNodeEntity.phraseId())
+              .text(phraseNodeEntity.phraseText())
+              .exemplar(phraseNodeEntity.exemplar())
+              .attributes(phraseNodeEntity.phraseAttributes());
 
   @Override
   @Cacheable("phraseCount")
@@ -102,22 +94,24 @@ public class PhraseService implements ContentService {
   }
 
   public List<Phrase> getAllPhrases() {
-    return phraseRepository.findAll().stream()
-        .map(phraseMapper)
-        .collect(Collectors.toList());
+    return phraseRepository.findAll().stream().map(phraseMapper).collect(Collectors.toList());
   }
 
   public Optional<Phrase> getPhraseById(String phraseId) {
     return phraseRepository.findOne(phraseWithExactId(phraseId)).map(phraseMapper);
   }
+
   public List<Phrase> getPhrasesByIds(List<String> phraseIds) {
-    return phraseRepository.getPhrasesForIds(phraseIds).stream().map(phraseMapper).collect(Collectors.toList());
+    return phraseRepository.getPhrasesForIds(phraseIds).stream()
+        .map(phraseMapper)
+        .collect(Collectors.toList());
   }
 
   public List<Phrase> getPhraseByText(String text, boolean exactMatch) {
     Collection<PhraseNodeEntity> phrases = new ArrayList<>();
     if (exactMatch) {
-      Optional<PhraseNodeEntity> optionalPhrase = phraseRepository.findOne(phraseWithTextExactMatch(text));
+      Optional<PhraseNodeEntity> optionalPhrase =
+          phraseRepository.findOne(phraseWithTextExactMatch(text));
       optionalPhrase.ifPresent(phrases::add);
     } else {
       phrases = phraseRepository.findAll(phraseWithText(text));

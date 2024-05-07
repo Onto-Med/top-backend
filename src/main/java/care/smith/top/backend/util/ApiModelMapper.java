@@ -90,10 +90,9 @@ public abstract class ApiModelMapper {
   }
 
   public static PhrasePage toPhrasePage(Page<Phrase> page) {
-      return (PhrasePage)
-          setPageMetadata(
-              new PhrasePage().content(page.getContent()), page, "phrase");
-    }
+    return (PhrasePage)
+        setPageMetadata(new PhrasePage().content(page.getContent()), page, "phrase");
+  }
 
   public static EntityType toRestrictedEntityType(EntityType entityType) {
     if (EntityType.SINGLE_PHENOTYPE.equals(entityType)) return EntityType.SINGLE_RESTRICTION;

@@ -53,14 +53,19 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
 
   @Override
   public ResponseEntity<Void> deleteConceptPipelineById(String pipelineId) {
-    //ToDo: another response than void?
-    //ToDo: option to only delete partial or better pick up where failed previously (because there are already steps present)
+    // ToDo: another response than void?
+    // ToDo: option to only delete partial or better pick up where failed previously (because there
+    // are already steps present)
     // the second option could/should be checked in startPipeline
-    PipelineResponse clusterResponse = conceptClusterService.deleteCompletePipelineAndResults(pipelineId);
+    PipelineResponse clusterResponse =
+        conceptClusterService.deleteCompletePipelineAndResults(pipelineId);
     PipelineResponse graphResponse = conceptGraphsService.deletePipeline(pipelineId);
-    if ((clusterResponse.getStatus().equals(PipelineResponseStatus.SUCCESSFUL) &&
-        graphResponse.getStatus().equals(PipelineResponseStatus.SUCCESSFUL)) ||
-        graphResponse.getResponse().contains(String.format("no such process '%s'", pipelineId.toLowerCase()))) return ResponseEntity.ok().build();
+    if ((clusterResponse.getStatus().equals(PipelineResponseStatus.SUCCESSFUL)
+            && graphResponse.getStatus().equals(PipelineResponseStatus.SUCCESSFUL))
+        || graphResponse
+            .getResponse()
+            .contains(String.format("no such process '%s'", pipelineId.toLowerCase())))
+      return ResponseEntity.ok().build();
     return ResponseEntity.internalServerError().build();
   }
 
@@ -68,9 +73,13 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
   public ResponseEntity<ConceptGraphPipeline> getConceptGraphPipelineById(String pipelineId) {
     ConceptGraphPipeline pipeline = new ConceptGraphPipeline();
     try {
-       pipeline = conceptGraphsService.getAllStoredProcesses().stream()
-          .filter(conceptGraphPipeline -> conceptGraphPipeline.getPipelineId().equalsIgnoreCase(pipelineId))
-          .findFirst().orElseThrow();
+      pipeline =
+          conceptGraphsService.getAllStoredProcesses().stream()
+              .filter(
+                  conceptGraphPipeline ->
+                      conceptGraphPipeline.getPipelineId().equalsIgnoreCase(pipelineId))
+              .findFirst()
+              .orElseThrow();
     } catch (NoSuchElementException e) {
       LOGGER.fine(String.format("A pipeline with id '%s' was not found", pipelineId));
     }
@@ -80,8 +89,9 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
   @Override
   public ResponseEntity<PipelineResponse> startConceptGraphPipelineWithJson(
       ConceptPipelineConfigRequest conceptPipelineConfigRequest) {
-    //ToDo!!!
-    return ConceptPipelineApiDelegate.super.startConceptGraphPipelineWithJson(conceptPipelineConfigRequest);
+    // ToDo!!!
+    return ConceptPipelineApiDelegate.super.startConceptGraphPipelineWithJson(
+        conceptPipelineConfigRequest);
   }
 
   @Override
@@ -126,33 +136,45 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
                     }));
 
     if (data == null) {
-      //ToDo: this should go somewhere where it can be more easily adapted later;
+      // ToDo: this should go somewhere where it can be more easily adapted later;
       // also index right now in the concept graphs api only supports one value
       documentQueryService
           .getTextAdapterConfig(StringUtils.defaultString(dataSourceId, defaultDataSourceId))
-          .ifPresent(textAdapterConfig -> {
-            List<String> lines = new ArrayList<>(List.of(
-                String.format("\"url\": \"%s\"", textAdapterConfig.getConnection().getUrl()),
-                String.format("\"port\": \"%s\"", textAdapterConfig.getConnection().getPort()),
-                String.format("\"index\": \"%s\"", Arrays.stream(textAdapterConfig.getIndex()).findFirst().orElseThrow()),
-                String.format("\"size\": \"%s\"", textAdapterConfig.getBatchSize())
-            ));
-            if (textAdapterConfig.getReplaceFields() != null) {
-              lines.add(String.format("\"replace_keys\": \"%s\"",
-                  textAdapterConfig.getReplaceFields().keySet().stream()
-                      .map(key -> key + ": " + textAdapterConfig.getReplaceFields().get(key))
-                      .collect(Collectors.joining(", ", "{", "}"))));
-            }
-            File tempFile = null;
-            try {
-              tempFile = File.createTempFile("tmp-", "-document_server_config");
-              Files.write(tempFile.toPath(), lines);
-              tempFile.deleteOnExit();
-            } catch (IOException e) {
-              LOGGER.severe("Couldn't create temporary file to send to the concept graphs api as a document_server_config.");
-            }
-            configMap.put("document_server", tempFile);
-          });
+          .ifPresent(
+              textAdapterConfig -> {
+                List<String> lines =
+                    new ArrayList<>(
+                        List.of(
+                            String.format(
+                                "\"url\": \"%s\"", textAdapterConfig.getConnection().getUrl()),
+                            String.format(
+                                "\"port\": \"%s\"", textAdapterConfig.getConnection().getPort()),
+                            String.format(
+                                "\"index\": \"%s\"",
+                                Arrays.stream(textAdapterConfig.getIndex())
+                                    .findFirst()
+                                    .orElseThrow()),
+                            String.format("\"size\": \"%s\"", textAdapterConfig.getBatchSize())));
+                if (textAdapterConfig.getReplaceFields() != null) {
+                  lines.add(
+                      String.format(
+                          "\"replace_keys\": \"%s\"",
+                          textAdapterConfig.getReplaceFields().keySet().stream()
+                              .map(
+                                  key -> key + ": " + textAdapterConfig.getReplaceFields().get(key))
+                              .collect(Collectors.joining(", ", "{", "}"))));
+                }
+                File tempFile = null;
+                try {
+                  tempFile = File.createTempFile("tmp-", "-document_server_config");
+                  Files.write(tempFile.toPath(), lines);
+                  tempFile.deleteOnExit();
+                } catch (IOException e) {
+                  LOGGER.severe(
+                      "Couldn't create temporary file to send to the concept graphs api as a document_server_config.");
+                }
+                configMap.put("document_server", tempFile);
+              });
     }
 
     try {

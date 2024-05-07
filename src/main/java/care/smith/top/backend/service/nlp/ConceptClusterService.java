@@ -1,4 +1,3 @@
-
 package care.smith.top.backend.service.nlp;
 
 import care.smith.top.backend.model.neo4j.ConceptNodeEntity;
@@ -18,11 +17,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.common.collect.Lists;
-
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
-
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.neo4j.cypherdsl.core.Cypher;
@@ -39,11 +36,12 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class ConceptClusterService implements ContentService {
-  //ToDo: think about: right now, the filtering of concepts by their corpusId is not made in neo4j
+  // ToDo: think about: right now, the filtering of concepts by their corpusId is not made in neo4j
   // but rather in the service -> don't know if this has some performance implications
 
   @Value("${spring.paging.page-size:10}")
   private int pageSize = 10;
+
   private final ConceptPipelineManager pipelineManager;
   private final ConceptClusterNodeRepository conceptNodeRepository;
   private final PhraseNodeRepository phraseNodeRepository;
@@ -51,7 +49,10 @@ public class ConceptClusterService implements ContentService {
   private final HashMap<String, Thread> conceptClusterProcesses;
 
   public ConceptClusterService(
-      @Value("${top.documents.concept-graphs-api.uri}") String conceptGraphsApiUri, ConceptClusterNodeRepository conceptNodeRepository, PhraseNodeRepository phraseNodeRepository, DocumentNodeRepository documentNodeRepository) {
+      @Value("${top.documents.concept-graphs-api.uri}") String conceptGraphsApiUri,
+      ConceptClusterNodeRepository conceptNodeRepository,
+      PhraseNodeRepository phraseNodeRepository,
+      DocumentNodeRepository documentNodeRepository) {
     pipelineManager = new ConceptPipelineManager(conceptGraphsApiUri);
     this.conceptNodeRepository = conceptNodeRepository;
     this.phraseNodeRepository = phraseNodeRepository;
@@ -71,7 +72,8 @@ public class ConceptClusterService implements ContentService {
     return this.conceptClusterProcesses.containsKey(pipelineId);
   }
 
-  public HashMap<String, Thread> addToClusterProcesses(String pipelineId, Thread clusterCreationThread) {
+  public HashMap<String, Thread> addToClusterProcesses(
+      String pipelineId, Thread clusterCreationThread) {
     this.conceptClusterProcesses.put(pipelineId, clusterCreationThread);
     return conceptClusterProcesses;
   }
@@ -83,7 +85,8 @@ public class ConceptClusterService implements ContentService {
   public PipelineResponse deleteCompletePipelineAndResults(String pipelineId) {
     try {
       if (this.conceptClusterProcessesContainsKey(pipelineId)) {
-        if (this.getConceptClusterProcess(pipelineId).isAlive()) this.getConceptClusterProcess(pipelineId).interrupt();
+        if (this.getConceptClusterProcess(pipelineId).isAlive())
+          this.getConceptClusterProcess(pipelineId).interrupt();
         this.removeFromClusterProcesses(pipelineId);
       }
       this.evictConceptsFromCache(pipelineId);
@@ -128,62 +131,83 @@ public class ConceptClusterService implements ContentService {
   }
 
   public Page<ConceptCluster> conceptsForPage(String corpusId, Integer page) {
-    List<ConceptCluster> conceptClusterList = conceptNodeRepository.findAll().stream()
-        .filter(conceptNodeEntity -> corpusId == null || Objects.equals(conceptNodeEntity.corpusId(), corpusId))
-        .sorted(Comparator.comparing(ConceptNodeEntity::conceptId))
-        .map(ConceptNodeEntity::toApiModel)
-        .collect(Collectors.toList());
+    List<ConceptCluster> conceptClusterList =
+        conceptNodeRepository.findAll().stream()
+            .filter(
+                conceptNodeEntity ->
+                    corpusId == null || Objects.equals(conceptNodeEntity.corpusId(), corpusId))
+            .sorted(Comparator.comparing(ConceptNodeEntity::conceptId))
+            .map(ConceptNodeEntity::toApiModel)
+            .collect(Collectors.toList());
     return new PageImpl<>(conceptClusterList, getPageRequestOf(page), conceptClusterList.size());
   }
 
   public ConceptCluster conceptById(String conceptId, String corpusId) {
     return conceptNodeRepository
         .findOne(conceptWithId(conceptId))
-        .filter(conceptNodeEntity -> corpusId == null || Objects.equals(conceptNodeEntity.corpusId(), corpusId))
+        .filter(
+            conceptNodeEntity ->
+                corpusId == null || Objects.equals(conceptNodeEntity.corpusId(), corpusId))
         .orElse(ConceptNodeEntity.nullConceptNode())
         .toApiModel();
   }
 
-  public Page<ConceptCluster> conceptsByDocumentId(String documentId, String corpusId, Integer page) {
-    List<ConceptCluster> conceptClusterList = conceptNodeRepository.getConceptNodesByDocumentId(documentId).stream()
-        .filter(conceptNodeEntity -> corpusId == null || Objects.equals(conceptNodeEntity.corpusId(), corpusId))
-        .sorted(Comparator.comparing(ConceptNodeEntity::conceptId))
-        .map(ConceptNodeEntity::toApiModel)
-        .collect(Collectors.toList());
+  public Page<ConceptCluster> conceptsByDocumentId(
+      String documentId, String corpusId, Integer page) {
+    List<ConceptCluster> conceptClusterList =
+        conceptNodeRepository.getConceptNodesByDocumentId(documentId).stream()
+            .filter(
+                conceptNodeEntity ->
+                    corpusId == null || Objects.equals(conceptNodeEntity.corpusId(), corpusId))
+            .sorted(Comparator.comparing(ConceptNodeEntity::conceptId))
+            .map(ConceptNodeEntity::toApiModel)
+            .collect(Collectors.toList());
     return new PageImpl<>(conceptClusterList, getPageRequestOf(page), conceptClusterList.size());
   }
 
   public Page<ConceptCluster> conceptsByLabels(List<String> labels, String corpusId, Integer page) {
-    List<ConceptCluster> conceptClusterList = conceptNodeRepository.getConceptNodesByLabels(labels).stream()
-        .filter(conceptNodeEntity -> corpusId == null || Objects.equals(conceptNodeEntity.corpusId(), corpusId))
-        .sorted(Comparator.comparing(ConceptNodeEntity::conceptId))
-        .map(ConceptNodeEntity::toApiModel)
-        .collect(Collectors.toList());
+    List<ConceptCluster> conceptClusterList =
+        conceptNodeRepository.getConceptNodesByLabels(labels).stream()
+            .filter(
+                conceptNodeEntity ->
+                    corpusId == null || Objects.equals(conceptNodeEntity.corpusId(), corpusId))
+            .sorted(Comparator.comparing(ConceptNodeEntity::conceptId))
+            .map(ConceptNodeEntity::toApiModel)
+            .collect(Collectors.toList());
     return new PageImpl<>(conceptClusterList, getPageRequestOf(page), conceptClusterList.size());
   }
 
-  public Page<ConceptCluster> conceptsByPhraseIds(List<String> phraseIds, String corpusId, Integer page) {
-      List<ConceptCluster> conceptClusterList = conceptNodeRepository.getConceptNodesByPhrases(phraseIds).stream()
-          .filter(conceptNodeEntity -> corpusId == null || Objects.equals(conceptNodeEntity.corpusId(), corpusId))
-          .sorted(Comparator.comparing(ConceptNodeEntity::conceptId))
-          .map(ConceptNodeEntity::toApiModel)
-          .collect(Collectors.toList());
-      return new PageImpl<>(conceptClusterList, getPageRequestOf(page), conceptClusterList.size());
-    }
-
-  public Page<ConceptCluster> conceptsByLabelsAndPhrases(List<String> labels, List<String> phraseIds, String corpusId, Integer page) {
-    Set<String> retainIds = conceptNodeRepository.getConceptNodesByLabels(labels).stream()
-        .filter(conceptNodeEntity -> corpusId == null || Objects.equals(conceptNodeEntity.corpusId(), corpusId))
-        .map(ConceptNodeEntity::conceptId)
-        .collect(Collectors.toSet());
-    List<ConceptCluster> conceptClusterPhraseList = conceptNodeRepository.getConceptNodesByPhrases(phraseIds).stream()
-        .sorted(Comparator.comparing(ConceptNodeEntity::conceptId))
-        .filter(conceptNodeEntity -> retainIds.contains(conceptNodeEntity.conceptId()))
-        .map(ConceptNodeEntity::toApiModel)
-        .collect(Collectors.toList());
-    return new PageImpl<>(conceptClusterPhraseList, getPageRequestOf(page), conceptClusterPhraseList.size());
+  public Page<ConceptCluster> conceptsByPhraseIds(
+      List<String> phraseIds, String corpusId, Integer page) {
+    List<ConceptCluster> conceptClusterList =
+        conceptNodeRepository.getConceptNodesByPhrases(phraseIds).stream()
+            .filter(
+                conceptNodeEntity ->
+                    corpusId == null || Objects.equals(conceptNodeEntity.corpusId(), corpusId))
+            .sorted(Comparator.comparing(ConceptNodeEntity::conceptId))
+            .map(ConceptNodeEntity::toApiModel)
+            .collect(Collectors.toList());
+    return new PageImpl<>(conceptClusterList, getPageRequestOf(page), conceptClusterList.size());
   }
 
+  public Page<ConceptCluster> conceptsByLabelsAndPhrases(
+      List<String> labels, List<String> phraseIds, String corpusId, Integer page) {
+    Set<String> retainIds =
+        conceptNodeRepository.getConceptNodesByLabels(labels).stream()
+            .filter(
+                conceptNodeEntity ->
+                    corpusId == null || Objects.equals(conceptNodeEntity.corpusId(), corpusId))
+            .map(ConceptNodeEntity::conceptId)
+            .collect(Collectors.toSet());
+    List<ConceptCluster> conceptClusterPhraseList =
+        conceptNodeRepository.getConceptNodesByPhrases(phraseIds).stream()
+            .sorted(Comparator.comparing(ConceptNodeEntity::conceptId))
+            .filter(conceptNodeEntity -> retainIds.contains(conceptNodeEntity.conceptId()))
+            .map(ConceptNodeEntity::toApiModel)
+            .collect(Collectors.toList());
+    return new PageImpl<>(
+        conceptClusterPhraseList, getPageRequestOf(page), conceptClusterPhraseList.size());
+  }
 
   public List<String> getCorpusIdsInNeo4j() {
     return conceptNodeRepository.getCorpusIds();
@@ -193,7 +217,11 @@ public class ConceptClusterService implements ContentService {
       String processName, List<String> graphIds, TextAdapter adapter) {
     Map<String, ConceptGraphEntity> graphs =
         pipelineManager.getConceptGraphs(processName, graphIds);
-    Thread t = new Thread(() -> graphs.forEach((gId, graph) -> createGraphInNeo4j(gId, processName, graph, adapter)));
+    Thread t =
+        new Thread(
+            () ->
+                graphs.forEach(
+                    (gId, graph) -> createGraphInNeo4j(gId, processName, graph, adapter)));
     t.start();
     return new ImmutablePair<>(processName, t);
   }
@@ -227,7 +255,8 @@ public class ConceptClusterService implements ContentService {
     pipelineResponse.response(response);
   }
 
-  private void createGraphInNeo4j(String graphId, String processId, ConceptGraphEntity conceptGraph, TextAdapter adapter) {
+  private void createGraphInNeo4j(
+      String graphId, String processId, ConceptGraphEntity conceptGraph, TextAdapter adapter) {
     Map<String, List<String>> documentId2PhraseIdMap = new HashMap<>();
     Map<String, Integer> phrasesDocumentCount = new HashMap<>();
     Map<String, PhraseNodeEntity> phraseNodeEntityMap = new HashMap<>();
@@ -239,7 +268,8 @@ public class ConceptClusterService implements ContentService {
                   .forEach(
                       documentId -> {
                         if (!documentId2PhraseIdMap.containsKey(documentId)) {
-                          documentId2PhraseIdMap.put(documentId, Lists.newArrayList(phraseNodeObject.getId()));
+                          documentId2PhraseIdMap.put(
+                              documentId, Lists.newArrayList(phraseNodeObject.getId()));
                         } else {
                           documentId2PhraseIdMap.get(documentId).add(phraseNodeObject.getId());
                         }
@@ -263,7 +293,8 @@ public class ConceptClusterService implements ContentService {
               .limit(3)
               .collect(Collectors.toList());
       conceptNodeRepository.save(
-          new ConceptNodeEntity(graphId, processId, labels, new HashSet<>(phraseNodeEntityMap.values())));
+          new ConceptNodeEntity(
+              graphId, processId, labels, new HashSet<>(phraseNodeEntityMap.values())));
     }
 
     // Create Relations between Phrases 'PHRASE<-HAS_NEIGHBOR->PHRASE'
@@ -280,22 +311,22 @@ public class ConceptClusterService implements ContentService {
             });
 
     // Save Document Nodes and by extension relationships 'DOCUMENT--HAS_PHRASE->PHRASE'
-    System.out.println("");
     try {
-      adapter.getDocumentsByIdsBatched(documentId2PhraseIdMap.keySet(),null, true)
+      adapter
+          .getDocumentsByIdsBatched(documentId2PhraseIdMap.keySet(), null, true)
           .forEach(
-              documentEntityList -> documentEntityList.forEach( documentEntity -> documentNodeRepository.save(
-                  new DocumentNodeEntity(
-                      documentEntity.getId(),
-                      documentEntity.getName(),
-                      documentId2PhraseIdMap.get(documentEntity.getId()).stream()
-                          .map(phraseNodeEntityMap::get)
-                          .collect(Collectors.toSet()))
-                  )
-              )
-          );
+              documentEntityList ->
+                  documentEntityList.forEach(
+                      documentEntity ->
+                          documentNodeRepository.save(
+                              new DocumentNodeEntity(
+                                  documentEntity.getId(),
+                                  documentEntity.getName(),
+                                  documentId2PhraseIdMap.get(documentEntity.getId()).stream()
+                                      .map(phraseNodeEntityMap::get)
+                                      .collect(Collectors.toSet())))));
     } catch (IOException e) {
-      //ToDo: !
+      // ToDo: !
       throw new RuntimeException(e);
     }
   }

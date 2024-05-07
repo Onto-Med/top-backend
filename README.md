@@ -107,7 +107,12 @@ The code in this repository, and in contributions provided via pull requests, sh
 to [Google Java Style](https://google.github.io/styleguide/javaguide.html).
 
 We use the flag `--skip-reflowing-long-strings` for [google-java-format](https://github.com/google/google-java-format),
-as it is currently not supported by all IDEs.
+as it is currently not supported by all IDEs.  
+
+If an IDE doesn't support file formatting, a simple cmd command for both linux and windows to run
+[google-java-format](https://github.com/google/google-java-format) before pushing is  
+``java -jar google-java-format-CURRENT_VERSION-all-deps.jar --skip-reflowing-long-strings --replace $(git ls-files *.java)``  
+(within the repository)
 
 ### Database Migrations
 

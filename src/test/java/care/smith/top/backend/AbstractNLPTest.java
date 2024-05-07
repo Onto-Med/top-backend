@@ -95,12 +95,17 @@ public abstract class AbstractNLPTest {
         .thenReturn(Optional.ofNullable(new Document().id("d2").name("Document 2")));
     when(adapter.getDocumentsByIdsPaged(eq(Set.of("d1", "d2")), anyInt(), anyBoolean()))
         .thenReturn(page1_2);
-    when(adapter.getDocumentsByIdsPaged(eq(Set.of("d1")), anyInt(), anyBoolean())).thenReturn(page1);
-    when(adapter.getDocumentsByIdsPaged(eq(Set.of("d2")), anyInt(), anyBoolean())).thenReturn(page2);
+    when(adapter.getDocumentsByIdsPaged(eq(Set.of("d1")), anyInt(), anyBoolean()))
+        .thenReturn(page1);
+    when(adapter.getDocumentsByIdsPaged(eq(Set.of("d2")), anyInt(), anyBoolean()))
+        .thenReturn(page2);
     when(adapter.getAllDocumentsPaged(anyInt(), anyBoolean())).thenReturn(page1_2);
-    when(adapter.getDocumentsByNamePaged(eq("Document 1"), anyInt(), anyBoolean())).thenReturn(page1);
-    when(adapter.getDocumentsByNamePaged(eq("Document 2"), anyInt(), anyBoolean())).thenReturn(page2);
-    when(adapter.getDocumentsByNamePaged(eq("Document"), anyInt(), anyBoolean())).thenReturn(page1_2);
+    when(adapter.getDocumentsByNamePaged(eq("Document 1"), anyInt(), anyBoolean()))
+        .thenReturn(page1);
+    when(adapter.getDocumentsByNamePaged(eq("Document 2"), anyInt(), anyBoolean()))
+        .thenReturn(page2);
+    when(adapter.getDocumentsByNamePaged(eq("Document"), anyInt(), anyBoolean()))
+        .thenReturn(page1_2);
 
     DocumentNodeRepository documentNodeRepository = mock(DocumentNodeRepository.class);
     when(documentNodeRepository.getDocumentsForPhraseIds(Set.of("p1", "p2"), false))

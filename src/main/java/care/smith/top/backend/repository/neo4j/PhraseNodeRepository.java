@@ -9,8 +9,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface PhraseNodeRepository
-    extends Neo4jRepository<PhraseNodeEntity, Long>,
-        CypherdslStatementExecutor<PhraseNodeEntity> {
+    extends Neo4jRepository<PhraseNodeEntity, Long>, CypherdslStatementExecutor<PhraseNodeEntity> {
 
   @Query(
       "MATCH (d:Document)-[:HAS_PHRASE]-(p:Phrase)"

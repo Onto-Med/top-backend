@@ -11,10 +11,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.neo4j.repository.config.EnableNeo4jRepositories;
 
-@SpringBootApplication(
-    exclude = {
-      Neo4jReactiveRepositoriesAutoConfiguration.class
-    })
+@SpringBootApplication(exclude = {Neo4jReactiveRepositoriesAutoConfiguration.class})
 @Import(InfrastructureConfig.class)
 @ComponentScan("care.smith.top.backend")
 @EnableCaching
@@ -24,8 +21,6 @@ import org.springframework.data.neo4j.repository.config.EnableNeo4jRepositories;
 public class TopBackendApplication {
 
   public static void main(String[] args) {
-    new SpringApplicationBuilder()
-        .sources(TopBackendApplication.class)
-        .run(args);
+    new SpringApplicationBuilder().sources(TopBackendApplication.class).run(args);
   }
 }

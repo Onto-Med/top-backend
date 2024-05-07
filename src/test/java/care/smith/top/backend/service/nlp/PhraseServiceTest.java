@@ -1,16 +1,13 @@
 package care.smith.top.backend.service.nlp;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import care.smith.top.backend.AbstractNLPTest;
+import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-
-import static org.assertj.core.api.Assertions.assertThat;
-
 
 @SpringBootTest
 class PhraseServiceTest extends AbstractNLPTest {
@@ -41,8 +38,10 @@ class PhraseServiceTest extends AbstractNLPTest {
 
   @Test
   void getPhraseByText() {
-    assertThat(Set.copyOf(phraseService.getPhraseByText("phrase", false))).isEqualTo(Set.copyOf(phrases1_2));
-    assertThat(Set.copyOf(phraseService.getPhraseByText("here", false))).isEqualTo(Set.copyOf(phrases1_2));
+    assertThat(Set.copyOf(phraseService.getPhraseByText("phrase", false)))
+        .isEqualTo(Set.copyOf(phrases1_2));
+    assertThat(Set.copyOf(phraseService.getPhraseByText("here", false)))
+        .isEqualTo(Set.copyOf(phrases1_2));
   }
 
   @Test
@@ -53,12 +52,14 @@ class PhraseServiceTest extends AbstractNLPTest {
   @Test
   void getPhrasesForDocument() {
     assertThat(phraseService.getPhrasesForDocument("d1", false)).isEqualTo(phrases2);
-    assertThat(Set.copyOf(phraseService.getPhrasesForDocument("d2", false))).isEqualTo(Set.copyOf(phrases1_2));
+    assertThat(Set.copyOf(phraseService.getPhrasesForDocument("d2", false)))
+        .isEqualTo(Set.copyOf(phrases1_2));
     assertThat(phraseService.getPhrasesForDocument("d2", true)).isEqualTo(phrases1);
   }
 
   @Test
   void getPhrasesByIds() {
-    assertThat(Set.copyOf(phraseService.getPhrasesByIds(List.of("p1", "p2")))).isEqualTo(Set.copyOf(phrases1_2));
+    assertThat(Set.copyOf(phraseService.getPhrasesByIds(List.of("p1", "p2"))))
+        .isEqualTo(Set.copyOf(phrases1_2));
   }
 }
