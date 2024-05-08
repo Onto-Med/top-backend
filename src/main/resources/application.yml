@@ -24,9 +24,6 @@ spring:
     authentication:
       username: ${DB_NEO4J_USER:neo4j}
       password: ${DB_NEO4J_PASS}
-  #  elasticsearch:
-#    connection-timeout: ${DB_ELASTIC_CONNECTION_TIMEOUT:1}s
-#    socket-timeout: ${DB_ELASTIC_SOCKET_TIMEOUT:30}s
   jpa:
     hibernate:
       ddl-auto: validate
