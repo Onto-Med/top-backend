@@ -435,7 +435,7 @@ class EntityServiceTest extends AbstractTest {
             new Phenotype()
                 .restriction(
                     new NumberRestriction()
-                        .addValuesItem(BigDecimal.valueOf(50))
+                        .addValuesItem(BigDecimal.valueOf(50.025))
                         .minOperator(RestrictionOperator.GREATER_THAN)
                         .quantifier(Quantifier.MIN)
                         .cardinality(1)
@@ -478,7 +478,7 @@ class EntityServiceTest extends AbstractTest {
                             .isEqualTo(RestrictionOperator.GREATER_THAN);
                         assertThat(((NumberRestriction) r).getValues()).size().isEqualTo(2);
                         assertThat(((NumberRestriction) r).getValues().get(0))
-                            .isEqualTo(BigDecimal.valueOf(50));
+                            .isEqualTo(BigDecimal.valueOf(50.025));
                         assertThat(((NumberRestriction) r).getValues().get(1)).isNull();
                       });
             });

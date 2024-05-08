@@ -1,0 +1,17 @@
+databaseChangeLog:
+-  changeSet:
+     id: 1715177902748-1
+     author:  ChristophB
+     changes:
+     -  modifyDataType:
+          columnName:  number_value
+          newDataType:  decimal
+          tableName:  value
+-  changeSet:
+     id: 1715177902748-2
+     author:  ChristophB
+     changes:
+     -  modifyDataType:
+          columnName:  number_values
+          newDataType:  decimal
+          tableName:  restriction_number_values
