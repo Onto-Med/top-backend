@@ -67,7 +67,6 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
       List<String> include) {
     page -= 1;
     TextAdapter adapter;
-    //    HashSet<String> highlightedTerms = new HashSet<>();
     try {
       adapter = documentService.getAdapterForDataSource(dataSource);
     } catch (InstantiationException e) {
@@ -80,12 +79,6 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
     boolean neo4jFilterOn = false;
     HashSet<String> finalDocumentIds = new HashSet<>();
     if (phraseIds != null && !phraseIds.isEmpty()) {
-      //      highlightedTerms.addAll(
-      //          phraseService
-      //              .getPhrasesByIds(phraseIds).stream()
-      //              .map(Phrase::getText)
-      //              .collect(Collectors.toSet())
-      //      );
       finalDocumentIds.addAll(
           documentService.getDocumentsForPhraseIds(Set.copyOf(phraseIds), exemplarOnly).stream()
               .map(Document::getId)
@@ -94,7 +87,6 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
     }
     if (conceptClusterIds != null && !conceptClusterIds.isEmpty()) {
       // 'gatheringMode' is only relevant for getting documents by 'conceptClusterIds'
-      //      Set<String> conceptClusterHighlights = conceptClusterService.
       Set<String> conceptClusterIdSet =
           documentService
               .getDocumentsForConceptIds(Set.copyOf(conceptClusterIds), exemplarOnly, gatheringMode)
@@ -103,7 +95,6 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
               .collect(Collectors.toSet());
       if (neo4jFilterOn) {
         finalDocumentIds.retainAll(conceptClusterIdSet);
-        //        highlightedTerms.retainAll()
       } else {
         finalDocumentIds.addAll(conceptClusterIdSet);
       }

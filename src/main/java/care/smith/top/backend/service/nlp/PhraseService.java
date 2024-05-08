@@ -126,7 +126,6 @@ public class PhraseService implements ContentService {
   }
 
   public List<Phrase> getPhrasesForDocument(String documentId, Boolean mostImportantOnly) {
-    //        return phraseRepository.findAll(phraseInDocument(documentId, mostImportantOnly))
     return phraseRepository.getPhrasesForDocument(documentId, mostImportantOnly).stream()
         .map(phraseMapper)
         .collect(Collectors.toList());
