@@ -36,8 +36,6 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class ConceptClusterService implements ContentService {
-  // ToDo: think about: right now, the filtering of concepts by their corpusId is not made in neo4j
-  // but rather in the service -> don't know if this has some performance implications
 
   @Value("${spring.paging.page-size:10}")
   private int pageSize = 10;
@@ -54,10 +52,10 @@ public class ConceptClusterService implements ContentService {
       PhraseNodeRepository phraseNodeRepository,
       DocumentNodeRepository documentNodeRepository) {
     pipelineManager = new ConceptPipelineManager(conceptGraphsApiUri);
+    conceptClusterProcesses = new HashMap<>();
     this.conceptNodeRepository = conceptNodeRepository;
     this.phraseNodeRepository = phraseNodeRepository;
     this.documentNodeRepository = documentNodeRepository;
-    this.conceptClusterProcesses = new HashMap<>();
   }
 
   public HashMap<String, Thread> getConceptClusterProcesses() {
@@ -65,40 +63,39 @@ public class ConceptClusterService implements ContentService {
   }
 
   public Thread getConceptClusterProcess(String pipelineId) {
-    return this.conceptClusterProcesses.get(pipelineId);
+    return conceptClusterProcesses.get(pipelineId);
   }
 
   public Boolean conceptClusterProcessesContainsKey(String pipelineId) {
-    return this.conceptClusterProcesses.containsKey(pipelineId);
+    return conceptClusterProcesses.containsKey(pipelineId);
   }
 
   public HashMap<String, Thread> addToClusterProcesses(
       String pipelineId, Thread clusterCreationThread) {
-    this.conceptClusterProcesses.put(pipelineId, clusterCreationThread);
+    conceptClusterProcesses.put(pipelineId, clusterCreationThread);
     return conceptClusterProcesses;
   }
 
   public Thread removeFromClusterProcesses(String pipelineId) {
-    return this.conceptClusterProcesses.remove(pipelineId);
+    return conceptClusterProcesses.remove(pipelineId);
   }
 
   public PipelineResponse deleteCompletePipelineAndResults(String pipelineId) {
+    PipelineResponse pipelineResponse = new PipelineResponse().pipelineId(pipelineId);
     try {
-      if (this.conceptClusterProcessesContainsKey(pipelineId)) {
-        if (this.getConceptClusterProcess(pipelineId).isAlive())
-          this.getConceptClusterProcess(pipelineId).interrupt();
-        this.removeFromClusterProcesses(pipelineId);
+      if (conceptClusterProcessesContainsKey(pipelineId)) {
+        if (getConceptClusterProcess(pipelineId).isAlive())
+          getConceptClusterProcess(pipelineId).interrupt();
+        removeFromClusterProcesses(pipelineId);
       }
-      this.evictConceptsFromCache(pipelineId);
-      this.removeClustersFromNeo4j(pipelineId);
+      evictConceptsFromCache(pipelineId);
+      removeClustersFromNeo4j(pipelineId);
     } catch (Exception e) {
-      return new PipelineResponse()
-          .pipelineId(pipelineId)
+      return pipelineResponse
           .status(PipelineResponseStatus.FAILED)
           .response("Pipeline could not be deleted. -- " + e.getMessage());
     }
-    return new PipelineResponse()
-        .pipelineId(pipelineId)
+    return pipelineResponse
         .status(PipelineResponseStatus.SUCCESSFUL)
         .response("Pipeline deleted.");
   }

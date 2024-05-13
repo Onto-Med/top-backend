@@ -12,6 +12,7 @@ import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -89,9 +90,7 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
   @Override
   public ResponseEntity<PipelineResponse> startConceptGraphPipelineWithJson(
       ConceptPipelineConfigRequest conceptPipelineConfigRequest) {
-    // ToDo!!!
-    return ConceptPipelineApiDelegate.super.startConceptGraphPipelineWithJson(
-        conceptPipelineConfigRequest);
+    throw new NotImplementedException();
   }
 
   @Override
