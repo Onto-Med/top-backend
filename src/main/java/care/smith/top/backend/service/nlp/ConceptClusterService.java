@@ -95,9 +95,7 @@ public class ConceptClusterService implements ContentService {
           .status(PipelineResponseStatus.FAILED)
           .response("Pipeline could not be deleted. -- " + e.getMessage());
     }
-    return pipelineResponse
-        .status(PipelineResponseStatus.SUCCESSFUL)
-        .response("Pipeline deleted.");
+    return pipelineResponse.status(PipelineResponseStatus.SUCCESSFUL).response("Pipeline deleted.");
   }
 
   static Statement conceptWithId(String id) {

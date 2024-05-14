@@ -131,7 +131,6 @@ public class ConceptClusterApiDelegateImpl implements ConceptclusterApiDelegate 
 
   @Override
   public ResponseEntity<Void> deleteConceptClustersForPipelineId(String pipelineId) {
-    // ToDo: another response than void?
     PipelineResponse response = conceptClusterService.deleteCompletePipelineAndResults(pipelineId);
     if (response.getStatus().equals(PipelineResponseStatus.SUCCESSFUL))
       return ResponseEntity.ok().build();

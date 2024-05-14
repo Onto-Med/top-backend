@@ -66,7 +66,6 @@ public class ConceptGraphsService implements ContentService {
   }
 
   public PipelineResponse deletePipeline(String processId) {
-    // ToDo: need to implement proper checkable status in concept-graphs-api
     PipelineResponse pipelineResponse = new PipelineResponse().pipelineId(processId);
     String stringResponse = pipelineManager.deleteProcess(processId);
     if (stringResponse.toLowerCase().contains("no such process")) {

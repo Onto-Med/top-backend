@@ -54,10 +54,6 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
 
   @Override
   public ResponseEntity<Void> deleteConceptPipelineById(String pipelineId) {
-    // ToDo: another response than void?
-    // ToDo: option to only delete partial or better pick up where failed previously (because there
-    // are already steps present)
-    // the second option could/should be checked in startPipeline
     PipelineResponse clusterResponse =
         conceptClusterService.deleteCompletePipelineAndResults(pipelineId);
     PipelineResponse graphResponse = conceptGraphsService.deletePipeline(pipelineId);

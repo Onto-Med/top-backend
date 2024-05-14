@@ -148,7 +148,6 @@ public class DocumentService implements ContentService {
 
   public List<String> getDocumentIdsForQuery(
       String organisationId, String repositoryId, UUID queryId) throws IOException {
-    // ToDo: should this be cached?
     return getDocumentQueryService().getDocumentIds(organisationId, repositoryId, queryId);
   }
 }
