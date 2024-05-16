@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import care.smith.top.backend.AbstractNLPTest;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,5 +61,8 @@ class DocumentServiceTest extends AbstractNLPTest {
 
   @Test
   @Disabled
-  void getAdapterFromQuery() {}
+  void getAdapterFromQuery() {
+    documentService.getAdapterFromQuery("someOrg", "someRepo", UUID.randomUUID());
+    System.out.println();
+  }
 }

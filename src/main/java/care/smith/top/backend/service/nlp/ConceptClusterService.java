@@ -321,7 +321,6 @@ public class ConceptClusterService implements ContentService {
                                       .map(phraseNodeEntityMap::get)
                                       .collect(Collectors.toSet())))));
     } catch (IOException e) {
-      // ToDo: !
       throw new RuntimeException(e);
     }
   }

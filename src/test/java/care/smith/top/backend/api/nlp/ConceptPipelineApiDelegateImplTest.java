@@ -34,14 +34,11 @@ class ConceptPipelineApiDelegateImplTest extends AbstractNLPTest {
   }
 
   @Test
-  @Disabled
-  void deleteConceptPipelineById() {}
-
-  @Test
-  @Disabled
-  void getConceptPipelineById() {}
-
-  @Test
-  @Disabled
-  void startConceptGraphPipeline() {}
+  void getConceptPipelineById() {
+    String process_id = "process_id";
+    assertEquals(
+        process_id,
+        Objects.requireNonNull(conceptGraphApi.getConceptGraphPipelineById(process_id).getBody())
+            .getPipelineId());
+  }
 }

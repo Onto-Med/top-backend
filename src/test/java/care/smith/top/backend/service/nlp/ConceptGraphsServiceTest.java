@@ -43,9 +43,6 @@ class ConceptGraphsServiceTest extends AbstractNLPTest {
   }
 
   @Test
-  void getStatusOfPipeline() {}
-
-  @Test
   void count() {
     assertThat(conceptGraphsService.count()).isEqualTo(2);
   }

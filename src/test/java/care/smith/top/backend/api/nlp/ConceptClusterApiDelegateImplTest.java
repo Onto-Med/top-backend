@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 class ConceptClusterApiDelegateImplTest extends AbstractNLPTest {
@@ -67,8 +66,4 @@ class ConceptClusterApiDelegateImplTest extends AbstractNLPTest {
                         .getBody())
                 .getContent()));
   }
-
-  @Test
-  @Disabled
-  void createConceptClustersForPipelineId() {}
 }
