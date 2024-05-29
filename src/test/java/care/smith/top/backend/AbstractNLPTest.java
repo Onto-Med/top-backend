@@ -10,12 +10,15 @@ import care.smith.top.backend.model.neo4j.DocumentNodeEntity;
 import care.smith.top.backend.repository.neo4j.ConceptClusterNodeRepository;
 import care.smith.top.backend.repository.neo4j.DocumentNodeRepository;
 import care.smith.top.backend.repository.neo4j.PhraseNodeRepository;
+import care.smith.top.backend.service.nlp.DocumentQueryService;
 import care.smith.top.backend.service.nlp.DocumentService;
 import care.smith.top.backend.util.ResourceHttpHandler;
 import care.smith.top.model.ConceptCluster;
 import care.smith.top.model.Document;
 import care.smith.top.model.Phrase;
 import care.smith.top.top_document_query.adapter.TextAdapter;
+import care.smith.top.top_document_query.adapter.config.Connection;
+import care.smith.top.top_document_query.adapter.config.TextAdapterConfig;
 import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -73,7 +76,7 @@ public abstract class AbstractNLPTest {
 
   @AfterAll
   static void cleanup() {
-    conceptGraphsApiService.stop(0);
+    if (conceptGraphsApiService != null) conceptGraphsApiService.stop(0);
   }
 
   protected static DocumentService mockedDocumentService()
@@ -119,15 +122,28 @@ public abstract class AbstractNLPTest {
     when(documentNodeRepository.getDocumentsForConceptIds(Set.of("c2"), false))
         .thenReturn(List.of(d1, d2));
 
+    DocumentQueryService documentQueryService = mock(DocumentQueryService.class);
+    TextAdapterConfig tac = new TextAdapterConfig();
+    Connection conn = new Connection();
+    conn.setUrl("http://localhost");
+    conn.setPort("9007");
+    tac.setConnection(conn);
+    tac.setConnection(new Connection());
+    when(documentQueryService.getTextAdapterConfigs()).thenReturn(List.of(tac));
+
     DocumentService documentService = mock(DocumentService.class);
     when(documentService.getDocumentNodeRepository()).thenReturn(documentNodeRepository);
     when(documentService.getAdapterFromQuery(anyString(), anyString(), any())).thenReturn(adapter);
     when(documentService.getAdapterForDataSource(anyString())).thenReturn(adapter);
     when(documentService.getDocumentIdsForQuery(anyString(), anyString(), any()))
         .thenReturn(List.of("d1", "d2"));
+    when(documentService.textAdaptersDocumentCount()).thenReturn(page1_2.getTotalElements());
+    when(documentService.getDocumentQueryService()).thenReturn(documentQueryService);
+
+    // CallRealMethod
+    when(documentService.count()).thenCallRealMethod();
     when(documentService.getDocumentsForConceptIds(anySet(), anyBoolean())).thenCallRealMethod();
-    when(documentService.getDocumentsForConceptIds(anySet(), anyBoolean(), any()))
-        .thenCallRealMethod();
+    when(documentService.getDocumentsForConceptIds(anySet(), anyBoolean(), any())).thenCallRealMethod();
     when(documentService.getDocumentsForPhraseIds(anySet(), anyBoolean())).thenCallRealMethod();
     when(documentService.getDocumentsForPhraseTexts(anySet(), anyBoolean())).thenCallRealMethod();
 

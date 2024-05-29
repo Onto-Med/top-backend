@@ -1,11 +1,19 @@
 package care.smith.top.backend.service.nlp;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 import care.smith.top.backend.AbstractNLPTest;
+
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
+
+import care.smith.top.model.Document;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,8 +21,14 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
 class DocumentServiceTest extends AbstractNLPTest {
-  // ToDo: should the corresponding methods for which the tests are disabled also be tested?
-  @Autowired private DocumentService documentService;
+  private static DocumentService documentService;
+
+  @BeforeEach
+  void provideDocumentService() throws IOException, InstantiationException {
+    documentService = new DocumentService(
+        documentNodeRepository, mockedDocumentService().getDocumentQueryService()
+    );
+  }
 
   @Test
   void documentNodesCount() {
@@ -49,20 +63,19 @@ class DocumentServiceTest extends AbstractNLPTest {
 
   @Test
   @Disabled
-  void getDocumentIdsForQuery() {}
+  void getDocumentIdsForQuery() {
+    // As of now: No reason to test here, as it just calls a method in DocumentQueryService
+  }
 
   @Test
   @Disabled
-  void textAdaptersDocumentCount() {}
-
-  @Test
-  @Disabled
-  void getAdapterForDataSource() {}
+  void getAdapterForDataSource() {
+    // As of now: No reason to test here, as it just calls a method in DocumentQueryService
+  }
 
   @Test
   @Disabled
   void getAdapterFromQuery() {
-    documentService.getAdapterFromQuery("someOrg", "someRepo", UUID.randomUUID());
-    System.out.println();
+    // As of now: No reason to test here, as it just calls a method in DocumentQueryService
   }
 }
