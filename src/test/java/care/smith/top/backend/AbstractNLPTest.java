@@ -143,7 +143,8 @@ public abstract class AbstractNLPTest {
     // CallRealMethod
     when(documentService.count()).thenCallRealMethod();
     when(documentService.getDocumentsForConceptIds(anySet(), anyBoolean())).thenCallRealMethod();
-    when(documentService.getDocumentsForConceptIds(anySet(), anyBoolean(), any())).thenCallRealMethod();
+    when(documentService.getDocumentsForConceptIds(anySet(), anyBoolean(), any()))
+        .thenCallRealMethod();
     when(documentService.getDocumentsForPhraseIds(anySet(), anyBoolean())).thenCallRealMethod();
     when(documentService.getDocumentsForPhraseTexts(anySet(), anyBoolean())).thenCallRealMethod();
 

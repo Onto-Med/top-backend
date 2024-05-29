@@ -1,22 +1,14 @@
 package care.smith.top.backend.service.nlp;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
 
 import care.smith.top.backend.AbstractNLPTest;
-
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import care.smith.top.model.Document;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
@@ -25,9 +17,9 @@ class DocumentServiceTest extends AbstractNLPTest {
 
   @BeforeEach
   void provideDocumentService() throws IOException, InstantiationException {
-    documentService = new DocumentService(
-        documentNodeRepository, mockedDocumentService().getDocumentQueryService()
-    );
+    documentService =
+        new DocumentService(
+            documentNodeRepository, mockedDocumentService().getDocumentQueryService());
   }
 
   @Test
