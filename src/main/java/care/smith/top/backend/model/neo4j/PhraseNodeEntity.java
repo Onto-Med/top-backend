@@ -13,12 +13,13 @@ public class PhraseNodeEntity {
   private final List<String> phraseAttributes;
 
   @Property("exemplar")
-  private final Boolean isExemplar;
+  private final Boolean exemplar;
 
   @Property("phrase")
   private final String phraseText;
 
-  @Id
+  @Id @GeneratedValue Long id;
+
   @Property("phraseId")
   private final String phraseId;
 
@@ -26,9 +27,9 @@ public class PhraseNodeEntity {
   private Set<PhraseNodeEntity> phrases;
 
   public PhraseNodeEntity(
-      List<String> phraseAttributes, Boolean isExemplar, String phraseText, String phraseId) {
+      List<String> phraseAttributes, Boolean exemplar, String phraseText, String phraseId) {
     this.phraseAttributes = phraseAttributes;
-    this.isExemplar = isExemplar;
+    this.exemplar = exemplar;
     this.phraseText = phraseText;
     this.phraseId = phraseId;
   }
@@ -41,8 +42,8 @@ public class PhraseNodeEntity {
     return this.phraseText;
   }
 
-  public Boolean isExemplar() {
-    return this.isExemplar;
+  public Boolean exemplar() {
+    return this.exemplar;
   }
 
   public String phraseId() {
@@ -74,7 +75,7 @@ public class PhraseNodeEntity {
     return new Phrase()
         .id(this.phraseId)
         .text(this.phraseText)
-        .isExemplar(this.isExemplar)
+        .exemplar(this.exemplar)
         .attributes(this.phraseAttributes);
   }
 }

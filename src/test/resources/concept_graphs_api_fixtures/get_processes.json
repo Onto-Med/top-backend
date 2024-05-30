@@ -1,0 +1,33 @@
+{
+  "processes": [
+    {
+      "status": [
+        {
+          "name": "data",
+          "status": "finished",
+          "rank": 1
+        },
+        {
+          "name": "embedding",
+          "status": "finished",
+          "rank": 2
+        },
+        {
+          "name": "clustering",
+          "status": "finished",
+          "rank": 3
+        },
+        {
+          "name": "graph",
+          "status": "finished",
+          "rank": 4
+        }
+      ],
+      "name": "process_id"
+    },
+    {
+      "status": [],
+      "name": "default"
+    }
+  ]
+}

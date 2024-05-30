@@ -1,174 +1,153 @@
 package care.smith.top.backend.service.nlp;
 
-import care.smith.top.backend.model.elasticsearch.DocumentEntity;
 import care.smith.top.backend.model.neo4j.DocumentNodeEntity;
-import care.smith.top.backend.repository.elasticsearch.DocumentRepository;
 import care.smith.top.backend.repository.neo4j.DocumentNodeRepository;
 import care.smith.top.backend.service.ContentService;
 import care.smith.top.model.Document;
+import care.smith.top.model.DocumentGatheringMode;
+import care.smith.top.top_document_query.adapter.TextAdapter;
+import java.io.IOException;
 import java.util.*;
 import java.util.Set;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
 @Service
 public class DocumentService implements ContentService {
-
-  private final DocumentRepository documentRepository;
-  private final DocumentNodeRepository documentNodeRepository;
-
-  @Value("${spring.paging.page-size:10}")
-  private int pageSize = 10;
+  private DocumentNodeRepository documentNodeRepository;
+  private DocumentQueryService documentQueryService;
 
   public DocumentService(
-      DocumentRepository documentRepository, DocumentNodeRepository documentNodeRepository) {
-    this.documentRepository = documentRepository;
+      DocumentNodeRepository documentNodeRepository, DocumentQueryService documentQueryService) {
+    this.documentNodeRepository = documentNodeRepository;
+    this.documentQueryService = documentQueryService;
+  }
+
+  public void setDocumentQueryService(DocumentQueryService documentQueryService) {
+    this.documentQueryService = documentQueryService;
+  }
+
+  public void setDocumentNodeRepository(DocumentNodeRepository documentNodeRepository) {
     this.documentNodeRepository = documentNodeRepository;
   }
 
-  @Override
+  public DocumentNodeRepository getDocumentNodeRepository() {
+    return documentNodeRepository;
+  }
+
+  public DocumentQueryService getDocumentQueryService() {
+    return documentQueryService;
+  }
+
   @Cacheable("documentCount")
   public long count() {
-    return documentRepository.count();
+    return documentNodeRepository.count();
   }
 
-  // ### method calls for the Spring ES Repository
-
-  /**
-   * @param batchSize size of each list element returned from the stream
-   * @return A stream consisting of lists with size 'batchSize'
-   */
-  public Stream<List<Document>> getAllDocumentsBatched(Integer batchSize) {
-    return Stream.generate(
-            new Supplier<List<Document>>() {
-              int page = 0;
-
-              @Override
-              public List<Document> get() {
-                Page<DocumentEntity> documentEntityPage =
-                    documentRepository.findAll(PageRequest.of(page++, batchSize));
-                return documentEntityPage.map(DocumentEntity::toApiModel).stream()
-                    .collect(Collectors.toList());
+  public long textAdaptersDocumentCount() {
+    return getDocumentQueryService().getTextAdapterConfigs().stream()
+        .map(
+            c -> {
+              try {
+                TextAdapter adapter = TextAdapter.getInstance(c);
+                return adapter.count();
+              } catch (Exception e) {
+                return 0L;
               }
             })
-        .takeWhile(list -> !list.isEmpty());
+        .reduce(Long::sum)
+        .orElse(0L);
   }
 
-  public Document getDocumentById(@NonNull String documentId) {
-    DocumentEntity document = documentRepository.findById(documentId).orElse(null);
-    if (document != null) {
-      return document.toApiModel();
-    } else {
-      return DocumentEntity.nullDocument();
-    }
-  }
-
-  /**
-   * @param page Integer; if negative, method returns all entries as one page
-   * @return Paged Document entries
-   */
-  public Page<Document> getAllDocuments(Integer page) {
-    if (page < 0)
-      return documentRepository.findAll(Pageable.unpaged()).map(DocumentEntity::toApiModel);
-    return documentRepository.findAll(pageRequestOf(page)).map(DocumentEntity::toApiModel);
-  }
-
-  public Page<Document> getDocumentsByName(@NonNull String documentName, Integer page) {
-    return documentRepository
-        .findDocumentEntitiesByDocumentNameContains(documentName, pageRequestOf(page))
-        .map(DocumentEntity::toApiModel);
-  }
-
-  public Page<Document> getDocumentsByIds(@NonNull Collection<String> ids, Integer page) {
-    // ToDo: something's not working with the repository constructed methods; so I needed to
-    //  implement my own filtering and paging
-
-    // Page<DocumentEntity> documentPageEntity =
-    // documentRepository.findDocumentEntitiesByIdIn(ids, pageRequestOf(page));
-    //    Page<Document> documentPage =  documentPageEntity.map(DocumentEntity::toApiModel);
-    Spliterator<DocumentEntity> documentEntitySpliterator =
-        documentRepository.findAllById(ids).spliterator();
-    int documentCount = (int) documentEntitySpliterator.getExactSizeIfKnown();
-    List<Document> documents =
-        StreamSupport.stream(documentEntitySpliterator, false)
-            .map(DocumentEntity::toApiModel)
-            .skip((long) (page - 1) * pageSize)
-            .limit(pageSize)
-            .collect(Collectors.toList());
-    return new PageImpl<>(documents, pageRequestOf(page), documentCount);
-  }
-
-  public Page<Document> getDocumentsByPhrases(@NonNull Collection<String> phrases, Integer page) {
-    return documentRepository
-        .findDocumentEntitiesByDocumentTextIn(phrases, pageRequestOf(page))
-        .map(DocumentEntity::toApiModel);
-  }
-
-  public Page<Document> getDocumentsByIdsAndPhrases(
-      @NonNull Collection<String> ids, @NonNull Collection<String> phrases, Integer page) {
-    return documentRepository
-        .findDocumentEntitiesByIdInAndDocumentTextIn(ids, phrases, pageRequestOf(page))
-        .map(DocumentEntity::toApiModel);
-  }
-
-  public List<Document> getDocumentsByTerms(String[] terms, String[] fields) {
-    return documentRepository.getESDocumentsByTerms(terms, fields).stream()
-        .map(DocumentEntity::toApiModel)
-        .collect(Collectors.toList());
-  }
-
-  // ### method calls for the custom ES repository
-
-  public List<Document> getDocumentsByTermsBoolean(
-      String[] mustTerms, String[] shouldTerms, String[] notTerms, String[] fields) {
-    return documentRepository
-        .getESDocumentsByTermsBoolean(shouldTerms, mustTerms, notTerms, fields)
-        .stream()
-        .map(DocumentEntity::toApiModel)
-        .collect(Collectors.toList());
-  }
-
-  public List<Document> getDocumentsByPhrases(String[] phrases, String[] fields) {
-    return documentRepository.getESDocumentsByPhrases(phrases, fields).stream()
-        .map(DocumentEntity::toApiModel)
-        .collect(Collectors.toList());
-  }
-
-  public List<Document> getDocumentsByPhrasesBoolean(
-      String[] mustPhrases, String[] shouldPhrases, String[] notPhrases, String[] fields) {
-    return documentRepository
-        .getESDocumentsByPhrasesBoolean(shouldPhrases, mustPhrases, notPhrases, fields)
-        .stream()
-        .map(DocumentEntity::toApiModel)
-        .collect(Collectors.toList());
-  }
-
-  // ### method calls for the Document Node Repository (i.e. graph database)
-
-  public List<Document> getDocumentsForConcepts(Set<String> conceptIds, Boolean exemplarOnly) {
-    if (conceptIds.size() == 0) {
+  public List<Document> getDocumentsForConceptIds(Set<String> conceptIds, Boolean exemplarOnly) {
+    if (conceptIds == null || conceptIds.isEmpty()) {
       return List.of();
     }
-    return documentNodeRepository
-        .getDocumentsForConcepts(List.copyOf(conceptIds), exemplarOnly)
+    return getDocumentNodeRepository().getDocumentsForConceptIds(conceptIds, exemplarOnly).stream()
+        .map(DocumentNodeEntity::toApiModel)
+        .collect(Collectors.toList());
+  }
+
+  public List<Document> getDocumentsForConceptIds(
+      Set<String> conceptIds, Boolean exemplarOnly, DocumentGatheringMode gatheringMode) {
+    if (conceptIds == null || conceptIds.isEmpty()) {
+      return List.of();
+    }
+
+    gatheringMode = (gatheringMode != null) ? gatheringMode : DocumentGatheringMode.UNION;
+
+    if (Objects.equals(gatheringMode, DocumentGatheringMode.INTERSECTION)) {
+      Map<String, DocumentNodeEntity> hashMapDocuments = new HashMap<>();
+      List<Set<String>> listOfSets = new ArrayList<>();
+      conceptIds.forEach(
+          conceptId -> {
+            List<DocumentNodeEntity> dneList =
+                getDocumentNodeRepository()
+                    .getDocumentsForConceptIds(Set.of(conceptId), exemplarOnly);
+            listOfSets.add(
+                dneList.stream().map(DocumentNodeEntity::documentId).collect(Collectors.toSet()));
+            dneList.forEach(dne -> hashMapDocuments.put(dne.documentId(), dne));
+          });
+      return listOfSets.stream()
+          .skip(1)
+          .collect(() -> listOfSets.get(0), Set::retainAll, Set::retainAll)
+          .stream()
+          .map(hashMapDocuments::get)
+          .map(DocumentNodeEntity::toApiModel)
+          .collect(Collectors.toList());
+    } else if (Objects.equals(gatheringMode, DocumentGatheringMode.EXCLUSIVE)) {
+      return getDocumentNodeRepository()
+          .getDocumentsForConceptIds(
+              Collections.singleton(conceptIds.iterator().next()), exemplarOnly)
+          .stream()
+          .map(DocumentNodeEntity::toApiModel)
+          .collect(Collectors.toList());
+    } else {
+      return getDocumentNodeRepository()
+          .getDocumentsForConceptIds(conceptIds, exemplarOnly)
+          .stream()
+          .map(DocumentNodeEntity::toApiModel)
+          .collect(Collectors.toList());
+    }
+  }
+
+  public List<Document> getDocumentsForPhraseIds(Set<String> phraseIds, Boolean exemplarOnly) {
+    if (phraseIds == null || phraseIds.isEmpty()) {
+      return List.of();
+    }
+    return getDocumentNodeRepository().getDocumentsForPhraseIds(phraseIds, exemplarOnly).stream()
+        .map(DocumentNodeEntity::toApiModel)
+        .collect(Collectors.toList());
+  }
+
+  public List<Document> getDocumentsForPhraseTexts(Set<String> phraseTexts, Boolean exemplarOnly) {
+    if (phraseTexts == null || phraseTexts.isEmpty()) {
+      return List.of();
+    }
+    return getDocumentNodeRepository()
+        .getDocumentsForPhrasesText(phraseTexts, exemplarOnly)
         .stream()
         .map(DocumentNodeEntity::toApiModel)
         .collect(Collectors.toList());
   }
 
-  // ### helper functions
+  @Cacheable("dataSourceAdapter")
+  public TextAdapter getAdapterForDataSource(String dataSource) throws InstantiationException {
+    return TextAdapter.getInstance(
+        getDocumentQueryService().getTextAdapterConfig(dataSource).orElseThrow());
+  }
 
-  private PageRequest pageRequestOf(Integer page) {
-    return PageRequest.of((page == null || page <= 0) ? 0 : page - 1, pageSize < 1 ? 1 : pageSize);
+  @Cacheable("queryAdapter")
+  public TextAdapter getAdapterFromQuery(String organisationId, String repositoryId, UUID queryId)
+      throws NoSuchElementException {
+    return getDocumentQueryService()
+        .getTextAdapter(organisationId, repositoryId, queryId)
+        .orElseThrow();
+  }
+
+  public List<String> getDocumentIdsForQuery(
+      String organisationId, String repositoryId, UUID queryId) throws IOException {
+    return getDocumentQueryService().getDocumentIds(organisationId, repositoryId, queryId);
   }
 }

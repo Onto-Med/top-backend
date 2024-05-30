@@ -9,8 +9,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface PhraseNodeRepository
-    extends Neo4jRepository<PhraseNodeEntity, String>,
-        CypherdslStatementExecutor<PhraseNodeEntity> {
+    extends Neo4jRepository<PhraseNodeEntity, Long>, CypherdslStatementExecutor<PhraseNodeEntity> {
 
   @Query(
       "MATCH (d:Document)-[:HAS_PHRASE]-(p:Phrase)"
@@ -21,4 +20,7 @@ public interface PhraseNodeRepository
 
   @Query("OPTIONAL MATCH (n:Phrase {phraseId: $phraseId})\n" + "RETURN n IS NOT NULL AS Predicate;")
   Boolean phraseNodeExists(String phraseId);
+
+  @Query("MATCH (n:Phrase WHERE n.phraseId IN $phraseIds) RETURN DISTINCT n")
+  List<PhraseNodeEntity> getPhrasesForIds(List<String> phraseIds);
 }

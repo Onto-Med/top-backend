@@ -1,101 +1,73 @@
 package care.smith.top.backend.service.nlp;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import care.smith.top.model.Document;
-import java.util.ArrayList;
+import care.smith.top.backend.AbstractNLPTest;
+import java.io.IOException;
 import java.util.HashSet;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.testcontainers.junit.jupiter.Testcontainers;
+import org.springframework.boot.test.context.SpringBootTest;
 
-@Testcontainers
-@ExtendWith(SpringExtension.class)
+@SpringBootTest
 class DocumentServiceTest extends AbstractNLPTest {
+  private static DocumentService documentService;
 
   @BeforeEach
-  void testIsContainerRunning() {
-    assertTrue(elasticsearchContainer.isRunning());
+  void provideDocumentService() throws IOException, InstantiationException {
+    documentService =
+        new DocumentService(
+            documentNodeRepository, mockedDocumentService().getDocumentQueryService());
   }
 
   @Test
-  void getDocumentByName() {
-    List<String> documentName =
-        documentService.getDocumentsByName("test01", 1).stream()
-            .map(Document::getName)
-            .collect(Collectors.toList());
-    assertNotNull(documentName);
-    assertArrayEquals(new String[] {"test01"}, documentName.toArray());
+  void documentNodesCount() {
+    assertThat(documentService.count()).isEqualTo(Long.valueOf(2));
   }
 
   @Test
-  void getDocumentsByTerms() {
-    List<Document> documents_with_term_document =
-        documentService.getDocumentsByTerms(new String[] {"document"}, new String[] {"text"});
-    assertEquals(3, documents_with_term_document.size());
+  void getDocumentsForConceptIds() {
+    assertThat(new HashSet<>(documentService.getDocumentsForConceptIds(Set.of("c2"), false)))
+        .isEqualTo(documents1_2);
 
-    List<Document> documents_with_term_entity =
-        documentService.getDocumentsByTerms(new String[] {"entity"}, new String[] {"text"});
-    assertEquals(1, documents_with_term_entity.size());
-
-    List<Document> documents_with_term_more_entities =
-        documentService.getDocumentsByTerms(
-            new String[] {"entity", "entities"}, new String[] {"text"});
-    assertEquals(2, documents_with_term_more_entities.size());
-
-    List<Document> documents_with_term_fuzzy_entity =
-        documentService.getDocumentsByTerms(new String[] {"entitie~"}, new String[] {"text"});
-    assertEquals(2, documents_with_term_fuzzy_entity.size());
-
-    assertEquals(documents_with_term_fuzzy_entity, documents_with_term_more_entities);
+    assertThat(new HashSet<>(documentService.getDocumentsForConceptIds(Set.of("c2"), true)))
+        .isEqualTo(Set.of());
   }
 
   @Test
-  void getDocumentsByTermsBoolean() {
-    List<Document> documents_with_term_boolean1 =
-        documentService.getDocumentsByTermsBoolean(
-            new String[] {"document"}, // must
-            new String[] {""}, // should
-            new String[] {"entitie~"}, // not
-            new String[] {"text"});
-    assertEquals(1, documents_with_term_boolean1.size());
-
-    List<Document> documents_with_term_boolean2 =
-        documentService.getDocumentsByTermsBoolean(
-            new String[] {""}, // must
-            new String[] {""}, // should
-            new String[] {"nothing", "two"}, // not
-            new String[] {"text"});
-    assertEquals(1, documents_with_term_boolean2.size());
+  void getDocumentsForPhraseIds() {
+    assertThat(new HashSet<>(documentService.getDocumentsForPhraseIds(Set.of("p1", "p2"), true)))
+        .isEqualTo(documents2);
   }
 
   @Test
-  void getDocumentsForConcepts() {}
+  void getDocumentsForPhraseTexts() {
+    assertThat(new HashSet<>(documentService.getDocumentsForPhraseTexts(Set.of("phrase"), false)))
+        .isEqualTo(documents1_2);
+
+    assertThat(
+            new HashSet<>(
+                documentService.getDocumentsForPhraseTexts(Set.of("there", "here"), true)))
+        .isEqualTo(documents2);
+  }
 
   @Test
-  void getAllDocumentsBatched() {
-    documentService
-        .getAllDocumentsBatched(1)
-        .forEach(
-            list -> {
-              assertEquals(1, list.size());
-              assertInstanceOf(Document.class, list.get(0));
-            });
+  @Disabled
+  void getDocumentIdsForQuery() {
+    // As of now: No reason to test here, as it just calls a method in DocumentQueryService
+  }
 
-    List<Document> newList1 = new ArrayList<>();
-    List<String> newList2 = new ArrayList<>();
-    documentService
-        .getAllDocumentsBatched(2)
-        .forEach(
-            list -> {
-              newList1.addAll(list);
-              list.forEach(document -> newList2.add(document.getName()));
-            });
-    assertEquals(3, newList1.size());
-    assertEquals(new HashSet<>(List.of("test01", "test02", "test03")), new HashSet<>(newList2));
+  @Test
+  @Disabled
+  void getAdapterForDataSource() {
+    // As of now: No reason to test here, as it just calls a method in DocumentQueryService
+  }
+
+  @Test
+  @Disabled
+  void getAdapterFromQuery() {
+    // As of now: No reason to test here, as it just calls a method in DocumentQueryService
   }
 }

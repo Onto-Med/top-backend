@@ -4,7 +4,6 @@ import care.smith.top.backend.model.jpa.EntityDao;
 import care.smith.top.backend.model.jpa.QueryDao;
 import care.smith.top.backend.model.jpa.QueryResultDao;
 import care.smith.top.backend.model.jpa.RepositoryDao;
-import care.smith.top.backend.repository.elasticsearch.DocumentRepository;
 import care.smith.top.backend.repository.jpa.ConceptRepository;
 import care.smith.top.backend.service.QueryService;
 import care.smith.top.model.*;
@@ -24,6 +23,7 @@ import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -38,14 +38,7 @@ public class DocumentQueryService extends QueryService {
   @Value("${top.documents.data-source-config-dir:config/data_sources/nlp}")
   private String dataSourceConfigDir;
 
-  private final DocumentRepository documentRepository;
-  private final ConceptRepository conceptRepository;
-
-  public DocumentQueryService(
-      DocumentRepository documentRepository, ConceptRepository conceptRepository) {
-    this.documentRepository = documentRepository;
-    this.conceptRepository = conceptRepository;
-  }
+  @Autowired private ConceptRepository conceptRepository;
 
   @Override
   @org.jobrunr.jobs.annotations.Job(name = "Document query", retries = 0)
@@ -97,7 +90,7 @@ public class DocumentQueryService extends QueryService {
           documents,
           concepts.toArray(new Concept[0]));
     } catch (Throwable e) {
-      e.printStackTrace();
+      LOGGER.severe(e.getMessage());
       result =
           new QueryResultDao(queryDao, createdAt, null, OffsetDateTime.now(), QueryState.FAILED)
               .message("Cause: " + (e.getMessage() != null ? e.getMessage() : e.toString()));
@@ -125,7 +118,6 @@ public class DocumentQueryService extends QueryService {
     if (queryRepository.existsById(queryId.toString()))
       throw new ResponseStatusException(HttpStatus.CONFLICT);
 
-    // TODO: check MD5 hash
     if (!repository.getOrganisation().hasDataSource(query.getDataSource()))
       throw new ResponseStatusException(
           HttpStatus.NOT_ACCEPTABLE, "Data source does not exist for organisation!");
@@ -154,15 +146,31 @@ public class DocumentQueryService extends QueryService {
       throw new FileSystemException("Repository directory isn't a child of the results directory.");
 
     ArrayList<String> ids = new ArrayList<>();
-    ZipFile zip = new ZipFile(queryPath.toFile());
-    Enumeration<? extends ZipEntry> entries = zip.entries();
-    while (entries.hasMoreElements()) {
-      ZipEntry content = entries.nextElement();
-      if (content.getName().equals("data.csv")) {
-        ids.addAll(csvConverter.readFirstColumn(zip.getInputStream(content)));
+    try {
+      ZipFile zip = new ZipFile(queryPath.toFile());
+      Enumeration<? extends ZipEntry> entries = zip.entries();
+      while (entries.hasMoreElements()) {
+        ZipEntry content = entries.nextElement();
+        if (content.getName().equals("data.csv")) {
+          ids.addAll(csvConverter.readFirstColumn(zip.getInputStream(content)));
+        }
       }
+      zip.close();
+    } catch (IOException e) {
+      LOGGER.warning(e.getMessage());
     }
     return ids;
+  }
+
+  public Optional<TextAdapter> getTextAdapter(
+      String organisationId, String repositoryId, UUID queryId) {
+    Query query = getQueryById(organisationId, repositoryId, queryId);
+    TextAdapterConfig config = getTextAdapterConfig(query.getDataSource()).orElseThrow();
+    try {
+      return Optional.of(TextAdapter.getInstance(config));
+    } catch (InstantiationException e) {
+      return Optional.empty();
+    }
   }
 
   public List<TextAdapterConfig> getTextAdapterConfigs() {
@@ -178,6 +186,21 @@ public class DocumentQueryService extends QueryService {
           String.format("Could not load text adapter configs from dir '%s'.", dataSourceConfigDir));
     }
     return Collections.emptyList();
+  }
+
+  public Optional<Path> getTextAdapterConfigPath(String id) {
+    if (id == null) return Optional.empty();
+    try (Stream<Path> paths =
+        Files.list(Path.of(dataSourceConfigDir)).filter(f -> !Files.isDirectory(f))) {
+      for (Path path : paths.collect(Collectors.toList())) {
+        TextAdapterConfig config = toTextAdapterConfig(path);
+        if (config != null && id.equals(config.getId())) return Optional.of(path);
+      }
+    } catch (Exception e) {
+      LOGGER.fine(
+          String.format("Could not load text adapter configs from dir '%s'.", dataSourceConfigDir));
+    }
+    return Optional.empty();
   }
 
   public List<DataSource> getDataSources() {

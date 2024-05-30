@@ -1,16 +1,14 @@
 package care.smith.top.backend.service.nlp;
 
-import care.smith.top.backend.model.conceptgraphs.ConceptGraphStatisticsEntity;
-import care.smith.top.backend.model.conceptgraphs.GraphStatsEntity;
-import care.smith.top.backend.model.conceptgraphs.pipelineresponses.PipelineFailEntity;
-import care.smith.top.backend.model.conceptgraphs.pipelineresponses.PipelineResponseEntity;
-import care.smith.top.backend.repository.conceptgraphs.ConceptGraphsRepository;
 import care.smith.top.backend.service.ContentService;
 import care.smith.top.model.*;
+import care.smith.top.top_document_query.concept_cluster.ConceptPipelineManager;
+import care.smith.top.top_document_query.concept_cluster.model.ConceptGraphEntity;
+import care.smith.top.top_document_query.concept_cluster.model.GraphStatsEntity;
+import care.smith.top.top_document_query.concept_cluster.model.pipeline_response.PipelineFailEntity;
+import care.smith.top.top_document_query.concept_cluster.model.pipeline_response.PipelineResponseEntity;
 import java.io.File;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,109 +16,81 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class ConceptGraphsService implements ContentService {
+  private final ConceptPipelineManager pipelineManager;
 
-  @Value("${spring.elasticsearch.uris}")
-  private String documentServerAddress;
-
-  @Value("${spring.elasticsearch.index.name}")
-  private String documentServerIndexName;
-
-  @Value("${top.documents.document-server.batch-size:30}")
-  private Integer documentServerBatchSize;
-
-  @Value("${top.documents.document-server.fields-replacement:{'text': 'content'}}")
-  private String documentServerFieldsReplacement;
-
-  private final ConceptGraphsRepository conceptGraphsRepository;
-
-  public ConceptGraphsService(ConceptGraphsRepository conceptGraphsRepository) {
-    this.conceptGraphsRepository = conceptGraphsRepository;
-  }
-
-  public String getDocumentServerAddress() {
-    return documentServerAddress;
-  }
-
-  public String getDocumentServerIndexName() {
-    return documentServerIndexName;
-  }
-
-  public Integer getDocumentServerBatchSize() {
-    return documentServerBatchSize;
-  }
-
-  public String getDocumentServerFieldsReplacement() {
-    return documentServerFieldsReplacement;
-  }
-
-  public Map<String, String> getDocumentServerFieldsReplacementAsMap() {
-    return Arrays.stream(documentServerFieldsReplacement.split(","))
-        .map(entry -> entry.split(":"))
-        .collect(Collectors.toMap(entry -> entry[0], entry -> entry[1]));
+  public ConceptGraphsService(
+      @Value("${top.documents.concept-graphs-api.uri}") String conceptGraphsApiUri) {
+    pipelineManager = new ConceptPipelineManager(conceptGraphsApiUri);
   }
 
   @Override
   public long count() {
-    return Arrays.stream(conceptGraphsRepository.getAllStoredProcesses().getProcesses()).count();
+    return pipelineManager.count();
   }
 
   public Map<String, ConceptGraphStat> getAllConceptGraphStatistics(String processName) {
-    ConceptGraphStatisticsEntity conceptGraphStatisticsEntity =
-        conceptGraphsRepository.getGraphStatisticsForProcess(processName);
-    if (conceptGraphStatisticsEntity.getConceptGraphs() == null) return null;
-    return Arrays.stream(conceptGraphStatisticsEntity.getConceptGraphs())
-        .map(GraphStatsEntity::toApiModel)
-        .collect(
-            Collectors.toMap(
-                ConceptGraphStat::getId, Function.identity(), (existing, replacement) -> existing));
+    return pipelineManager
+        .getGraphStatisticsForProcess(processName)
+        .map(
+            statistics -> {
+              if (statistics.getConceptGraphs() == null)
+                return new HashMap<String, ConceptGraphStat>();
+              return Arrays.stream(statistics.getConceptGraphs())
+                  .map(GraphStatsEntity::toApiModel)
+                  .collect(
+                      Collectors.toMap(
+                          ConceptGraphStat::getId,
+                          Function.identity(),
+                          (existing, replacement) -> existing));
+            })
+        .orElseGet(HashMap::new);
   }
 
   public ConceptGraph getConceptGraphForIdAndProcess(String id, String process) {
-    return conceptGraphsRepository.getGraphForIdAndProcess(id, process).toApiModel();
+    return pipelineManager
+        .getGraphForIdAndProcess(id, process)
+        .map(ConceptGraphEntity::toApiModel)
+        .orElse(null);
   }
 
-  public List<ConceptGraphProcess> getAllStoredProcesses() {
-    return conceptGraphsRepository.getAllStoredProcesses().toApiModel();
+  public List<ConceptGraphPipeline> getAllStoredProcesses() {
+    return pipelineManager.getAllStoredProcesses();
   }
 
-  public PipelineResponse initPipeline(File data, String processName) {
-    PipelineResponseEntity pre =
-        conceptGraphsRepository.startPipelineForData(data, processName, null, true, false);
-    return addStatusToPipelineResponse(pre, processName);
+  public PipelineResponseStatus getStatusOfPipeline(String process) {
+    return pipelineManager
+        .getStatusOfProcess(process)
+        .orElseThrow()
+        .getSpecificResponse()
+        .getStatus();
   }
 
-  public PipelineResponse initPipelineWithBooleans(
-      File data, String processName, Boolean skipPresent, Boolean returnStatistics) {
-    PipelineResponseEntity pre =
-        conceptGraphsRepository.startPipelineForData(
-            data, processName, null, skipPresent, returnStatistics);
-    return addStatusToPipelineResponse(pre, processName);
+  public PipelineResponse deletePipeline(String processId) {
+    PipelineResponse pipelineResponse = new PipelineResponse().pipelineId(processId);
+    String stringResponse = pipelineManager.deleteProcess(processId);
+    if (stringResponse.toLowerCase().contains("no such process")) {
+      return pipelineResponse.response(stringResponse).status(PipelineResponseStatus.FAILED);
+    } else if (stringResponse.toLowerCase().contains("is currently running")) {
+      return pipelineResponse.response(stringResponse).status(PipelineResponseStatus.RUNNING);
+    } else if (stringResponse
+        .toLowerCase()
+        .contains(String.format("process '%s' deleted", processId.toLowerCase()))) {
+      return pipelineResponse.response(stringResponse).status(PipelineResponseStatus.SUCCESSFUL);
+    }
+    return pipelineResponse.response(stringResponse).status(PipelineResponseStatus.FAILED);
   }
 
-  public PipelineResponse initPipelineWithDataUploadAndWithConfigs(
+  public PipelineResponse initPipeline(
       File data,
       File labels,
+      Map<String, File> configs,
       String processName,
       String language,
       Boolean skipPresent,
-      Boolean returnStatistics,
-      Map<String, File> configs) {
+      Boolean returnStatistics) {
     PipelineResponseEntity pre =
-        conceptGraphsRepository.startPipelineForDataAndLabelsAndConfigs(
-            data, labels, processName, language, skipPresent, returnStatistics, configs);
-    return addStatusToPipelineResponse(pre, processName);
-  }
-
-  public PipelineResponse initPipelineWithDataServerAndWithConfigs(
-      File labels,
-      String processName,
-      String lang,
-      Boolean skipPresent,
-      Boolean returnStatistics,
-      Map<String, File> configs) {
-    PipelineResponseEntity pre =
-        conceptGraphsRepository.startPipelineForDataServerAndLabelsAndConfigs(
-            labels, processName, lang, skipPresent, returnStatistics, configs);
+        pipelineManager.startPipeline(
+            data, configs, labels, processName, language, skipPresent, returnStatistics);
     return addStatusToPipelineResponse(pre, processName);
   }
 
@@ -128,7 +98,7 @@ public class ConceptGraphsService implements ContentService {
       PipelineResponseEntity responseEntity, String processName) {
     if (responseEntity == null) {
       return new PipelineResponse()
-          .name(processName)
+          .pipelineId(processName)
           .response("Pipeline failed. Please consult the logs.")
           .status(PipelineResponseStatus.FAILED);
     } else if (responseEntity instanceof PipelineFailEntity) {

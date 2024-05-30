@@ -21,9 +21,9 @@ spring:
   max-batch-size: ${MAX_BATCH_SIZE:100}
   neo4j:
     connection-timeout: ${DB_NEO4J_CONNECTION_TIMEOUT:30}s
-  elasticsearch:
-    connection-timeout: ${DB_ELASTIC_CONNECTION_TIMEOUT:1}s
-    socket-timeout: ${DB_ELASTIC_SOCKET_TIMEOUT:30}s
+    authentication:
+      username: ${DB_NEO4J_USER:neo4j}
+      password: ${DB_NEO4J_PASS}
   jpa:
     hibernate:
       ddl-auto: validate
@@ -47,6 +47,11 @@ spring:
   jackson:
     default-property-inclusion: NON_NULL
 
+management:
+  health:
+    elasticsearch:
+      enabled: false
+
 org:
   jobrunr:
     background-job-server:
@@ -64,14 +69,13 @@ top:
     execute-queries: ${EXECUTE_QUERIES:true}
   documents:
     data-source-config-dir: ${DOCUMENT_DATA_SOURCE_CONFIG_DIR:config/data_sources/nlp}
-    default_adapter: ${DOCUMENT_DEFAULT_ADAPTER:#{null}}
+    default-adapter: ${DOCUMENT_DEFAULT_ADAPTER:#{null}}
+    concept-graphs-api:
+      uri: ${CONCEPT_GRAPHS_API_ENDPOINT:http://localhost:9007}
     security:
       graphdb:
         username: ${DB_NEO4J_USER:neo4j}
         password: ${DB_NEO4J_PASS:#{null}}
-      documentdb:
-        username: ${DB_ELASTIC_USER:elastic}
-        password: ${DB_ELASTIC_PASS:#{null}}
 
 coding:
   terminology-service: ${TERMINOLOGY_SERVICE_ENDPOINT:https://www.ebi.ac.uk/ols4/api}

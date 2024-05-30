@@ -10,9 +10,6 @@ logging:
 spring:
   neo4j:
     connection-timeout: ${DB_NEO4J_CONNECTION_TIMEOUT:30}s
-  elasticsearch:
-    connection-timeout: ${DB_ELASTIC_CONNECTION_TIMEOUT:1}s
-    socket-timeout: ${DB_ELASTIC_SOCKET_TIMEOUT:30}s
   liquibase:
     drop-first: true
   jpa:
@@ -35,6 +32,11 @@ spring:
   jackson:
     default-property-inclusion: NON_NULL
 
+management:
+  health:
+    elasticsearch:
+      enabled: false
+
 org:
   jobrunr:
     background-job-server:
@@ -50,6 +52,8 @@ top:
   documents:
     data-source-config-dir: src/test/resources/config/data_sources/nlp
     default_adapter: ${DOCUMENT_DEFAULT_ADAPTER:#{null}}
+    concept-graphs-api:
+      uri: ${CONCEPT_GRAPHS_API_ENDPOINT:http://localhost:9007}
     security:
       graphdb:
         username: ${DB_NEO4J_USER:neo4j}
