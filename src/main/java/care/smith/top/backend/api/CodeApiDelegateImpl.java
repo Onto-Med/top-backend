@@ -3,6 +3,7 @@ package care.smith.top.backend.api;
 import care.smith.top.backend.service.OLSCodeService;
 import care.smith.top.model.Code;
 import care.smith.top.model.CodePage;
+import care.smith.top.model.CodeScope;
 import care.smith.top.model.CodeSystemPage;
 import java.net.URI;
 import java.util.List;
@@ -19,8 +20,8 @@ public class CodeApiDelegateImpl implements CodeApiDelegate {
   @Autowired private OLSCodeService codeService;
 
   @Override
-  public ResponseEntity<Code> getCode(URI uri, String codeSystemId, List<String> include) {
-    return ResponseEntity.ok(codeService.getCode(uri, codeSystemId, include));
+  public ResponseEntity<Code> getCode(URI uri, String codeSystemId, CodeScope subtree) {
+    return ResponseEntity.ok(codeService.getCode(uri, codeSystemId, subtree));
   }
 
   @Override

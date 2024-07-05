@@ -9,12 +9,13 @@ public class OLSTerm {
   private String iri;
   private String short_form;
   private String label;
-  private String description;
+  private List<String> description;
   private String ontology_name;
   private String ontology_prefix;
   private String ontology_iri;
   private List<String> synonyms;
-
+  private OLSLinks _links;
+  
   public String getIri() {
     return iri;
   }
@@ -39,11 +40,11 @@ public class OLSTerm {
     this.label = label;
   }
 
-  public String getDescription() {
+  public List<String> getDescription() {
     return description;
   }
 
-  public void setDescription(String description) {
+  public void setDescription(List<String> description) {
     this.description = description;
   }
 
@@ -77,5 +78,13 @@ public class OLSTerm {
 
   public void setSynonyms(List<String> synonyms) {
     this.synonyms = synonyms;
+  }
+  
+  public OLSLinks get_links() {
+    return _links;
+  }
+  
+  public void set_links(OLSLinks _links) {
+    this._links = _links;
   }
 }
