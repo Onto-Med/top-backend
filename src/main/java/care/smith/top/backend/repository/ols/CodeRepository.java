@@ -1,16 +1,17 @@
 package care.smith.top.backend.repository.ols;
 
-import care.smith.top.backend.service.ols.OLSSuggestResponse;
-import care.smith.top.backend.service.ols.OLSSuggestResponseBody;
-import care.smith.top.backend.service.ols.OLSTerm;
+import care.smith.top.backend.service.ols.*;
 import care.smith.top.model.Code;
 import care.smith.top.model.CodePage;
+import care.smith.top.model.CodeScope;
 import care.smith.top.model.CodeSystem;
 import java.net.URI;
 import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
+import java.nio.charset.Charset;
 import java.util.*;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -21,8 +22,13 @@ import reactor.core.publisher.Mono;
 
 @Repository
 public class CodeRepository extends OlsRepository {
+  private static final Logger log = LoggerFactory.getLogger(CodeRepository.class);
+
   @Value("${spring.paging.page-size:10}")
   private int suggestionsPageSize;
+
+  @Value("500")
+  private int codeChildrenPageSize;
 
   @Autowired private CodeSystemRepository codeSystemRepository;
 
@@ -37,7 +43,7 @@ public class CodeRepository extends OlsRepository {
     return page == null ? 0 : (page - 1) * pageSize;
   }
 
-  public Code getCode(URI uri, String codeSystemId) {
+  public Code getCode(URI uri, String codeSystemId, CodeScope scope) {
     CodeSystem codeSystem =
         getCodeSystem(codeSystemId)
             .orElseThrow(
@@ -54,9 +60,7 @@ public class CodeRepository extends OlsRepository {
                     // OLS requires that uri is double URL encoded, so we encode it once and
                     // additionally rely on uriBuilder encoding it for a second time
                     uriBuilder
-                        .path("/term")
-                        .pathSegment(
-                            codeSystemId, URLEncoder.encode(uri.toString(), StandardCharsets.UTF_8))
+                        .pathSegment("ontologies", codeSystemId, "terms", uri.toString())
                         .build())
             .retrieve()
             .bodyToMono(OLSTerm.class)
@@ -78,12 +82,143 @@ public class CodeRepository extends OlsRepository {
             ? term.getSynonyms().get(0)
             : term.getLabel();
 
-    return new Code()
-        .code(term.getLabel())
-        .name(primaryLabel)
-        .uri(URI.create(term.getIri()))
-        .codeSystem(codeSystem)
-        .synonyms(term.getSynonyms());
+    Code result =
+        new Code()
+            .code(term.getLabel())
+            .name(primaryLabel)
+            .uri(URI.create(term.getIri()))
+            .codeSystem(codeSystem)
+            .synonyms(term.getSynonyms());
+
+    var childrenLink = term.get_links().getHierarchicalChildren();
+    if (childrenLink != null) {
+      fillInSubtree(result, scope);
+    }
+
+    return result;
+  }
+
+  private void fillInSubtree(Code code, CodeScope scope) {
+    switch (scope) {
+      case LEAVES:
+        code.setChildren(collectLeaves(code, new HashSet<>()));
+        return;
+      case SUBTREE:
+        fillInSubtree(code, new HashSet<>());
+        return;
+      case SELF:
+      default:
+    }
+  }
+
+  private void fillInSubtree(Code code, Set<URI> tracker) {
+    // We need to keep track of which codes we have already encountered as ontologies might
+    // contain cycles, and we might end up in an infinite loop.
+    // This is not supposed to happen with TOP terminologies created by the
+    // TOP import pipeline. However, we have no control over what kind of ontologies are
+    // loaded into the OLS instance, so better safe than sorry.
+    if (tracker.contains(code.getUri())) return;
+    tracker.add(code.getUri());
+
+    var children = retrieveChildren(code);
+
+    code.setChildren(children);
+    children.forEach(
+        childCode -> {
+          fillInSubtree(childCode, tracker);
+        });
+  }
+
+  private List<Code> collectLeaves(Code code, Set<URI> tracker) {
+    if (tracker.contains(code.getUri())) return Collections.emptyList();
+    tracker.add(code.getUri());
+
+    var children = retrieveChildren(code);
+
+    if (children.isEmpty()) {
+      // code is a leaf.
+      return List.of(code);
+    }
+
+    return children.stream()
+        .flatMap(childCode -> collectLeaves(childCode, tracker).stream().distinct())
+        .collect(Collectors.toList());
+  }
+
+  class PageCounter {
+    private Integer page = 0;
+
+    Integer getPage() {
+      return page;
+    }
+
+    void increase() {
+      page++;
+    }
+  }
+
+  private List<Code> retrieveChildren(Code code) {
+    final PageCounter counter = new PageCounter();
+
+    final List<Code> result = new ArrayList<>();
+
+    while (true) {
+      OLSHierarchicalChildrenResponse response =
+          Objects.requireNonNull(
+              terminologyService
+                  .get()
+                  .uri(
+                      uriBuilder ->
+                          uriBuilder
+                              .pathSegment(
+                                  "ontologies",
+                                  code.getCodeSystem().getExternalId(),
+                                  "terms",
+                                  URLEncoder.encode(
+                                      code.getUri().toString(), Charset.defaultCharset()),
+                                  "hierarchicalChildren")
+                              .queryParam("page", counter.getPage())
+                              .queryParam("size", codeChildrenPageSize)
+                              .build())
+                  .retrieve()
+                  .bodyToMono(OLSHierarchicalChildrenResponse.class)
+                  .onErrorResume(
+                      WebClientResponseException.class,
+                      e ->
+                          e.getRawStatusCode() == HttpStatus.NOT_FOUND.value()
+                              ? Mono.empty()
+                              : Mono.error(e))
+                  .block());
+
+      if (response.get_embedded() == null) {
+        return Collections.emptyList();
+      }
+      response
+          .get_embedded()
+          .getTerms()
+          .forEach(
+              term -> {
+                String primaryLabel =
+                    term.getSynonyms() != null && term.getSynonyms().size() != 0
+                        ? term.getSynonyms().get(0)
+                        : term.getLabel();
+
+                result.add(
+                    new Code()
+                        .code(term.getLabel())
+                        .name(primaryLabel)
+                        .uri(URI.create(term.getIri()))
+                        .codeSystem(code.getCodeSystem())
+                        .synonyms(term.getSynonyms()));
+              });
+
+      var paginationInfo = response.getPage();
+      if (paginationInfo.getNumber() + 1 == paginationInfo.getTotalPages()) {
+        break;
+      }
+      counter.increase();
+    }
+    return result;
   }
 
   public CodePage getCodes(
