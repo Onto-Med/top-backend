@@ -25,6 +25,15 @@ public class SecurityConfiguration {
   @Autowired private JwtAuthenticationProvider customAuthenticationProvider;
 
   @Bean
+  public HttpFirewall allowUrlEncodedSlashHttpFirewall() {
+    StrictHttpFirewall firewall = new StrictHttpFirewall();
+    firewall.setAllowUrlEncodedSlash(true);
+    firewall.setAllowUrlEncodedDoubleSlash(true);
+    firewall.setAllowUrlEncodedPercent(true);
+    return firewall;
+  }
+
+  @Bean
   SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http.sessionManagement()
         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
@@ -53,14 +62,5 @@ public class SecurityConfiguration {
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
     source.registerCorsConfiguration("/**", configuration);
     return source;
-  }
-  
-  @Bean
-  public HttpFirewall allowUrlEncodedSlashHttpFirewall() {
-    StrictHttpFirewall firewall = new StrictHttpFirewall();
-    firewall.setAllowUrlEncodedSlash(true);
-    firewall.setAllowUrlEncodedDoubleSlash(true);
-    firewall.setAllowUrlEncodedPercent(true);
-    return firewall;
   }
 }

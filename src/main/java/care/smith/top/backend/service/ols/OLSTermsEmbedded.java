@@ -1,6 +1,5 @@
 package care.smith.top.backend.service.ols;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -8,11 +7,11 @@ import java.util.List;
  */
 public class OLSTermsEmbedded {
   private List<OLSTerm> terms;
-  
+
   public List<OLSTerm> getTerms() {
     return terms;
   }
-  
+
   public void setTerms(List<OLSTerm> terms) {
     this.terms = terms;
   }

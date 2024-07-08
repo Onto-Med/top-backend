@@ -7,11 +7,11 @@ import java.util.List;
  */
 public class OLSHierarchicalChildrenEmbedded {
   private List<OLSTerm> terms;
-  
+
   public List<OLSTerm> getTerms() {
     return terms;
   }
-  
+
   public void setTerms(List<OLSTerm> terms) {
     this.terms = terms;
   }
