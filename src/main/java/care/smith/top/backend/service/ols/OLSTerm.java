@@ -15,7 +15,7 @@ public class OLSTerm {
   private String ontology_iri;
   private List<String> synonyms;
   private OLSLinks _links;
-  
+
   public String getIri() {
     return iri;
   }
@@ -79,11 +79,11 @@ public class OLSTerm {
   public void setSynonyms(List<String> synonyms) {
     this.synonyms = synonyms;
   }
-  
+
   public OLSLinks get_links() {
     return _links;
   }
-  
+
   public void set_links(OLSLinks _links) {
     this._links = _links;
   }

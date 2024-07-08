@@ -2,8 +2,6 @@ package care.smith.top.backend.model.jpa;
 
 import care.smith.top.model.Code;
 import care.smith.top.model.CodeSystem;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
 import java.net.URI;
 import java.util.Collections;
 import java.util.List;
@@ -11,6 +9,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity(name = "code")
 @EntityListeners(AuditingEntityListener.class)
@@ -65,14 +64,6 @@ public class CodeDao {
             .collect(Collectors.toList());
   }
 
-  private CodeDao deepTranslate(Code code) {
-    final CodeDao codeDao = new CodeDao(code);
-    return codeDao.children(
-        Optional.of(code.getChildren()).orElse(Collections.emptyList()).stream()
-            .map(childCode -> deepTranslate(childCode).parent(codeDao))
-            .collect(Collectors.toList()));
-  }
-
   public Code toApiModel() {
     return new Code()
         .code(code)
@@ -82,17 +73,9 @@ public class CodeDao {
         .children(getChildren().stream().map(CodeDao::toApiModel).collect(Collectors.toList()));
   }
 
-  public Long getId() {
-    return id;
-  }
-
   public CodeDao id(@NotNull Long id) {
     this.id = id;
     return this;
-  }
-
-  public CodeDao getParent() {
-    return parent;
   }
 
   public CodeDao parent(@NotNull CodeDao parent) {
@@ -100,17 +83,9 @@ public class CodeDao {
     return this;
   }
 
-  public List<CodeDao> getChildren() {
-    return children;
-  }
-
   public CodeDao children(List<CodeDao> children) {
     this.children = children;
     return this;
-  }
-
-  public String getCode() {
-    return code;
   }
 
   public CodeDao code(@NotNull String code) {
@@ -118,26 +93,14 @@ public class CodeDao {
     return this;
   }
 
-  public String getName() {
-    return name;
-  }
-
   public CodeDao name(String name) {
     this.name = name;
     return this;
   }
 
-  public String getUri() {
-    return uri;
-  }
-
   public CodeDao uri(String uri) {
     this.uri = uri;
     return this;
-  }
-
-  public String getCodeSystemUri() {
-    return codeSystemUri;
   }
 
   public CodeDao codeSystemUri(@NotNull String codeSystemUri) {
@@ -167,5 +130,41 @@ public class CodeDao {
     result = 31 * result + (getUri() != null ? getUri().hashCode() : 0);
     result = 31 * result + getCodeSystemUri().hashCode();
     return result;
+  }
+
+  public Long getId() {
+    return id;
+  }
+
+  public CodeDao getParent() {
+    return parent;
+  }
+
+  public List<CodeDao> getChildren() {
+    return children;
+  }
+
+  public String getCode() {
+    return code;
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public String getUri() {
+    return uri;
+  }
+
+  public String getCodeSystemUri() {
+    return codeSystemUri;
+  }
+
+  private CodeDao deepTranslate(Code code) {
+    final CodeDao codeDao = new CodeDao(code);
+    return codeDao.children(
+        Optional.of(code.getChildren()).orElse(Collections.emptyList()).stream()
+            .map(childCode -> deepTranslate(childCode).parent(codeDao))
+            .collect(Collectors.toList()));
   }
 }

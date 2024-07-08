@@ -5,11 +5,11 @@ package care.smith.top.backend.service.ols;
  */
 public class OLSLinks {
   private OLSLink hierarchicalChildren;
-  
+
   public OLSLink getHierarchicalChildren() {
     return hierarchicalChildren;
   }
-  
+
   public void setHierarchicalChildren(OLSLink hierarchicalChildren) {
     this.hierarchicalChildren = hierarchicalChildren;
   }
