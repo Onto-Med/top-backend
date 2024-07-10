@@ -1,0 +1,79 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1720604582951-8
+      author: Ralph Schäfermeier (generated)
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: codePK
+                  name: id
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: code
+                  type: VARCHAR(255)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: code_system_uri
+                  type: VARCHAR(255)
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+              - column:
+                  name: uri
+                  type: VARCHAR(255)
+              - column:
+                  name: parent_id
+                  type: BIGINT
+              - column:
+                  name: children_order
+                  type: INT
+            tableName: code
+  - changeSet:
+      id: 1720604582951-11
+      author: Ralph Schäfermeier (generated)
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: parent_id
+            baseTableName: code
+            constraintName: FKlopab3u1y8gn63pdhbhyyiq5f
+            deferrable: false
+            initiallyDeferred: false
+            referencedColumnNames: id
+            referencedTableName: code
+            validate: true
+  - changeSet:
+      id: 1720604582951-13
+      author: Ralph Schäfermeier (generated)
+      changes:
+        - dropColumn:
+            columnName: CODE
+            tableName: ENTITY_VERSION_CODES
+  - changeSet:
+      id: 1720604582951-14
+      author: Ralph Schäfermeier (generated)
+      changes:
+        - dropColumn:
+            columnName: CODE_SYSTEM_URI
+            tableName: ENTITY_VERSION_CODES
+  - changeSet:
+      id: 1720604582951-15
+      author: Ralph Schäfermeier (generated)
+      changes:
+        - dropColumn:
+            columnName: NAME
+            tableName: ENTITY_VERSION_CODES
+  - changeSet:
+      id: 1720604582951-16
+      author: Ralph Schäfermeier (generated)
+      changes:
+        - dropColumn:
+            columnName: URI
+            tableName: ENTITY_VERSION_CODES
