@@ -4,7 +4,7 @@ name: Lint and test
 on:
   push:
     branches:
-      - master
+      - main
     paths:
       - "pom.xml"
       - ".mvn-ci.xml"
@@ -12,7 +12,7 @@ on:
       - ".github/workflows/lint-and-test.yml"
   pull_request:
     branches:
-      - master
+      - main
     paths:
       - "pom.xml"
       - ".mvn-ci.xml"
