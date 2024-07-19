@@ -1,0 +1,17 @@
+databaseChangeLog:
+-  changeSet:
+     id: 1721386699210-1
+     author:  ChristophB
+     changes:
+     -  modifyDataType:
+          columnName:  minimum_number_value
+          newDataType:  decimal
+          tableName:  restriction
+-  changeSet:
+     id: 1721386699210-2
+     author:  ChristophB
+     changes:
+     -  modifyDataType:
+          columnName:  maximum_number_value
+          newDataType:  decimal
+          tableName:  restriction
