@@ -31,8 +31,7 @@ for additional documentation.
    *(The following variables will be overwritten by their respective adapter values if specified)*  
     * `DB_NEO4J_USER`: username for neo4j database, defaults to `neo4j`
     * `DB_NEO4J_PASS`: password for neo4j database (should be declared here and not written into an adapter)
-    * `DB_ELASTIC_USER`: username for elasticsearch database, defaults to `elastic`
-    * `DB_ELASTIC_PASS`: password for elasticsearch database (should be declared here and not written into an adapter)
+    * `CONCEPT_GRAPHS_API_ENDPOINT`: API endpoint of the concept-graphs service, defaults to http\://localhost:9007
 
    *(These are general configuration variables for the database that won't be declared in an adapter)*  
     * `DB_ELASTIC_CONNECTION_TIMEOUT`: timeout in seconds, defaults to `1s`
