@@ -30,14 +30,10 @@ for additional documentation.
    Document related:
     * `DB_NEO4J_HOST`: Neo4j database server name, defaults to `localhost`
     * `DB_NEO4J_PORT`: Neo4J database port, defaults to 7687
-    * `DB_NEO4J_USER`: username for neo4j database, defaults to `neo4j`
-    * `DB_NEO4J_PASS`: password for neo4j database (should be declared here and not written into an adapter)
-    * `CONCEPT_GRAPHS_API_ENDPOINT`: API endpoint of the concept-graphs service, defaults to http\://localhost:9007
-
-   *(These are general configuration variables for the database that won't be declared in an adapter)*  
-    * `DB_ELASTIC_CONNECTION_TIMEOUT`: timeout in seconds, defaults to `1s`
-    * `DB_ELASTIC_SOCKET_TIMEOUT`: timeout in seconds, defaults to `30s`
-    * `DB_NEO4J_CONNECTION_TIMEOUT`: timeout in seconds, defaults to `30s`  
+    * `DB_NEO4J_USER`: username for Neo4j database, defaults to `neo4j`
+    * `DB_NEO4J_PASS`: password for Neo4j database (should be declared here and not written into an adapter)
+    * `DB_NEO4J_CONNECTION_TIMEOUT`: timeout in seconds for Neo4j requests, defaults to 30
+    * `CONCEPT_GRAPHS_API_ENDPOINT`: API endpoint of the concept-graphs service, defaults to `http://localhost:9007`
 
    OAuth2 related:
     * `OAUTH2_ENABLED`: enable or disable oauth2, defaults to `false`
@@ -63,18 +59,21 @@ If you run the TOP Framework with an OAuth2 server, the first user that is creat
 
 ## NLP/Document related configuration
 
-To utilize the document search of the framework, one needs three different services running: 
-1. Elasticsearch or something similar (default: `http://localhost:9008`)
-2. A Neo4j cluster (default: `bolt://localhost:7687`)
-3. And the [concept graphs service](https://github.com/Onto-Med/concept-graphs) (default: `http://localhost:9007`)
+To utilize the document search of the framework, one needs three different services running:
+1. [concept graphs service](https://github.com/Onto-Med/concept-graphs) (default: `http://localhost:9007`)
+2. Neo4j cluster (default: `bolt://localhost:7687`)
+3. Document servers (e.g. Elasticsearch)
 
-The document search is adapter centric and one needs a working configuration file (yml) that specifies the addresses of said services
-under the folder declared with the environment variable `DOCUMENT_DATA_SOURCE_CONFIG_DIR`.
-If no `DOCUMENT_DEFAULT_ADAPTER` is specified, the first adapter found in the folder is used for setup.  
-If there is no such adapter present, or it's faulty in some other way, the framework uses default values for the connections (specified above).
+1 and 2 are configurable via environment variables.
+
+The document search is adapter centric and one needs a working configuration file (yml) that specifies the address of
+a document server in the folder declared with the environment variable `DOCUMENT_DATA_SOURCE_CONFIG_DIR`.
 You can find more information about the adapter specification under [top-document-query](https://github.com/Onto-Med/top-document-query).  
-The [concept graphs service](https://github.com/Onto-Med/concept-graphs) is responsible for generating graphs of related phrases from a document source (either via upload or an external data/document server like the one used for the framework).
-These graphs in turn are then represented as `concept nodes`, `phrase nodes` and `document nodes` on a Neo4j cluster where they serve as a way to search/explore documents.  
+
+The [concept graphs service](https://github.com/Onto-Med/concept-graphs) is responsible for generating graphs of related
+phrases from a document source (either via upload or an external data/document server, such as Elasticsearch).
+These graphs in turn are then represented as `concept nodes`, `phrase nodes` and `document nodes` on a Neo4j cluster
+where they serve as a way to search/explore documents.  
 
 ## Plugins
 
