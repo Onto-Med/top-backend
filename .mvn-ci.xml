@@ -12,11 +12,6 @@
             <password>${env.GH_MAVEN_PKG_AUTH_TOKEN}</password>
         </server>
         <server>
-            <id>simple-onto-api</id>
-            <username>${env.GH_MAVEN_PKG_USER}</username>
-            <password>${env.GH_MAVEN_PKG_AUTH_TOKEN}</password>
-        </server>
-        <server>
             <id>top-document-query</id>
             <username>${env.GH_MAVEN_PKG_USER}</username>
             <password>${env.GH_MAVEN_PKG_AUTH_TOKEN}</password>

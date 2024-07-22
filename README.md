@@ -7,6 +7,11 @@ for additional documentation.
 
 ## Running the Spring Server
 
+Because some Maven dependencies are hosted at [GitHub Packages](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-apache-maven-registry),
+you need to make some modifications to your Maven installation in order to run the TOP Backend server. Please follow the
+[Authenticating to GitHub Packages](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-apache-maven-registry#authenticating-to-github-packages)
+instructions.
+
 1. Set up environment variables:
     * `APP_PORT`: the port where the spring application will run on, e.g. 8080
     * `APP_PATH`: the context path, e.g. "/" for root
@@ -146,7 +151,13 @@ On newer JDK versions, you might need the following arguments to run Neo4j tests
 
 ### Docker
 
-Before building the Docker image, copy `.env.dist` to `.env` and fill in your GitHub username and Maven package registry authentication token.
+To build a Docker image, you need to provide your GitHub username and [personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens)
+as [Docker secrets](https://docs.docker.com/engine/swarm/secrets/). Assuming they are available
+as environment variables:
+
+```sh
+docker build --secret id=GH_MAVEN_PKG_USER --secret id=GH_MAVEN_PKG_AUTH_TOKEN -t top-backend .
+```
 
 ## License
 

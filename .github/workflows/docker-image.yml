@@ -29,6 +29,9 @@ jobs:
           cache: 'maven'
           check-latest: true
       - run: mvn -B test --no-transfer-progress -s .mvn-ci.xml --file pom.xml
+        env:
+          GH_MAVEN_PKG_AUTH_TOKEN: ${{ secrets.GH_MAVEN_PKG_AUTH_TOKEN }}
+          GH_MAVEN_PKG_USER: ${{ secrets.GH_MAVEN_PKG_USER }}
       - name: Log into registry ${{ env.REGISTRY }}
         uses: docker/login-action@v3
         with:
@@ -47,6 +50,6 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          build-args: |
-            GH_MAVEN_PKG_USER=${{ secrets.GH_MAVEN_PKG_USER }}
-            GH_MAVEN_PKG_AUTH_TOKEN=${{ secrets.GH_MAVEN_PKG_AUTH_TOKEN }}
+          secrets: |
+            "GH_MAVEN_PKG_AUTH_TOKEN=${{ secrets.GH_MAVEN_PKG_AUTH_TOKEN }}"
+            "GH_MAVEN_PKG_USER=${{ secrets.GH_MAVEN_PKG_USER }}"
