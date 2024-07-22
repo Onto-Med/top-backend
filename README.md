@@ -27,8 +27,9 @@ for additional documentation.
       defaults to false
     * `MAX_BATCH_SIZE`: max number of entities that can be uploaded to the server in one batch
 
-   Document related:  
-   *(The following variables will be overwritten by their respective adapter values if specified)*  
+   Document related:
+    * `DB_NEO4J_HOST`: Neo4j database server name, defaults to `localhost`
+    * `DB_NEO4J_PORT`: Neo4J database port, defaults to 7687
     * `DB_NEO4J_USER`: username for neo4j database, defaults to `neo4j`
     * `DB_NEO4J_PASS`: password for neo4j database (should be declared here and not written into an adapter)
     * `CONCEPT_GRAPHS_API_ENDPOINT`: API endpoint of the concept-graphs service, defaults to http\://localhost:9007
