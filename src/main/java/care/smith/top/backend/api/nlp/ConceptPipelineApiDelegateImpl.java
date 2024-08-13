@@ -12,9 +12,11 @@ import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -84,14 +86,38 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
   }
 
   @Override
-  public ResponseEntity<Object> getConceptGraphPipelineConfiguration(String pipelineId) {
+  public ResponseEntity<String> getConceptGraphPipelineConfiguration(String pipelineId) {
     throw new NotImplementedException();
   }
 
   @Override
   public ResponseEntity<PipelineResponse> startConceptGraphPipelineWithJson(
-      ConceptPipelineConfigRequest conceptPipelineConfigRequest) {
-    throw new NotImplementedException();
+      String conceptPipelineConfigRequest) {
+    PipelineResponse pipelineResponse;
+    //ToDo: Attention! skip_present & return_statistics need to be put into the json as well (so it's not the same json as from concept-graphs-api)
+    JSONObject pipelineConfig = new JSONObject(conceptPipelineConfigRequest);
+    HashMap<String, String> requestParams = new HashMap<>();
+    List<String> keyList = List.of("name", "language", "config", "skip_present", "return_statistics");
+    for (String key: keyList) {
+      key = key.toLowerCase();
+      if (!pipelineConfig.has(key)) continue;
+      if (List.of("name", "language").contains(key)) {
+        requestParams.put(key, pipelineConfig.getString(key));
+      } else if (List.of("skip_present", "return_statistics").contains(key)) {
+        Boolean boolParam = p
+      }
+    }
+    pipelineResponse = conceptGraphsService.initPipeline(
+        config.has("name")? (String) config.get("name") : conceptPipelineConfigRequest.getName(),
+        config.has("language")? (String) config.get("language") : conceptPipelineConfigRequest.getLanguage(),
+        conceptPipelineConfigRequest.isSkipPresent(),
+        conceptPipelineConfigRequest.isReturnStatistics(),
+        pipelineConfig
+      );
+    if (pipelineResponse.getStatus().equals(PipelineResponseStatus.FAILED)) {
+      return ResponseEntity.of(Optional.of(pipelineResponse));
+    }
+    return ResponseEntity.ok(pipelineResponse);
   }
 
   @Override

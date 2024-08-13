@@ -11,6 +11,8 @@ import java.io.File;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -91,6 +93,17 @@ public class ConceptGraphsService implements ContentService {
     PipelineResponseEntity pre =
         pipelineManager.startPipeline(
             data, configs, labels, processName, language, skipPresent, returnStatistics);
+    return addStatusToPipelineResponse(pre, processName);
+  }
+
+  public PipelineResponse initPipeline(
+      String processName,
+      String language,
+      Boolean skipPresent,
+      Boolean returnStatistics,
+      JSONObject jsonBody) {
+    PipelineResponseEntity pre =
+        pipelineManager.startPipeline(processName, language, skipPresent, returnStatistics, jsonBody);
     return addStatusToPipelineResponse(pre, processName);
   }
 
