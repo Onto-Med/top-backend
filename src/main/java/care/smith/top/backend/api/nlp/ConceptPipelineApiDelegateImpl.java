@@ -95,24 +95,30 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
       String conceptPipelineConfigRequest) {
     PipelineResponse pipelineResponse;
     //ToDo: Attention! skip_present & return_statistics need to be put into the json as well (so it's not the same json as from concept-graphs-api)
-    JSONObject pipelineConfig = new JSONObject(conceptPipelineConfigRequest);
-    HashMap<String, String> requestParams = new HashMap<>();
-    List<String> keyList = List.of("name", "language", "config", "skip_present", "return_statistics");
+    JSONObject request = new JSONObject(conceptPipelineConfigRequest);
+    HashMap<String, String> requestParams = new HashMap<>(Map.of(
+        "name", "default",
+        "language", "en"
+    ));
+    HashMap<String, Boolean> queryArgs = new HashMap<>(Map.of(
+      "skip_present", true,
+      "return_statistics", false
+    ));
+    List<String> keyList = List.of("name", "language", "skip_present", "return_statistics");
     for (String key: keyList) {
       key = key.toLowerCase();
-      if (!pipelineConfig.has(key)) continue;
+      if (!request.has(key)) continue;
       if (List.of("name", "language").contains(key)) {
-        requestParams.put(key, pipelineConfig.getString(key));
+        requestParams.put(key, request.getString(key));
       } else if (List.of("skip_present", "return_statistics").contains(key)) {
-        Boolean boolParam = p
+        queryArgs.put(key, request.getBoolean(key));
+        request.remove(key);
       }
     }
     pipelineResponse = conceptGraphsService.initPipeline(
-        config.has("name")? (String) config.get("name") : conceptPipelineConfigRequest.getName(),
-        config.has("language")? (String) config.get("language") : conceptPipelineConfigRequest.getLanguage(),
-        conceptPipelineConfigRequest.isSkipPresent(),
-        conceptPipelineConfigRequest.isReturnStatistics(),
-        pipelineConfig
+        requestParams.get("name"), requestParams.get("language"),
+        queryArgs.get("skip_present"), queryArgs.get("return_statistics"),
+        request
       );
     if (pipelineResponse.getStatus().equals(PipelineResponseStatus.FAILED)) {
       return ResponseEntity.of(Optional.of(pipelineResponse));
