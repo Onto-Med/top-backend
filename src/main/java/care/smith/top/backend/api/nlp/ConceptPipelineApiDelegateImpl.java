@@ -87,7 +87,9 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
 
   @Override
   public ResponseEntity<String> getConceptGraphPipelineConfiguration(String pipelineId) {
-    throw new NotImplementedException();
+    String config = conceptGraphsService.getPipelineConfig(pipelineId);
+    if (Objects.equals(config, "{}")) return ResponseEntity.notFound().build();
+    return ResponseEntity.of(Optional.ofNullable(config));
   }
 
   @Override

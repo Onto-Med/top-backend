@@ -82,6 +82,10 @@ public class ConceptGraphsService implements ContentService {
     return pipelineResponse.response(stringResponse).status(PipelineResponseStatus.FAILED);
   }
 
+  public String getPipelineConfig(String processId) {
+    return pipelineManager.getPipelineConfiguration(processId).orElse("{}");
+  }
+
   public PipelineResponse initPipeline(
       File data,
       File labels,
