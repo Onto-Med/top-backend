@@ -89,7 +89,9 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
   public ResponseEntity<String> getConceptGraphPipelineConfiguration(String pipelineId) {
     String config = conceptGraphsService.getPipelineConfig(pipelineId);
     if (Objects.equals(config, "{}")) return ResponseEntity.notFound().build();
-    return ResponseEntity.of(Optional.ofNullable(config));
+    JSONObject jsonObject = new JSONObject(config);
+    String configStr = jsonObject.has("config")? jsonObject.get("config").toString() : "{}";
+    return ResponseEntity.of(Optional.ofNullable(configStr));
   }
 
   @Override
