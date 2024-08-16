@@ -99,7 +99,7 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
       String conceptPipelineConfigRequest) {
     PipelineResponse pipelineResponse;
     //ToDo: Attention! skip_present & return_statistics need to be put into the json as well (so it's not the same json as from concept-graphs-api)
-    JSONObject request = new JSONObject(conceptPipelineConfigRequest);
+    JSONObject request = new JSONObject(conceptPipelineConfigRequest.replace("\\",""));
     HashMap<String, String> requestParams = new HashMap<>(Map.of(
         "name", "default",
         "language", "en"
