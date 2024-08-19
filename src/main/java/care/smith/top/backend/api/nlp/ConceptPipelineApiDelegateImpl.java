@@ -9,11 +9,12 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.apache.commons.lang3.NotImplementedException;
+import care.smith.top.top_document_query.adapter.config.TextAdapterConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.json.JSONObject;
@@ -86,8 +87,8 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
   }
 
   @Override
-  public ResponseEntity<String> getConceptGraphPipelineConfiguration(String pipelineId) {
-    String config = conceptGraphsService.getPipelineConfig(pipelineId);
+  public ResponseEntity<String> getConceptGraphPipelineConfiguration(String pipelineId, String language) {
+    String config = conceptGraphsService.getPipelineConfig(pipelineId, language);
     if (Objects.equals(config, "{}")) return ResponseEntity.notFound().build();
     JSONObject jsonObject = new JSONObject(config);
     String configStr = jsonObject.has("config")? jsonObject.get("config").toString() : "{}";
@@ -119,6 +120,19 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
         request.remove(key);
       }
     }
+
+    AtomicReference<JSONObject> documentServerConfig = new AtomicReference<>();
+    documentQueryService
+        .getTextAdapterConfig(StringUtils.defaultString(!Objects.equals(requestParams.get("name"), "default") ?
+            requestParams.get("name"): null, defaultDataSourceId))
+        .ifPresent(
+            textAdapterConfig -> {
+              Map<String, String> configMap = createDocumentServerConfigMap(textAdapterConfig);
+              documentServerConfig.set(new JSONObject(configMap));
+            }
+        );
+    request.put("document_server", documentServerConfig.get());
+
     pipelineResponse = conceptGraphsService.initPipeline(
         requestParams.get("name"), requestParams.get("language"),
         queryArgs.get("skip_present"), queryArgs.get("return_statistics"),
@@ -172,34 +186,11 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
                     }));
 
     if (data == null) {
-      // ToDo: this should go somewhere where it can be more easily adapted later;
-      // also index right now in the concept graphs api only supports one value
       documentQueryService
           .getTextAdapterConfig(StringUtils.defaultString(dataSourceId, defaultDataSourceId))
           .ifPresent(
               textAdapterConfig -> {
-                List<String> lines =
-                    new ArrayList<>(
-                        List.of(
-                            String.format(
-                                "\"url\": \"%s\"", textAdapterConfig.getConnection().getUrl()),
-                            String.format(
-                                "\"port\": \"%s\"", textAdapterConfig.getConnection().getPort()),
-                            String.format(
-                                "\"index\": \"%s\"",
-                                Arrays.stream(textAdapterConfig.getIndex())
-                                    .findFirst()
-                                    .orElseThrow()),
-                            String.format("\"size\": \"%s\"", textAdapterConfig.getBatchSize())));
-                if (textAdapterConfig.getReplaceFields() != null) {
-                  lines.add(
-                      String.format(
-                          "\"replace_keys\": \"%s\"",
-                          textAdapterConfig.getReplaceFields().keySet().stream()
-                              .map(
-                                  key -> key + ": " + textAdapterConfig.getReplaceFields().get(key))
-                              .collect(Collectors.joining(", ", "{", "}"))));
-                }
+                List<String> lines = createDocumentServerConfigLines(textAdapterConfig);
                 File tempFile = null;
                 try {
                   tempFile = File.createTempFile("tmp-", "-document_server_config");
@@ -230,5 +221,34 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  private Map<String, String> createDocumentServerConfigMap(TextAdapterConfig textAdapterConfig) {
+    // ToDO: index right now in the concept graphs api only supports one value
+    Map<String, String> configMap = new HashMap<>(Map.of(
+        "url", textAdapterConfig.getConnection().getUrl(),
+        "port", textAdapterConfig.getConnection().getPort(),
+        "index", Arrays.stream(textAdapterConfig.getIndex())
+            .findFirst()
+            .orElseThrow(),
+        "size", String.valueOf(textAdapterConfig.getBatchSize()),
+        "label_key", textAdapterConfig.getLabelKey(),
+        "other_id", textAdapterConfig.getOtherId()
+    ));
+    if (textAdapterConfig.getReplaceFields() != null) {
+      configMap.put("replace_keys",
+        textAdapterConfig.getReplaceFields().keySet().stream()
+            .map(
+                key -> key + ": " + textAdapterConfig.getReplaceFields().get(key))
+            .collect(Collectors.joining(", ", "{", "}"))
+      );
+    }
+    return configMap;
+  }
+
+  private List<String> createDocumentServerConfigLines(TextAdapterConfig textAdapterConfig) {
+    List<String> l = new ArrayList<>();
+    createDocumentServerConfigMap(textAdapterConfig).forEach((k, v) -> l.add(String.format("\"%s\": \"%s\"", k, v)));
+    return l;
   }
 }
