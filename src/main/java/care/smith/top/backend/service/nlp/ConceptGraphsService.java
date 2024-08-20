@@ -111,6 +111,21 @@ public class ConceptGraphsService implements ContentService {
     return addStatusToPipelineResponse(pre, processName);
   }
 
+  public PipelineResponse stopPipeline(
+      String processName
+  ) {
+    PipelineResponse pipelineResponse = new PipelineResponse().pipelineId(processName);
+    String stringResponse = pipelineManager.stopPipeline(processName);
+    if (stringResponse.toLowerCase().contains("no thread/process for")) {
+      return pipelineResponse.response(stringResponse).status(PipelineResponseStatus.FAILED);
+    } else if (stringResponse.toLowerCase().contains("find a running step in the pipeline")) {
+      return pipelineResponse.response(stringResponse).status(PipelineResponseStatus.FAILED);
+    } else if (stringResponse.toLowerCase().contains("process will be stopped")) {
+      return pipelineResponse.response(stringResponse).status(PipelineResponseStatus.SUCCESSFUL);
+    }
+    return pipelineResponse.response(stringResponse).status(PipelineResponseStatus.FAILED);
+  }
+
   private PipelineResponse addStatusToPipelineResponse(
       PipelineResponseEntity responseEntity, String processName) {
     if (responseEntity == null) {

@@ -223,6 +223,12 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
     }
   }
 
+  @Override
+  public ResponseEntity<Void> stopConceptGraphPipeline(String pipelineId) {
+    PipelineResponse pipelineResponse = conceptGraphsService.stopPipeline(pipelineId);
+    return ResponseEntity.ok().build();
+  }
+
   private Map<String, String> createDocumentServerConfigMap(TextAdapterConfig textAdapterConfig) {
     // ToDO: index right now in the concept graphs api only supports one value
     Map<String, String> configMap = new HashMap<>(Map.of(
