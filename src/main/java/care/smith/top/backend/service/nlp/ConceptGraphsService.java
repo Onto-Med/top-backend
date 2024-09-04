@@ -11,7 +11,6 @@ import java.io.File;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -107,13 +106,12 @@ public class ConceptGraphsService implements ContentService {
       Boolean returnStatistics,
       JSONObject jsonBody) {
     PipelineResponseEntity pre =
-        pipelineManager.startPipeline(processName, language, skipPresent, returnStatistics, jsonBody);
+        pipelineManager.startPipeline(
+            processName, language, skipPresent, returnStatistics, jsonBody);
     return addStatusToPipelineResponse(pre, processName);
   }
 
-  public PipelineResponse stopPipeline(
-      String processName
-  ) {
+  public PipelineResponse stopPipeline(String processName) {
     PipelineResponse pipelineResponse = new PipelineResponse().pipelineId(processName);
     String stringResponse = pipelineManager.stopPipeline(processName);
     if (stringResponse.toLowerCase().contains("no thread/process for")) {
