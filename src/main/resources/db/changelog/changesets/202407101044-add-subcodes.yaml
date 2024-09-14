@@ -1,18 +1,30 @@
 databaseChangeLog:
   - changeSet:
-      id: 1720604582951-8
+      id: 1720604582951-1
+      author: Ralph Schäfermeier
+      changes:
+        - addColumn:
+            tableName: entity_version_codes
+            columns:
+              - column:
+                  name: codes_id
+                  type: BIGINT
+                  defaultValueSequenceNext: hibernate_sequence
+  - changeSet:
+      id: 1720604582951-2
       author: Ralph Schäfermeier (generated)
       changes:
         - createTable:
+            tableName: code
             columns:
               - column:
-                  autoIncrement: true
                   constraints:
                     nullable: false
                     primaryKey: true
                     primaryKeyName: codePK
                   name: id
                   type: BIGINT
+                  defaultValueSequenceNext: hibernate_sequence
               - column:
                   constraints:
                     nullable: false
@@ -35,45 +47,98 @@ databaseChangeLog:
               - column:
                   name: children_order
                   type: INT
-            tableName: code
   - changeSet:
-      id: 1720604582951-11
+      id: 1720604582951-3
       author: Ralph Schäfermeier (generated)
       changes:
         - addForeignKeyConstraint:
             baseColumnNames: parent_id
             baseTableName: code
-            constraintName: FKlopab3u1y8gn63pdhbhyyiq5f
+            constraintName: FK_code_parentid_code_id
             deferrable: false
             initiallyDeferred: false
             referencedColumnNames: id
             referencedTableName: code
             validate: true
   - changeSet:
-      id: 1720604582951-13
-      author: Ralph Schäfermeier (generated)
+      id: 1720604582951-5
+      author: Ralph Schäfermeier
       changes:
-        - dropColumn:
-            columnName: CODE
-            tableName: ENTITY_VERSION_CODES
+        - sql: insert into code (id, code, code_system_uri, name, uri) select codes_id as id, code, code_system_uri, name, uri from entity_version_codes
+      rollback:
+        - delete:
+            tableName: code
   - changeSet:
-      id: 1720604582951-14
+      id: 1720604582951-4
       author: Ralph Schäfermeier (generated)
       changes:
-        - dropColumn:
-            columnName: CODE_SYSTEM_URI
-            tableName: ENTITY_VERSION_CODES
+        - addForeignKeyConstraint:
+            baseColumnNames: codes_id
+            baseTableName: entity_version_codes
+            constraintName: FK_entityversioncodes_codesid_codes_id
+            deferrable: false
+            initiallyDeferred: false
+            referencedColumnNames: id
+            referencedTableName: code
+            validate: true
   - changeSet:
-      id: 1720604582951-15
+      id: 1720604582951-6
       author: Ralph Schäfermeier (generated)
       changes:
         - dropColumn:
-            columnName: NAME
-            tableName: ENTITY_VERSION_CODES
+            columnName: code
+            tableName: entity_version_codes
+      rollback:
+        - addColumn:
+            tableName: entity_version_codes
+            columns:
+              - column:
+                  name: code
+                  type: VARCHAR(255)
+                  valueComputed: (select c.code from code c where c.id=codes_id)
   - changeSet:
-      id: 1720604582951-16
+      id: 1720604582951-7
       author: Ralph Schäfermeier (generated)
       changes:
         - dropColumn:
-            columnName: URI
-            tableName: ENTITY_VERSION_CODES
+            columnName: code_system_uri
+            tableName: entity_version_codes
+      rollback:
+        - addColumn:
+            tableName: entity_version_codes
+            columns:
+              - column:
+                  name: code_system_uri
+                  type: VARCHAR(255)
+                  valueComputed: (select c.code_system_uri from code c where c.id=codes_id)
+  - changeSet:
+      id: 1720604582951-8
+      author: Ralph Schäfermeier (generated)
+      changes:
+        - dropColumn:
+            columnName: name
+            tableName: entity_version_codes
+      rollback:
+        - addColumn:
+            tableName: entity_version_codes
+            columns:
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+                  valueComputed: (select c.name from code c where c.id=codes_id)
+  - changeSet:
+      id: 1720604582951-9
+      author: Ralph Schäfermeier (generated)
+      changes:
+        - dropColumn:
+            columnName: uri
+            tableName: entity_version_codes
+      rollback:
+        - addColumn:
+            tableName: entity_version_codes
+            columns:
+              - column:
+                  name: uri
+                  type: VARCHAR(255)
+                  valueComputed: (select c.uri from code c where c.id=codes_id)
+
