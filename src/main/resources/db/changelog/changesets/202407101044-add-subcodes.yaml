@@ -1,7 +1,7 @@
 databaseChangeLog:
   - changeSet:
-      dbms: postgresql
       id: 1720604582951-1
+      dbms: postgresql
       author: Ralph Schäfermeier
       changes:
         - addColumn:
@@ -12,8 +12,8 @@ databaseChangeLog:
                   type: BIGINT
                   defaultValueSequenceNext: hibernate_sequence
   - changeSet:
-      dbms: hsqldb
       id: 1720604582951-1-test
+      dbms: hsqldb
       author: Ralph Schäfermeier
       changes:
         - addColumn:
@@ -28,6 +28,28 @@ databaseChangeLog:
       dbms: postgresql
       author: Ralph Schäfermeier
       changes:
+        - dropDefaultValue:
+            tableName: entity_version_codes
+            columnName: codes_id
+      rollback:
+        - addDefaultValue:
+            tableName: entity_version_codes
+            columnName: codes_id
+            defaultValueSequenceNext: hibernate_sequence
+  - changeSet:
+      id: 1720604582951-2-test
+      dbms: hsqldb
+      author: Ralph Schäfermeier
+      changes:
+        - modifyDataType:
+            tableName: entity_version_codes
+            columnName: codes_id
+            newDataType: BIGINT
+  - changeSet:
+      id: 1720604582951-3
+      dbms: postgresql
+      author: Ralph Schäfermeier
+      changes:
         - createTable:
             tableName: code
             columns:
@@ -62,7 +84,7 @@ databaseChangeLog:
                   name: children_order
                   type: INT
   - changeSet:
-      id: 1720604582951-2-test
+      id: 1720604582951-3-test
       dbms: hsqldb
       author: Ralph Schäfermeier
       changes:
@@ -100,7 +122,7 @@ databaseChangeLog:
                   name: children_order
                   type: INT
   - changeSet:
-      id: 1720604582951-3
+      id: 1720604582951-4
       author: Ralph Schäfermeier (generated)
       changes:
         - addForeignKeyConstraint:
@@ -121,7 +143,7 @@ databaseChangeLog:
         - delete:
             tableName: code
   - changeSet:
-      id: 1720604582951-4
+      id: 1720604582951-6
       author: Ralph Schäfermeier (generated)
       changes:
         - addForeignKeyConstraint:
@@ -134,7 +156,7 @@ databaseChangeLog:
             referencedTableName: code
             validate: true
   - changeSet:
-      id: 1720604582951-6
+      id: 1720604582951-7
       author: Ralph Schäfermeier (generated)
       changes:
         - dropColumn:
@@ -149,7 +171,7 @@ databaseChangeLog:
                   type: VARCHAR(255)
                   valueComputed: (select c.code from code c where c.id=codes_id)
   - changeSet:
-      id: 1720604582951-7
+      id: 1720604582951-8
       author: Ralph Schäfermeier (generated)
       changes:
         - dropColumn:
@@ -164,7 +186,7 @@ databaseChangeLog:
                   type: VARCHAR(255)
                   valueComputed: (select c.code_system_uri from code c where c.id=codes_id)
   - changeSet:
-      id: 1720604582951-8
+      id: 1720604582951-9
       author: Ralph Schäfermeier (generated)
       changes:
         - dropColumn:
@@ -179,7 +201,7 @@ databaseChangeLog:
                   type: VARCHAR(255)
                   valueComputed: (select c.name from code c where c.id=codes_id)
   - changeSet:
-      id: 1720604582951-9
+      id: 1720604582951-10
       author: Ralph Schäfermeier (generated)
       changes:
         - dropColumn:
