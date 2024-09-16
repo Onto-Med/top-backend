@@ -1,5 +1,6 @@
 databaseChangeLog:
   - changeSet:
+      dbms: postgresql
       id: 1720604582951-1
       author: Ralph Schäfermeier
       changes:
@@ -11,8 +12,21 @@ databaseChangeLog:
                   type: BIGINT
                   defaultValueSequenceNext: hibernate_sequence
   - changeSet:
+      dbms: hsqldb
+      id: 1720604582951-1-test
+      author: Ralph Schäfermeier
+      changes:
+        - addColumn:
+            tableName: entity_version_codes
+            columns:
+              - column:
+                  name: codes_id
+                  type: BIGINT
+                  autoIncrement: true
+  - changeSet:
       id: 1720604582951-2
-      author: Ralph Schäfermeier (generated)
+      dbms: postgresql
+      author: Ralph Schäfermeier
       changes:
         - createTable:
             tableName: code
@@ -25,6 +39,44 @@ databaseChangeLog:
                   name: id
                   type: BIGINT
                   defaultValueSequenceNext: hibernate_sequence
+              - column:
+                  constraints:
+                    nullable: false
+                  name: code
+                  type: VARCHAR(255)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: code_system_uri
+                  type: VARCHAR(255)
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+              - column:
+                  name: uri
+                  type: VARCHAR(255)
+              - column:
+                  name: parent_id
+                  type: BIGINT
+              - column:
+                  name: children_order
+                  type: INT
+  - changeSet:
+      id: 1720604582951-2-test
+      dbms: hsqldb
+      author: Ralph Schäfermeier
+      changes:
+        - createTable:
+            tableName: code
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: codePK
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
               - column:
                   constraints:
                     nullable: false
