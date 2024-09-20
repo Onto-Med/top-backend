@@ -739,7 +739,26 @@ public class EntityService implements ContentService {
           .superCategories(
               ((Category) data)
                   .getSuperCategories().stream()
-                      .map(c -> (Category) c.id(ids.get(c.getId())))
+                      .map(
+                          c ->
+                              (Category)
+                                  new Category()
+                                      .id(ids.get(c.getId()))
+                                      .entityType(EntityType.CATEGORY))
+                      .collect(Collectors.toList()));
+    }
+
+    if (data instanceof Concept && ((Concept) data).getSuperConcepts() != null) {
+      ((Concept) data)
+          .superConcepts(
+              ((Concept) data)
+                  .getSuperConcepts().stream()
+                      .map(
+                          c ->
+                              (SingleConcept)
+                                  new SingleConcept()
+                                      .id(ids.get(c.getId()))
+                                      .entityType(EntityType.SINGLE_CONCEPT))
                       .collect(Collectors.toList()));
     }
 
