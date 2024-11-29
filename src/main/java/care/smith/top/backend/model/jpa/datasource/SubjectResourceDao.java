@@ -1,4 +1,4 @@
-package care.smith.top.backend.model.datasource;
+package care.smith.top.backend.model.jpa.datasource;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -8,10 +8,10 @@ import java.util.Objects;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 
-@Entity
+@Entity(name = "subject_resource")
 @Table(schema = "data_source", indexes = @Index(columnList = "dataSourceId"))
-@IdClass(SubjectResource.SubjectResourceKey.class)
-public class SubjectResource {
+@IdClass(SubjectResourceDao.SubjectResourceKey.class)
+public class SubjectResourceDao {
   @Id private String dataSourceId;
   @Id private Long subjectResourceId;
 
@@ -27,9 +27,9 @@ public class SubjectResource {
   private LocalDateTime dateTimeValue;
   private Boolean booleanValue;
 
-  public SubjectResource() {}
+  public SubjectResourceDao() {}
 
-  public SubjectResource(
+  public SubjectResourceDao(
       String dataSourceId,
       Long subjectResourceId,
       String subjectId,
@@ -47,8 +47,20 @@ public class SubjectResource {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
 
-    SubjectResource that = (SubjectResource) o;
-    return getDataSourceId().equals(that.getDataSourceId()) && getSubjectResourceId().equals(that.getSubjectResourceId()) && getSubjectId().equals(that.getSubjectId()) && getCodeSystem().equals(that.getCodeSystem()) && getCode().equals(that.getCode()) && Objects.equals(getDateTime(), that.getDateTime()) && Objects.equals(getStartDate(), that.getStartDate()) && Objects.equals(getEndDate(), that.getEndDate()) && Objects.equals(getNumberValue(), that.getNumberValue()) && Objects.equals(getUnit(), that.getUnit()) && Objects.equals(getTextValue(), that.getTextValue()) && Objects.equals(getDateTimeValue(), that.getDateTimeValue()) && Objects.equals(getBooleanValue(), that.getBooleanValue());
+    SubjectResourceDao that = (SubjectResourceDao) o;
+    return getDataSourceId().equals(that.getDataSourceId())
+        && getSubjectResourceId().equals(that.getSubjectResourceId())
+        && getSubjectId().equals(that.getSubjectId())
+        && getCodeSystem().equals(that.getCodeSystem())
+        && getCode().equals(that.getCode())
+        && Objects.equals(getDateTime(), that.getDateTime())
+        && Objects.equals(getStartDate(), that.getStartDate())
+        && Objects.equals(getEndDate(), that.getEndDate())
+        && Objects.equals(getNumberValue(), that.getNumberValue())
+        && Objects.equals(getUnit(), that.getUnit())
+        && Objects.equals(getTextValue(), that.getTextValue())
+        && Objects.equals(getDateTimeValue(), that.getDateTimeValue())
+        && Objects.equals(getBooleanValue(), that.getBooleanValue());
   }
 
   @Override
@@ -69,37 +81,37 @@ public class SubjectResource {
     return result;
   }
 
-  public SubjectResource textValue(String textValue) {
+  public SubjectResourceDao textValue(String textValue) {
     this.textValue = textValue;
     return this;
   }
 
-  public SubjectResource unit(String unit) {
+  public SubjectResourceDao unit(String unit) {
     this.unit = unit;
     return this;
   }
 
-  public SubjectResource dateTime(OffsetDateTime dateTime) {
+  public SubjectResourceDao dateTime(OffsetDateTime dateTime) {
     this.dateTime = dateTime;
     return this;
   }
 
-  public SubjectResource startDate(OffsetDateTime startDate) {
+  public SubjectResourceDao startDate(OffsetDateTime startDate) {
     this.startDate = startDate;
     return this;
   }
 
-  public SubjectResource endDate(OffsetDateTime endDate) {
+  public SubjectResourceDao endDate(OffsetDateTime endDate) {
     this.endDate = endDate;
     return this;
   }
 
-  public SubjectResource numberValue(BigDecimal numberValue) {
+  public SubjectResourceDao numberValue(BigDecimal numberValue) {
     this.numberValue = numberValue;
     return this;
   }
 
-  public SubjectResource booleanValue(Boolean booleanValue) {
+  public SubjectResourceDao booleanValue(Boolean booleanValue) {
     this.booleanValue = booleanValue;
     return this;
   }
