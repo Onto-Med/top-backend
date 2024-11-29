@@ -1,0 +1,119 @@
+databaseChangeLog:
+- changeSet:
+    id: 1732866544755-7
+    author: ChristophB
+    changes:
+    - sql:
+        sql: CREATE SCHEMA IF NOT EXISTS data_source
+- changeSet:
+    id: 1732866544755-8
+    author: ChristophB
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: subjectPK
+            name: data_source_id
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: subjectPK
+            name: subject_id
+            type: VARCHAR(255)
+        - column:
+            name: birth_date
+            type: TIMESTAMP
+        - column:
+            name: sex
+            type: VARCHAR(255)
+        schemaName: data_source
+        tableName: subject
+- changeSet:
+    id: 1732866544755-9
+    author: ChristophB
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: subject_resourcePK
+            name: data_source_id
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: subject_resourcePK
+            name: subject_resource_id
+            type: BIGINT
+        - column:
+            name: boolean_value
+            type: BOOLEAN
+        - column:
+            constraints:
+              nullable: false
+            name: code
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: code_system
+            type: VARCHAR(255)
+        - column:
+            name: date_time
+            type: TIMESTAMP
+        - column:
+            name: date_time_value
+            type: TIMESTAMP
+        - column:
+            name: end_date
+            type: TIMESTAMP
+        - column:
+            name: number_value
+            type: numeric(19, 2)
+        - column:
+            name: start_date
+            type: TIMESTAMP
+        - column:
+            constraints:
+              nullable: false
+            name: subject_id
+            type: VARCHAR(255)
+        - column:
+            name: text_value
+            type: VARCHAR(255)
+        - column:
+            name: unit
+            type: VARCHAR(255)
+        schemaName: data_source
+        tableName: subject_resource
+- changeSet:
+    id: 1732866544755-10
+    author: ChristophB
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: data_source_id
+        indexName: IDXdnphs32fxqgb64w3rbq2sa6eo
+        schemaName: data_source
+        tableName: subject_resource
+- changeSet:
+    id: 1732866544755-11
+    author: ChristophB
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: data_source_id
+        indexName: IDXt4k56ftei9k1e3e66jevgfnci
+        schemaName: data_source
+        tableName: subject
+
