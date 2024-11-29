@@ -1,23 +1,23 @@
-package care.smith.top.backend.model.datasource;
+package care.smith.top.backend.model.jpa.datasource;
 
 import java.io.Serializable;
 import java.time.OffsetDateTime;
 import java.util.Objects;
 import javax.persistence.*;
 
-@Entity
+@Entity(name = "subject")
 @Table(schema = "data_source", indexes = @Index(columnList = "dataSourceId"))
-@IdClass(Subject.SubjectKey.class)
-public class Subject {
+@IdClass(SubjectDao.SubjectKey.class)
+public class SubjectDao {
   @Id private String dataSourceId;
   @Id private String subjectId;
 
   private OffsetDateTime birthDate;
   private String sex;
 
-  public Subject() {}
+  public SubjectDao() {}
 
-  public Subject(String dataSourceId, String subjectId, OffsetDateTime birthDate, String sex) {
+  public SubjectDao(String dataSourceId, String subjectId, OffsetDateTime birthDate, String sex) {
     this.dataSourceId = dataSourceId;
     this.subjectId = subjectId;
     this.birthDate = birthDate;
@@ -29,11 +29,11 @@ public class Subject {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
 
-    Subject subject = (Subject) o;
-    return dataSourceId.equals(subject.dataSourceId)
-        && subjectId.equals(subject.subjectId)
-        && Objects.equals(birthDate, subject.birthDate)
-        && Objects.equals(sex, subject.sex);
+    SubjectDao subjectDao = (SubjectDao) o;
+    return dataSourceId.equals(subjectDao.dataSourceId)
+        && subjectId.equals(subjectDao.subjectId)
+        && Objects.equals(birthDate, subjectDao.birthDate)
+        && Objects.equals(sex, subjectDao.sex);
   }
 
   @Override
@@ -45,12 +45,12 @@ public class Subject {
     return result;
   }
 
-  public Subject birthDate(OffsetDateTime birthDate) {
+  public SubjectDao birthDate(OffsetDateTime birthDate) {
     this.birthDate = birthDate;
     return this;
   }
 
-  public Subject sex(String sex) {
+  public SubjectDao sex(String sex) {
     this.sex = sex;
     return this;
   }
