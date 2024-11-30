@@ -6,12 +6,10 @@ import care.smith.top.model.Concept;
 import care.smith.top.model.Entity;
 import care.smith.top.model.EntityType;
 import care.smith.top.model.SingleConcept;
-import org.springframework.stereotype.Repository;
-
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ConceptRepository extends EntityRepository {
@@ -24,8 +22,13 @@ public interface ConceptRepository extends EntityRepository {
     for (Entity concept : concepts) {
       if (ApiModelMapper.isSingleConcept(concept)) {
         EntityDao entityDao = findByIdAndRepositoryId(concept.getId(), repositoryId).orElseThrow();
-        Set<Entity> subConcepts = entityDao.getSubEntities().stream().map(EntityDao::toApiModel).collect(Collectors.toSet());
-        ((SingleConcept) concept).setSubConcepts(subConcepts.stream().map(sc -> (Concept) sc).collect(Collectors.toList()));
+        Set<Entity> subConcepts =
+            entityDao.getSubEntities().stream()
+                .map(EntityDao::toApiModel)
+                .collect(Collectors.toSet());
+        ((SingleConcept) concept)
+            .setSubConcepts(
+                subConcepts.stream().map(sc -> (Concept) sc).collect(Collectors.toList()));
       }
     }
   }
