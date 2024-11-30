@@ -68,6 +68,7 @@ public class DocumentQueryService extends QueryService {
             .map(EntityDao::toApiModel)
             .collect(Collectors.toList());
     concepts.add(entity.toApiModel());
+    conceptRepository.populateSubconcepts(concepts, queryDao.getRepository().getId());
 
     TextAdapterConfig config = getTextAdapterConfig(query.getDataSource()).orElseThrow();
     QueryResultDao result;
