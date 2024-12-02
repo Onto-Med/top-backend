@@ -19,8 +19,8 @@ public class SubjectResourceDao {
   @NotNull private String codeSystem;
   @NotNull private String code;
   private OffsetDateTime dateTime;
-  private OffsetDateTime startDate;
-  private OffsetDateTime endDate;
+  private OffsetDateTime startDateTime;
+  private OffsetDateTime endDateTime;
   private BigDecimal numberValue;
   private String unit;
   private String textValue;
@@ -54,8 +54,8 @@ public class SubjectResourceDao {
         && getCodeSystem().equals(that.getCodeSystem())
         && getCode().equals(that.getCode())
         && Objects.equals(getDateTime(), that.getDateTime())
-        && Objects.equals(getStartDate(), that.getStartDate())
-        && Objects.equals(getEndDate(), that.getEndDate())
+        && Objects.equals(getStartDateTime(), that.getStartDateTime())
+        && Objects.equals(getEndDateTime(), that.getEndDateTime())
         && Objects.equals(getNumberValue(), that.getNumberValue())
         && Objects.equals(getUnit(), that.getUnit())
         && Objects.equals(getTextValue(), that.getTextValue())
@@ -71,8 +71,8 @@ public class SubjectResourceDao {
     result = 31 * result + getCodeSystem().hashCode();
     result = 31 * result + getCode().hashCode();
     result = 31 * result + Objects.hashCode(getDateTime());
-    result = 31 * result + Objects.hashCode(getStartDate());
-    result = 31 * result + Objects.hashCode(getEndDate());
+    result = 31 * result + Objects.hashCode(getStartDateTime());
+    result = 31 * result + Objects.hashCode(getEndDateTime());
     result = 31 * result + Objects.hashCode(getNumberValue());
     result = 31 * result + Objects.hashCode(getUnit());
     result = 31 * result + Objects.hashCode(getTextValue());
@@ -96,13 +96,13 @@ public class SubjectResourceDao {
     return this;
   }
 
-  public SubjectResourceDao startDate(OffsetDateTime startDate) {
-    this.startDate = startDate;
+  public SubjectResourceDao startDateTime(OffsetDateTime startDateTime) {
+    this.startDateTime = startDateTime;
     return this;
   }
 
-  public SubjectResourceDao endDate(OffsetDateTime endDate) {
-    this.endDate = endDate;
+  public SubjectResourceDao endDateTime(OffsetDateTime endDateTime) {
+    this.endDateTime = endDateTime;
     return this;
   }
 
@@ -152,12 +152,12 @@ public class SubjectResourceDao {
     return dateTime;
   }
 
-  public OffsetDateTime getStartDate() {
-    return startDate;
+  public OffsetDateTime getStartDateTime() {
+    return startDateTime;
   }
 
-  public OffsetDateTime getEndDate() {
-    return endDate;
+  public OffsetDateTime getEndDateTime() {
+    return endDateTime;
   }
 
   public BigDecimal getNumberValue() {
