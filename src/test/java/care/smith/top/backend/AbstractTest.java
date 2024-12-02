@@ -2,6 +2,7 @@ package care.smith.top.backend;
 
 import care.smith.top.backend.api.OrganisationApiDelegateImpl;
 import care.smith.top.backend.repository.jpa.*;
+import care.smith.top.backend.repository.jpa.datasource.SubjectRepository;
 import care.smith.top.backend.service.EntityService;
 import care.smith.top.backend.service.OrganisationService;
 import care.smith.top.backend.service.RepositoryService;
@@ -35,6 +36,7 @@ public abstract class AbstractTest {
   @Autowired protected UserRepository userRepository;
   @Autowired protected UserService userService;
   @Autowired protected OrganisationMembershipRepository organisationMembershipRepository;
+  @Autowired protected SubjectRepository subjectRepository;
 
   @BeforeAll
   static void initializeOLS() throws IOException {
@@ -54,5 +56,6 @@ public abstract class AbstractTest {
   public void resetState() {
     organisationRepository.deleteAll();
     userRepository.deleteAll();
+    subjectRepository.deleteAll();
   }
 }
