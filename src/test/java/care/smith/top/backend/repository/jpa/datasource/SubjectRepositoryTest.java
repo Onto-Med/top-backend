@@ -1,8 +1,9 @@
-package care.smith.top.backend.model.jpa.datasource;
+package care.smith.top.backend.repository.jpa.datasource;
 
 import static org.assertj.core.api.Assertions.*;
 
 import care.smith.top.backend.AbstractTest;
+import care.smith.top.backend.model.jpa.datasource.SubjectDao;
 import java.time.OffsetDateTime;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -10,12 +11,14 @@ import org.springframework.test.context.ContextConfiguration;
 
 @SpringBootTest
 @ContextConfiguration
-class SubjectDaoTest extends AbstractTest {
+class SubjectRepositoryTest extends AbstractTest {
 
   @Test
-  void testCreateAndDeleteSubject() {
+  void testfindByDataSourceIdAndSubjectId() {
     String dataSourceId = "data_source_1";
     String subjectId = "subject_1";
+
+    assertThat(subjectRepository.findByDataSourceIdAndSubjectId(dataSourceId, subjectId)).isEmpty();
 
     SubjectDao subject = new SubjectDao(dataSourceId, subjectId, OffsetDateTime.now(), "female");
     subjectRepository.save(subject);
@@ -24,7 +27,7 @@ class SubjectDaoTest extends AbstractTest {
         .isNotEmpty();
 
     // This should fail, because no subject with ID "subject_2" exists:
-    assertThat(subjectRepository.findById(new SubjectDao.SubjectKey(dataSourceId, "subject_2")))
+    assertThat(subjectRepository.findByDataSourceIdAndSubjectId(dataSourceId, "subject_2"))
         .isEmpty();
 
     assertThatCode(() -> subjectRepository.delete(subject)).doesNotThrowAnyException();
