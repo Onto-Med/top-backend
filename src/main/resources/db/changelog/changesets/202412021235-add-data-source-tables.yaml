@@ -1,0 +1,219 @@
+databaseChangeLog:
+- changeSet:
+    id: 1732866544755-7
+    author: ChristophB
+    changes:
+    - sql:
+        sql: CREATE SCHEMA IF NOT EXISTS data_source
+- changeSet:
+    id: 1733139168243-8
+    author: ChristophB
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: encounterPK
+            name: data_source_id
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: encounterPK
+            name: encounter_id
+            type: VARCHAR(255)
+        - column:
+            name: end_date_time
+            type: TIMESTAMP
+        - column:
+            name: start_date_time
+            type: TIMESTAMP
+        - column:
+            name: type
+            type: VARCHAR(255)
+        - column:
+            name: subject_data_source_id
+            type: VARCHAR(255)
+        - column:
+            name: subject_subject_id
+            type: VARCHAR(255)
+        schemaName: data_source
+        tableName: encounter
+- changeSet:
+    id: 1733139168243-9
+    author: ChristophB
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: subjectPK
+            name: data_source_id
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: subjectPK
+            name: subject_id
+            type: VARCHAR(255)
+        - column:
+            name: birth_date
+            type: TIMESTAMP
+        - column:
+            name: sex
+            type: VARCHAR(255)
+        schemaName: data_source
+        tableName: subject
+- changeSet:
+    id: 1733139168243-10
+    author: ChristophB
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: subject_resourcePK
+            name: data_source_id
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: subject_resourcePK
+            name: subject_resource_id
+            type: BIGINT
+        - column:
+            name: boolean_value
+            type: BOOLEAN
+        - column:
+            constraints:
+              nullable: false
+            name: code
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: code_system
+            type: VARCHAR(255)
+        - column:
+            name: date_time
+            type: TIMESTAMP
+        - column:
+            name: date_time_value
+            type: TIMESTAMP
+        - column:
+            name: end_date_time
+            type: TIMESTAMP
+        - column:
+            name: number_value
+            type: numeric(19, 2)
+        - column:
+            name: start_date_time
+            type: TIMESTAMP
+        - column:
+            name: text_value
+            type: VARCHAR(255)
+        - column:
+            name: unit
+            type: VARCHAR(255)
+        - column:
+            name: encounter_data_source_id
+            type: VARCHAR(255)
+        - column:
+            name: encounter_encounter_id
+            type: VARCHAR(255)
+        - column:
+            name: subject_data_source_id
+            type: VARCHAR(255)
+        - column:
+            name: subject_subject_id
+            type: VARCHAR(255)
+        schemaName: data_source
+        tableName: subject_resource
+- changeSet:
+    id: 1733139168243-11
+    author: ChristophB
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: data_source_id
+        indexName: IDXdnphs32fxqgb64w3rbq2sa6eo
+        schemaName: data_source
+        tableName: subject_resource
+- changeSet:
+    id: 1733139168243-12
+    author: ChristophB
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: data_source_id
+        indexName: IDXds8vnhku3fbq5jtof3ea99bm8
+        schemaName: data_source
+        tableName: encounter
+- changeSet:
+    id: 1733139168243-13
+    author: ChristophB
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: data_source_id
+        indexName: IDXt4k56ftei9k1e3e66jevgfnci
+        schemaName: data_source
+        tableName: subject
+- changeSet:
+    id: 1733139168243-14
+    author: ChristophB
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: subject_data_source_id,subject_subject_id
+        baseTableName: subject_resource
+        baseTableSchemaName: data_source
+        constraintName: FK7kierwumapym4x2csuhvmcfa8
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: data_source_id,subject_id
+        referencedTableName: subject
+        referencedTableSchemaName: data_source
+        validate: true
+- changeSet:
+    id: 1733139168243-15
+    author: ChristophB
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: encounter_data_source_id,encounter_encounter_id
+        baseTableName: subject_resource
+        baseTableSchemaName: data_source
+        constraintName: FK82tb8nfwudk8dio3iujtx1ir3
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: data_source_id,encounter_id
+        referencedTableName: encounter
+        referencedTableSchemaName: data_source
+        validate: true
+- changeSet:
+    id: 1733139168243-16
+    author: ChristophB
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: subject_data_source_id,subject_subject_id
+        baseTableName: encounter
+        baseTableSchemaName: data_source
+        constraintName: FKeubnrljdpvhqmtr69bqw7b2dg
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: data_source_id,subject_id
+        referencedTableName: subject
+        referencedTableSchemaName: data_source
+        validate: true
+
