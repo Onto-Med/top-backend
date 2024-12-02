@@ -19,7 +19,7 @@ public class EncounterDao {
   private OffsetDateTime startDateTime;
   private OffsetDateTime endDateTime;
 
-  @OneToMany(mappedBy = "encounter", cascade = CascadeType.REMOVE)
+  @OneToMany(mappedBy = "encounter", cascade = CascadeType.ALL)
   private List<SubjectResourceDao> subjectResources = null;
 
   public EncounterDao() {}

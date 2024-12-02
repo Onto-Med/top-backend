@@ -5,12 +5,7 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.IdClass;
-import javax.persistence.Index;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 @Entity(name = "subject")
 @Table(schema = "data_source", indexes = @Index(columnList = "dataSourceId"))
@@ -22,10 +17,10 @@ public class SubjectDao {
   private OffsetDateTime birthDate;
   private String sex;
 
-  @OneToMany(mappedBy = "subject")
+  @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL)
   private List<EncounterDao> encounters;
 
-  @OneToMany(mappedBy = "subject")
+  @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL)
   private List<SubjectResourceDao> subjectResources;
 
   public SubjectDao() {}
