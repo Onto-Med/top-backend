@@ -4,7 +4,12 @@ import java.io.Serializable;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Objects;
-import javax.persistence.*;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.IdClass;
+import javax.persistence.Index;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
 
 @Entity(name = "subject")
 @Table(schema = "data_source", indexes = @Index(columnList = "dataSourceId"))
@@ -50,6 +55,16 @@ public class SubjectDao {
     result = 31 * result + Objects.hashCode(birthDate);
     result = 31 * result + Objects.hashCode(sex);
     return result;
+  }
+
+  public SubjectDao dataSourceId(String dataSourceId) {
+    this.dataSourceId = dataSourceId;
+    return this;
+  }
+
+  public SubjectDao subjectId(String subjectId) {
+    this.subjectId = subjectId;
+    return this;
   }
 
   public SubjectDao birthDate(OffsetDateTime birthDate) {
