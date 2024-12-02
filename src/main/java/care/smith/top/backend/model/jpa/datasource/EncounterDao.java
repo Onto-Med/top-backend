@@ -2,6 +2,7 @@ package care.smith.top.backend.model.jpa.datasource;
 
 import java.io.Serializable;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import javax.persistence.*;
@@ -87,8 +88,14 @@ public class EncounterDao {
     return this;
   }
 
-  public EncounterDao subjectResources(List<SubjectResourceDao> subjectResources) {
-    this.subjectResources = subjectResources;
+  public EncounterDao subjectResources(List<SubjectResourceDao> subjectResourceDaos) {
+    this.subjectResources = subjectResourceDaos;
+    return this;
+  }
+
+  public EncounterDao addSubjectRecouse(SubjectResourceDao... subjectResourceDaos) {
+    if (subjectResources == null) subjectResources = new ArrayList<>();
+    subjectResources.addAll(List.of(subjectResourceDaos));
     return this;
   }
 
@@ -102,10 +109,6 @@ public class EncounterDao {
 
   public SubjectDao getSubject() {
     return subject;
-  }
-
-  public void setSubject(SubjectDao subject) {
-    this.subject = subject;
   }
 
   public String getType() {
