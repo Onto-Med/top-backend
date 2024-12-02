@@ -2,6 +2,7 @@ package care.smith.top.backend.model.jpa.datasource;
 
 import java.io.Serializable;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Objects;
 import javax.persistence.*;
 
@@ -14,6 +15,12 @@ public class SubjectDao {
 
   private OffsetDateTime birthDate;
   private String sex;
+
+  @OneToMany(mappedBy = "subject")
+  private List<EncounterDao> encounters;
+
+  @OneToMany(mappedBy = "subject")
+  private List<SubjectResourceDao> subjectResources;
 
   public SubjectDao() {}
 
@@ -55,6 +62,16 @@ public class SubjectDao {
     return this;
   }
 
+  public SubjectDao encounters(List<EncounterDao> encounters) {
+    this.encounters = encounters;
+    return this;
+  }
+
+  public SubjectDao subjectResources(List<SubjectResourceDao> subjectResources) {
+    this.subjectResources = subjectResources;
+    return this;
+  }
+
   public String getDataSourceId() {
     return dataSourceId;
   }
@@ -69,6 +86,14 @@ public class SubjectDao {
 
   public String getSex() {
     return sex;
+  }
+
+  public List<EncounterDao> getEncounters() {
+    return encounters;
+  }
+
+  public List<SubjectResourceDao> getSubjectResources() {
+    return subjectResources;
   }
 
   public static class SubjectKey implements Serializable {

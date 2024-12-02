@@ -2,12 +2,9 @@ package care.smith.top.backend.model.jpa.datasource;
 
 import java.io.Serializable;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Objects;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.IdClass;
-import javax.persistence.Index;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 @Entity(name = "encounter")
 @Table(schema = "data_source", indexes = @Index(columnList = "dataSourceId"))
@@ -16,23 +13,26 @@ public class EncounterDao {
   @Id private String dataSourceId;
   @Id private String encounterId;
 
-  private String subjectId;
+  @ManyToOne private SubjectDao subject;
   private String type;
   private OffsetDateTime startDateTime;
   private OffsetDateTime endDateTime;
+
+  @OneToMany(mappedBy = "encounter", cascade = CascadeType.REMOVE)
+  private List<SubjectResourceDao> subjectResources = null;
 
   public EncounterDao() {}
 
   public EncounterDao(
       String dataSourceId,
       String encounterId,
-      String subjectId,
+      SubjectDao subject,
       String type,
       OffsetDateTime startDateTime,
       OffsetDateTime endDateTime) {
     this.dataSourceId = dataSourceId;
     this.encounterId = encounterId;
-    this.subjectId = subjectId;
+    this.subject = subject;
     this.type = type;
     this.startDateTime = startDateTime;
     this.endDateTime = endDateTime;
@@ -40,7 +40,7 @@ public class EncounterDao {
 
   @Override
   public int hashCode() {
-    return Objects.hash(dataSourceId, encounterId, endDateTime, startDateTime, subjectId, type);
+    return Objects.hash(dataSourceId, encounterId, endDateTime, startDateTime, subject, type);
   }
 
   @Override
@@ -49,12 +49,12 @@ public class EncounterDao {
     if (obj == null) return false;
     if (getClass() != obj.getClass()) return false;
     EncounterDao other = (EncounterDao) obj;
-    return Objects.equals(dataSourceId, other.dataSourceId)
-        && Objects.equals(encounterId, other.encounterId)
-        && Objects.equals(endDateTime, other.endDateTime)
-        && Objects.equals(startDateTime, other.startDateTime)
-        && Objects.equals(subjectId, other.subjectId)
-        && Objects.equals(type, other.type);
+    return Objects.equals(dataSourceId, other.getDataSourceId())
+        && Objects.equals(encounterId, other.getEncounterId())
+        && Objects.equals(endDateTime, other.getEndDateTime())
+        && Objects.equals(startDateTime, other.getStartDateTime())
+        && Objects.equals(subject, other.getSubject())
+        && Objects.equals(type, other.getType());
   }
 
   public EncounterDao dataSourceId(String dataSourceId) {
@@ -67,8 +67,8 @@ public class EncounterDao {
     return this;
   }
 
-  public EncounterDao subjectId(String subjectId) {
-    this.subjectId = subjectId;
+  public EncounterDao subject(SubjectDao subject) {
+    this.subject = subject;
     return this;
   }
 
@@ -87,6 +87,11 @@ public class EncounterDao {
     return this;
   }
 
+  public EncounterDao subjectResources(List<SubjectResourceDao> subjectResources) {
+    this.subjectResources = subjectResources;
+    return this;
+  }
+
   public String getDataSourceId() {
     return dataSourceId;
   }
@@ -95,8 +100,12 @@ public class EncounterDao {
     return encounterId;
   }
 
-  public String getSubjectId() {
-    return subjectId;
+  public SubjectDao getSubject() {
+    return subject;
+  }
+
+  public void setSubject(SubjectDao subject) {
+    this.subject = subject;
   }
 
   public String getType() {
@@ -109,6 +118,10 @@ public class EncounterDao {
 
   public OffsetDateTime getEndDateTime() {
     return endDateTime;
+  }
+
+  public List<SubjectResourceDao> getSubjectResources() {
+    return subjectResources;
   }
 
   public static class EncounterKey implements Serializable {
