@@ -13,7 +13,7 @@ import javax.validation.constraints.NotNull;
 @IdClass(SubjectResourceDao.SubjectResourceKey.class)
 public class SubjectResourceDao {
   @Id private String dataSourceId;
-  @Id private Long subjectResourceId;
+  @Id @GeneratedValue private Long subjectResourceId;
 
   @ManyToOne private SubjectDao subject;
 
@@ -34,12 +34,10 @@ public class SubjectResourceDao {
 
   public SubjectResourceDao(
       @NotNull String dataSourceId,
-      @NotNull Long subjectResourceId,
       SubjectDao subject,
       @NotNull String codeSystem,
       @NotNull String code) {
     this.dataSourceId = dataSourceId;
-    this.subjectResourceId = subjectResourceId;
     this.subject = subject;
     this.codeSystem = codeSystem;
     this.code = code;
@@ -47,12 +45,10 @@ public class SubjectResourceDao {
 
   public SubjectResourceDao(
       @NotNull String dataSourceId,
-      @NotNull Long subjectResourceId,
       EncounterDao encounter,
       @NotNull String codeSystem,
       @NotNull String code) {
     this.dataSourceId = dataSourceId;
-    this.subjectResourceId = subjectResourceId;
     this.encounter = encounter;
     this.codeSystem = codeSystem;
     this.code = code;
