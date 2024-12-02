@@ -110,6 +110,11 @@ public class SubjectResourceDao {
     return this;
   }
 
+  public SubjectResourceDao now() {
+    this.dateTime = OffsetDateTime.now();
+    return this;
+  }
+
   public SubjectResourceDao startDateTime(OffsetDateTime startDateTime) {
     this.startDateTime = startDateTime;
     return this;
