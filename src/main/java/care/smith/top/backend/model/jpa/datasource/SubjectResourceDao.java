@@ -195,8 +195,10 @@ public class SubjectResourceDao {
   }
 
   public static class SubjectResourceKey implements Serializable {
-    private final String dataSourceId;
-    private final Long subjectResourceId;
+    private String dataSourceId;
+    private Long subjectResourceId;
+
+    public SubjectResourceKey() {}
 
     public SubjectResourceKey(String dataSourceId, Long subjectResourceId) {
       this.dataSourceId = dataSourceId;

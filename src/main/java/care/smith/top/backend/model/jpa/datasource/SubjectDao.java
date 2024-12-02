@@ -97,8 +97,10 @@ public class SubjectDao {
   }
 
   public static class SubjectKey implements Serializable {
-    private final String dataSourceId;
-    private final String subjectId;
+    private String dataSourceId;
+    private String subjectId;
+
+    public SubjectKey() {}
 
     public SubjectKey(String dataSourceId, String subjectId) {
       this.dataSourceId = dataSourceId;

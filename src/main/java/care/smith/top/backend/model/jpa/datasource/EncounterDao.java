@@ -125,8 +125,10 @@ public class EncounterDao {
   }
 
   public static class EncounterKey implements Serializable {
-    private final String dataSourceId;
-    private final String encounterId;
+    private String dataSourceId;
+    private String encounterId;
+
+    public EncounterKey() {}
 
     public EncounterKey(String dataSourceId, String encounterId) {
       this.dataSourceId = dataSourceId;
