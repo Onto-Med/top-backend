@@ -15,7 +15,10 @@ public class SubjectResourceDao {
   @Id private String dataSourceId;
   @Id private Long subjectResourceId;
 
-  @NotNull private String subjectId;
+  @ManyToOne private SubjectDao subject;
+
+  @ManyToOne private EncounterDao encounter;
+
   @NotNull private String codeSystem;
   @NotNull private String code;
   private OffsetDateTime dateTime;
@@ -30,14 +33,27 @@ public class SubjectResourceDao {
   public SubjectResourceDao() {}
 
   public SubjectResourceDao(
-      String dataSourceId,
-      Long subjectResourceId,
-      String subjectId,
-      String codeSystem,
-      String code) {
+      @NotNull String dataSourceId,
+      @NotNull Long subjectResourceId,
+      SubjectDao subject,
+      @NotNull String codeSystem,
+      @NotNull String code) {
     this.dataSourceId = dataSourceId;
     this.subjectResourceId = subjectResourceId;
-    this.subjectId = subjectId;
+    this.subject = subject;
+    this.codeSystem = codeSystem;
+    this.code = code;
+  }
+
+  public SubjectResourceDao(
+      @NotNull String dataSourceId,
+      @NotNull Long subjectResourceId,
+      EncounterDao encounter,
+      @NotNull String codeSystem,
+      @NotNull String code) {
+    this.dataSourceId = dataSourceId;
+    this.subjectResourceId = subjectResourceId;
+    this.encounter = encounter;
     this.codeSystem = codeSystem;
     this.code = code;
   }
@@ -50,7 +66,8 @@ public class SubjectResourceDao {
     SubjectResourceDao that = (SubjectResourceDao) o;
     return getDataSourceId().equals(that.getDataSourceId())
         && getSubjectResourceId().equals(that.getSubjectResourceId())
-        && getSubjectId().equals(that.getSubjectId())
+        && Objects.equals(getSubject(), that.getSubject())
+        && Objects.equals(getEncounter(), that.getEncounter())
         && getCodeSystem().equals(that.getCodeSystem())
         && getCode().equals(that.getCode())
         && Objects.equals(getDateTime(), that.getDateTime())
@@ -67,7 +84,8 @@ public class SubjectResourceDao {
   public int hashCode() {
     int result = getDataSourceId().hashCode();
     result = 31 * result + getSubjectResourceId().hashCode();
-    result = 31 * result + getSubjectId().hashCode();
+    result = 31 * result + Objects.hashCode(getSubject());
+    result = 31 * result + Objects.hashCode(getEncounter());
     result = 31 * result + getCodeSystem().hashCode();
     result = 31 * result + getCode().hashCode();
     result = 31 * result + Objects.hashCode(getDateTime());
@@ -124,8 +142,16 @@ public class SubjectResourceDao {
     return subjectResourceId;
   }
 
-  public String getSubjectId() {
-    return subjectId;
+  public SubjectDao getSubject() {
+    return subject;
+  }
+
+  public void setSubject(SubjectDao subject) {
+    this.subject = subject;
+  }
+
+  public EncounterDao getEncounter() {
+    return encounter;
   }
 
   public String getCodeSystem() {
