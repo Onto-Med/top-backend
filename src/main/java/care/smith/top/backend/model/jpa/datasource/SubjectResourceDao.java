@@ -3,7 +3,6 @@ package care.smith.top.backend.model.jpa.datasource;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 import java.util.Objects;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -30,9 +29,9 @@ public class SubjectResourceDao {
   @NotNull private String codeSystem;
   @NotNull private String code;
 
-  private OffsetDateTime dateTime;
-  private OffsetDateTime startDateTime;
-  private OffsetDateTime endDateTime;
+  private LocalDateTime dateTime;
+  private LocalDateTime startDateTime;
+  private LocalDateTime endDateTime;
 
   private String unit;
   private BigDecimal numberValue;
@@ -105,6 +104,39 @@ public class SubjectResourceDao {
         && Objects.equals(unit, other.unit);
   }
 
+  @Override
+  public String toString() {
+    return "SubjectResourceDao [dataSourceId="
+        + dataSourceId
+        + ", subjectResourceId="
+        + subjectResourceId
+        + ", subjectId="
+        + subjectId
+        + ", encounterId="
+        + encounterId
+        + ", codeSystem="
+        + codeSystem
+        + ", code="
+        + code
+        + ", dateTime="
+        + dateTime
+        + ", startDateTime="
+        + startDateTime
+        + ", endDateTime="
+        + endDateTime
+        + ", unit="
+        + unit
+        + ", numberValue="
+        + numberValue
+        + ", textValue="
+        + textValue
+        + ", booleanValue="
+        + booleanValue
+        + ", dateTimeValue="
+        + dateTimeValue
+        + "]";
+  }
+
   public SubjectResourceDao dataSourceId(String dataSourceId) {
     this.dataSourceId = dataSourceId;
     return this;
@@ -146,20 +178,20 @@ public class SubjectResourceDao {
   }
 
   public SubjectResourceDao now() {
-    return dateTime(OffsetDateTime.now());
+    return dateTime(LocalDateTime.now());
   }
 
-  public SubjectResourceDao dateTime(OffsetDateTime dateTime) {
+  public SubjectResourceDao dateTime(LocalDateTime dateTime) {
     this.dateTime = dateTime;
     return this;
   }
 
-  public SubjectResourceDao startDateTime(OffsetDateTime startDateTime) {
+  public SubjectResourceDao startDateTime(LocalDateTime startDateTime) {
     this.startDateTime = startDateTime;
     return this;
   }
 
-  public SubjectResourceDao endDateTime(OffsetDateTime endDateTime) {
+  public SubjectResourceDao endDateTime(LocalDateTime endDateTime) {
     this.endDateTime = endDateTime;
     return this;
   }
@@ -221,15 +253,15 @@ public class SubjectResourceDao {
     return code;
   }
 
-  public OffsetDateTime getDateTime() {
+  public LocalDateTime getDateTime() {
     return dateTime;
   }
 
-  public OffsetDateTime getStartDateTime() {
+  public LocalDateTime getStartDateTime() {
     return startDateTime;
   }
 
-  public OffsetDateTime getEndDateTime() {
+  public LocalDateTime getEndDateTime() {
     return endDateTime;
   }
 
