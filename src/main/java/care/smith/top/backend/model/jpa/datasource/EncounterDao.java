@@ -1,7 +1,7 @@
 package care.smith.top.backend.model.jpa.datasource;
 
 import java.io.Serializable;
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -26,8 +26,8 @@ public class EncounterDao {
   @ManyToOne private SubjectDao subject;
 
   private String type;
-  private OffsetDateTime startDateTime;
-  private OffsetDateTime endDateTime;
+  private LocalDateTime startDateTime;
+  private LocalDateTime endDateTime;
 
   @OneToMany(mappedBy = "encounter", cascade = CascadeType.ALL)
   private List<SubjectResourceDao> subjectResources = null;
@@ -39,8 +39,8 @@ public class EncounterDao {
       String encounterId,
       SubjectDao subject,
       String type,
-      OffsetDateTime startDateTime,
-      OffsetDateTime endDateTime) {
+      LocalDateTime startDateTime,
+      LocalDateTime endDateTime) {
     this.dataSourceId = dataSourceId;
     this.encounterId = encounterId;
     this.subject = subject;
@@ -68,6 +68,23 @@ public class EncounterDao {
         && Objects.equals(type, other.getType());
   }
 
+  @Override
+  public String toString() {
+    return "EncounterDao [dataSourceId="
+        + dataSourceId
+        + ", encounterId="
+        + encounterId
+        + ", subjectId="
+        + subjectId
+        + ", type="
+        + type
+        + ", startDateTime="
+        + startDateTime
+        + ", endDateTime="
+        + endDateTime
+        + "]";
+  }
+
   public EncounterDao dataSourceId(String dataSourceId) {
     this.dataSourceId = dataSourceId;
     return this;
@@ -93,12 +110,12 @@ public class EncounterDao {
     return this;
   }
 
-  public EncounterDao startDateTime(OffsetDateTime startDateTime) {
+  public EncounterDao startDateTime(LocalDateTime startDateTime) {
     this.startDateTime = startDateTime;
     return this;
   }
 
-  public EncounterDao endDateTime(OffsetDateTime endDateTime) {
+  public EncounterDao endDateTime(LocalDateTime endDateTime) {
     this.endDateTime = endDateTime;
     return this;
   }
@@ -134,11 +151,11 @@ public class EncounterDao {
     return type;
   }
 
-  public OffsetDateTime getStartDateTime() {
+  public LocalDateTime getStartDateTime() {
     return startDateTime;
   }
 
-  public OffsetDateTime getEndDateTime() {
+  public LocalDateTime getEndDateTime() {
     return endDateTime;
   }
 

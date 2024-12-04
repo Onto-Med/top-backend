@@ -1,7 +1,7 @@
 package care.smith.top.backend.model.jpa.datasource;
 
 import java.io.Serializable;
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -20,7 +20,7 @@ public class SubjectDao {
   @Id private String dataSourceId;
   @Id private String subjectId;
 
-  private OffsetDateTime birthDate;
+  private LocalDateTime birthDate;
   private String sex;
 
   @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL)
@@ -31,7 +31,7 @@ public class SubjectDao {
 
   public SubjectDao() {}
 
-  public SubjectDao(String dataSourceId, String subjectId, OffsetDateTime birthDate, String sex) {
+  public SubjectDao(String dataSourceId, String subjectId, LocalDateTime birthDate, String sex) {
     this.dataSourceId = dataSourceId;
     this.subjectId = subjectId;
     this.birthDate = birthDate;
@@ -55,6 +55,19 @@ public class SubjectDao {
         && Objects.equals(subjectId, other.subjectId);
   }
 
+  @Override
+  public String toString() {
+    return "SubjectDao [dataSourceId="
+        + dataSourceId
+        + ", subjectId="
+        + subjectId
+        + ", birthDate="
+        + birthDate
+        + ", sex="
+        + sex
+        + "]";
+  }
+
   public SubjectDao dataSourceId(String dataSourceId) {
     this.dataSourceId = dataSourceId;
     return this;
@@ -65,7 +78,7 @@ public class SubjectDao {
     return this;
   }
 
-  public SubjectDao birthDate(OffsetDateTime birthDate) {
+  public SubjectDao birthDate(LocalDateTime birthDate) {
     this.birthDate = birthDate;
     return this;
   }
@@ -105,7 +118,7 @@ public class SubjectDao {
     return subjectId;
   }
 
-  public OffsetDateTime getBirthDate() {
+  public LocalDateTime getBirthDate() {
     return birthDate;
   }
 
