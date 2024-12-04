@@ -1,11 +1,12 @@
 package care.smith.top.backend.repository.jpa.datasource;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 import care.smith.top.backend.AbstractTest;
 import care.smith.top.backend.model.jpa.datasource.SubjectDao;
 import care.smith.top.backend.model.jpa.datasource.SubjectResourceDao;
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
@@ -21,7 +22,7 @@ class SubjectRepositoryTest extends AbstractTest {
 
     assertThat(subjectRepository.findByDataSourceIdAndSubjectId(dataSourceId, subjectId)).isEmpty();
 
-    SubjectDao subject = new SubjectDao(dataSourceId, subjectId, OffsetDateTime.now(), "female");
+    SubjectDao subject = new SubjectDao(dataSourceId, subjectId, LocalDateTime.now(), "female");
     subjectRepository.save(subject);
 
     assertThat(subjectRepository.findByDataSourceIdAndSubjectId(dataSourceId, subjectId))
@@ -39,7 +40,7 @@ class SubjectRepositoryTest extends AbstractTest {
   void testCascadeInsert() {
     String subjectId = "subject_1";
 
-    SubjectDao subject = new SubjectDao(dataSourceId, subjectId, OffsetDateTime.now(), "male");
+    SubjectDao subject = new SubjectDao(dataSourceId, subjectId, LocalDateTime.now(), "male");
 
     SubjectResourceDao height =
         new SubjectResourceDao(dataSourceId, subject, "http://loinc.org/", "3137-7").now();
