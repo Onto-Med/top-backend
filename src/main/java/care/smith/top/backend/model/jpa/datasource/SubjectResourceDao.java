@@ -5,7 +5,13 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.Objects;
-import javax.persistence.*;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.IdClass;
+import javax.persistence.Index;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
 
 @Entity(name = "subject_resource")
@@ -13,22 +19,26 @@ import javax.validation.constraints.NotNull;
 @IdClass(SubjectResourceDao.SubjectResourceKey.class)
 public class SubjectResourceDao {
   @Id private String dataSourceId;
-  @Id @GeneratedValue private Long subjectResourceId;
+  @Id private String subjectResourceId;
 
+  @Transient private String subjectId;
   @ManyToOne private SubjectDao subject;
 
+  @Transient private String encounterId;
   @ManyToOne private EncounterDao encounter;
 
   @NotNull private String codeSystem;
   @NotNull private String code;
+
   private OffsetDateTime dateTime;
   private OffsetDateTime startDateTime;
   private OffsetDateTime endDateTime;
-  private BigDecimal numberValue;
+
   private String unit;
+  private BigDecimal numberValue;
   private String textValue;
-  private LocalDateTime dateTimeValue;
   private Boolean booleanValue;
+  private LocalDateTime dateTimeValue;
 
   public SubjectResourceDao() {}
 
@@ -55,63 +65,92 @@ public class SubjectResourceDao {
   }
 
   @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-
-    SubjectResourceDao that = (SubjectResourceDao) o;
-    return getDataSourceId().equals(that.getDataSourceId())
-        && getSubjectResourceId().equals(that.getSubjectResourceId())
-        && Objects.equals(getSubject(), that.getSubject())
-        && Objects.equals(getEncounter(), that.getEncounter())
-        && getCodeSystem().equals(that.getCodeSystem())
-        && getCode().equals(that.getCode())
-        && Objects.equals(getDateTime(), that.getDateTime())
-        && Objects.equals(getStartDateTime(), that.getStartDateTime())
-        && Objects.equals(getEndDateTime(), that.getEndDateTime())
-        && Objects.equals(getNumberValue(), that.getNumberValue())
-        && Objects.equals(getUnit(), that.getUnit())
-        && Objects.equals(getTextValue(), that.getTextValue())
-        && Objects.equals(getDateTimeValue(), that.getDateTimeValue())
-        && Objects.equals(getBooleanValue(), that.getBooleanValue());
+  public int hashCode() {
+    return Objects.hash(
+        booleanValue,
+        code,
+        codeSystem,
+        dataSourceId,
+        dateTime,
+        dateTimeValue,
+        encounter,
+        endDateTime,
+        numberValue,
+        startDateTime,
+        subject,
+        subjectResourceId,
+        textValue,
+        unit);
   }
 
   @Override
-  public int hashCode() {
-    int result = getDataSourceId().hashCode();
-    result = 31 * result + getSubjectResourceId().hashCode();
-    result = 31 * result + Objects.hashCode(getSubject());
-    result = 31 * result + Objects.hashCode(getEncounter());
-    result = 31 * result + getCodeSystem().hashCode();
-    result = 31 * result + getCode().hashCode();
-    result = 31 * result + Objects.hashCode(getDateTime());
-    result = 31 * result + Objects.hashCode(getStartDateTime());
-    result = 31 * result + Objects.hashCode(getEndDateTime());
-    result = 31 * result + Objects.hashCode(getNumberValue());
-    result = 31 * result + Objects.hashCode(getUnit());
-    result = 31 * result + Objects.hashCode(getTextValue());
-    result = 31 * result + Objects.hashCode(getDateTimeValue());
-    result = 31 * result + Objects.hashCode(getBooleanValue());
-    return result;
+  public boolean equals(Object obj) {
+    if (this == obj) return true;
+    if (obj == null) return false;
+    if (getClass() != obj.getClass()) return false;
+    SubjectResourceDao other = (SubjectResourceDao) obj;
+    return Objects.equals(booleanValue, other.booleanValue)
+        && Objects.equals(code, other.code)
+        && Objects.equals(codeSystem, other.codeSystem)
+        && Objects.equals(dataSourceId, other.dataSourceId)
+        && Objects.equals(dateTime, other.dateTime)
+        && Objects.equals(dateTimeValue, other.dateTimeValue)
+        && Objects.equals(encounter, other.encounter)
+        && Objects.equals(endDateTime, other.endDateTime)
+        && Objects.equals(numberValue, other.numberValue)
+        && Objects.equals(startDateTime, other.startDateTime)
+        && Objects.equals(subject, other.subject)
+        && Objects.equals(subjectResourceId, other.subjectResourceId)
+        && Objects.equals(textValue, other.textValue)
+        && Objects.equals(unit, other.unit);
   }
 
-  public SubjectResourceDao textValue(String textValue) {
-    this.textValue = textValue;
+  public SubjectResourceDao dataSourceId(String dataSourceId) {
+    this.dataSourceId = dataSourceId;
     return this;
   }
 
-  public SubjectResourceDao unit(String unit) {
-    this.unit = unit;
+  public SubjectResourceDao subjectResourceId(String subjectResourceId) {
+    this.subjectResourceId = subjectResourceId;
     return this;
   }
 
-  public SubjectResourceDao dateTime(OffsetDateTime dateTime) {
-    this.dateTime = dateTime;
+  public SubjectResourceDao subjectId(String subjectId) {
+    this.subjectId = subjectId;
+    return this;
+  }
+
+  public SubjectResourceDao subject(SubjectDao subject) {
+    this.subject = subject;
+    return this;
+  }
+
+  public SubjectResourceDao encounterId(String encounterId) {
+    this.encounterId = encounterId;
+    return this;
+  }
+
+  public SubjectResourceDao encounter(EncounterDao encounter) {
+    this.encounter = encounter;
+    return this;
+  }
+
+  public SubjectResourceDao codeSystem(String codeSystem) {
+    this.codeSystem = codeSystem;
+    return this;
+  }
+
+  public SubjectResourceDao code(String code) {
+    this.code = code;
     return this;
   }
 
   public SubjectResourceDao now() {
-    this.dateTime = OffsetDateTime.now();
+    return dateTime(OffsetDateTime.now());
+  }
+
+  public SubjectResourceDao dateTime(OffsetDateTime dateTime) {
+    this.dateTime = dateTime;
     return this;
   }
 
@@ -125,8 +164,18 @@ public class SubjectResourceDao {
     return this;
   }
 
+  public SubjectResourceDao unit(String unit) {
+    this.unit = unit;
+    return this;
+  }
+
   public SubjectResourceDao numberValue(BigDecimal numberValue) {
     this.numberValue = numberValue;
+    return this;
+  }
+
+  public SubjectResourceDao textValue(String textValue) {
+    this.textValue = textValue;
     return this;
   }
 
@@ -135,20 +184,29 @@ public class SubjectResourceDao {
     return this;
   }
 
+  public SubjectResourceDao dateTimeValue(LocalDateTime dateTimeValue) {
+    this.dateTimeValue = dateTimeValue;
+    return this;
+  }
+
   public String getDataSourceId() {
     return dataSourceId;
   }
 
-  public Long getSubjectResourceId() {
+  public String getSubjectResourceId() {
     return subjectResourceId;
+  }
+
+  public String getSubjectId() {
+    return subjectId;
   }
 
   public SubjectDao getSubject() {
     return subject;
   }
 
-  public void setSubject(SubjectDao subject) {
-    this.subject = subject;
+  public String getEncounterId() {
+    return encounterId;
   }
 
   public EncounterDao getEncounter() {
@@ -159,20 +217,8 @@ public class SubjectResourceDao {
     return codeSystem;
   }
 
-  public Boolean getBooleanValue() {
-    return booleanValue;
-  }
-
-  public LocalDateTime getDateTimeValue() {
-    return dateTimeValue;
-  }
-
-  public String getTextValue() {
-    return textValue;
-  }
-
-  public String getUnit() {
-    return unit;
+  public String getCode() {
+    return code;
   }
 
   public OffsetDateTime getDateTime() {
@@ -187,40 +233,50 @@ public class SubjectResourceDao {
     return endDateTime;
   }
 
+  public String getUnit() {
+    return unit;
+  }
+
   public BigDecimal getNumberValue() {
     return numberValue;
   }
 
-  public String getCode() {
-    return code;
+  public String getTextValue() {
+    return textValue;
+  }
+
+  public Boolean getBooleanValue() {
+    return booleanValue;
+  }
+
+  public LocalDateTime getDateTimeValue() {
+    return dateTimeValue;
   }
 
   public static class SubjectResourceKey implements Serializable {
     private String dataSourceId;
-    private Long subjectResourceId;
+    private String subjectResourceId;
 
     public SubjectResourceKey() {}
 
-    public SubjectResourceKey(String dataSourceId, Long subjectResourceId) {
+    public SubjectResourceKey(String dataSourceId, String subjectResourceId) {
       this.dataSourceId = dataSourceId;
       this.subjectResourceId = subjectResourceId;
     }
 
     @Override
-    public boolean equals(Object o) {
-      if (this == o) return true;
-      if (o == null || getClass() != o.getClass()) return false;
-
-      SubjectResourceKey that = (SubjectResourceKey) o;
-      return dataSourceId.equals(that.dataSourceId)
-          && subjectResourceId.equals(that.subjectResourceId);
+    public int hashCode() {
+      return Objects.hash(dataSourceId, subjectResourceId);
     }
 
     @Override
-    public int hashCode() {
-      int result = dataSourceId.hashCode();
-      result = 31 * result + subjectResourceId.hashCode();
-      return result;
+    public boolean equals(Object obj) {
+      if (this == obj) return true;
+      if (obj == null) return false;
+      if (getClass() != obj.getClass()) return false;
+      SubjectResourceKey other = (SubjectResourceKey) obj;
+      return Objects.equals(dataSourceId, other.dataSourceId)
+          && Objects.equals(subjectResourceId, other.subjectResourceId);
     }
   }
 }
