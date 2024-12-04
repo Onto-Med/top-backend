@@ -5,7 +5,15 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import javax.persistence.*;
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.IdClass;
+import javax.persistence.Index;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
+import javax.persistence.Transient;
 
 @Entity(name = "encounter")
 @Table(schema = "data_source", indexes = @Index(columnList = "dataSourceId"))
@@ -14,7 +22,9 @@ public class EncounterDao {
   @Id private String dataSourceId;
   @Id private String encounterId;
 
+  @Transient private String subjectId;
   @ManyToOne private SubjectDao subject;
+
   private String type;
   private OffsetDateTime startDateTime;
   private OffsetDateTime endDateTime;
@@ -68,6 +78,11 @@ public class EncounterDao {
     return this;
   }
 
+  public EncounterDao subjectId(String subjectId) {
+    this.subjectId = subjectId;
+    return this;
+  }
+
   public EncounterDao subject(SubjectDao subject) {
     this.subject = subject;
     return this;
@@ -105,6 +120,10 @@ public class EncounterDao {
 
   public String getEncounterId() {
     return encounterId;
+  }
+
+  public String getSubjectId() {
+    return subjectId;
   }
 
   public SubjectDao getSubject() {

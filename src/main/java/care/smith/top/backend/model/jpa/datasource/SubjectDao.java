@@ -5,7 +5,13 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import javax.persistence.*;
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.IdClass;
+import javax.persistence.Index;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
 
 @Entity(name = "subject")
 @Table(schema = "data_source", indexes = @Index(columnList = "dataSourceId"))
@@ -33,24 +39,20 @@ public class SubjectDao {
   }
 
   @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-
-    SubjectDao subjectDao = (SubjectDao) o;
-    return dataSourceId.equals(subjectDao.dataSourceId)
-        && subjectId.equals(subjectDao.subjectId)
-        && Objects.equals(birthDate, subjectDao.birthDate)
-        && Objects.equals(sex, subjectDao.sex);
+  public int hashCode() {
+    return Objects.hash(birthDate, dataSourceId, sex, subjectId);
   }
 
   @Override
-  public int hashCode() {
-    int result = dataSourceId.hashCode();
-    result = 31 * result + subjectId.hashCode();
-    result = 31 * result + Objects.hashCode(birthDate);
-    result = 31 * result + Objects.hashCode(sex);
-    return result;
+  public boolean equals(Object obj) {
+    if (this == obj) return true;
+    if (obj == null) return false;
+    if (getClass() != obj.getClass()) return false;
+    SubjectDao other = (SubjectDao) obj;
+    return Objects.equals(birthDate, other.birthDate)
+        && Objects.equals(dataSourceId, other.dataSourceId)
+        && Objects.equals(sex, other.sex)
+        && Objects.equals(subjectId, other.subjectId);
   }
 
   public SubjectDao dataSourceId(String dataSourceId) {
@@ -131,19 +133,18 @@ public class SubjectDao {
     }
 
     @Override
-    public boolean equals(Object o) {
-      if (this == o) return true;
-      if (o == null || getClass() != o.getClass()) return false;
-
-      SubjectKey that = (SubjectKey) o;
-      return dataSourceId.equals(that.dataSourceId) && subjectId.equals(that.subjectId);
+    public int hashCode() {
+      return Objects.hash(dataSourceId, subjectId);
     }
 
     @Override
-    public int hashCode() {
-      int result = dataSourceId.hashCode();
-      result = 31 * result + subjectId.hashCode();
-      return result;
+    public boolean equals(Object obj) {
+      if (this == obj) return true;
+      if (obj == null) return false;
+      if (getClass() != obj.getClass()) return false;
+      SubjectKey other = (SubjectKey) obj;
+      return Objects.equals(dataSourceId, other.dataSourceId)
+          && Objects.equals(subjectId, other.subjectId);
     }
   }
 }
