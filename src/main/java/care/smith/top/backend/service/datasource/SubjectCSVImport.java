@@ -1,16 +1,12 @@
 package care.smith.top.backend.service.datasource;
 
 import care.smith.top.backend.model.jpa.datasource.SubjectDao;
-import care.smith.top.backend.repository.jpa.datasource.SubjectRepository;
 import java.io.Reader;
 import java.util.Map;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class SubjectCSVImport extends CSVImport {
-
-  @Autowired private SubjectRepository subjectRepository;
 
   public SubjectCSVImport(
       String dataSourceId, Map<String, String> fieldsMapping, Reader reader, char separator) {
