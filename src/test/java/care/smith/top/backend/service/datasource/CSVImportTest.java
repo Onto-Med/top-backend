@@ -32,8 +32,8 @@ class CSVImportTest extends AbstractTest {
     Map<String, String> fieldsMaping =
         Map.of("pat_id", "subjectId", "birth_date", "birthDate", "gender", "sex");
 
-    SubjectCSVImport imp = new SubjectCSVImport(dataSourceId, fieldsMaping, reader);
-    imp.run();
+    subjectCSVImport = new SubjectCSVImport(dataSourceId, fieldsMaping, reader);
+    subjectCSVImport.run();
 
     List<SubjectDao> subjects = subjectRepository.findAll();
 
