@@ -73,7 +73,8 @@ public abstract class CSVImport {
 
   protected void setFields(Object dao, String[] values) {
     for (int i = 0; i < header.length; i++)
-      if (header[i] != null) setField(dao, header[i], values[i].trim());
+      if (header[i] != null && values[i] != null && !values[i].isBlank())
+        setField(dao, header[i], values[i].trim());
   }
 
   private void setField(Object dao, String name, String value) {
