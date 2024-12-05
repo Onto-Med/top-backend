@@ -1,6 +1,5 @@
 package care.smith.top.backend.service.datasource;
 
-import care.smith.top.backend.model.jpa.datasource.SubjectDao;
 import care.smith.top.top_document_query.util.DateUtil;
 import com.opencsv.CSVParser;
 import com.opencsv.CSVParserBuilder;
@@ -29,7 +28,7 @@ public abstract class CSVImport {
   private CSVReader csvReader;
 
   protected CSVImport(
-      Class<SubjectDao> daoClass,
+      Class<?> daoClass,
       String dataSourceId,
       Map<String, String> fieldsMapping,
       Reader reader,
@@ -52,10 +51,7 @@ public abstract class CSVImport {
   }
 
   protected CSVImport(
-      Class<SubjectDao> daoClass,
-      String dataSourceId,
-      Map<String, String> fieldsMapping,
-      Reader reader) {
+      Class<?> daoClass, String dataSourceId, Map<String, String> fieldsMapping, Reader reader) {
     this(daoClass, dataSourceId, fieldsMapping, reader, ';');
   }
 
