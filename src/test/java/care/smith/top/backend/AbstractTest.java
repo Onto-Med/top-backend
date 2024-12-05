@@ -1,13 +1,22 @@
 package care.smith.top.backend;
 
 import care.smith.top.backend.api.OrganisationApiDelegateImpl;
-import care.smith.top.backend.repository.jpa.*;
+import care.smith.top.backend.repository.jpa.CategoryRepository;
+import care.smith.top.backend.repository.jpa.ConceptRepository;
+import care.smith.top.backend.repository.jpa.EntityRepository;
+import care.smith.top.backend.repository.jpa.EntityVersionRepository;
+import care.smith.top.backend.repository.jpa.OrganisationMembershipRepository;
+import care.smith.top.backend.repository.jpa.OrganisationRepository;
+import care.smith.top.backend.repository.jpa.PhenotypeRepository;
+import care.smith.top.backend.repository.jpa.RepositoryRepository;
+import care.smith.top.backend.repository.jpa.UserRepository;
 import care.smith.top.backend.repository.jpa.datasource.SubjectRepository;
 import care.smith.top.backend.repository.jpa.datasource.SubjectResourceRepository;
 import care.smith.top.backend.service.EntityService;
 import care.smith.top.backend.service.OrganisationService;
 import care.smith.top.backend.service.RepositoryService;
 import care.smith.top.backend.service.UserService;
+import care.smith.top.backend.service.datasource.SubjectCSVImport;
 import care.smith.top.backend.util.ResourceHttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
@@ -39,6 +48,7 @@ public abstract class AbstractTest {
   @Autowired protected OrganisationMembershipRepository organisationMembershipRepository;
   @Autowired protected SubjectRepository subjectRepository;
   @Autowired protected SubjectResourceRepository subjectResourceRepository;
+  @Autowired protected SubjectCSVImport subjectCSVImport;
 
   @BeforeAll
   static void initializeOLS() throws IOException {

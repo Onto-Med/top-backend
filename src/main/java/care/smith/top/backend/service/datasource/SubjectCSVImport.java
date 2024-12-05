@@ -5,10 +5,12 @@ import care.smith.top.backend.repository.jpa.datasource.SubjectRepository;
 import java.io.Reader;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
+@Service
 public class SubjectCSVImport extends CSVImport {
 
-  @Autowired private SubjectRepository repository;
+  @Autowired private SubjectRepository subjectRepository;
 
   public SubjectCSVImport(
       String dataSourceId, Map<String, String> fieldsMapping, Reader reader, char separator) {
@@ -23,6 +25,6 @@ public class SubjectCSVImport extends CSVImport {
   public void run(String[] values) {
     SubjectDao dao = new SubjectDao().dataSourceId(dataSourceId);
     setFields(dao, values);
-    repository.save(dao);
+    subjectRepository.save(dao);
   }
 }
