@@ -20,14 +20,13 @@ public class EnumConverter implements WebMvcConfigurer {
     @Override
     public <T extends QueryType> @NotNull Converter<String, T> getConverter(
         @NotNull Class<T> targetType) {
-      return new QueryTypeStringToEnumConverter<>(targetType);
+      return new QueryTypeStringToEnumConverter<>();
     }
 
     public static class QueryTypeStringToEnumConverter<T extends QueryType>
         implements Converter<String, T> {
 
-      public QueryTypeStringToEnumConverter(Class<T> targetClass) {
-      }
+      public QueryTypeStringToEnumConverter() {}
 
       @SuppressWarnings("unchecked")
       @Override
