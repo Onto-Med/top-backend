@@ -16,7 +16,6 @@ import care.smith.top.backend.service.EntityService;
 import care.smith.top.backend.service.OrganisationService;
 import care.smith.top.backend.service.RepositoryService;
 import care.smith.top.backend.service.UserService;
-import care.smith.top.backend.service.datasource.SubjectCSVImport;
 import care.smith.top.backend.util.ResourceHttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
@@ -48,7 +47,6 @@ public abstract class AbstractTest {
   @Autowired protected OrganisationMembershipRepository organisationMembershipRepository;
   @Autowired protected SubjectRepository subjectRepository;
   @Autowired protected SubjectResourceRepository subjectResourceRepository;
-  @Autowired protected SubjectCSVImport subjectCSVImport;
 
   @BeforeAll
   static void initializeOLS() throws IOException {
