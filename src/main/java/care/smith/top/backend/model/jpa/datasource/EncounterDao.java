@@ -39,10 +39,10 @@ public class EncounterDao {
     this.encounterId = encounterId;
   }
 
-  public EncounterDao(String dataSourceId, String encounterId, String subjectId) {
+  public EncounterDao(String dataSourceId, String encounterId, SubjectDao subject) {
     this.dataSourceId = dataSourceId;
     this.encounterId = encounterId;
-    this.subjectId = subjectId;
+    this.subject = subject;
   }
 
   public EncounterDao(

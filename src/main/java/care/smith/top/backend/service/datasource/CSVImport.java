@@ -105,10 +105,15 @@ public abstract class CSVImport {
   }
 
   protected EncounterDao getEncounter(
-      String dataSourceId, String encounterId, EncounterRepository encounterRepository) {
+      String dataSourceId,
+      String encounterId,
+      SubjectDao subject,
+      EncounterRepository encounterRepository) {
     Optional<EncounterDao> encounter =
         encounterRepository.findByDataSourceIdAndEncounterId(dataSourceId, encounterId);
     if (encounter.isPresent()) return encounter.get();
-    return encounterRepository.save(new EncounterDao(dataSourceId, encounterId));
+    if (subject == null)
+      return encounterRepository.save(new EncounterDao(dataSourceId, encounterId));
+    return encounterRepository.save(new EncounterDao(dataSourceId, encounterId, subject));
   }
 }

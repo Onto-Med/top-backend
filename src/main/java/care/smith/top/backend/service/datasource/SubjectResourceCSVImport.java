@@ -1,5 +1,6 @@
 package care.smith.top.backend.service.datasource;
 
+import care.smith.top.backend.model.jpa.datasource.SubjectDao;
 import care.smith.top.backend.model.jpa.datasource.SubjectResourceDao;
 import care.smith.top.backend.repository.jpa.datasource.EncounterRepository;
 import care.smith.top.backend.repository.jpa.datasource.SubjectRepository;
@@ -44,13 +45,16 @@ public class SubjectResourceCSVImport extends CSVImport {
     SubjectResourceDao subjectResource = new SubjectResourceDao().dataSourceId(dataSourceId);
     setFields(subjectResource, values);
 
-    if (subjectResource.getSubjectId() != null)
-      subjectResource.subject(
-          getSubject(dataSourceId, subjectResource.getSubjectId(), subjectRepository));
+    SubjectDao subject = null;
+    if (subjectResource.getSubjectId() != null) {
+      subject = getSubject(dataSourceId, subjectResource.getSubjectId(), subjectRepository);
+      subjectResource.subject(subject);
+    }
 
     if (subjectResource.getEncounterId() != null)
       subjectResource.encounter(
-          getEncounter(dataSourceId, subjectResource.getEncounterId(), encounterRepository));
+          getEncounter(
+              dataSourceId, subjectResource.getEncounterId(), subject, encounterRepository));
 
     subjectResourceRepository.save(subjectResource);
   }
