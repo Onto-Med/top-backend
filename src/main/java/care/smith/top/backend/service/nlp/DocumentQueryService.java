@@ -69,7 +69,12 @@ public class DocumentQueryService extends QueryService {
             .map(EntityDao::toApiModel)
             .collect(Collectors.toList());
     concepts.add(entity.toApiModel());
-    conceptRepository.populateSubconcepts(concepts, queryDao.getRepository().getId());
+
+    Map<String, Set<String>> subDependencies = new HashMap<>();
+    Map<String, Entity> conceptMap =
+        concepts.stream().collect(Collectors.toMap(Entity::getId, Function.identity()));
+    conceptRepository.getSubDependencies(
+        conceptMap, subDependencies, queryDao.getRepository().getId());
 
     Map<String, Set<String>> subDependencies = new HashMap<>();
     Map<String, Entity> conceptMap =
