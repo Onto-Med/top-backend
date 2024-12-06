@@ -166,7 +166,7 @@ class RepositoryServiceTest extends AbstractTest {
   }
 
   @Test
-  void updateRepository() {
+  void updateRepository() throws InterruptedException {
     Organisation organisation =
         organisationService.createOrganisation(new Organisation().id("org"));
     Repository repository =
@@ -175,6 +175,8 @@ class RepositoryServiceTest extends AbstractTest {
             new Repository().id("repo").repositoryType(RepositoryType.PHENOTYPE_REPOSITORY),
             null);
     assertThat(repository).isNotNull();
+
+    Thread.sleep(1);
 
     Repository expected =
         new Repository().id(repository.getId()).name("Repository").description("Some description");
