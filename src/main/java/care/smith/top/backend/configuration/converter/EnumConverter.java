@@ -26,12 +26,10 @@ public class EnumConverter implements WebMvcConfigurer {
     public static class QueryTypeStringToEnumConverter<T extends QueryType>
         implements Converter<String, T> {
 
-      private Class<T> targetClass;
-
       public QueryTypeStringToEnumConverter(Class<T> targetClass) {
-        this.targetClass = targetClass;
       }
 
+      @SuppressWarnings("unchecked")
       @Override
       public T convert(String source) {
         return (T) QueryType.fromValue(source);

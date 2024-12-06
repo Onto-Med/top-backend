@@ -233,7 +233,7 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
 
   @Override
   public ResponseEntity<Void> stopConceptGraphPipeline(String pipelineId) {
-    PipelineResponse pipelineResponse = conceptGraphsService.stopPipeline(pipelineId);
+    conceptGraphsService.stopPipeline(pipelineId);
     return ResponseEntity.ok().build();
   }
 
