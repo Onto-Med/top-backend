@@ -56,7 +56,7 @@ public abstract class AbstractNLPTest {
 
   @DynamicPropertySource
   static void dbProperties(DynamicPropertyRegistry registry) {
-    registry.add("spring.neo4j.uri", neo4JExtension.getEmbeddedNeo4j()::boltURI);
+    registry.add("spring.neo4j.uri", neo4JExtension::getBoltUri);
     registry.add("spring.neo4j.authentication.username", () -> "neo4j");
     registry.add("spring.neo4j.authentication.password", () -> null);
   }

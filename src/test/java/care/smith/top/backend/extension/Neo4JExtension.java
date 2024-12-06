@@ -2,6 +2,7 @@ package care.smith.top.backend.extension;
 
 import static care.smith.top.backend.AbstractNLPTest.*;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -95,7 +96,7 @@ public class Neo4JExtension implements BeforeAllCallback, ExtensionContext.Store
     embeddedNeo4j.close();
   }
 
-  public Neo4j getEmbeddedNeo4j() {
-    return embeddedNeo4j;
+  public URI getBoltUri() {
+    return embeddedNeo4j.boltURI();
   }
 }
