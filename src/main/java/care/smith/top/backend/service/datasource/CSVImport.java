@@ -1,8 +1,5 @@
 package care.smith.top.backend.service.datasource;
 
-import care.smith.top.backend.repository.jpa.datasource.EncounterRepository;
-import care.smith.top.backend.repository.jpa.datasource.SubjectRepository;
-import care.smith.top.backend.repository.jpa.datasource.SubjectResourceRepository;
 import care.smith.top.top_document_query.util.DateUtil;
 import com.opencsv.CSVParser;
 import com.opencsv.CSVParserBuilder;
@@ -21,10 +18,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
-@Service
 public abstract class CSVImport {
 
   protected final Logger LOGGER = LoggerFactory.getLogger(CSVImport.class);
@@ -33,10 +27,6 @@ public abstract class CSVImport {
   protected String[] header;
   protected Map<String, Method> fields;
   private CSVReader csvReader;
-
-  @Autowired protected SubjectRepository subjectRepository;
-  @Autowired protected EncounterRepository encounterRepository;
-  @Autowired protected SubjectResourceRepository subjectResourceRepository;
 
   protected CSVImport(
       Class<?> daoClass,
