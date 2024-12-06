@@ -1,7 +1,5 @@
 package care.smith.top.backend.api.nlp;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import care.smith.top.backend.AbstractNLPTest;
 import care.smith.top.backend.service.nlp.PhraseService;
 import java.io.IOException;
@@ -11,14 +9,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class PhraseApiDelegateImplTest extends AbstractNLPTest {
-  private DocumentApiDelegateImpl documentApi;
   private PhraseApiDelegateImpl phraseApi;
   private PhraseService phraseService;
 
   @BeforeEach
   void setUp() throws IOException, InstantiationException {
     phraseService = new PhraseService(phraseRepository);
-    documentApi = new DocumentApiDelegateImpl(mockedDocumentService());
     phraseApi = new PhraseApiDelegateImpl(phraseService, mockedDocumentService());
   }
 
