@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface EntityVersionRepository extends JpaRepository<EntityVersionDao, String> {
+public interface EntityVersionRepository extends JpaRepository<EntityVersionDao, Long> {
   List<EntityVersionDao> findAllByEntity_RepositoryIdAndEntityIdOrderByVersionDesc(
       String repositoryId, String entityId);
 
