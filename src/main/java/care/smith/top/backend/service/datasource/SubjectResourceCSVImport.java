@@ -1,14 +1,11 @@
 package care.smith.top.backend.service.datasource;
 
-import care.smith.top.backend.model.jpa.datasource.EncounterDao;
-import care.smith.top.backend.model.jpa.datasource.SubjectDao;
 import care.smith.top.backend.model.jpa.datasource.SubjectResourceDao;
 import care.smith.top.backend.repository.jpa.datasource.EncounterRepository;
 import care.smith.top.backend.repository.jpa.datasource.SubjectRepository;
 import care.smith.top.backend.repository.jpa.datasource.SubjectResourceRepository;
 import java.io.Reader;
 import java.util.Map;
-import java.util.Optional;
 
 public class SubjectResourceCSVImport extends CSVImport {
   private final SubjectRepository subjectRepository;
@@ -44,21 +41,17 @@ public class SubjectResourceCSVImport extends CSVImport {
 
   @Override
   public void run(String[] values) {
-    SubjectResourceDao dao = new SubjectResourceDao().dataSourceId(dataSourceId);
-    setFields(dao, values);
+    SubjectResourceDao subjectResource = new SubjectResourceDao().dataSourceId(dataSourceId);
+    setFields(subjectResource, values);
 
-    if (dao.getSubjectId() != null) {
-      Optional<SubjectDao> subject =
-          subjectRepository.findByDataSourceIdAndSubjectId(dataSourceId, dao.getSubjectId());
-      if (subject.isPresent()) dao.subject(subject.get());
-    }
+    if (subjectResource.getSubjectId() != null)
+      subjectResource.subject(
+          getSubject(dataSourceId, subjectResource.getSubjectId(), subjectRepository));
 
-    if (dao.getEncounterId() != null) {
-      Optional<EncounterDao> encounter =
-          encounterRepository.findByDataSourceIdAndEncounterId(dataSourceId, dao.getEncounterId());
-      if (encounter.isPresent()) dao.encounter(encounter.get());
-    }
+    if (subjectResource.getEncounterId() != null)
+      subjectResource.encounter(
+          getEncounter(dataSourceId, subjectResource.getEncounterId(), encounterRepository));
 
-    subjectResourceRepository.save(dao);
+    subjectResourceRepository.save(subjectResource);
   }
 }

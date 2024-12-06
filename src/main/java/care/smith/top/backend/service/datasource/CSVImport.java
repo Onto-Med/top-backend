@@ -1,5 +1,9 @@
 package care.smith.top.backend.service.datasource;
 
+import care.smith.top.backend.model.jpa.datasource.EncounterDao;
+import care.smith.top.backend.model.jpa.datasource.SubjectDao;
+import care.smith.top.backend.repository.jpa.datasource.EncounterRepository;
+import care.smith.top.backend.repository.jpa.datasource.SubjectRepository;
 import care.smith.top.top_document_query.util.DateUtil;
 import com.opencsv.CSVParser;
 import com.opencsv.CSVParserBuilder;
@@ -13,6 +17,7 @@ import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -89,5 +94,21 @@ public abstract class CSVImport {
     } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
       LOGGER.warn(e.getMessage(), e);
     }
+  }
+
+  protected SubjectDao getSubject(
+      String dataSourceId, String subjectId, SubjectRepository subjectRepository) {
+    Optional<SubjectDao> subject =
+        subjectRepository.findByDataSourceIdAndSubjectId(dataSourceId, subjectId);
+    if (subject.isPresent()) return subject.get();
+    return subjectRepository.save(new SubjectDao(dataSourceId, subjectId));
+  }
+
+  protected EncounterDao getEncounter(
+      String dataSourceId, String encounterId, EncounterRepository encounterRepository) {
+    Optional<EncounterDao> encounter =
+        encounterRepository.findByDataSourceIdAndEncounterId(dataSourceId, encounterId);
+    if (encounter.isPresent()) return encounter.get();
+    return encounterRepository.save(new EncounterDao(dataSourceId, encounterId));
   }
 }

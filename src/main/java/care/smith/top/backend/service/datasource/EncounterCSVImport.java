@@ -1,12 +1,10 @@
 package care.smith.top.backend.service.datasource;
 
 import care.smith.top.backend.model.jpa.datasource.EncounterDao;
-import care.smith.top.backend.model.jpa.datasource.SubjectDao;
 import care.smith.top.backend.repository.jpa.datasource.EncounterRepository;
 import care.smith.top.backend.repository.jpa.datasource.SubjectRepository;
 import java.io.Reader;
 import java.util.Map;
-import java.util.Optional;
 
 public class EncounterCSVImport extends CSVImport {
   private final EncounterRepository encounterRepository;
@@ -37,15 +35,12 @@ public class EncounterCSVImport extends CSVImport {
 
   @Override
   public void run(String[] values) {
-    EncounterDao dao = new EncounterDao().dataSourceId(dataSourceId);
-    setFields(dao, values);
+    EncounterDao encounter = new EncounterDao().dataSourceId(dataSourceId);
+    setFields(encounter, values);
 
-    if (dao.getSubjectId() != null) {
-      Optional<SubjectDao> subject =
-          subjectRepository.findByDataSourceIdAndSubjectId(dataSourceId, dao.getSubjectId());
-      if (subject.isPresent()) dao.subject(subject.get());
-    }
+    if (encounter.getSubjectId() != null)
+      encounter.subject(getSubject(dataSourceId, encounter.getSubjectId(), subjectRepository));
 
-    encounterRepository.save(dao);
+    encounterRepository.save(encounter);
   }
 }
