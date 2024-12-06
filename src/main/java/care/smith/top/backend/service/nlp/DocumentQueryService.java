@@ -80,7 +80,7 @@ public class DocumentQueryService extends QueryService {
     QueryResultDao result;
     try {
       TextAdapter adapter = TextAdapter.getInstance(config);
-      TextFinder finder = new TextFinder(query, concepts.toArray(new Entity[0]), adapter);
+      TextFinder finder = new TextFinder(query, conceptMap, subDependencies, adapter);
       List<DocumentHit> documents = finder.execute();
       result =
           new QueryResultDao(
