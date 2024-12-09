@@ -24,10 +24,10 @@ import org.slf4j.LoggerFactory;
 
 public abstract class CSVImport extends DataImport {
 
-  protected final Logger LOGGER = LoggerFactory.getLogger(CSVImport.class);
+  private final Logger LOGGER = LoggerFactory.getLogger(CSVImport.class);
 
-  protected String[] header;
-  protected Map<String, Method> fields;
+  private String[] header;
+  private Map<String, Method> fields;
   private CSVReader csvReader;
 
   protected CSVImport(
