@@ -31,6 +31,10 @@ public class SubjectDao {
 
   public SubjectDao() {}
 
+  public SubjectDao(String dataSourceId) {
+    this.dataSourceId = dataSourceId;
+  }
+
   public SubjectDao(String dataSourceId, String subjectId) {
     this.dataSourceId = dataSourceId;
     this.subjectId = subjectId;

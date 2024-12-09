@@ -34,6 +34,10 @@ public class EncounterDao {
 
   public EncounterDao() {}
 
+  public EncounterDao(String dataSourceId) {
+    this.dataSourceId = dataSourceId;
+  }
+
   public EncounterDao(String dataSourceId, String encounterId) {
     this.dataSourceId = dataSourceId;
     this.encounterId = encounterId;
