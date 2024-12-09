@@ -47,10 +47,12 @@ public class SubjectResourceDao {
 
   public SubjectResourceDao(
       @NotNull String dataSourceId,
+      @NotNull String subjectResourceId,
       SubjectDao subject,
       @NotNull String codeSystem,
       @NotNull String code) {
     this.dataSourceId = dataSourceId;
+    this.subjectResourceId = subjectResourceId;
     this.subject = subject;
     this.codeSystem = codeSystem;
     this.code = code;
@@ -58,10 +60,27 @@ public class SubjectResourceDao {
 
   public SubjectResourceDao(
       @NotNull String dataSourceId,
+      @NotNull String subjectResourceId,
       EncounterDao encounter,
       @NotNull String codeSystem,
       @NotNull String code) {
     this.dataSourceId = dataSourceId;
+    this.subjectResourceId = subjectResourceId;
+    this.encounter = encounter;
+    this.codeSystem = codeSystem;
+    this.code = code;
+  }
+
+  public SubjectResourceDao(
+      @NotNull String dataSourceId,
+      @NotNull String subjectResourceId,
+      SubjectDao subject,
+      EncounterDao encounter,
+      @NotNull String codeSystem,
+      @NotNull String code) {
+    this.dataSourceId = dataSourceId;
+    this.subjectResourceId = subjectResourceId;
+    this.subject = subject;
     this.encounter = encounter;
     this.codeSystem = codeSystem;
     this.code = code;

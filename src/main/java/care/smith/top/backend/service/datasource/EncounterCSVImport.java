@@ -7,40 +7,45 @@ import java.io.Reader;
 import java.util.Map;
 
 public class EncounterCSVImport extends CSVImport {
-  private final EncounterRepository encounterRepository;
-  private final SubjectRepository subjectRepository;
 
   public EncounterCSVImport(
+      String dataSourceId,
+      Reader reader,
       SubjectRepository subjectRepository,
       EncounterRepository encounterRepository,
-      String dataSourceId,
       Map<String, String> fieldsMapping,
-      Reader reader,
       char separator) {
-    super(EncounterDao.class, dataSourceId, fieldsMapping, reader, separator);
-    this.subjectRepository = subjectRepository;
-    this.encounterRepository = encounterRepository;
+    super(
+        dataSourceId,
+        reader,
+        subjectRepository,
+        encounterRepository,
+        null,
+        EncounterDao.class,
+        fieldsMapping,
+        separator);
   }
 
   public EncounterCSVImport(
+      String dataSourceId,
+      Reader reader,
       SubjectRepository subjectRepository,
       EncounterRepository encounterRepository,
-      String dataSourceId,
-      Map<String, String> fieldsMapping,
-      Reader reader) {
-    super(EncounterDao.class, dataSourceId, fieldsMapping, reader);
-    this.subjectRepository = subjectRepository;
-    this.encounterRepository = encounterRepository;
+      Map<String, String> fieldsMapping) {
+    super(
+        dataSourceId,
+        reader,
+        subjectRepository,
+        encounterRepository,
+        null,
+        EncounterDao.class,
+        fieldsMapping);
   }
 
   @Override
   public void run(String[] values) {
     EncounterDao encounter = new EncounterDao(dataSourceId);
     setFields(encounter, values);
-
-    if (encounter.getSubjectId() != null)
-      encounter.subject(getSubject(dataSourceId, encounter.getSubjectId(), subjectRepository));
-
-    encounterRepository.save(encounter);
+    saveEncounter(encounter);
   }
 }

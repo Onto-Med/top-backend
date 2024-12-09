@@ -43,7 +43,7 @@ class SubjectRepositoryTest extends AbstractTest {
     SubjectDao subject = new SubjectDao(dataSourceId, subjectId, LocalDateTime.now(), "male");
 
     SubjectResourceDao height =
-        new SubjectResourceDao(dataSourceId, subject, "http://loinc.org/", "3137-7").now();
+        new SubjectResourceDao(dataSourceId, "123", subject, "http://loinc.org/", "3137-7").now();
 
     subject.addSubjectResource(height);
 
