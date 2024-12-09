@@ -41,6 +41,10 @@ public class SubjectResourceDao {
 
   public SubjectResourceDao() {}
 
+  public SubjectResourceDao(String dataSourceId) {
+    this.dataSourceId = dataSourceId;
+  }
+
   public SubjectResourceDao(
       @NotNull String dataSourceId,
       SubjectDao subject,

@@ -29,7 +29,7 @@ public class SubjectCSVImport extends CSVImport {
 
   @Override
   public void run(String[] values) {
-    SubjectDao subject = new SubjectDao().dataSourceId(dataSourceId);
+    SubjectDao subject = new SubjectDao(dataSourceId);
     setFields(subject, values);
     subjectRepository.save(subject);
   }

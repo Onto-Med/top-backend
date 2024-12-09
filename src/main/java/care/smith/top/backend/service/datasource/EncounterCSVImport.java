@@ -35,7 +35,7 @@ public class EncounterCSVImport extends CSVImport {
 
   @Override
   public void run(String[] values) {
-    EncounterDao encounter = new EncounterDao().dataSourceId(dataSourceId);
+    EncounterDao encounter = new EncounterDao(dataSourceId);
     setFields(encounter, values);
 
     if (encounter.getSubjectId() != null)
