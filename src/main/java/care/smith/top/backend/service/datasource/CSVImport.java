@@ -1,9 +1,8 @@
 package care.smith.top.backend.service.datasource;
 
-import care.smith.top.backend.model.jpa.datasource.EncounterDao;
-import care.smith.top.backend.model.jpa.datasource.SubjectDao;
 import care.smith.top.backend.repository.jpa.datasource.EncounterRepository;
 import care.smith.top.backend.repository.jpa.datasource.SubjectRepository;
+import care.smith.top.backend.repository.jpa.datasource.SubjectResourceRepository;
 import care.smith.top.top_document_query.util.DateUtil;
 import com.opencsv.CSVParser;
 import com.opencsv.CSVParserBuilder;
@@ -17,28 +16,30 @@ import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class CSVImport {
+public abstract class CSVImport extends DataImport {
 
   protected final Logger LOGGER = LoggerFactory.getLogger(CSVImport.class);
 
-  protected String dataSourceId;
   protected String[] header;
   protected Map<String, Method> fields;
   private CSVReader csvReader;
 
   protected CSVImport(
-      Class<?> daoClass,
       String dataSourceId,
-      Map<String, String> fieldsMapping,
       Reader reader,
+      SubjectRepository subjectRepository,
+      EncounterRepository encounterRepository,
+      SubjectResourceRepository subjectResourceRepository,
+      Class<?> daoClass,
+      Map<String, String> fieldsMapping,
       char separator) {
+    super(dataSourceId, reader, subjectRepository, encounterRepository, subjectResourceRepository);
     try {
       CSVParser parser = new CSVParserBuilder().withSeparator(separator).build();
       csvReader = new CSVReaderBuilder(reader).withCSVParser(parser).build();
@@ -49,7 +50,6 @@ public abstract class CSVImport {
     } catch (IOException | CsvValidationException e) {
       LOGGER.warn(e.getMessage(), e);
     }
-    this.dataSourceId = dataSourceId;
     this.fields =
         Stream.of(daoClass.getDeclaredMethods())
             .filter(m -> m.getParameterCount() == 1)
@@ -57,10 +57,25 @@ public abstract class CSVImport {
   }
 
   protected CSVImport(
-      Class<?> daoClass, String dataSourceId, Map<String, String> fieldsMapping, Reader reader) {
-    this(daoClass, dataSourceId, fieldsMapping, reader, ';');
+      String dataSourceId,
+      Reader reader,
+      SubjectRepository subjectRepository,
+      EncounterRepository encounterRepository,
+      SubjectResourceRepository subjectResourceRepository,
+      Class<?> daoClass,
+      Map<String, String> fieldsMapping) {
+    this(
+        dataSourceId,
+        reader,
+        subjectRepository,
+        encounterRepository,
+        subjectResourceRepository,
+        daoClass,
+        fieldsMapping,
+        ';');
   }
 
+  @Override
   public void run() {
     try {
       String[] values;
@@ -94,26 +109,5 @@ public abstract class CSVImport {
     } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
       LOGGER.warn(e.getMessage(), e);
     }
-  }
-
-  protected SubjectDao getSubject(
-      String dataSourceId, String subjectId, SubjectRepository subjectRepository) {
-    Optional<SubjectDao> subject =
-        subjectRepository.findByDataSourceIdAndSubjectId(dataSourceId, subjectId);
-    if (subject.isPresent()) return subject.get();
-    return subjectRepository.save(new SubjectDao(dataSourceId, subjectId));
-  }
-
-  protected EncounterDao getEncounter(
-      String dataSourceId,
-      String encounterId,
-      SubjectDao subject,
-      EncounterRepository encounterRepository) {
-    Optional<EncounterDao> encounter =
-        encounterRepository.findByDataSourceIdAndEncounterId(dataSourceId, encounterId);
-    if (encounter.isPresent()) return encounter.get();
-    if (subject == null)
-      return encounterRepository.save(new EncounterDao(dataSourceId, encounterId));
-    return encounterRepository.save(new EncounterDao(dataSourceId, encounterId, subject));
   }
 }

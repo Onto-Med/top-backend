@@ -10,6 +10,7 @@ import care.smith.top.backend.repository.jpa.OrganisationRepository;
 import care.smith.top.backend.repository.jpa.PhenotypeRepository;
 import care.smith.top.backend.repository.jpa.RepositoryRepository;
 import care.smith.top.backend.repository.jpa.UserRepository;
+import care.smith.top.backend.repository.jpa.datasource.EncounterRepository;
 import care.smith.top.backend.repository.jpa.datasource.SubjectRepository;
 import care.smith.top.backend.repository.jpa.datasource.SubjectResourceRepository;
 import care.smith.top.backend.service.EntityService;
@@ -46,6 +47,7 @@ public abstract class AbstractTest {
   @Autowired protected UserService userService;
   @Autowired protected OrganisationMembershipRepository organisationMembershipRepository;
   @Autowired protected SubjectRepository subjectRepository;
+  @Autowired protected EncounterRepository encounterRepository;
   @Autowired protected SubjectResourceRepository subjectResourceRepository;
 
   @BeforeAll

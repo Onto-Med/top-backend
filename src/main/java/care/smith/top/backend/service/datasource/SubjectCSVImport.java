@@ -6,31 +6,36 @@ import java.io.Reader;
 import java.util.Map;
 
 public class SubjectCSVImport extends CSVImport {
-  private final SubjectRepository subjectRepository;
 
   public SubjectCSVImport(
-      SubjectRepository subjectRepository,
       String dataSourceId,
-      Map<String, String> fieldsMapping,
       Reader reader,
+      SubjectRepository subjectRepository,
+      Map<String, String> fieldsMapping,
       char separator) {
-    super(SubjectDao.class, dataSourceId, fieldsMapping, reader, separator);
-    this.subjectRepository = subjectRepository;
+    super(
+        dataSourceId,
+        reader,
+        subjectRepository,
+        null,
+        null,
+        SubjectDao.class,
+        fieldsMapping,
+        separator);
   }
 
   public SubjectCSVImport(
-      SubjectRepository subjectRepository,
       String dataSourceId,
-      Map<String, String> fieldsMapping,
-      Reader reader) {
-    super(SubjectDao.class, dataSourceId, fieldsMapping, reader);
-    this.subjectRepository = subjectRepository;
+      Reader reader,
+      SubjectRepository subjectRepository,
+      Map<String, String> fieldsMapping) {
+    super(dataSourceId, reader, subjectRepository, null, null, SubjectDao.class, fieldsMapping);
   }
 
   @Override
   public void run(String[] values) {
     SubjectDao subject = new SubjectDao(dataSourceId);
     setFields(subject, values);
-    subjectRepository.save(subject);
+    saveSubject(subject);
   }
 }
