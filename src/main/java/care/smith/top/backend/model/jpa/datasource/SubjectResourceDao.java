@@ -45,6 +45,11 @@ public class SubjectResourceDao {
     this.dataSourceId = dataSourceId;
   }
 
+  public SubjectResourceDao(@NotNull String dataSourceId, @NotNull String subjectResourceId) {
+    this.dataSourceId = dataSourceId;
+    this.subjectResourceId = subjectResourceId;
+  }
+
   public SubjectResourceDao(
       @NotNull String dataSourceId,
       @NotNull String subjectResourceId,
