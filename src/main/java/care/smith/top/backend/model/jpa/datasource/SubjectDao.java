@@ -66,15 +66,10 @@ public class SubjectDao {
 
   @Override
   public String toString() {
-    return "SubjectDao [dataSourceId="
-        + dataSourceId
-        + ", subjectId="
-        + subjectId
-        + ", birthDate="
-        + birthDate
-        + ", sex="
-        + sex
-        + "]";
+    StringBuffer sb = new StringBuffer("[SubjectDao|" + dataSourceId + "|" + subjectId);
+    if (birthDate != null) sb.append("|" + birthDate);
+    if (sex != null) sb.append("|" + sex);
+    return sb.append("]").toString();
   }
 
   public SubjectDao dataSourceId(String dataSourceId) {

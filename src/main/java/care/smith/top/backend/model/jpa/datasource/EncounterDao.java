@@ -85,19 +85,12 @@ public class EncounterDao {
 
   @Override
   public String toString() {
-    return "EncounterDao [dataSourceId="
-        + dataSourceId
-        + ", encounterId="
-        + encounterId
-        + ", subjectId="
-        + subjectId
-        + ", type="
-        + type
-        + ", startDateTime="
-        + startDateTime
-        + ", endDateTime="
-        + endDateTime
-        + "]";
+    StringBuffer sb =
+        new StringBuffer("[EncounterDao|" + dataSourceId + "|" + encounterId + "|" + subject);
+    if (type != null) sb.append("|" + type);
+    if (startDateTime != null) sb.append("|" + startDateTime);
+    if (endDateTime != null) sb.append("|" + endDateTime);
+    return sb.append("]").toString();
   }
 
   public EncounterDao dataSourceId(String dataSourceId) {

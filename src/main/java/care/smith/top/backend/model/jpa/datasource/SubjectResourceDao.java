@@ -129,35 +129,30 @@ public class SubjectResourceDao {
 
   @Override
   public String toString() {
-    return "SubjectResourceDao [dataSourceId="
-        + dataSourceId
-        + ", subjectResourceId="
-        + subjectResourceId
-        + ", subjectId="
-        + subjectId
-        + ", encounterId="
-        + encounterId
-        + ", codeSystem="
-        + codeSystem
-        + ", code="
-        + code
-        + ", dateTime="
-        + dateTime
-        + ", startDateTime="
-        + startDateTime
-        + ", endDateTime="
-        + endDateTime
-        + ", unit="
-        + unit
-        + ", numberValue="
-        + numberValue
-        + ", textValue="
-        + textValue
-        + ", booleanValue="
-        + booleanValue
-        + ", dateTimeValue="
-        + dateTimeValue
-        + "]";
+    String ls = System.lineSeparator();
+    StringBuffer sb =
+        new StringBuffer(
+            "SubjectResourceDao|"
+                + dataSourceId
+                + "|"
+                + subjectResourceId
+                + "|"
+                + codeSystem
+                + "|"
+                + code
+                + ls);
+    sb.append("--------------------------------------------------" + ls);
+    sb.append("subject: " + subject + ls);
+    sb.append("encounter: " + encounter + ls);
+    if (dateTime != null) sb.append("dateTime: " + dateTime + ls);
+    if (startDateTime != null) sb.append("startDateTime: " + startDateTime + ls);
+    if (endDateTime != null) sb.append("endDateTime: " + endDateTime + ls);
+    if (unit != null) sb.append("unit: " + unit + ls);
+    if (numberValue != null) sb.append("numberValue: " + numberValue + ls);
+    if (textValue != null) sb.append("textValue: " + textValue + ls);
+    if (booleanValue != null) sb.append("booleanValue: " + booleanValue + ls);
+    if (dateTimeValue != null) sb.append("dateTimeValue: " + dateTimeValue + ls);
+    return sb.toString();
   }
 
   public SubjectResourceDao dataSourceId(String dataSourceId) {
