@@ -1,13 +1,13 @@
 databaseChangeLog:
 - changeSet:
-    id: 1732866544755-7
-    author: ChristophB
+    id: 1733855764753-7
+    author: ChristophB (generated)
     changes:
     - sql:
         sql: CREATE SCHEMA IF NOT EXISTS data_source
 - changeSet:
-    id: 1733139168243-8
-    author: ChristophB
+    id: 1733855764753-8
+    author: ChristophB (generated)
     changes:
     - createTable:
         columns:
@@ -17,14 +17,14 @@ databaseChangeLog:
               primaryKey: true
               primaryKeyName: encounterPK
             name: data_source_id
-            type: VARCHAR(255)
+            type: VARCHAR(5000)
         - column:
             constraints:
               nullable: false
               primaryKey: true
               primaryKeyName: encounterPK
             name: encounter_id
-            type: VARCHAR(255)
+            type: VARCHAR(5000)
         - column:
             name: end_date_time
             type: TIMESTAMP
@@ -33,18 +33,18 @@ databaseChangeLog:
             type: TIMESTAMP
         - column:
             name: type
-            type: VARCHAR(255)
+            type: VARCHAR(5000)
         - column:
             name: subject_data_source_id
-            type: VARCHAR(255)
+            type: VARCHAR(5000)
         - column:
             name: subject_subject_id
-            type: VARCHAR(255)
+            type: VARCHAR(5000)
         schemaName: data_source
         tableName: encounter
 - changeSet:
-    id: 1733139168243-9
-    author: ChristophB
+    id: 1733855764753-9
+    author: ChristophB (generated)
     changes:
     - createTable:
         columns:
@@ -54,14 +54,14 @@ databaseChangeLog:
               primaryKey: true
               primaryKeyName: subjectPK
             name: data_source_id
-            type: VARCHAR(255)
+            type: VARCHAR(5000)
         - column:
             constraints:
               nullable: false
               primaryKey: true
               primaryKeyName: subjectPK
             name: subject_id
-            type: VARCHAR(255)
+            type: VARCHAR(5000)
         - column:
             name: birth_date
             type: TIMESTAMP
@@ -71,8 +71,8 @@ databaseChangeLog:
         schemaName: data_source
         tableName: subject
 - changeSet:
-    id: 1733139168243-10
-    author: ChristophB
+    id: 1733855764753-10
+    author: ChristophB (generated)
     changes:
     - createTable:
         columns:
@@ -82,14 +82,14 @@ databaseChangeLog:
               primaryKey: true
               primaryKeyName: subject_resourcePK
             name: data_source_id
-            type: VARCHAR(255)
+            type: VARCHAR(5000)
         - column:
             constraints:
               nullable: false
               primaryKey: true
               primaryKeyName: subject_resourcePK
             name: subject_resource_id
-            type: BIGINT
+            type: VARCHAR(5000)
         - column:
             name: boolean_value
             type: BOOLEAN
@@ -102,7 +102,7 @@ databaseChangeLog:
             constraints:
               nullable: false
             name: code_system
-            type: VARCHAR(255)
+            type: VARCHAR(5000)
         - column:
             name: date_time
             type: TIMESTAMP
@@ -120,27 +120,27 @@ databaseChangeLog:
             type: TIMESTAMP
         - column:
             name: text_value
-            type: VARCHAR(255)
+            type: VARCHAR(5000)
         - column:
             name: unit
             type: VARCHAR(255)
         - column:
             name: encounter_data_source_id
-            type: VARCHAR(255)
+            type: VARCHAR(5000)
         - column:
             name: encounter_encounter_id
-            type: VARCHAR(255)
+            type: VARCHAR(5000)
         - column:
             name: subject_data_source_id
-            type: VARCHAR(255)
+            type: VARCHAR(5000)
         - column:
             name: subject_subject_id
-            type: VARCHAR(255)
+            type: VARCHAR(5000)
         schemaName: data_source
         tableName: subject_resource
 - changeSet:
-    id: 1733139168243-11
-    author: ChristophB
+    id: 1733855764753-11
+    author: ChristophB (generated)
     changes:
     - createIndex:
         columns:
@@ -150,8 +150,8 @@ databaseChangeLog:
         schemaName: data_source
         tableName: subject_resource
 - changeSet:
-    id: 1733139168243-12
-    author: ChristophB
+    id: 1733855764753-12
+    author: ChristophB (generated)
     changes:
     - createIndex:
         columns:
@@ -161,8 +161,8 @@ databaseChangeLog:
         schemaName: data_source
         tableName: encounter
 - changeSet:
-    id: 1733139168243-13
-    author: ChristophB
+    id: 1733855764753-13
+    author: ChristophB (generated)
     changes:
     - createIndex:
         columns:
@@ -172,8 +172,8 @@ databaseChangeLog:
         schemaName: data_source
         tableName: subject
 - changeSet:
-    id: 1733139168243-14
-    author: ChristophB
+    id: 1733855764753-14
+    author: ChristophB (generated)
     changes:
     - addForeignKeyConstraint:
         baseColumnNames: subject_data_source_id,subject_subject_id
@@ -187,8 +187,8 @@ databaseChangeLog:
         referencedTableSchemaName: data_source
         validate: true
 - changeSet:
-    id: 1733139168243-15
-    author: ChristophB
+    id: 1733855764753-15
+    author: ChristophB (generated)
     changes:
     - addForeignKeyConstraint:
         baseColumnNames: encounter_data_source_id,encounter_encounter_id
@@ -202,8 +202,8 @@ databaseChangeLog:
         referencedTableSchemaName: data_source
         validate: true
 - changeSet:
-    id: 1733139168243-16
-    author: ChristophB
+    id: 1733855764753-16
+    author: ChristophB (generated)
     changes:
     - addForeignKeyConstraint:
         baseColumnNames: subject_data_source_id,subject_subject_id
