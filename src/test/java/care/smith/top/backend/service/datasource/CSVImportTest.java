@@ -54,9 +54,9 @@ class CSVImportTest extends AbstractTest {
     String csv =
         "res_id; enc_id; pat_id; code; code_system; timestamp; value"
             + System.lineSeparator()
-            + "1; e1; p1; code1; codesystem1; 01.02.2003; 12.34"
+            + "r1; e1; p1; code1; codesystem1; 01.02.2003; 12.34"
             + System.lineSeparator()
-            + "2; e2; p2; code2; codesystem2; 2004-05-06T01:02:03; 56.78";
+            + "r2; e2; p2; code2; codesystem2; 2004-05-06T01:02:03; 56.78";
 
     Reader reader = new StringReader(csv);
 
@@ -94,11 +94,11 @@ class CSVImportTest extends AbstractTest {
     EncounterDao enc2 = new EncounterDao(dataSourceId, "e2", sub2);
 
     SubjectResourceDao res1 =
-        new SubjectResourceDao(dataSourceId, "1", sub1, enc1, "codesystem1", "code1")
+        new SubjectResourceDao(dataSourceId, "r1", sub1, enc1, "codesystem1", "code1")
             .dateTime(DateUtil.parse("01.02.2003"))
             .numberValue(new BigDecimal("12.34"));
     SubjectResourceDao res2 =
-        new SubjectResourceDao(dataSourceId, "2", sub2, enc2, "codesystem2", "code2")
+        new SubjectResourceDao(dataSourceId, "r2", sub2, enc2, "codesystem2", "code2")
             .dateTime(DateUtil.parse("2004-05-06T01:02:03"))
             .numberValue(new BigDecimal("56.78"));
 
@@ -113,6 +113,8 @@ class CSVImportTest extends AbstractTest {
     assertEquals(encounters.get(1), enc2);
 
     List<SubjectResourceDao> resources = subjectResourceRepository.findAll();
+    System.out.println(resources.get(0));
+    System.out.println(resources.get(1));
     assertEquals(2, resources.size());
     assertEquals(resources.get(0), res1);
     assertEquals(resources.get(1), res2);

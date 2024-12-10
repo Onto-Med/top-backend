@@ -69,5 +69,7 @@ public abstract class AbstractTest {
     organisationRepository.deleteAll();
     userRepository.deleteAll();
     subjectRepository.deleteAll();
+    encounterRepository.deleteAll();
+    subjectResourceRepository.deleteAll();
   }
 }
