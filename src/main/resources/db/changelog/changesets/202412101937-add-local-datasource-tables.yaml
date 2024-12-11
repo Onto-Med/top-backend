@@ -1,11 +1,5 @@
 databaseChangeLog:
 - changeSet:
-    id: 1733855764753-7
-    author: ChristophB (generated)
-    changes:
-    - sql:
-        sql: CREATE SCHEMA IF NOT EXISTS data_source
-- changeSet:
     id: 1733855764753-8
     author: ChristophB (generated)
     changes:
@@ -40,7 +34,6 @@ databaseChangeLog:
         - column:
             name: subject_subject_id
             type: VARCHAR(5000)
-        schemaName: data_source
         tableName: encounter
 - changeSet:
     id: 1733855764753-9
@@ -68,7 +61,6 @@ databaseChangeLog:
         - column:
             name: sex
             type: VARCHAR(255)
-        schemaName: data_source
         tableName: subject
 - changeSet:
     id: 1733855764753-10
@@ -136,7 +128,6 @@ databaseChangeLog:
         - column:
             name: subject_subject_id
             type: VARCHAR(5000)
-        schemaName: data_source
         tableName: subject_resource
 - changeSet:
     id: 1733855764753-11
@@ -147,7 +138,6 @@ databaseChangeLog:
         - column:
             name: data_source_id
         indexName: IDXdnphs32fxqgb64w3rbq2sa6eo
-        schemaName: data_source
         tableName: subject_resource
 - changeSet:
     id: 1733855764753-12
@@ -158,7 +148,6 @@ databaseChangeLog:
         - column:
             name: data_source_id
         indexName: IDXds8vnhku3fbq5jtof3ea99bm8
-        schemaName: data_source
         tableName: encounter
 - changeSet:
     id: 1733855764753-13
@@ -169,7 +158,6 @@ databaseChangeLog:
         - column:
             name: data_source_id
         indexName: IDXt4k56ftei9k1e3e66jevgfnci
-        schemaName: data_source
         tableName: subject
 - changeSet:
     id: 1733855764753-14
@@ -178,13 +166,11 @@ databaseChangeLog:
     - addForeignKeyConstraint:
         baseColumnNames: subject_data_source_id,subject_subject_id
         baseTableName: subject_resource
-        baseTableSchemaName: data_source
         constraintName: FK7kierwumapym4x2csuhvmcfa8
         deferrable: false
         initiallyDeferred: false
         referencedColumnNames: data_source_id,subject_id
         referencedTableName: subject
-        referencedTableSchemaName: data_source
         validate: true
 - changeSet:
     id: 1733855764753-15
@@ -193,13 +179,11 @@ databaseChangeLog:
     - addForeignKeyConstraint:
         baseColumnNames: encounter_data_source_id,encounter_encounter_id
         baseTableName: subject_resource
-        baseTableSchemaName: data_source
         constraintName: FK82tb8nfwudk8dio3iujtx1ir3
         deferrable: false
         initiallyDeferred: false
         referencedColumnNames: data_source_id,encounter_id
         referencedTableName: encounter
-        referencedTableSchemaName: data_source
         validate: true
 - changeSet:
     id: 1733855764753-16
@@ -208,12 +192,10 @@ databaseChangeLog:
     - addForeignKeyConstraint:
         baseColumnNames: subject_data_source_id,subject_subject_id
         baseTableName: encounter
-        baseTableSchemaName: data_source
         constraintName: FKeubnrljdpvhqmtr69bqw7b2dg
         deferrable: false
         initiallyDeferred: false
         referencedColumnNames: data_source_id,subject_id
         referencedTableName: subject
-        referencedTableSchemaName: data_source
         validate: true
 
