@@ -16,7 +16,7 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 
 @Entity(name = "encounter")
-@Table(schema = "data_source", indexes = @Index(columnList = "dataSourceId"))
+@Table(indexes = @Index(columnList = "dataSourceId"))
 @IdClass(EncounterDao.EncounterKey.class)
 public class EncounterDao {
   @Id private String dataSourceId;

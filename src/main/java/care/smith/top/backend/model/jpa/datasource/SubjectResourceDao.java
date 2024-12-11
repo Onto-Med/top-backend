@@ -14,7 +14,7 @@ import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
 
 @Entity(name = "subject_resource")
-@Table(schema = "data_source", indexes = @Index(columnList = "dataSourceId"))
+@Table(indexes = @Index(columnList = "dataSourceId"))
 @IdClass(SubjectResourceDao.SubjectResourceKey.class)
 public class SubjectResourceDao {
   @Id private String dataSourceId;

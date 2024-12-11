@@ -14,7 +14,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 @Entity(name = "subject")
-@Table(schema = "data_source", indexes = @Index(columnList = "dataSourceId"))
+@Table(indexes = @Index(columnList = "dataSourceId"))
 @IdClass(SubjectDao.SubjectKey.class)
 public class SubjectDao {
   @Id private String dataSourceId;
