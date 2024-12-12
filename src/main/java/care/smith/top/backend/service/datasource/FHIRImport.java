@@ -12,6 +12,10 @@ import care.smith.top.top_phenotypic_query.adapter.fhir.FHIRUtil;
 import care.smith.top.top_phenotypic_query.util.DateUtil;
 import java.io.Reader;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Bundle.BundleEntryComponent;
@@ -30,6 +34,9 @@ import org.hl7.fhir.r4.model.Quantity;
 
 public class FHIRImport extends DataImport {
 
+  private Map<String, Coding> medications = new HashMap<>();
+  private List<SubjectResourceDao> medicationResources = new ArrayList<>();
+
   public FHIRImport(
       String dataSourceId,
       Reader reader,
@@ -43,6 +50,10 @@ public class FHIRImport extends DataImport {
   public void run() {
     IParser parser = FhirContext.forR4().newJsonParser();
     importResource(parser.parseResource(reader));
+    for (SubjectResourceDao dao : medicationResources) {
+      setCode(dao, medications.get(dao.getCode()));
+      saveSubjectResource(dao);
+    }
   }
 
   private void importResource(IBaseResource r) {
@@ -52,7 +63,7 @@ public class FHIRImport extends DataImport {
     else if (r instanceof Observation) importObservation((Observation) r);
     else if (r instanceof Condition) importCondition((Condition) r);
     else if (r instanceof Procedure) importProcedure((Procedure) r);
-    else if (r instanceof Medication) importMedication((Medication) r);
+    else if (r instanceof Medication) saveMedication((Medication) r);
     else if (r instanceof MedicationAdministration)
       importMedicationAdministration((MedicationAdministration) r);
     else if (r instanceof MedicationStatement) importMedicationStatement((MedicationStatement) r);
@@ -86,21 +97,13 @@ public class FHIRImport extends DataImport {
     SubjectResourceDao dao = new SubjectResourceDao(dataSourceId, FHIRUtil.getId(r));
     if (r.hasSubject()) dao.subjectId(FHIRUtil.getId(r.getSubject()));
     if (r.hasEncounter()) dao.encounterId(FHIRUtil.getId(r.getEncounter()));
-    if (r.hasCode()) {
-      Coding c = r.getCode().getCodingFirstRep();
-      dao.codeSystem(c.getSystem());
-      dao.code(c.getCode());
-    }
+    if (r.hasCode()) setCode(dao, r.getCode().getCodingFirstRep());
 
     if (r.hasEffectiveDateTimeType())
       dao.dateTime(DateUtil.ofDate(r.getEffectiveDateTimeType().getValue()));
     else if (r.hasEffectiveInstantType())
       dao.dateTime(DateUtil.ofDate(r.getEffectiveInstantType().getValue()));
-    else if (r.hasEffectivePeriod()) {
-      Period p = r.getEffectivePeriod();
-      if (p.hasStart()) dao.startDateTime(DateUtil.ofDate(p.getStart()));
-      if (p.hasEnd()) dao.endDateTime(DateUtil.ofDate(p.getEnd()));
-    }
+    else if (r.hasEffectivePeriod()) setPeriod(dao, r.getEffectivePeriod());
 
     if (r.hasValueBooleanType()) dao.booleanValue(r.getValueBooleanType().getValue());
     else if (r.hasValueCodeableConcept()) {
@@ -119,22 +122,120 @@ public class FHIRImport extends DataImport {
     saveSubjectResource(dao);
   }
 
-  private void importCondition(Condition r) { // TODO Auto-generated method stub
+  private void importCondition(Condition r) {
+    SubjectResourceDao dao = new SubjectResourceDao(dataSourceId, FHIRUtil.getId(r));
+    if (r.hasSubject()) dao.subjectId(FHIRUtil.getId(r.getSubject()));
+    if (r.hasEncounter()) dao.encounterId(FHIRUtil.getId(r.getEncounter()));
+    if (r.hasCode()) setCode(dao, r.getCode().getCodingFirstRep());
+
+    if (r.hasOnsetDateTimeType())
+      dao.dateTime(DateUtil.ofDate(r.getOnsetDateTimeType().getValue()));
+    else if (r.hasOnsetPeriod()) setPeriod(dao, r.getOnsetPeriod());
+    else if (r.hasRecordedDate()) dao.dateTime(DateUtil.ofDate(r.getRecordedDate()));
+
+    dao.booleanValue(true);
+
+    saveSubjectResource(dao);
   }
 
-  private void importProcedure(Procedure r) { // TODO Auto-generated method stub
+  private void importProcedure(Procedure r) {
+    SubjectResourceDao dao = new SubjectResourceDao(dataSourceId, FHIRUtil.getId(r));
+    if (r.hasSubject()) dao.subjectId(FHIRUtil.getId(r.getSubject()));
+    if (r.hasEncounter()) dao.encounterId(FHIRUtil.getId(r.getEncounter()));
+    if (r.hasCode()) setCode(dao, r.getCode().getCodingFirstRep());
+
+    if (r.hasPerformedDateTimeType())
+      dao.dateTime(DateUtil.ofDate(r.getPerformedDateTimeType().getValue()));
+    else if (r.hasPerformedPeriod()) setPeriod(dao, r.getPerformedPeriod());
+
+    dao.booleanValue(true);
+
+    saveSubjectResource(dao);
   }
 
-  private void importMedication(Medication r) { // TODO Auto-generated method stub
+  private void importMedicationAdministration(MedicationAdministration r) {
+    SubjectResourceDao dao = new SubjectResourceDao(dataSourceId, FHIRUtil.getId(r));
+    if (r.hasSubject()) dao.subjectId(FHIRUtil.getId(r.getSubject()));
+    if (r.hasContext()) dao.encounterId(FHIRUtil.getId(r.getContext()));
+
+    if (r.hasEffectiveDateTimeType())
+      dao.dateTime(DateUtil.ofDate(r.getEffectiveDateTimeType().getValue()));
+    else if (r.hasEffectivePeriod()) setPeriod(dao, r.getEffectivePeriod());
+
+    dao.booleanValue(true);
+
+    if (r.hasMedicationCodeableConcept()) {
+      setCode(dao, r.getMedicationCodeableConcept().getCodingFirstRep());
+      saveSubjectResource(dao);
+    } else if (r.hasMedicationReference()) {
+      String medicationId = FHIRUtil.getId(r.getMedicationReference());
+      Coding c = medications.get(medicationId);
+      if (c != null) {
+        setCode(dao, c);
+        saveSubjectResource(dao);
+      } else medicationResources.add(dao.code(medicationId));
+    }
   }
 
-  private void importMedicationAdministration(
-      MedicationAdministration r) { // TODO Auto-generated method stub
+  private void importMedicationStatement(MedicationStatement r) {
+    SubjectResourceDao dao = new SubjectResourceDao(dataSourceId, FHIRUtil.getId(r));
+    if (r.hasSubject()) dao.subjectId(FHIRUtil.getId(r.getSubject()));
+    if (r.hasContext()) dao.encounterId(FHIRUtil.getId(r.getContext()));
+
+    if (r.hasEffectiveDateTimeType())
+      dao.dateTime(DateUtil.ofDate(r.getEffectiveDateTimeType().getValue()));
+    else if (r.hasEffectivePeriod()) setPeriod(dao, r.getEffectivePeriod());
+
+    dao.booleanValue(true);
+
+    if (r.hasMedicationCodeableConcept()) {
+      setCode(dao, r.getMedicationCodeableConcept().getCodingFirstRep());
+      saveSubjectResource(dao);
+    } else if (r.hasMedicationReference()) {
+      String medicationId = FHIRUtil.getId(r.getMedicationReference());
+      Coding c = medications.get(medicationId);
+      if (c != null) {
+        setCode(dao, c);
+        saveSubjectResource(dao);
+      } else medicationResources.add(dao.code(medicationId));
+    }
   }
 
-  private void importMedicationStatement(MedicationStatement r) { // TODO Auto-generated method stub
+  private void importMedicationRequest(MedicationRequest r) {
+    SubjectResourceDao dao = new SubjectResourceDao(dataSourceId, FHIRUtil.getId(r));
+    if (r.hasSubject()) dao.subjectId(FHIRUtil.getId(r.getSubject()));
+    if (r.hasEncounter()) dao.encounterId(FHIRUtil.getId(r.getEncounter()));
+
+    if (r.hasDosageInstruction()) {
+      // TODO
+    }
+
+    dao.booleanValue(true);
+
+    if (r.hasMedicationCodeableConcept()) {
+      setCode(dao, r.getMedicationCodeableConcept().getCodingFirstRep());
+      saveSubjectResource(dao);
+    } else if (r.hasMedicationReference()) {
+      String medicationId = FHIRUtil.getId(r.getMedicationReference());
+      Coding c = medications.get(medicationId);
+      if (c != null) {
+        setCode(dao, c);
+        saveSubjectResource(dao);
+      } else medicationResources.add(dao.code(medicationId));
+    }
   }
 
-  private void importMedicationRequest(MedicationRequest r) { // TODO Auto-generated method stub
+  private void saveMedication(Medication r) {
+    if (r.hasCode()) medications.put(FHIRUtil.getId(r), r.getCode().getCodingFirstRep());
+  }
+
+  private void setCode(SubjectResourceDao dao, Coding c) {
+    dao.codeSystem(c.getSystem());
+    dao.code(c.getCode());
+  }
+
+  private void setPeriod(SubjectResourceDao dao, Period p) {
+    if (p.hasStart()) dao.startDateTime(DateUtil.ofDate(p.getStart()));
+    if (p.hasEnd()) dao.endDateTime(DateUtil.ofDate(p.getEnd()));
   }
 }
