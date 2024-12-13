@@ -21,6 +21,7 @@ import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Bundle.BundleEntryComponent;
 import org.hl7.fhir.r4.model.Coding;
 import org.hl7.fhir.r4.model.Condition;
+import org.hl7.fhir.r4.model.Dosage;
 import org.hl7.fhir.r4.model.Encounter;
 import org.hl7.fhir.r4.model.Medication;
 import org.hl7.fhir.r4.model.MedicationAdministration;
@@ -31,6 +32,7 @@ import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.model.Period;
 import org.hl7.fhir.r4.model.Procedure;
 import org.hl7.fhir.r4.model.Quantity;
+import org.hl7.fhir.r4.model.Timing.TimingRepeatComponent;
 
 public class FHIRImport extends DataImport {
 
@@ -51,7 +53,8 @@ public class FHIRImport extends DataImport {
     IParser parser = FhirContext.forR4().newJsonParser();
     importResource(parser.parseResource(reader));
     for (SubjectResourceDao dao : medicationResources) {
-      setCode(dao, medications.get(dao.getCode()));
+      Coding c = medications.get(dao.getCode());
+      if (c != null) setCode(dao, c);
       saveSubjectResource(dao);
     }
   }
@@ -207,8 +210,15 @@ public class FHIRImport extends DataImport {
     if (r.hasEncounter()) dao.encounterId(FHIRUtil.getId(r.getEncounter()));
 
     if (r.hasDosageInstruction()) {
-      // TODO
-    }
+      Dosage d = r.getDosageInstructionFirstRep();
+      if (d.hasTiming()) {
+        if (d.getTiming().hasRepeat()) {
+          TimingRepeatComponent rep = d.getTiming().getRepeat();
+          if (rep.hasBoundsPeriod()) setPeriod(dao, rep.getBoundsPeriod());
+        } else if (d.getTiming().hasEvent())
+          dao.dateTime(DateUtil.ofDate(d.getTiming().getEvent().get(0).getValue()));
+      }
+    } else if (r.hasAuthoredOn()) dao.dateTime(DateUtil.ofDate(r.getAuthoredOn()));
 
     dao.booleanValue(true);
 
