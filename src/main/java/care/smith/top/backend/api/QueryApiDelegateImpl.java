@@ -1,14 +1,15 @@
 package care.smith.top.backend.api;
 
 import care.smith.top.backend.repository.jpa.QueryRepository;
+import care.smith.top.backend.repository.jpa.datasource.SubjectRepository;
 import care.smith.top.backend.service.OrganisationService;
 import care.smith.top.backend.service.PhenotypeQueryService;
 import care.smith.top.backend.service.QueryService;
+import care.smith.top.backend.service.datasource.SubjectCSVImport;
 import care.smith.top.backend.service.nlp.DocumentQueryService;
 import care.smith.top.backend.util.ApiModelMapper;
 import care.smith.top.model.*;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.FileSystemException;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -21,6 +22,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
@@ -29,6 +31,8 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
   @Autowired private DocumentQueryService documentQueryService;
   @Autowired private OrganisationService organisationService;
   @Autowired private QueryRepository queryRepository;
+  @Autowired
+  private SubjectRepository subjectRepository;
 
   @Override
   public ResponseEntity<Void> deleteQuery(
@@ -85,6 +89,32 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<List<DataSource>> getDataSources(QueryType queryType) {
     return new ResponseEntity<>(new ArrayList<>(loadDataSources(queryType)), HttpStatus.OK);
+  }
+
+  @Override
+  @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<Void> deleteDataSource(String dataSourceId) {
+    return QueryApiDelegate.super.deleteDataSource(dataSourceId);
+  }
+
+  @Override
+  @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<Void> uploadDataSource(String dataSourceId, MultipartFile file) {
+    try {
+      BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream()));
+      // TODO: pick imported based on file type
+      // TODO: propagate field mapping
+      SubjectCSVImport importer =
+        new SubjectCSVImport(dataSourceId, reader, subjectRepository, new HashMap<>());
+      // TODO: run import in background job
+      importer.run();
+    } catch (IOException e) {
+      throw new ResponseStatusException(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        "Could not read uploaded file."
+      );
+    }
+    return QueryApiDelegate.super.uploadDataSource(dataSourceId, file);
   }
 
   @Override
