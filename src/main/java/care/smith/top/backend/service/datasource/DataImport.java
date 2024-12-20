@@ -7,7 +7,10 @@ import care.smith.top.backend.repository.jpa.datasource.EncounterRepository;
 import care.smith.top.backend.repository.jpa.datasource.SubjectRepository;
 import care.smith.top.backend.repository.jpa.datasource.SubjectResourceRepository;
 import java.io.Reader;
+import java.util.Arrays;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public abstract class DataImport {
 
@@ -32,6 +35,17 @@ public abstract class DataImport {
   }
 
   public abstract void run();
+
+  public static Map<String, String> configToCsvFieldMapping(String config) {
+    return configToCsvFieldMapping(config, ";", "=");
+  }
+
+  public static Map<String, String> configToCsvFieldMapping(
+      String config, String listSeparator, String keyValueSeparator) {
+    return Arrays.stream(config.split(listSeparator))
+        .map(kv -> kv.split(keyValueSeparator))
+        .collect(Collectors.toMap(k -> k[0], v -> v[1]));
+  }
 
   protected void saveSubject(SubjectDao subject) {
     subjectRepository.save(subject);
