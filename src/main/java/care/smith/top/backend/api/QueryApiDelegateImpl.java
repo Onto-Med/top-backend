@@ -1,7 +1,5 @@
 package care.smith.top.backend.api;
 
-import static care.smith.top.backend.service.datasource.DataImport.configToCsvFieldMapping;
-
 import care.smith.top.backend.repository.jpa.QueryRepository;
 import care.smith.top.backend.repository.jpa.datasource.EncounterRepository;
 import care.smith.top.backend.repository.jpa.datasource.SubjectRepository;
@@ -9,10 +7,7 @@ import care.smith.top.backend.repository.jpa.datasource.SubjectResourceRepositor
 import care.smith.top.backend.service.OrganisationService;
 import care.smith.top.backend.service.PhenotypeQueryService;
 import care.smith.top.backend.service.QueryService;
-import care.smith.top.backend.service.datasource.CSVImport;
-import care.smith.top.backend.service.datasource.EncounterCSVImport;
-import care.smith.top.backend.service.datasource.SubjectCSVImport;
-import care.smith.top.backend.service.datasource.SubjectResourceCSVImport;
+import care.smith.top.backend.service.datasource.*;
 import care.smith.top.backend.service.nlp.DocumentQueryService;
 import care.smith.top.backend.util.ApiModelMapper;
 import care.smith.top.model.*;
@@ -111,42 +106,20 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
       MultipartFile file, String fileType, String dataSourceId, String config) {
     try {
       BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream()));
-      CSVImport importer = null;
-      switch (fileType) {
-        case "csv_subject":
-          importer =
-              new SubjectCSVImport(
-                  dataSourceId, reader, subjectRepository, configToCsvFieldMapping(config));
-          break;
-        case "csv_encounter":
-          importer =
-              new EncounterCSVImport(
-                  dataSourceId,
-                  reader,
-                  subjectRepository,
-                  encounterRepository,
-                  configToCsvFieldMapping(config));
-          break;
-        case "csv_subject_resource":
-          importer =
-              new SubjectResourceCSVImport(
-                  dataSourceId,
-                  reader,
-                  subjectRepository,
-                  encounterRepository,
-                  subjectResourceRepository,
-                  configToCsvFieldMapping(config));
-          break;
-      }
-      if (importer == null)
-        throw new UnsupportedOperationException(
-            "The specified data source file type is not supported.");
-
       // TODO: run import in background job
-      importer.run();
+      DataImport.getInstance(
+              subjectRepository,
+              encounterRepository,
+              subjectResourceRepository,
+              reader,
+              fileType,
+              dataSourceId,
+              config)
+          .run();
     } catch (IOException e) {
       throw new ResponseStatusException(
-          HttpStatus.INTERNAL_SERVER_ERROR, "Could not read uploaded file.");
+          HttpStatus.INTERNAL_SERVER_ERROR,
+          String.format("Could not read uploaded file. (%s)", e.getMessage()));
     }
     return new ResponseEntity<>(HttpStatus.CREATED);
   }
