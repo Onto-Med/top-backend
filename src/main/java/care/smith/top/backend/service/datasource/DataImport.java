@@ -6,6 +6,7 @@ import care.smith.top.backend.model.jpa.datasource.SubjectResourceDao;
 import care.smith.top.backend.repository.jpa.datasource.EncounterRepository;
 import care.smith.top.backend.repository.jpa.datasource.SubjectRepository;
 import care.smith.top.backend.repository.jpa.datasource.SubjectResourceRepository;
+import java.io.IOException;
 import java.io.Reader;
 import java.util.Arrays;
 import java.util.Map;
@@ -35,6 +36,46 @@ public abstract class DataImport {
   }
 
   public abstract void run();
+
+  public static DataImport getInstance(
+      SubjectRepository subjectRepository,
+      EncounterRepository encounterRepository,
+      SubjectResourceRepository subjectResourceRepository,
+      Reader reader,
+      String fileType,
+      String dataSourceId,
+      String config) throws IOException {
+    DataImport importer = null;
+    switch (fileType) {
+      case "csv_subject":
+        importer =
+            new SubjectCSVImport(
+                dataSourceId, reader, subjectRepository, configToCsvFieldMapping(config));
+        break;
+      case "csv_encounter":
+        importer =
+            new EncounterCSVImport(
+                dataSourceId,
+                reader,
+                subjectRepository,
+                encounterRepository,
+                configToCsvFieldMapping(config));
+        break;
+      case "csv_subject_resource":
+        importer =
+            new SubjectResourceCSVImport(
+                dataSourceId,
+                reader,
+                subjectRepository,
+                encounterRepository,
+                subjectResourceRepository,
+                configToCsvFieldMapping(config));
+        break;
+    }
+    if (importer == null)
+      throw new IOException("The specified data source file type is not supported.");
+    return importer;
+  }
 
   public static Map<String, String> configToCsvFieldMapping(String config) {
     return configToCsvFieldMapping(config, ";", "=");
