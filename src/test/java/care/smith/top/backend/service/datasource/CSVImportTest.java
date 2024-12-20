@@ -1,7 +1,7 @@
 package care.smith.top.backend.service.datasource;
 
-import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import care.smith.top.backend.AbstractTest;
 import care.smith.top.backend.model.jpa.datasource.EncounterDao;
