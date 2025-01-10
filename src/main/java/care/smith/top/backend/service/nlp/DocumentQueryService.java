@@ -17,6 +17,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.OffsetDateTime;
 import java.util.*;
+import java.util.function.Function;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -69,11 +70,17 @@ public class DocumentQueryService extends QueryService {
             .collect(Collectors.toList());
     concepts.add(entity.toApiModel());
 
+    Map<String, Set<String>> subDependencies = new HashMap<>();
+    Map<String, Entity> conceptMap =
+        concepts.stream().collect(Collectors.toMap(Entity::getId, Function.identity()));
+    conceptRepository.getSubDependencies(
+        conceptMap, subDependencies, queryDao.getRepository().getId());
+
     TextAdapterConfig config = getTextAdapterConfig(query.getDataSource()).orElseThrow();
     QueryResultDao result;
     try {
       TextAdapter adapter = TextAdapter.getInstance(config);
-      TextFinder finder = new TextFinder(query, concepts.toArray(new Entity[0]), adapter);
+      TextFinder finder = new TextFinder(query, conceptMap, subDependencies, adapter);
       List<DocumentHit> documents = finder.execute();
       result =
           new QueryResultDao(
