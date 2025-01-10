@@ -10,7 +10,6 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.io.*;
 import java.util.logging.Logger;
 
-@SuppressWarnings("unused")
 public class TopJsonFormat implements PhenotypeExporter, PhenotypeImporter {
   private static final Logger LOGGER = Logger.getLogger(TopJsonFormat.class.getName());
   private final ObjectMapper MAPPER =

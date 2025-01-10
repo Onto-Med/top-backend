@@ -98,9 +98,4 @@ public class OrganisationDataSourceDao {
   public UserDao getCreatedBy() {
     return createdBy;
   }
-
-  private OrganisationDataSourceDao queryType(@NotNull QueryType queryType) {
-    this.queryType = queryType;
-    return this;
-  }
 }

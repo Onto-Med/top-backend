@@ -78,6 +78,7 @@ public class RestrictionDao {
     }
   }
 
+  @SuppressWarnings("unchecked")
   public <T> RestrictionDao(
       @NotNull DataType dataType, Quantifier quantifier, Integer cardinality, List<T> values) {
     this.dataType = dataType;

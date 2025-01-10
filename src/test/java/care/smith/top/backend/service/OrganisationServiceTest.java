@@ -97,7 +97,7 @@ class OrganisationServiceTest extends AbstractTest {
   }
 
   @Test
-  void updateOrganisationById() {
+  void updateOrganisationById() throws InterruptedException {
     Organisation superOrganisation = new Organisation().id("super_org");
     Organisation actual = organisationService.createOrganisation(superOrganisation);
 
@@ -121,6 +121,8 @@ class OrganisationServiceTest extends AbstractTest {
 
     superOrganisation.name("Super organisation").description("Some description");
 
+    Thread.sleep(1);
+
     assertThat(
             organisationService.updateOrganisationById(
                 superOrganisation.getId(), superOrganisation))
@@ -136,6 +138,9 @@ class OrganisationServiceTest extends AbstractTest {
             });
 
     subOrganisation1.name("Sub organisation 1");
+
+    Thread.sleep(1);
+
     assertThat(
             organisationService.updateOrganisationById(subOrganisation1.getId(), subOrganisation1))
         .isNotNull()

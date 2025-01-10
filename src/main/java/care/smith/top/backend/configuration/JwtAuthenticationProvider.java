@@ -1,7 +1,6 @@
 package care.smith.top.backend.configuration;
 
 import care.smith.top.backend.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -16,7 +15,6 @@ public class JwtAuthenticationProvider implements AuthenticationProvider {
   private final JwtDecoder jwtDecoder;
   private final UserService userService;
 
-  @Autowired
   public JwtAuthenticationProvider(JwtDecoder jwtDecoder, UserService userService) {
     this.jwtDecoder = jwtDecoder;
     this.userService = userService;

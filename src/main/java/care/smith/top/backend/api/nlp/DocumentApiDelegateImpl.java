@@ -3,7 +3,6 @@ package care.smith.top.backend.api.nlp;
 import static java.util.regex.Pattern.UNICODE_CASE;
 
 import care.smith.top.backend.api.DocumentApiDelegate;
-import care.smith.top.backend.service.nlp.ConceptClusterService;
 import care.smith.top.backend.service.nlp.DocumentService;
 import care.smith.top.backend.service.nlp.PhraseService;
 import care.smith.top.backend.util.ApiModelMapper;
@@ -27,7 +26,6 @@ import org.springframework.stereotype.Service;
 @Service
 public class DocumentApiDelegateImpl implements DocumentApiDelegate {
   private final Logger LOGGER = Logger.getLogger(DocumentApiDelegateImpl.class.getName());
-  @Autowired private ConceptClusterService conceptClusterService;
   @Autowired private PhraseService phraseService;
   private final DocumentService documentService;
   private final String COLOR_PRE = "$color::";
@@ -196,7 +194,8 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
     } catch (NoSuchElementException e) {
       LOGGER.severe(
           String.format(
-              "The text adapter for 'organisation: %s', 'repository: %s' and 'query: %s' could not be found.",
+              "The text adapter for 'organisation: %s', 'repository: %s' and 'query: %s' could not"
+                  + " be found.",
               organisationId, repositoryId, queryId.toString()));
       return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }

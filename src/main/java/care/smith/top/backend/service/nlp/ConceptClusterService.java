@@ -236,10 +236,12 @@ public class ConceptClusterService implements ContentService {
                 private final String status = statusStr;
                 private final String message = msgStr;
 
+                @SuppressWarnings("unused")
                 public String getMessage() {
                   return message;
                 }
 
+                @SuppressWarnings("unused")
                 public String getStatus() {
                   return status;
                 }
