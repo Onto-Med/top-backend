@@ -49,6 +49,8 @@ public abstract class AbstractNLPTest {
       List.of(new Phrase().id("p2").text("another phrase there").exemplar(false));
   public static List<Phrase> phrases1_2 = List.of(phrases1.get(0), phrases2.get(0));
   protected static HttpServer conceptGraphsApiService;
+  protected static int cgApi = 9009;
+
   @RegisterExtension static Neo4JExtension neo4JExtension = new Neo4JExtension();
   @Autowired protected ConceptClusterNodeRepository conceptClusterNodeRepository;
   @Autowired protected PhraseNodeRepository phraseRepository;
@@ -63,14 +65,14 @@ public abstract class AbstractNLPTest {
 
   @BeforeAll
   static void setup() throws IOException {
-    conceptGraphsApiService = HttpServer.create(new InetSocketAddress(9007), 0);
+    conceptGraphsApiService = HttpServer.create(new InetSocketAddress(cgApi), 0);
     conceptGraphsApiService.createContext(
         "/processes", new ResourceHttpHandler("/concept_graphs_api_fixtures/get_processes.json"));
     conceptGraphsApiService.createContext(
         "/graph/statistics",
         new ResourceHttpHandler("/concept_graphs_api_fixtures/get_statistics.json"));
     conceptGraphsApiService.createContext(
-        "/graph/0", new ResourceHttpHandler("/concept_graphs_api_fixtures/get_concept_graph.json"));
+        "/graph/0?process=process_id", new ResourceHttpHandler("/concept_graphs_api_fixtures/get_concept_graph.json"));
     conceptGraphsApiService.start();
   }
 
@@ -126,7 +128,7 @@ public abstract class AbstractNLPTest {
     TextAdapterConfig tac = new TextAdapterConfig();
     Connection conn = new Connection();
     conn.setUrl("http://localhost");
-    conn.setPort("9007");
+    conn.setPort(String.valueOf(cgApi));
     tac.setConnection(conn);
     tac.setConnection(new Connection());
     when(documentQueryService.getTextAdapterConfigs()).thenReturn(List.of(tac));
