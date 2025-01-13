@@ -6,12 +6,14 @@ import care.smith.top.backend.model.jpa.datasource.SubjectResourceDao;
 import care.smith.top.backend.repository.jpa.datasource.EncounterRepository;
 import care.smith.top.backend.repository.jpa.datasource.SubjectRepository;
 import care.smith.top.backend.repository.jpa.datasource.SubjectResourceRepository;
+import care.smith.top.model.DataSourceFileType;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.NotImplementedException;
 
 public abstract class DataImport {
 
@@ -42,17 +44,17 @@ public abstract class DataImport {
       EncounterRepository encounterRepository,
       SubjectResourceRepository subjectResourceRepository,
       Reader reader,
-      String fileType,
+      DataSourceFileType fileType,
       String dataSourceId,
       String config) throws IOException {
     DataImport importer = null;
     switch (fileType) {
-      case "csv_subject":
+      case CSV_SUBJECT:
         importer =
             new SubjectCSVImport(
                 dataSourceId, reader, subjectRepository, configToCsvFieldMapping(config));
         break;
-      case "csv_encounter":
+      case CSV_ENCOUNTER:
         importer =
             new EncounterCSVImport(
                 dataSourceId,
@@ -61,7 +63,7 @@ public abstract class DataImport {
                 encounterRepository,
                 configToCsvFieldMapping(config));
         break;
-      case "csv_subject_resource":
+      case CSV_SUBJECT_RESOURCE:
         importer =
             new SubjectResourceCSVImport(
                 dataSourceId,
@@ -71,9 +73,11 @@ public abstract class DataImport {
                 subjectResourceRepository,
                 configToCsvFieldMapping(config));
         break;
+      case FHIR:
+        throw new NotImplementedException();
     }
     if (importer == null)
-      throw new IOException("The specified data source file type is not supported.");
+      throw new IOException("The specified data source file or type are not supported.");
     return importer;
   }
 

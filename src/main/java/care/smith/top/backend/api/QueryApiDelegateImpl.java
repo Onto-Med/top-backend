@@ -103,7 +103,7 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
   @Override
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<Void> uploadDataSource(
-      MultipartFile file, String fileType, String dataSourceId, String config) {
+      MultipartFile file, DataSourceFileType fileType, String dataSourceId, String config) {
     try {
       BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream()));
       // TODO: run import in background job
