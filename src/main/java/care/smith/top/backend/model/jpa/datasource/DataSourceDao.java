@@ -1,12 +1,11 @@
 package care.smith.top.backend.model.jpa.datasource;
 
 import care.smith.top.model.DataSource;
+import care.smith.top.model.QueryType;
 import java.util.Objects;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.validation.constraints.NotNull;
-
-import care.smith.top.model.QueryType;
 import org.apache.commons.lang3.StringUtils;
 
 @Entity(name = "data_source")
@@ -40,7 +39,11 @@ public class DataSourceDao {
   }
 
   public DataSource toApiModel() {
-    return new DataSource().id(this.getDataSourceId()).title(this.getTitle()).queryType(QueryType.PHENOTYPE);
+    return new DataSource()
+        .id(this.getDataSourceId())
+        .title(this.getTitle())
+        .queryType(QueryType.PHENOTYPE)
+        .local(true);
   }
 
   @Override
