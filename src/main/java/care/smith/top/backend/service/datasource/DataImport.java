@@ -10,9 +10,11 @@ import care.smith.top.model.DataSourceFileType;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import javax.validation.constraints.NotNull;
 import org.apache.commons.lang3.NotImplementedException;
 
 public abstract class DataImport {
@@ -46,7 +48,8 @@ public abstract class DataImport {
       Reader reader,
       DataSourceFileType fileType,
       String dataSourceId,
-      String config) throws IOException {
+      String config)
+      throws IOException {
     DataImport importer = null;
     switch (fileType) {
       case CSV_SUBJECT:
@@ -86,7 +89,8 @@ public abstract class DataImport {
   }
 
   public static Map<String, String> configToCsvFieldMapping(
-      String config, String listSeparator, String keyValueSeparator) {
+      String config, @NotNull String listSeparator, @NotNull String keyValueSeparator) {
+    if (config == null) return new HashMap<>();
     return Arrays.stream(config.split(listSeparator))
         .map(kv -> kv.split(keyValueSeparator))
         .collect(Collectors.toMap(k -> k[0], v -> v[1]));
