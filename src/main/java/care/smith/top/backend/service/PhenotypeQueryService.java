@@ -1,10 +1,13 @@
 package care.smith.top.backend.service;
 
 import care.smith.top.backend.model.jpa.*;
+import care.smith.top.backend.model.jpa.datasource.DataSourceDao;
 import care.smith.top.backend.repository.jpa.PhenotypeRepository;
+import care.smith.top.backend.repository.jpa.datasource.DataSourceRepository;
 import care.smith.top.model.*;
 import care.smith.top.top_phenotypic_query.adapter.DataAdapter;
 import care.smith.top.top_phenotypic_query.adapter.config.DataAdapterConfig;
+import care.smith.top.top_phenotypic_query.adapter.sql.SQLAdapter;
 import care.smith.top.top_phenotypic_query.converter.csv.CSV;
 import care.smith.top.top_phenotypic_query.result.ResultSet;
 import care.smith.top.top_phenotypic_query.search.PhenotypeFinder;
@@ -38,6 +41,7 @@ public class PhenotypeQueryService extends QueryService {
   private boolean executeQueries;
 
   @Autowired private PhenotypeRepository phenotypeRepository;
+  @Autowired private DataSourceRepository dataSourceRepository;
 
   @Override
   public QueryResult enqueueQuery(String organisationId, String repositoryId, Query query) {
@@ -144,6 +148,13 @@ public class PhenotypeQueryService extends QueryService {
 
   public Optional<DataAdapterConfig> getDataAdapterConfig(String id) {
     if (id == null) return Optional.empty();
+    Optional<DataSourceDao> dataSource = dataSourceRepository.findById(id);
+    if (dataSource.isPresent()) {
+      DataAdapterConfig config = new DataAdapterConfig();
+      config.setAdapter(SQLAdapter.class.getName());
+      config.setId(id);
+      return Optional.of(config);
+    }
     return getDataAdapterConfigs().stream().filter(a -> id.equals(a.getId())).findFirst();
   }
 
@@ -163,8 +174,9 @@ public class PhenotypeQueryService extends QueryService {
   }
 
   public List<DataSource> getDataSources() {
-    return getDataAdapterConfigs().stream()
-        .map(this::dataAdapterConfigToDataSource)
+    return Stream.concat(
+            dataSourceRepository.findAll().stream().map(DataSourceDao::toApiModel),
+            getDataAdapterConfigs().stream().map(this::dataAdapterConfigToDataSource))
         .sorted(Comparator.comparing(DataSource::getId))
         .collect(Collectors.toList());
   }

@@ -1,6 +1,8 @@
 package care.smith.top.backend.api;
 
+import care.smith.top.backend.model.jpa.datasource.DataSourceDao;
 import care.smith.top.backend.repository.jpa.QueryRepository;
+import care.smith.top.backend.repository.jpa.datasource.DataSourceRepository;
 import care.smith.top.backend.repository.jpa.datasource.EncounterRepository;
 import care.smith.top.backend.repository.jpa.datasource.SubjectRepository;
 import care.smith.top.backend.repository.jpa.datasource.SubjectResourceRepository;
@@ -37,6 +39,7 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
   @Autowired private SubjectRepository subjectRepository;
   @Autowired private EncounterRepository encounterRepository;
   @Autowired private SubjectResourceRepository subjectResourceRepository;
+  @Autowired private DataSourceRepository dataSourceRepository;
 
   @Override
   public ResponseEntity<Void> deleteQuery(
@@ -134,6 +137,7 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
                   .map(c -> c + "=" + c)
                   .collect(Collectors.joining(";")))
           .run();
+      dataSourceRepository.save(new DataSourceDao(dataSourceId));
     } catch (IOException e) {
       throw new ResponseStatusException(
           HttpStatus.INTERNAL_SERVER_ERROR,
