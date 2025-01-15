@@ -106,7 +106,6 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
       MultipartFile file, DataSourceFileType fileType, String dataSourceId, String config) {
     try {
       BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream()));
-      // TODO: run import in background job
       DataImport.getInstance(
               subjectRepository,
               encounterRepository,
