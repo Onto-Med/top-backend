@@ -15,6 +15,7 @@ import java.io.*;
 import java.nio.file.FileSystemException;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -113,7 +114,25 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
               reader,
               fileType,
               dataSourceId,
-              config)
+              Stream.of(
+                      "subjectId",
+                      "birthDate",
+                      "sex",
+                      "encounterId",
+                      "type",
+                      "startDateTime",
+                      "endDateTime",
+                      "subjectResourceId",
+                      "codeSystem",
+                      "code",
+                      "dateTime",
+                      "unit",
+                      "numberValue",
+                      "textValue",
+                      "booleanValue",
+                      "dateTimeValue")
+                  .map(c -> c + "=" + c)
+                  .collect(Collectors.joining(";")))
           .run();
     } catch (IOException e) {
       throw new ResponseStatusException(
