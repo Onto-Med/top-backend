@@ -106,7 +106,7 @@ databaseChangeLog:
             type: TIMESTAMP
         - column:
             name: number_value
-            type: numeric(19, 2)
+            type: decimal
         - column:
             name: start_date_time
             type: TIMESTAMP
