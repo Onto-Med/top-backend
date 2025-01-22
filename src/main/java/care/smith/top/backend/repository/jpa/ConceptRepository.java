@@ -7,6 +7,8 @@ import care.smith.top.model.EntityType;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -17,11 +19,13 @@ public interface ConceptRepository extends EntityRepository {
   }
 
   default Map<String, Entity> getSubDependencies(
-      Map<String, Entity> concepts, Map<String, Set<String>> dependencies, String repositoryId) {
+      Map<String, Entity> concepts, Map<String, Set<String>> dependencies, String repositoryId, Map<String, EntityDao> allOfRepository) {
     Set<Entity> conceptIter = concepts.values().stream().collect(Collectors.toUnmodifiableSet());
+    if (allOfRepository.isEmpty()) allOfRepository.putAll(getMapOfAll(repositoryId));
     for (Entity concept : conceptIter) {
       if (ApiModelMapper.isSingleConcept(concept)) {
-        EntityDao entityDao = findByIdAndRepositoryId(concept.getId(), repositoryId).orElseThrow();
+        if (!allOfRepository.containsKey(concept.getId())) continue;
+        EntityDao entityDao = allOfRepository.get(concept.getId());
         Map<String, Entity> children =
             entityDao.getSubEntities().stream()
                 .map(EntityDao::toApiModel)
@@ -32,10 +36,15 @@ public interface ConceptRepository extends EntityRepository {
           } else {
             dependencies.put(concept.getId(), new HashSet<>(children.keySet()));
           }
-          concepts.putAll(getSubDependencies(children, dependencies, repositoryId));
+          concepts.putAll(getSubDependencies(children, dependencies, repositoryId, allOfRepository));
         }
       }
     }
     return concepts;
+  }
+
+  private Map<String, EntityDao> getMapOfAll(String repositoryId) {
+    return findAllByRepositoryId(repositoryId, Pageable.unpaged()).stream()
+        .collect(Collectors.toMap(EntityDao::getId, Function.identity()));
   }
 }
