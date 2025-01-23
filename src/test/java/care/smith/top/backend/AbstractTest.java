@@ -18,9 +18,11 @@ import care.smith.top.backend.service.OrganisationService;
 import care.smith.top.backend.service.RepositoryService;
 import care.smith.top.backend.service.UserService;
 import care.smith.top.backend.util.ResourceHttpHandler;
+import care.smith.top.backend.util.ResourcePathHttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.file.Path;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -56,6 +58,18 @@ public abstract class AbstractTest {
     olsServer.createContext(
         "/api/ontologies", new ResourceHttpHandler("/ols4_fixtures/ontologies.json"));
     olsServer.createContext("/api/select", new ResourceHttpHandler("/ols4_fixtures/select.json"));
+    olsServer.createContext(
+        "/api/ontologies/test/terms",
+        new ResourcePathHttpHandler(
+            path -> {
+              boolean hierarchicalChildren =
+                  path.getFileName().toString().equals("hierarchicalChildren");
+              Path realPath = hierarchicalChildren ? path.getParent() : path;
+              Path resourceRootPath =
+                  Path.of("/ols4_fixtures", hierarchicalChildren ? "terms_hierarchy" : "terms");
+              Path relativeUriPath = Path.of("/api/ontologies/test/terms").relativize(realPath);
+              return resourceRootPath.resolve(relativeUriPath.toString() + ".json");
+            }));
     olsServer.start();
   }
 

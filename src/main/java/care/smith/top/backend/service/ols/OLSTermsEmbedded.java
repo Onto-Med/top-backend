@@ -1,12 +1,13 @@
 package care.smith.top.backend.service.ols;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
  * @author Ralph Schäfermeier
  */
 public class OLSTermsEmbedded {
-  private List<OLSTerm> terms;
+  private List<OLSTerm> terms = Collections.emptyList();
 
   public List<OLSTerm> getTerms() {
     return terms;

@@ -1,5 +1,6 @@
 package care.smith.top.backend.service.ols;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -7,13 +8,13 @@ import java.util.List;
  */
 public class OLSAutoSuggestion {
 
-  private List<String> label_autosuggest;
+  private List<String> label_autosuggest = Collections.emptyList();
 
-  private List<String> label;
+  private List<String> label = Collections.emptyList();
 
-  private List<String> synonym_autosuggest;
+  private List<String> synonym_autosuggest = Collections.emptyList();
 
-  private List<String> synonym;
+  private List<String> synonym = Collections.emptyList();
 
   public List<String> getLabel_autosuggest() {
     return label_autosuggest;
