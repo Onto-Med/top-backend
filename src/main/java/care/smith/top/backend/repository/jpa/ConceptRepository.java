@@ -8,7 +8,10 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.postgresql.core.NativeQuery;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -18,33 +21,37 @@ public interface ConceptRepository extends EntityRepository {
         new EntityType[] {EntityType.SINGLE_CONCEPT, EntityType.COMPOSITE_CONCEPT});
   }
 
-  default Map<String, Entity> getSubDependencies(
-      Map<String, Entity> concepts, Map<String, Set<String>> dependencies, String repositoryId, Map<String, EntityDao> allOfRepository) {
-    Set<Entity> conceptIter = concepts.values().stream().collect(Collectors.toUnmodifiableSet());
-    if (allOfRepository.isEmpty()) allOfRepository.putAll(getMapOfAll(repositoryId));
-    for (Entity concept : conceptIter) {
-      if (ApiModelMapper.isSingleConcept(concept)) {
-        if (!allOfRepository.containsKey(concept.getId())) continue;
-        EntityDao entityDao = allOfRepository.get(concept.getId());
-        Map<String, Entity> children =
-            entityDao.getSubEntities().stream()
-                .map(EntityDao::toApiModel)
-                .collect(Collectors.toMap(Entity::getId, Function.identity()));
-        if (!children.isEmpty()) {
-          if (dependencies.containsKey(concept.getId())) {
-            dependencies.get(concept.getId()).addAll(children.keySet());
-          } else {
-            dependencies.put(concept.getId(), new HashSet<>(children.keySet()));
-          }
-          concepts.putAll(getSubDependencies(children, dependencies, repositoryId, allOfRepository));
+  @Query(
+          nativeQuery = true,
+          value = "WITH RECURSIVE tree AS (" +
+          " SELECT *, NULL\\:\\:character varying AS parent_id, 0 AS level" +
+          " FROM entity e" +
+          " WHERE id = :entityId" +
+          " UNION" +
+          " SELECT entity.*, super_entities_id AS parent_id, level + 1 AS level" +
+          " FROM entity" +
+          "   JOIN entity_super_entities ON (id = sub_entities_id)" +
+          "   JOIN tree t ON (t.id = super_entities_id)" +
+          ")" +
+          "SELECT *" +
+          "FROM tree")
+  List<EntityDao> getEntityTreeByEntityId(String entityId);
+
+  default void populateEntities(Map<String, Entity> concepts, Map<String, Set<String>> dependencies) {
+    Set<String> conceptIter = concepts.keySet().stream().collect(Collectors.toUnmodifiableSet());
+    for (String conceptId : conceptIter) {
+      for (EntityDao entity : getEntityTreeByEntityId(conceptId)) {
+        String entityId = entity.getId();
+        if (!concepts.containsKey(entityId)) {
+          concepts.put(entityId, entity.toApiModel());
+        }
+        if (dependencies.containsKey(entityId)) {
+          dependencies.get(entityId).addAll(entity.getSubEntities().stream().map(EntityDao::getId).collect(Collectors.toUnmodifiableSet()));
+        }
+        else {
+          dependencies.put(entityId, entity.getSubEntities().stream().map(EntityDao::getId).collect(Collectors.toCollection(LinkedHashSet::new)));
         }
       }
     }
-    return concepts;
-  }
-
-  private Map<String, EntityDao> getMapOfAll(String repositoryId) {
-    return findAllByRepositoryId(repositoryId, Pageable.unpaged()).stream()
-        .collect(Collectors.toMap(EntityDao::getId, Function.identity()));
   }
 }

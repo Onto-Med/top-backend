@@ -71,11 +71,9 @@ public class DocumentQueryService extends QueryService {
     concepts.add(entity.toApiModel());
 
     Map<String, Set<String>> subDependencies = new HashMap<>();
-    Map<String, EntityDao> allEntities = new HashMap<>();
     Map<String, Entity> conceptMap =
         concepts.stream().collect(Collectors.toMap(Entity::getId, Function.identity()));
-    conceptRepository.getSubDependencies(
-        conceptMap, subDependencies, queryDao.getRepository().getId(), allEntities);
+    conceptRepository.populateEntities(conceptMap, subDependencies);
 
     TextAdapterConfig config = getTextAdapterConfig(query.getDataSource()).orElseThrow();
     QueryResultDao result;
