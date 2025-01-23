@@ -9,10 +9,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity(name = "code")
-@EntityListeners(AuditingEntityListener.class)
 public class CodeDao {
 
   @Id @GeneratedValue private Long id;
@@ -70,7 +68,8 @@ public class CodeDao {
         .uri(uri != null ? URI.create(uri) : null)
         .name(name)
         .codeSystem(new CodeSystem().uri(URI.create(codeSystemUri)))
-        .children(getChildren().stream().map(CodeDao::toApiModel).collect(Collectors.toList()));
+        .children(getChildren().stream().map(CodeDao::toApiModel).collect(Collectors.toList()))
+        .synonyms(Collections.emptyList());
   }
 
   public CodeDao id(@NotNull Long id) {
@@ -163,7 +162,7 @@ public class CodeDao {
   private CodeDao deepTranslate(Code code) {
     final CodeDao codeDao = new CodeDao(code);
     return codeDao.children(
-        Optional.of(code.getChildren()).orElse(Collections.emptyList()).stream()
+        Optional.ofNullable(code.getChildren()).orElse(Collections.emptyList()).stream()
             .map(childCode -> deepTranslate(childCode).parent(codeDao))
             .collect(Collectors.toList()));
   }

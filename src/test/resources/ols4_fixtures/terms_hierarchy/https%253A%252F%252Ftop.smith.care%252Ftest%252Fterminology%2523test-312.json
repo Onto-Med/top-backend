@@ -1,0 +1,13 @@
+{
+  "_links" : {
+    "self" : {
+      "href" : "http://localhost:9000/api/ontologies/TEST/terms/https%253A%252F%252Ftop.smith.care%252Ftest%252Fterminology%2523test-312/hierarchicalChildren?page=0&size=500"
+    }
+  },
+  "page" : {
+    "size" : 500,
+    "totalElements" : 0,
+    "totalPages" : 0,
+    "number" : 0
+  }
+}

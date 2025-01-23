@@ -60,7 +60,11 @@ public class CodeRepository extends OlsRepository {
                     // OLS requires that uri is double URL encoded, so we encode it once and
                     // additionally rely on uriBuilder encoding it for a second time
                     uriBuilder
-                        .pathSegment("ontologies", codeSystemId, "terms", uri.toString())
+                        .pathSegment(
+                            "ontologies",
+                            codeSystemId,
+                            "terms",
+                            URLEncoder.encode(uri.toString(), Charset.defaultCharset()))
                         .build())
             .retrieve()
             .bodyToMono(OLSTerm.class)
@@ -95,6 +99,9 @@ public class CodeRepository extends OlsRepository {
       fillInSubtree(result, scope);
     }
 
+    if (result.getChildren() == null) {
+      result.setChildren(Collections.emptyList());
+    }
     return result;
   }
 
@@ -209,7 +216,8 @@ public class CodeRepository extends OlsRepository {
                         .name(primaryLabel)
                         .uri(URI.create(term.getIri()))
                         .codeSystem(code.getCodeSystem())
-                        .synonyms(term.getSynonyms()));
+                        .synonyms(term.getSynonyms())
+                        .children(Collections.emptyList()));
               });
 
       var paginationInfo = response.getPage();
