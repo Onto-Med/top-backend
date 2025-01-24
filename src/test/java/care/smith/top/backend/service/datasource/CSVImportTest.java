@@ -13,6 +13,8 @@ import java.io.StringReader;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
@@ -20,6 +22,7 @@ import org.springframework.test.context.ContextConfiguration;
 @SpringBootTest
 @ContextConfiguration
 class CSVImportTest extends AbstractTest {
+  Logger LOG = Logger.getLogger(CSVImportTest.class.getName());
   String dataSourceId = "data_source_1";
 
   @Test
@@ -86,8 +89,8 @@ class CSVImportTest extends AbstractTest {
     assertEquals(encounters.get(1), enc2);
 
     List<SubjectResourceDao> resources = subjectResourceRepository.findAll();
-    System.out.println(resources.get(0));
-    System.out.println(resources.get(1));
+    LOG.fine(resources.get(0).toString());
+    LOG.fine(resources.get(1).toString());
     assertEquals(2, resources.size());
     assertEquals(resources.get(0), res1);
     assertEquals(resources.get(1), res2);
@@ -153,8 +156,8 @@ class CSVImportTest extends AbstractTest {
     assertTrue(encounters.isEmpty());
 
     List<SubjectResourceDao> resources = subjectResourceRepository.findAll();
-    System.out.println(resources.get(0));
-    System.out.println(resources.get(1));
+    LOG.fine(resources.get(0).toString());
+    LOG.fine(resources.get(1).toString());
     assertEquals(2, resources.size());
     assertEquals(resources.get(0), res1);
     assertEquals(resources.get(1), res2);
@@ -239,8 +242,8 @@ class CSVImportTest extends AbstractTest {
     assertEquals(encounters.get(1), enc2);
 
     List<SubjectResourceDao> resources = subjectResourceRepository.findAll();
-    System.out.println(resources.get(0));
-    System.out.println(resources.get(1));
+    LOG.fine(resources.get(0).toString());
+    LOG.fine(resources.get(1).toString());
     assertEquals(2, resources.size());
     assertEquals(resources.get(0), res1);
     assertEquals(resources.get(1), res2);
@@ -326,8 +329,8 @@ class CSVImportTest extends AbstractTest {
     assertEquals(encounters.get(1), enc2);
 
     List<SubjectResourceDao> resources = subjectResourceRepository.findAll();
-    System.out.println(resources.get(0));
-    System.out.println(resources.get(1));
+    LOG.fine(resources.get(0).toString());
+    LOG.fine(resources.get(1).toString());
     assertEquals(2, resources.size());
     assertEquals(resources.get(0), res1);
     assertEquals(resources.get(1), res2);
@@ -454,8 +457,8 @@ class CSVImportTest extends AbstractTest {
     assertEquals(encounters.get(1), enc2);
 
     List<SubjectResourceDao> resources = subjectResourceRepository.findAll();
-    System.out.println(resources.get(0));
-    System.out.println(resources.get(1));
+    LOG.fine(resources.get(0).toString());
+    LOG.fine(resources.get(1).toString());
     assertEquals(2, resources.size());
     assertEquals(resources.get(0), res1);
     assertEquals(resources.get(1), res2);
