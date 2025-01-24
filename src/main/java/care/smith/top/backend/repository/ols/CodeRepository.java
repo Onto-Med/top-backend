@@ -24,10 +24,10 @@ import reactor.core.publisher.Mono;
 public class CodeRepository extends OlsRepository {
   private static final Logger log = LoggerFactory.getLogger(CodeRepository.class);
 
-  @Value("${spring.paging.page-size:10}")
+  @Value("${coding.suggestions-page-size}")
   private int suggestionsPageSize;
 
-  @Value("500")
+  @Value("${coding.code-children-page-size}")
   private int codeChildrenPageSize;
 
   @Autowired private CodeSystemRepository codeSystemRepository;
