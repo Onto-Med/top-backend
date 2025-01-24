@@ -6,6 +6,8 @@ import care.smith.top.model.CodePage;
 import care.smith.top.model.CodeScope;
 import care.smith.top.model.CodeSystemPage;
 import java.net.URI;
+import java.net.URLDecoder;
+import java.nio.charset.Charset;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +23,11 @@ public class CodeApiDelegateImpl implements CodeApiDelegate {
 
   @Override
   public ResponseEntity<Code> getCode(URI uri, String codeSystemId, CodeScope scope) {
-    return ResponseEntity.ok(codeService.getCode(uri, codeSystemId, scope));
+    return ResponseEntity.ok(
+        codeService.getCode(
+            URI.create(URLDecoder.decode(uri.toString(), Charset.defaultCharset())),
+            codeSystemId,
+            scope));
   }
 
   @Override
