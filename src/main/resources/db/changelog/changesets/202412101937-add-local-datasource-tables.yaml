@@ -198,4 +198,29 @@ databaseChangeLog:
         referencedColumnNames: data_source_id,subject_id
         referencedTableName: subject
         validate: true
+-  changeSet:
+    id: 1733855764753-17
+    author:  ChristophB
+    dbms: '!postgresql'
+    changes:
+    - modifyDataType:
+         columnName: number_value
+         newDataType: decimal(20, 3)
+         tableName: subject_resource
+    -  modifyDataType:
+         columnName:  number_value
+         newDataType:  decimal(20, 3)
+         tableName:  value
+    - modifyDataType:
+         columnName: number_values
+         newDataType: decimal(20, 3)
+         tableName: restriction_number_values
+    - modifyDataType:
+         columnName: minimum_number_value
+         newDataType: decimal(20, 3)
+         tableName: restriction
+    - modifyDataType:
+         columnName: maximum_number_value
+         newDataType: decimal(20, 3)
+         tableName: restriction
 

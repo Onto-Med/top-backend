@@ -72,11 +72,11 @@ class CSVImportTest extends AbstractTest {
     SubjectResourceDao res1 =
         new SubjectResourceDao(dataSourceId, "r1", sub1, enc1, "codesystem1", "code1")
             .dateTime(DateUtil.parse("01.02.2003"))
-            .numberValue(new BigDecimal("12.34"));
+            .numberValue(new BigDecimal("12.340"));
     SubjectResourceDao res2 =
         new SubjectResourceDao(dataSourceId, "r2", sub2, enc2, "codesystem2", "code2")
             .dateTime(DateUtil.parse("2004-05-06T01:02:03"))
-            .numberValue(new BigDecimal("56.78"));
+            .numberValue(new BigDecimal("56.780"));
 
     List<SubjectDao> subjects = subjectRepository.findAll();
     assertEquals(2, subjects.size());
@@ -141,11 +141,11 @@ class CSVImportTest extends AbstractTest {
     SubjectResourceDao res1 =
         new SubjectResourceDao(dataSourceId, "r1", sub1, enc1, "codesystem1", "code1")
             .dateTime(DateUtil.parse("01.02.2003"))
-            .numberValue(new BigDecimal("12.34"));
+            .numberValue(new BigDecimal("12.340"));
     SubjectResourceDao res2 =
         new SubjectResourceDao(dataSourceId, "r2", sub2, enc2, "codesystem2", "code2")
             .dateTime(DateUtil.parse("2004-05-06T01:02:03"))
-            .numberValue(new BigDecimal("56.78"));
+            .numberValue(new BigDecimal("56.780"));
 
     List<SubjectDao> subjects = subjectRepository.findAll();
     assertEquals(2, subjects.size());
@@ -225,11 +225,11 @@ class CSVImportTest extends AbstractTest {
     SubjectResourceDao res1 =
         new SubjectResourceDao(dataSourceId, "r1", sub1, enc1, "codesystem1", "code1")
             .dateTime(DateUtil.parse("01.02.2003"))
-            .numberValue(new BigDecimal("12.34"));
+            .numberValue(new BigDecimal("12.340"));
     SubjectResourceDao res2 =
         new SubjectResourceDao(dataSourceId, "r2", sub2, enc2, "codesystem2", "code2")
             .dateTime(DateUtil.parse("2004-05-06T01:02:03"))
-            .numberValue(new BigDecimal("56.78"));
+            .numberValue(new BigDecimal("56.780"));
 
     List<SubjectDao> subjects = subjectRepository.findAll();
     assertEquals(2, subjects.size());
@@ -270,9 +270,9 @@ class CSVImportTest extends AbstractTest {
     csv =
         "res_id; enc_id; pat_id; code; code_system; timestamp; value"
             + System.lineSeparator()
-            + "r1; e1; p1; code1; codesystem1; 01.02.2003; 12.34"
+            + "r1; e1; p1; code1; codesystem1; 01.02.2003; 12.340"
             + System.lineSeparator()
-            + "r2; e2; p2; code2; codesystem2; 2004-05-06T01:02:03; 56.78";
+            + "r2; e2; p2; code2; codesystem2; 2004-05-06T01:02:03; 56.780";
 
     reader = new StringReader(csv);
 
@@ -312,11 +312,11 @@ class CSVImportTest extends AbstractTest {
     SubjectResourceDao res1 =
         new SubjectResourceDao(dataSourceId, "r1", sub1, enc1, "codesystem1", "code1")
             .dateTime(DateUtil.parse("01.02.2003"))
-            .numberValue(new BigDecimal("12.34"));
+            .numberValue(new BigDecimal("12.340"));
     SubjectResourceDao res2 =
         new SubjectResourceDao(dataSourceId, "r2", sub2, enc2, "codesystem2", "code2")
             .dateTime(DateUtil.parse("2004-05-06T01:02:03"))
-            .numberValue(new BigDecimal("56.78"));
+            .numberValue(new BigDecimal("56.780"));
 
     List<SubjectDao> subjects = subjectRepository.findAll();
     assertEquals(2, subjects.size());
@@ -440,11 +440,11 @@ class CSVImportTest extends AbstractTest {
     SubjectResourceDao res1 =
         new SubjectResourceDao(dataSourceId, "r1", sub1, enc1, "codesystem1", "code1")
             .dateTime(DateUtil.parse("01.02.2003"))
-            .numberValue(new BigDecimal("12.34"));
+            .numberValue(new BigDecimal("12.340"));
     SubjectResourceDao res2 =
         new SubjectResourceDao(dataSourceId, "r2", sub2, enc2, "codesystem2", "code2")
             .dateTime(DateUtil.parse("2004-05-06T01:02:03"))
-            .numberValue(new BigDecimal("56.78"));
+            .numberValue(new BigDecimal("56.780"));
 
     List<SubjectDao> subjects = subjectRepository.findAll();
     assertEquals(2, subjects.size());
