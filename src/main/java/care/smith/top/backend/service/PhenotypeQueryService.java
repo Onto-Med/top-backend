@@ -7,7 +7,7 @@ import care.smith.top.backend.repository.jpa.datasource.DataSourceRepository;
 import care.smith.top.model.*;
 import care.smith.top.top_phenotypic_query.adapter.DataAdapter;
 import care.smith.top.top_phenotypic_query.adapter.config.DataAdapterConfig;
-import care.smith.top.top_phenotypic_query.adapter.sql.SQLAdapter;
+import care.smith.top.top_phenotypic_query.adapter.sql.SQLAdapterDataSource;
 import care.smith.top.top_phenotypic_query.converter.csv.CSV;
 import care.smith.top.top_phenotypic_query.result.ResultSet;
 import care.smith.top.top_phenotypic_query.search.PhenotypeFinder;
@@ -39,6 +39,15 @@ public class PhenotypeQueryService extends QueryService {
 
   @Value("${top.phenotyping.execute-queries:true}")
   private boolean executeQueries;
+
+  @Value("${spring.datasource.url}")
+  private String jpaDataSourceUrl;
+
+  @Value("${spring.datasource.username}")
+  private String jpaDataSourceUsername;
+
+  @Value("${spring.datasource.password}")
+  private String jpaDataSourcePassword;
 
   @Autowired private PhenotypeRepository phenotypeRepository;
   @Autowired private DataSourceRepository dataSourceRepository;
@@ -151,8 +160,11 @@ public class PhenotypeQueryService extends QueryService {
     Optional<DataSourceDao> dataSource = dataSourceRepository.findById(id);
     if (dataSource.isPresent()) {
       DataAdapterConfig config = new DataAdapterConfig();
-      config.setAdapter(SQLAdapter.class.getName());
+      config.setAdapter(SQLAdapterDataSource.class.getName());
       config.setId(id);
+      config.setConnectionAttribute("url", jpaDataSourceUrl);
+      config.setConnectionAttribute("user", jpaDataSourceUsername);
+      config.setConnectionAttribute("password", jpaDataSourcePassword);
       return Optional.of(config);
     }
     return getDataAdapterConfigs().stream().filter(a -> id.equals(a.getId())).findFirst();
