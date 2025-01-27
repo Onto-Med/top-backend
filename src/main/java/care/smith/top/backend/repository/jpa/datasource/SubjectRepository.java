@@ -8,5 +8,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface SubjectRepository extends JpaRepository<SubjectDao, SubjectDao.SubjectKey> {
   Optional<SubjectDao> findByDataSourceIdAndSubjectId(String dataSourceId, String subjectId);
+
   void deleteAllByDataSourceId(String dataSourceId);
 }

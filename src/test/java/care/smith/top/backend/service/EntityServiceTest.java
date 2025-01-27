@@ -11,7 +11,6 @@ import java.io.ByteArrayInputStream;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.util.*;
-
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -297,10 +296,11 @@ class EntityServiceTest extends AbstractTest {
             entityRepository.findByRepositoryIdAndOriginId(
                 forkingInstruction.getRepositoryId(), origin.getId()))
         .isPresent()
-        .satisfies(f -> {
-            assertThat(f.isPresent()).isTrue();
-            assertThat(f.get().getCurrentVersion().getVersion()).isEqualTo(2);
-        });
+        .satisfies(
+            f -> {
+              assertThat(f.isPresent()).isTrue();
+              assertThat(f.get().getCurrentVersion().getVersion()).isEqualTo(2);
+            });
 
     assertThat(entityVersionRepository.findAll()).isNotEmpty().size().isEqualTo(5);
 
