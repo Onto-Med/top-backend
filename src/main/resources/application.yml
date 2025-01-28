@@ -77,6 +77,7 @@ top:
       graphdb:
         username: ${DB_NEO4J_USER:neo4j}
         password: ${DB_NEO4J_PASS:#{null}}
+    max-term-count: 15000
 
 coding:
   terminology-service: ${TERMINOLOGY_SERVICE_ENDPOINT:https://www.ebi.ac.uk/ols4/api}

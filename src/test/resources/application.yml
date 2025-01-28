@@ -61,6 +61,7 @@ top:
       documentdb:
         username: ${DB_ELASTIC_USER:elastic}
         password: ${DB_ELASTIC_PASS:#{null}}
+    max-term-count: 15000
 
 coding:
   terminology-service: ${TERMINOLOGY_SERVICE_ENDPOINT:http://localhost:9000/api}
