@@ -7,10 +7,33 @@ import care.smith.top.backend.model.jpa.datasource.EncounterDao;
 import care.smith.top.backend.model.jpa.datasource.SubjectDao;
 import care.smith.top.backend.model.jpa.datasource.SubjectResourceDao;
 import care.smith.top.top_document_query.util.DateUtil;
+import care.smith.top.top_phenotypic_query.adapter.fhir.FHIRUtil;
 import java.io.Reader;
 import java.io.StringReader;
 import java.math.BigDecimal;
 import java.util.List;
+import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.CodeableConcept;
+import org.hl7.fhir.r4.model.Coding;
+import org.hl7.fhir.r4.model.Condition;
+import org.hl7.fhir.r4.model.DateTimeType;
+import org.hl7.fhir.r4.model.Dosage;
+import org.hl7.fhir.r4.model.Encounter;
+import org.hl7.fhir.r4.model.Enumerations.AdministrativeGender;
+import org.hl7.fhir.r4.model.Medication;
+import org.hl7.fhir.r4.model.MedicationAdministration;
+import org.hl7.fhir.r4.model.MedicationRequest;
+import org.hl7.fhir.r4.model.MedicationStatement;
+import org.hl7.fhir.r4.model.Observation;
+import org.hl7.fhir.r4.model.Patient;
+import org.hl7.fhir.r4.model.Period;
+import org.hl7.fhir.r4.model.Procedure;
+import org.hl7.fhir.r4.model.Quantity;
+import org.hl7.fhir.r4.model.Reference;
+import org.hl7.fhir.r4.model.Timing;
+import org.hl7.fhir.r4.model.Timing.TimingRepeatComponent;
+import org.hl7.fhir.r4.model.codesystems.V3ActCode;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
@@ -20,406 +43,156 @@ import org.springframework.test.context.ContextConfiguration;
 class FHIRImportTest extends AbstractTest {
   String dataSourceId = "data_source_1";
 
-  @Test
-  void testImportMedicationFirst() {
-    String fhir =
-        "{\r\n"
-            + "  \"resourceType\" : \"Bundle\",\r\n"
-            + "  \"id\" : \"101\",\r\n"
-            + "  \"type\" : \"collection\",\r\n"
-            + "  \"entry\" : [\r\n"
-            //
-            + "{\r\n"
-            + "  \"resource\" : {\r\n"
-            + "  \"resourceType\": \"Encounter\",\r\n"
-            + "  \"id\": \"e2\",\r\n"
-            + "  \"text\": {\r\n"
-            + "    \"status\": \"generated\",\r\n"
-            + "    \"div\": \"<div xmlns=\\\"http://www.w3.org/1999/xhtml\\\">Encounter with patient @example who is at home</div>\"\r\n"
-            + "  },\r\n"
-            + "  \"contained\": [\r\n"
-            + "    {\r\n"
-            + "      \"resourceType\": \"Location\",\r\n"
-            + "      \"id\": \"home\",\r\n"
-            + "      \"description\": \"Client's home\",\r\n"
-            + "      \"mode\": \"kind\"\r\n"
-            + "    }\r\n"
-            + "  ],\r\n"
-            + "  \"status\": \"finished\",\r\n"
-            + "  \"class\": {\r\n"
-            + "    \"system\": \"http://terminology.hl7.org/CodeSystem/v3-ActCode\",\r\n"
-            + "    \"code\": \"HH\",\r\n"
-            + "    \"display\": \"home health\"\r\n"
-            + "  },\r\n"
-            + "  \"subject\": {\r\n"
-            + "    \"reference\": \"Patient/p2\"\r\n"
-            + "  },\r\n"
-            + "  \"participant\": [\r\n"
-            + "    {\r\n"
-            + "      \"period\": {\r\n"
-            + "        \"start\": \"2015-01-17T16:00:00+10:00\",\r\n"
-            + "        \"end\": \"2015-01-17T16:30:00+10:00\"\r\n"
-            + "      },\r\n"
-            + "      \"individual\": {\r\n"
-            + "        \"reference\": \"Practitioner/example\",\r\n"
-            + "        \"display\": \"Dr Adam Careful\"\r\n"
-            + "      }\r\n"
-            + "    }\r\n"
-            + "  ],\r\n"
-            + "  \"period\": {\r\n"
-            + "    \"start\": \"2015-01-17T16:00:00+10:00\",\r\n"
-            + "    \"end\": \"2015-01-17T16:30:00+10:00\"\r\n"
-            + "  },\r\n"
-            + "  \"location\": [\r\n"
-            + "    {\r\n"
-            + "      \"location\": {\r\n"
-            + "        \"reference\": \"#home\",\r\n"
-            + "        \"display\": \"Client's home\"\r\n"
-            + "      },\r\n"
-            + "      \"status\": \"completed\",\r\n"
-            + "      \"period\": {\r\n"
-            + "        \"start\": \"2015-01-17T16:00:00+10:00\",\r\n"
-            + "        \"end\": \"2015-01-17T16:30:00+10:00\"\r\n"
-            + "      }\r\n"
-            + "    }\r\n"
-            + "  ]\r\n"
-            + "}},"
-            //
-            + "{\r\n"
-            + "  \"resource\" : {\r\n"
-            + "  \"resourceType\": \"Encounter\",\r\n"
-            + "  \"id\": \"e1\",\r\n"
-            + "  \"text\": {\r\n"
-            + "    \"status\": \"generated\",\r\n"
-            + "    \"div\": \"<div xmlns=\\\"http://www.w3.org/1999/xhtml\\\">Encounter with patient @example</div>\"\r\n"
-            + "  },\r\n"
-            + "  \"status\": \"in-progress\",\r\n"
-            + "  \"class\": {\r\n"
-            + "    \"system\": \"http://terminology.hl7.org/CodeSystem/v3-ActCode\",\r\n"
-            + "    \"code\": \"IMP\",\r\n"
-            + "    \"display\": \"inpatient encounter\"\r\n"
-            + "  },\r\n"
-            + "  \"subject\": {\r\n"
-            + "    \"reference\": \"Patient/p1\"\r\n"
-            + "  }\r\n"
-            + "  }\r\n"
-            + "}\r\n,"
-            //
-            + "{\r\n"
-            + "  \"resource\" : {\r\n"
-            + "  \"resourceType\": \"Patient\",\r\n"
-            + "  \"id\": \"p2\",\r\n"
-            + "  \"text\": {\r\n"
-            + "    \"status\": \"generated\",\r\n"
-            + "    \"div\": \"<div xmlns=\\\"http://www.w3.org/1999/xhtml\\\">\\n      \\n      <p>Patient Simon Notsowell @ Acme Healthcare, Inc. MR = 123457, DECEASED</p>\\n    \\n    </div>\"\r\n"
-            + "  },\r\n"
-            + "  \"identifier\": [\r\n"
-            + "    {\r\n"
-            + "      \"use\": \"usual\",\r\n"
-            + "      \"type\": {\r\n"
-            + "        \"coding\": [\r\n"
-            + "          {\r\n"
-            + "            \"system\": \"http://terminology.hl7.org/CodeSystem/v2-0203\",\r\n"
-            + "            \"code\": \"MR\"\r\n"
-            + "          }\r\n"
-            + "        ]\r\n"
-            + "      },\r\n"
-            + "      \"system\": \"urn:oid:0.1.2.3.4.5.6.7\",\r\n"
-            + "      \"value\": \"123457\"\r\n"
-            + "    }\r\n"
-            + "  ],\r\n"
-            + "  \"active\": true,\r\n"
-            + "  \"name\": [\r\n"
-            + "    {\r\n"
-            + "      \"use\": \"official\",\r\n"
-            + "      \"family\": \"Notsowell\",\r\n"
-            + "      \"given\": [\r\n"
-            + "        \"Simon\"\r\n"
-            + "      ]\r\n"
-            + "    }\r\n"
-            + "  ],\r\n"
-            + "  \"gender\": \"male\",\r\n"
-            + "  \"birthDate\": \"1982-01-23\",\r\n"
-            + "  \"deceasedDateTime\": \"2015-02-14T13:42:00+10:00\",\r\n"
-            + "  \"managingOrganization\": {\r\n"
-            + "    \"reference\": \"Organization/1\",\r\n"
-            + "    \"display\": \"ACME Healthcare, Inc\"\r\n"
-            + "  }\r\n"
-            + "  }\r\n"
-            + "}\r\n,"
-            //
-            + "{\r\n"
-            + "  \"resource\" : {\r\n"
-            + "  \"resourceType\": \"Patient\",\r\n"
-            + "  \"id\": \"p1\",\r\n"
-            + "  \"text\": {\r\n"
-            + "    \"status\": \"generated\",\r\n"
-            + "    \"div\": \"<div xmlns=\\\"http://www.w3.org/1999/xhtml\\\">\\n\\t\\t\\t<table>\\n\\t\\t\\t\\t<tbody>\\n\\t\\t\\t\\t\\t<tr>\\n\\t\\t\\t\\t\\t\\t<td>Name</td>\\n\\t\\t\\t\\t\\t\\t<td>Peter James \\n              <b>Chalmers</b> (&quot;Jim&quot;)\\n            </td>\\n\\t\\t\\t\\t\\t</tr>\\n\\t\\t\\t\\t\\t<tr>\\n\\t\\t\\t\\t\\t\\t<td>Address</td>\\n\\t\\t\\t\\t\\t\\t<td>534 Erewhon, Pleasantville, Vic, 3999</td>\\n\\t\\t\\t\\t\\t</tr>\\n\\t\\t\\t\\t\\t<tr>\\n\\t\\t\\t\\t\\t\\t<td>Contacts</td>\\n\\t\\t\\t\\t\\t\\t<td>Home: unknown. Work: (03) 5555 6473</td>\\n\\t\\t\\t\\t\\t</tr>\\n\\t\\t\\t\\t\\t<tr>\\n\\t\\t\\t\\t\\t\\t<td>Id</td>\\n\\t\\t\\t\\t\\t\\t<td>MRN: 12345 (Acme Healthcare)</td>\\n\\t\\t\\t\\t\\t</tr>\\n\\t\\t\\t\\t</tbody>\\n\\t\\t\\t</table>\\n\\t\\t</div>\"\r\n"
-            + "  },\r\n"
-            + "  \"identifier\": [\r\n"
-            + "    {\r\n"
-            + "      \"use\": \"usual\",\r\n"
-            + "      \"type\": {\r\n"
-            + "        \"coding\": [\r\n"
-            + "          {\r\n"
-            + "            \"system\": \"http://terminology.hl7.org/CodeSystem/v2-0203\",\r\n"
-            + "            \"code\": \"MR\"\r\n"
-            + "          }\r\n"
-            + "        ]\r\n"
-            + "      },\r\n"
-            + "      \"system\": \"urn:oid:1.2.36.146.595.217.0.1\",\r\n"
-            + "      \"value\": \"12345\",\r\n"
-            + "      \"period\": {\r\n"
-            + "        \"start\": \"2001-05-06\"\r\n"
-            + "      },\r\n"
-            + "      \"assigner\": {\r\n"
-            + "        \"display\": \"Acme Healthcare\"\r\n"
-            + "      }\r\n"
-            + "    }\r\n"
-            + "  ],\r\n"
-            + "  \"active\": true,\r\n"
-            + "  \"name\": [\r\n"
-            + "    {\r\n"
-            + "      \"use\": \"official\",\r\n"
-            + "      \"family\": \"Chalmers\",\r\n"
-            + "      \"given\": [\r\n"
-            + "        \"Peter\",\r\n"
-            + "        \"James\"\r\n"
-            + "      ]\r\n"
-            + "    },\r\n"
-            + "    {\r\n"
-            + "      \"use\": \"usual\",\r\n"
-            + "      \"given\": [\r\n"
-            + "        \"Jim\"\r\n"
-            + "      ]\r\n"
-            + "    },\r\n"
-            + "    {\r\n"
-            + "      \"use\": \"maiden\",\r\n"
-            + "      \"family\": \"Windsor\",\r\n"
-            + "      \"given\": [\r\n"
-            + "        \"Peter\",\r\n"
-            + "        \"James\"\r\n"
-            + "      ],\r\n"
-            + "      \"period\": {\r\n"
-            + "        \"end\": \"2002\"\r\n"
-            + "      }\r\n"
-            + "    }\r\n"
-            + "  ],\r\n"
-            + "  \"telecom\": [\r\n"
-            + "    {\r\n"
-            + "      \"use\": \"home\"\r\n"
-            + "    },\r\n"
-            + "    {\r\n"
-            + "      \"system\": \"phone\",\r\n"
-            + "      \"value\": \"(03) 5555 6473\",\r\n"
-            + "      \"use\": \"work\",\r\n"
-            + "      \"rank\": 1\r\n"
-            + "    },\r\n"
-            + "    {\r\n"
-            + "      \"system\": \"phone\",\r\n"
-            + "      \"value\": \"(03) 3410 5613\",\r\n"
-            + "      \"use\": \"mobile\",\r\n"
-            + "      \"rank\": 2\r\n"
-            + "    },\r\n"
-            + "    {\r\n"
-            + "      \"system\": \"phone\",\r\n"
-            + "      \"value\": \"(03) 5555 8834\",\r\n"
-            + "      \"use\": \"old\",\r\n"
-            + "      \"period\": {\r\n"
-            + "        \"end\": \"2014\"\r\n"
-            + "      }\r\n"
-            + "    }\r\n"
-            + "  ],\r\n"
-            + "  \"gender\": \"male\",\r\n"
-            + "  \"birthDate\": \"1974-12-25\",\r\n"
-            + "  \"_birthDate\": {\r\n"
-            + "    \"extension\": [\r\n"
-            + "      {\r\n"
-            + "        \"url\": \"http://hl7.org/fhir/StructureDefinition/patient-birthTime\",\r\n"
-            + "        \"valueDateTime\": \"1974-12-25T14:35:45-05:00\"\r\n"
-            + "      }\r\n"
-            + "    ]\r\n"
-            + "  },\r\n"
-            + "  \"deceasedBoolean\": false,\r\n"
-            + "  \"address\": [\r\n"
-            + "    {\r\n"
-            + "      \"use\": \"home\",\r\n"
-            + "      \"type\": \"both\",\r\n"
-            + "      \"text\": \"534 Erewhon St PeasantVille, Rainbow, Vic  3999\",\r\n"
-            + "      \"line\": [\r\n"
-            + "        \"534 Erewhon St\"\r\n"
-            + "      ],\r\n"
-            + "      \"city\": \"PleasantVille\",\r\n"
-            + "      \"district\": \"Rainbow\",\r\n"
-            + "      \"state\": \"Vic\",\r\n"
-            + "      \"postalCode\": \"3999\",\r\n"
-            + "      \"period\": {\r\n"
-            + "        \"start\": \"1974-12-25\"\r\n"
-            + "      }\r\n"
-            + "    }\r\n"
-            + "  ],\r\n"
-            + "  \"contact\": [\r\n"
-            + "    {\r\n"
-            + "      \"relationship\": [\r\n"
-            + "        {\r\n"
-            + "          \"coding\": [\r\n"
-            + "            {\r\n"
-            + "              \"system\": \"http://terminology.hl7.org/CodeSystem/v2-0131\",\r\n"
-            + "              \"code\": \"N\"\r\n"
-            + "            }\r\n"
-            + "          ]\r\n"
-            + "        }\r\n"
-            + "      ],\r\n"
-            + "      \"name\": {\r\n"
-            + "        \"family\": \"du Marché\",\r\n"
-            + "        \"_family\": {\r\n"
-            + "          \"extension\": [\r\n"
-            + "            {\r\n"
-            + "              \"url\": \"http://hl7.org/fhir/StructureDefinition/humanname-own-prefix\",\r\n"
-            + "              \"valueString\": \"VV\"\r\n"
-            + "            }\r\n"
-            + "          ]\r\n"
-            + "        },\r\n"
-            + "        \"given\": [\r\n"
-            + "          \"Bénédicte\"\r\n"
-            + "        ]\r\n"
-            + "      },\r\n"
-            + "      \"telecom\": [\r\n"
-            + "        {\r\n"
-            + "          \"system\": \"phone\",\r\n"
-            + "          \"value\": \"+33 (237) 998327\"\r\n"
-            + "        }\r\n"
-            + "      ],\r\n"
-            + "      \"address\": {\r\n"
-            + "        \"use\": \"home\",\r\n"
-            + "        \"type\": \"both\",\r\n"
-            + "        \"line\": [\r\n"
-            + "          \"534 Erewhon St\"\r\n"
-            + "        ],\r\n"
-            + "        \"city\": \"PleasantVille\",\r\n"
-            + "        \"district\": \"Rainbow\",\r\n"
-            + "        \"state\": \"Vic\",\r\n"
-            + "        \"postalCode\": \"3999\",\r\n"
-            + "        \"period\": {\r\n"
-            + "          \"start\": \"1974-12-25\"\r\n"
-            + "        }\r\n"
-            + "      },\r\n"
-            + "      \"gender\": \"female\",\r\n"
-            + "      \"period\": {\r\n"
-            + "        \"start\": \"2012\"\r\n"
-            + "      }\r\n"
-            + "    }\r\n"
-            + "  ],\r\n"
-            + "  \"managingOrganization\": {\r\n"
-            + "    \"reference\": \"Organization/1\"\r\n"
-            + "  }\r\n"
-            + "  }\r\n"
-            + "}\r\n,"
-            //
-            + "  {\r\n"
-            + "    \"fullUrl\" : \"https://example.com/base/Observation/r15\",\r\n"
-            + "    \"resource\" : {\r\n"
-            + "      \"resourceType\" : \"Observation\",\r\n"
-            + "      \"id\" : \"r15\",\r\n"
-            + "      \"text\" : {\r\n"
-            + "        \"status\" : \"generated\",\r\n"
-            + "        \"div\" : \"<div xmlns=\\\"http://www.w3.org/1999/xhtml\\\"><p class=\\\"res-header-id\\\"><b>Generated Narrative: Observation r15</b></p><a name=\\\"r15\\\"> </a><a name=\\\"hcr15\\\"> </a><a name=\\\"r15-en-US\\\"> </a><p><b>status</b>: final</p><p><b>code</b>: <span title=\\\"Codes:{http://loinc.org 711-2}\\\">Eosinophils</span></p><p><b>subject</b>: <a href=\\\"patient-example-b.html\\\">Duck D Donald (official) other, DoB Unknown ( Medical record number\\u00a0(use:\\u00a0usual,\\u00a0))</a></p><p><b>performer</b>: <a href=\\\"organization-example-lab.html\\\">Acme Laboratory, Inc</a></p><p><b>value</b>: 0.92 x10*9/L<span style=\\\"background: LightGoldenRodYellow\\\"> (Details: UCUM  code10*9/L = '10*9/L')</span></p><p><b>interpretation</b>: <span title=\\\"Codes:{http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation HH}\\\">Critical high</span></p><h3>ReferenceRanges</h3><table class=\\\"grid\\\"><tr><td style=\\\"display: none\\\">-</td><td><b>Low</b></td><td><b>High</b></td></tr><tr><td style=\\\"display: none\\\">*</td><td>0.04 x10*9/L<span style=\\\"background: LightGoldenRodYellow\\\"> (Details: UCUM  code10*9/L = '10*9/L')</span></td><td>0.40 x10*9/L<span style=\\\"background: LightGoldenRodYellow\\\"> (Details: UCUM  code10*9/L = '10*9/L')</span></td></tr></table></div>\"\r\n"
-            + "      },\r\n"
-            + "      \"status\" : \"final\",\r\n"
-            + "      \"code\" : {\r\n"
-            + "        \"coding\" : [{\r\n"
-            + "          \"system\" : \"http://loinc.org\",\r\n"
-            + "          \"code\" : \"711-2\",\r\n"
-            + "          \"display\" : \"Eosinophils [#/volume] in Blood by Automated count\"\r\n"
-            + "        }],\r\n"
-            + "        \"text\" : \"Eosinophils\"\r\n"
-            + "      },\r\n"
-            + "      \"subject\" : {\r\n"
-            + "        \"reference\" : \"Patient/p1\"\r\n"
-            + "      },\r\n"
-            + "      \"performer\" : [{\r\n"
-            + "        \"reference\" : \"Organization/1832473e-2fe0-452d-abe9-3cdb9879522f\",\r\n"
-            + "        \"display\" : \"Acme Laboratory, Inc\"\r\n"
-            + "      }],\r\n"
-            + "      \"encounter\": {\r\n"
-            + "        \"reference\": \"Encounter/e1\"\r\n"
-            + "      },\r\n"
-            + "      \"valueQuantity\" : {\r\n"
-            + "        \"value\" : 0.92,\r\n"
-            + "        \"unit\" : \"x10*9/L\",\r\n"
-            + "        \"system\" : \"http://unitsofmeasure.org\",\r\n"
-            + "        \"code\" : \"10*9/L\"\r\n"
-            + "      },\r\n"
-            + "      \"interpretation\" : [{\r\n"
-            + "        \"coding\" : [{\r\n"
-            + "          \"system\" : \"http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation\",\r\n"
-            + "          \"code\" : \"HH\"\r\n"
-            + "        }]\r\n"
-            + "      }],\r\n"
-            + "      \"referenceRange\" : [{\r\n"
-            + "        \"low\" : {\r\n"
-            + "          \"value\" : 0.04,\r\n"
-            + "          \"unit\" : \"x10*9/L\",\r\n"
-            + "          \"system\" : \"http://unitsofmeasure.org\",\r\n"
-            + "          \"code\" : \"10*9/L\"\r\n"
-            + "        },\r\n"
-            + "        \"high\" : {\r\n"
-            + "          \"value\" : 0.40,\r\n"
-            + "          \"unit\" : \"x10*9/L\",\r\n"
-            + "          \"system\" : \"http://unitsofmeasure.org\",\r\n"
-            + "          \"code\" : \"10*9/L\"\r\n"
-            + "        }\r\n"
-            + "      }]\r\n"
-            + "    }\r\n"
-            + "  },\r\n"
-            //
-            + "  {\r\n"
-            + "    \"fullUrl\" : \"https://example.com/base/Observation/r17\",\r\n"
-            + "    \"resource\" : {\r\n"
-            + "      \"resourceType\" : \"Observation\",\r\n"
-            + "      \"id\" : \"r17\",\r\n"
-            + "      \"text\" : {\r\n"
-            + "        \"status\" : \"generated\",\r\n"
-            + "        \"div\" : \"<div xmlns=\\\"http://www.w3.org/1999/xhtml\\\"><p class=\\\"res-header-id\\\"><b>Generated Narrative: Observation r17</b></p><a name=\\\"r17\\\"> </a><a name=\\\"hcr17\\\"> </a><a name=\\\"r17-en-US\\\"> </a><p><b>status</b>: final</p><p><b>code</b>: <span title=\\\"Codes:{http://loinc.org 704-7}\\\">Basophils</span></p><p><b>subject</b>: <a href=\\\"patient-example-b.html\\\">Duck D Donald (official) other, DoB Unknown ( Medical record number\\u00a0(use:\\u00a0usual,\\u00a0))</a></p><p><b>performer</b>: <a href=\\\"organization-example-lab.html\\\">Acme Laboratory, Inc</a></p><p><b>value</b>: 0.92 x10*9/L<span style=\\\"background: LightGoldenRodYellow\\\"> (Details: UCUM  code10*9/L = '10*9/L')</span></p><h3>ReferenceRanges</h3><table class=\\\"grid\\\"><tr><td style=\\\"display: none\\\">-</td><td><b>High</b></td></tr><tr><td style=\\\"display: none\\\">*</td><td>0.21 x10*9/L<span style=\\\"background: LightGoldenRodYellow\\\"> (Details: UCUM  code10*9/L = '10*9/L')</span></td></tr></table></div>\"\r\n"
-            + "      },\r\n"
-            + "      \"status\" : \"final\",\r\n"
-            + "      \"code\" : {\r\n"
-            + "        \"coding\" : [{\r\n"
-            + "          \"system\" : \"http://loinc.org\",\r\n"
-            + "          \"code\" : \"704-7\",\r\n"
-            + "          \"display\" : \"Basophils [#/volume] in Blood by Automated count\"\r\n"
-            + "        }],\r\n"
-            + "        \"text\" : \"Basophils\"\r\n"
-            + "      },\r\n"
-            + "      \"subject\" : {\r\n"
-            + "        \"reference\" : \"Patient/p2\"\r\n"
-            + "      },\r\n"
-            + "      \"performer\" : [{\r\n"
-            + "        \"reference\" : \"Organization/1832473e-2fe0-452d-abe9-3cdb9879522f\",\r\n"
-            + "        \"display\" : \"Acme Laboratory, Inc\"\r\n"
-            + "      }],\r\n"
-            + "      \"encounter\": {\r\n"
-            + "        \"reference\": \"Encounter/e2\"\r\n"
-            + "      },\r\n"
-            + "      \"valueQuantity\" : {\r\n"
-            + "        \"value\" : 0.12,\r\n"
-            + "        \"unit\" : \"x10*9/L\",\r\n"
-            + "        \"system\" : \"http://unitsofmeasure.org\",\r\n"
-            + "        \"code\" : \"10*9/L\"\r\n"
-            + "      },\r\n"
-            + "      \"referenceRange\" : [{\r\n"
-            + "        \"high\" : {\r\n"
-            + "          \"value\" : 0.21,\r\n"
-            + "          \"unit\" : \"x10*9/L\",\r\n"
-            + "          \"system\" : \"http://unitsofmeasure.org\",\r\n"
-            + "          \"code\" : \"10*9/L\"\r\n"
-            + "        }\r\n"
-            + "      }]\r\n"
-            + "    }\r\n"
-            + "  }]\r\n"
-            + "}";
+  static String FHIR;
 
-    Reader reader = new StringReader(fhir);
+  @BeforeAll
+  static void beforeAll() {
+    Patient p1 =
+        ((Patient) new Patient().setId("p1"))
+            .setGender(AdministrativeGender.MALE)
+            .setBirthDate(DateUtil.parseToDate("1974-12-25"));
+
+    Patient p2 =
+        ((Patient) new Patient().setId("p2"))
+            .setGender(AdministrativeGender.FEMALE)
+            .setBirthDate(DateUtil.parseToDate("1982-01-23"));
+
+    Coding amb =
+        new Coding(V3ActCode.AMB.getSystem(), V3ActCode.AMB.toCode(), V3ActCode.AMB.getDisplay());
+    Coding imp =
+        new Coding(V3ActCode.IMP.getSystem(), V3ActCode.IMP.toCode(), V3ActCode.IMP.getDisplay());
+
+    Encounter p1e1 =
+        ((Encounter) new Encounter().setId("p1e1"))
+            .setSubject(new Reference(p1))
+            .setClass_(imp)
+            .setPeriod(
+                new Period()
+                    .setStart(DateUtil.parseToDate("2015-02-01T10:00"))
+                    .setEnd(DateUtil.parseToDate("2015-02-05T18:30")));
+    Encounter p1e2 =
+        ((Encounter) new Encounter().setId("p1e2"))
+            .setSubject(new Reference(p1))
+            .setClass_(amb)
+            .setPartOf(new Reference(p1e1));
+    Encounter p1e3 =
+        ((Encounter) new Encounter().setId("p1e3"))
+            .setSubject(new Reference(p1))
+            .setClass_(amb)
+            .setPartOf(new Reference(p1e2));
+
+    Encounter p2e1 =
+        ((Encounter) new Encounter().setId("p2e1"))
+            .setSubject(new Reference(p2))
+            .setClass_(imp)
+            .setPeriod(
+                new Period()
+                    .setStart(DateUtil.parseToDate("2016-02-01T10:00"))
+                    .setEnd(DateUtil.parseToDate("2016-02-05T18:30")));
+    Encounter p2e2 =
+        ((Encounter) new Encounter().setId("p2e2"))
+            .setSubject(new Reference(p2))
+            .setClass_(amb)
+            .setPartOf(new Reference(p2e1));
+    Encounter p2e3 =
+        ((Encounter) new Encounter().setId("p2e3"))
+            .setSubject(new Reference(p2))
+            .setClass_(amb)
+            .setPartOf(new Reference(p2e2));
+
+    Observation p1o =
+        ((Observation) new Observation().setId("p1o"))
+            .setSubject(new Reference(p1))
+            .setEncounter(new Reference(p1e1))
+            .setCode(new CodeableConcept(new Coding("http://loinc.org", "711-2", "")))
+            .setValue(new Quantity().setValue(new BigDecimal("0.92")).setUnit("x10*9/L"))
+            .setEffective(new DateTimeType("2015-02-01T12:00:00"));
+    Procedure p1p =
+        ((Procedure) new Procedure().setId("p1p"))
+            .setSubject(new Reference(p1))
+            .setEncounter(new Reference(p1e2))
+            .setCode(new CodeableConcept(new Coding("http://snomed.info/sct", "399010004", "")))
+            .setPerformed(
+                new Period()
+                    .setStart(DateUtil.parseToDate("2015-02-02T11:00"))
+                    .setEnd(DateUtil.parseToDate("2015-02-02T12:00")));
+    Condition p1c =
+        ((Condition) new Condition().setId("p1c"))
+            .setSubject(new Reference(p1))
+            .setEncounter(new Reference(p1e3))
+            .setCode(new CodeableConcept(new Coding("http://snomed.info/sct", "39065001", "")))
+            .setOnset(new DateTimeType("2015-02-03T12:00:00"));
+
+    Medication m1 =
+        ((Medication) new Medication().setId("m1"))
+            .setCode(
+                new CodeableConcept(new Coding("http://hl7.org/fhir/sid/ndc", "24208-813-20", "")));
+    Medication m2 =
+        ((Medication) new Medication().setId("m2"))
+            .setCode(
+                new CodeableConcept(new Coding("http://hl7.org/fhir/sid/ndc", "24208-813-30", "")));
+
+    MedicationAdministration p2ma =
+        ((MedicationAdministration) new MedicationAdministration().setId("p2ma"))
+            .setSubject(new Reference(p2))
+            .setContext(new Reference(p2e1))
+            .setMedication(
+                new CodeableConcept(new Coding("http://hl7.org/fhir/sid/ndc", "24208-813-10", "")))
+            .setEffective(new DateTimeType("2016-02-01T12:00:00"));
+    MedicationStatement p2ms =
+        ((MedicationStatement) new MedicationStatement().setId("p2ms"))
+            .setSubject(new Reference(p2))
+            .setContext(new Reference(p2e2))
+            .setMedication(new Reference(m1))
+            .setEffective(
+                new Period()
+                    .setStart(DateUtil.parseToDate("2016-02-02T11:00"))
+                    .setEnd(DateUtil.parseToDate("2016-02-02T12:00")));
+    MedicationRequest p2mr =
+        ((MedicationRequest) new MedicationRequest().setId("p2mr"))
+            .setSubject(new Reference(p2))
+            .setEncounter(new Reference(p2e3))
+            .setMedication(new Reference(m2))
+            .addDosageInstruction(
+                new Dosage()
+                    .setTiming(
+                        new Timing()
+                            .setRepeat(
+                                new TimingRepeatComponent()
+                                    .setBounds(
+                                        new Period()
+                                            .setStart(DateUtil.parseToDate("2016-02-03T11:00"))
+                                            .setEnd(DateUtil.parseToDate("2016-02-03T12:00"))))));
+
+    Bundle b = new Bundle().setType(Bundle.BundleType.COLLECTION);
+
+    b.addEntry().setResource(p1);
+    b.addEntry().setResource(p1e1);
+    b.addEntry().setResource(p1e2);
+    b.addEntry().setResource(p1e3);
+
+    b.addEntry().setResource(p2);
+    b.addEntry().setResource(p2e1);
+    b.addEntry().setResource(p2e2);
+    b.addEntry().setResource(p2e3);
+
+    b.addEntry().setResource(p1o);
+    b.addEntry().setResource(p1p);
+    b.addEntry().setResource(p1c);
+
+    b.addEntry().setResource(m1);
+    b.addEntry().setResource(m2);
+
+    b.addEntry().setResource(p2ma);
+    b.addEntry().setResource(p2ms);
+    b.addEntry().setResource(p2mr);
+
+    FHIR = FHIRUtil.toString(b);
+  }
+
+  @Test
+  void test() {
+    Reader reader = new StringReader(FHIR);
 
     FHIRImport imp =
         new FHIRImport(
@@ -433,28 +206,80 @@ class FHIRImportTest extends AbstractTest {
     SubjectDao sub1 =
         new SubjectDao(dataSourceId, "Patient/p1", DateUtil.parse("1974-12-25"), "male");
     SubjectDao sub2 =
-        new SubjectDao(dataSourceId, "Patient/p2", DateUtil.parse("1982-01-23"), "male");
+        new SubjectDao(dataSourceId, "Patient/p2", DateUtil.parse("1982-01-23"), "female");
 
-    EncounterDao enc1 = new EncounterDao(dataSourceId, "Encounter/e1", sub1).type("IMP");
-    EncounterDao enc2 =
+    EncounterDao enc11 =
         new EncounterDao(
             dataSourceId,
-            "Encounter/e2",
-            sub2,
-            "HH",
-            DateUtil.parse("2015-01-17T07:00"),
-            DateUtil.parse("2015-01-17T07:30"));
+            "Encounter/p1e1",
+            sub1,
+            "IMP",
+            DateUtil.parse("2015-02-01T10:00"),
+            DateUtil.parse("2015-02-05T18:30"));
+    EncounterDao enc12 = new EncounterDao(dataSourceId, "Encounter/p1e2", sub1).type("AMB");
+    EncounterDao enc13 = new EncounterDao(dataSourceId, "Encounter/p1e3", sub1).type("AMB");
 
-    SubjectResourceDao res1 =
+    EncounterDao enc21 =
+        new EncounterDao(
+            dataSourceId,
+            "Encounter/p2e1",
+            sub2,
+            "IMP",
+            DateUtil.parse("2016-02-01T10:00"),
+            DateUtil.parse("2016-02-05T18:30"));
+    EncounterDao enc22 = new EncounterDao(dataSourceId, "Encounter/p2e2", sub2).type("AMB");
+    EncounterDao enc23 = new EncounterDao(dataSourceId, "Encounter/p2e3", sub2).type("AMB");
+
+    SubjectResourceDao p1o =
         new SubjectResourceDao(
-                dataSourceId, "Observation/r15", sub1, enc1, "http://loinc.org", "711-2")
+                dataSourceId, "Observation/p1o", sub1, enc11, "http://loinc.org", "711-2")
             .numberValue(new BigDecimal("0.92"))
-            .unit("x10*9/L");
-    SubjectResourceDao res2 =
+            .unit("x10*9/L")
+            .dateTime(DateUtil.parse("2015-02-01T12:00"));
+    SubjectResourceDao p1p =
         new SubjectResourceDao(
-                dataSourceId, "Observation/r17", sub2, enc2, "http://loinc.org", "704-7")
-            .numberValue(new BigDecimal("0.12"))
-            .unit("x10*9/L");
+                dataSourceId, "Procedure/p1p", sub1, enc12, "http://snomed.info/sct", "399010004")
+            .booleanValue(true)
+            .startDateTime(DateUtil.parse("2015-02-02T11:00"))
+            .endDateTime(DateUtil.parse("2015-02-02T12:00"));
+    SubjectResourceDao p1c =
+        new SubjectResourceDao(
+                dataSourceId, "Condition/p1c", sub1, enc13, "http://snomed.info/sct", "39065001")
+            .booleanValue(true)
+            .dateTime(DateUtil.parse("2015-02-03T12:00"));
+
+    SubjectResourceDao p2ma =
+        new SubjectResourceDao(
+                dataSourceId,
+                "MedicationAdministration/p2ma",
+                sub2,
+                enc21,
+                "http://hl7.org/fhir/sid/ndc",
+                "24208-813-10")
+            .booleanValue(true)
+            .dateTime(DateUtil.parse("2016-02-01T12:00"));
+    SubjectResourceDao p2ms =
+        new SubjectResourceDao(
+                dataSourceId,
+                "MedicationStatement/p2ms",
+                sub2,
+                enc22,
+                "http://hl7.org/fhir/sid/ndc",
+                "24208-813-20")
+            .booleanValue(true)
+            .startDateTime(DateUtil.parse("2016-02-02T11:00"))
+            .endDateTime(DateUtil.parse("2016-02-02T12:00"));
+    SubjectResourceDao p2mr =
+        new SubjectResourceDao(
+                dataSourceId,
+                "MedicationRequest/p2mr",
+                sub2,
+                enc23,
+                "http://hl7.org/fhir/sid/ndc",
+                "24208-813-30")
+            .booleanValue(true)
+            .startDateTime(DateUtil.parse("2016-02-03T11:00"))
+            .endDateTime(DateUtil.parse("2016-02-03T12:00"));
 
     List<SubjectDao> subjects = subjectRepository.findAll();
     assertEquals(2, subjects.size());
@@ -462,15 +287,137 @@ class FHIRImportTest extends AbstractTest {
     assertEquals(sub2, subjects.get(1));
 
     List<EncounterDao> encounters = encounterRepository.findAll();
-    assertEquals(2, encounters.size());
-    assertEquals(enc1, encounters.get(0));
-    assertEquals(enc2, encounters.get(1));
+    assertEquals(6, encounters.size());
+    assertEquals(enc11, encounters.get(0));
+    assertEquals(enc12, encounters.get(1));
+    assertEquals(enc13, encounters.get(2));
+    assertEquals(enc21, encounters.get(3));
+    assertEquals(enc22, encounters.get(4));
+    assertEquals(enc23, encounters.get(5));
 
     List<SubjectResourceDao> resources = subjectResourceRepository.findAll();
-    System.out.println(resources.get(0));
-    System.out.println(resources.get(1));
-    assertEquals(2, resources.size());
-    assertEquals(res1, resources.get(0));
-    assertEquals(res2, resources.get(1));
+    assertEquals(6, resources.size());
+    assertEquals(p1c, resources.get(0));
+    assertEquals(p2ma, resources.get(1));
+    assertEquals(p2mr, resources.get(2));
+    assertEquals(p2ms, resources.get(3));
+    assertEquals(p1o, resources.get(4));
+    assertEquals(p1p, resources.get(5));
+  }
+
+  @Test
+  void testMergeEncounters() {
+    Reader reader = new StringReader(FHIR);
+
+    FHIRImport imp =
+        new FHIRImport(
+            dataSourceId,
+            reader,
+            subjectRepository,
+            encounterRepository,
+            subjectResourceRepository,
+            true);
+    imp.run();
+
+    SubjectDao sub1 =
+        new SubjectDao(dataSourceId, "Patient/p1", DateUtil.parse("1974-12-25"), "male");
+    SubjectDao sub2 =
+        new SubjectDao(dataSourceId, "Patient/p2", DateUtil.parse("1982-01-23"), "female");
+
+    EncounterDao enc11 =
+        new EncounterDao(
+            dataSourceId,
+            "Encounter/p1e1",
+            sub1,
+            "IMP",
+            DateUtil.parse("2015-02-01T10:00"),
+            DateUtil.parse("2015-02-05T18:30"));
+    EncounterDao enc12 = new EncounterDao(dataSourceId, "Encounter/p1e2", sub1).type("AMB");
+    EncounterDao enc13 = new EncounterDao(dataSourceId, "Encounter/p1e3", sub1).type("AMB");
+
+    EncounterDao enc21 =
+        new EncounterDao(
+            dataSourceId,
+            "Encounter/p2e1",
+            sub2,
+            "IMP",
+            DateUtil.parse("2016-02-01T10:00"),
+            DateUtil.parse("2016-02-05T18:30"));
+    EncounterDao enc22 = new EncounterDao(dataSourceId, "Encounter/p2e2", sub2).type("AMB");
+    EncounterDao enc23 = new EncounterDao(dataSourceId, "Encounter/p2e3", sub2).type("AMB");
+
+    SubjectResourceDao p1o =
+        new SubjectResourceDao(
+                dataSourceId, "Observation/p1o", sub1, enc11, "http://loinc.org", "711-2")
+            .numberValue(new BigDecimal("0.92"))
+            .unit("x10*9/L")
+            .dateTime(DateUtil.parse("2015-02-01T12:00"));
+    SubjectResourceDao p1p =
+        new SubjectResourceDao(
+                dataSourceId, "Procedure/p1p", sub1, enc11, "http://snomed.info/sct", "399010004")
+            .booleanValue(true)
+            .startDateTime(DateUtil.parse("2015-02-02T11:00"))
+            .endDateTime(DateUtil.parse("2015-02-02T12:00"));
+    SubjectResourceDao p1c =
+        new SubjectResourceDao(
+                dataSourceId, "Condition/p1c", sub1, enc11, "http://snomed.info/sct", "39065001")
+            .booleanValue(true)
+            .dateTime(DateUtil.parse("2015-02-03T12:00"));
+
+    SubjectResourceDao p2ma =
+        new SubjectResourceDao(
+                dataSourceId,
+                "MedicationAdministration/p2ma",
+                sub2,
+                enc21,
+                "http://hl7.org/fhir/sid/ndc",
+                "24208-813-10")
+            .booleanValue(true)
+            .dateTime(DateUtil.parse("2016-02-01T12:00"));
+    SubjectResourceDao p2ms =
+        new SubjectResourceDao(
+                dataSourceId,
+                "MedicationStatement/p2ms",
+                sub2,
+                enc21,
+                "http://hl7.org/fhir/sid/ndc",
+                "24208-813-20")
+            .booleanValue(true)
+            .startDateTime(DateUtil.parse("2016-02-02T11:00"))
+            .endDateTime(DateUtil.parse("2016-02-02T12:00"));
+    SubjectResourceDao p2mr =
+        new SubjectResourceDao(
+                dataSourceId,
+                "MedicationRequest/p2mr",
+                sub2,
+                enc21,
+                "http://hl7.org/fhir/sid/ndc",
+                "24208-813-30")
+            .booleanValue(true)
+            .startDateTime(DateUtil.parse("2016-02-03T11:00"))
+            .endDateTime(DateUtil.parse("2016-02-03T12:00"));
+
+    List<SubjectDao> subjects = subjectRepository.findAll();
+    assertEquals(2, subjects.size());
+    assertEquals(sub1, subjects.get(0));
+    assertEquals(sub2, subjects.get(1));
+
+    List<EncounterDao> encounters = encounterRepository.findAll();
+    assertEquals(6, encounters.size());
+    assertEquals(enc11, encounters.get(0));
+    assertEquals(enc12, encounters.get(1));
+    assertEquals(enc13, encounters.get(2));
+    assertEquals(enc21, encounters.get(3));
+    assertEquals(enc22, encounters.get(4));
+    assertEquals(enc23, encounters.get(5));
+
+    List<SubjectResourceDao> resources = subjectResourceRepository.findAll();
+    assertEquals(6, resources.size());
+    assertEquals(p1c, resources.get(0));
+    assertEquals(p2ma, resources.get(1));
+    assertEquals(p2mr, resources.get(2));
+    assertEquals(p2ms, resources.get(3));
+    assertEquals(p1o, resources.get(4));
+    assertEquals(p1p, resources.get(5));
   }
 }

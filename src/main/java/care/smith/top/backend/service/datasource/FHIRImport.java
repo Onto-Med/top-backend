@@ -12,9 +12,7 @@ import care.smith.top.top_phenotypic_query.adapter.fhir.FHIRUtil;
 import care.smith.top.top_phenotypic_query.util.DateUtil;
 import java.io.Reader;
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.Bundle;
@@ -32,12 +30,14 @@ import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.model.Period;
 import org.hl7.fhir.r4.model.Procedure;
 import org.hl7.fhir.r4.model.Quantity;
+import org.hl7.fhir.r4.model.Reference;
 import org.hl7.fhir.r4.model.Timing.TimingRepeatComponent;
 
 public class FHIRImport extends DataImport {
 
   private Map<String, Coding> medications = new HashMap<>();
-  private List<SubjectResourceDao> medicationResources = new ArrayList<>();
+  private Map<String, String> encounters = new HashMap<>();
+  private boolean mergeEncounters;
 
   public FHIRImport(
       String dataSourceId,
@@ -45,18 +45,71 @@ public class FHIRImport extends DataImport {
       SubjectRepository subjectRepository,
       EncounterRepository encounterRepository,
       SubjectResourceRepository subjectResourceRepository) {
+    this(
+        dataSourceId,
+        reader,
+        subjectRepository,
+        encounterRepository,
+        subjectResourceRepository,
+        false);
+  }
+
+  public FHIRImport(
+      String dataSourceId,
+      Reader reader,
+      SubjectRepository subjectRepository,
+      EncounterRepository encounterRepository,
+      SubjectResourceRepository subjectResourceRepository,
+      boolean mergeEncounters) {
     super(dataSourceId, reader, subjectRepository, encounterRepository, subjectResourceRepository);
+    this.mergeEncounters = mergeEncounters;
   }
 
   @Override
   public void run() {
     IParser parser = FhirContext.forR4().newJsonParser();
-    importResource(parser.parseResource(reader));
-    for (SubjectResourceDao dao : medicationResources) {
-      Coding c = medications.get(dao.getCode());
-      if (c != null) setCode(dao, c);
-      saveSubjectResource(dao);
-    }
+    IBaseResource r = parser.parseResource(reader);
+    preprocessResource(r);
+    if (mergeEncounters) mergeEncounters();
+    importResource(r);
+  }
+
+  private void mergeEncounters() {
+    for (String enc : encounters.keySet()) encounters.put(enc, getRootParent(enc));
+  }
+
+  private String getRootParent(String child) {
+    String parent = encounters.get(child);
+    if (parent == null) return child;
+    return getRootParent(parent);
+  }
+
+  private String getEncounterId(Reference r) {
+    String id = FHIRUtil.getId(r);
+    if (mergeEncounters && encounters.get(id) != null) return encounters.get(id);
+    return id;
+  }
+
+  private void preprocessResource(IBaseResource r) {
+    if (r instanceof Bundle) preprocessBundle((Bundle) r);
+    else if (r instanceof Medication) preprocessMedication((Medication) r);
+    else if (mergeEncounters && r instanceof Encounter) preprocessEncounter((Encounter) r);
+  }
+
+  private void preprocessBundle(Bundle r) {
+    for (BundleEntryComponent comp : r.getEntry()) preprocessResource(comp.getResource());
+  }
+
+  private void preprocessMedication(Medication r) {
+    if (r.hasCode()) medications.put(FHIRUtil.getId(r), r.getCode().getCodingFirstRep());
+  }
+
+  private void preprocessEncounter(Encounter r) {
+    Reference parent = r.getPartOf();
+    if (parent != null
+        && parent.getReferenceElement() != null
+        && parent.getReferenceElement().getIdPart() != null)
+      encounters.put(FHIRUtil.getId(r), FHIRUtil.getId(parent));
   }
 
   private void importResource(IBaseResource r) {
@@ -66,7 +119,6 @@ public class FHIRImport extends DataImport {
     else if (r instanceof Observation) importObservation((Observation) r);
     else if (r instanceof Condition) importCondition((Condition) r);
     else if (r instanceof Procedure) importProcedure((Procedure) r);
-    else if (r instanceof Medication) saveMedication((Medication) r);
     else if (r instanceof MedicationAdministration)
       importMedicationAdministration((MedicationAdministration) r);
     else if (r instanceof MedicationStatement) importMedicationStatement((MedicationStatement) r);
@@ -99,7 +151,7 @@ public class FHIRImport extends DataImport {
   private void importObservation(Observation r) {
     SubjectResourceDao dao = new SubjectResourceDao(dataSourceId, FHIRUtil.getId(r));
     if (r.hasSubject()) dao.subjectId(FHIRUtil.getId(r.getSubject()));
-    if (r.hasEncounter()) dao.encounterId(FHIRUtil.getId(r.getEncounter()));
+    if (r.hasEncounter()) dao.encounterId(getEncounterId(r.getEncounter()));
     if (r.hasCode()) setCode(dao, r.getCode().getCodingFirstRep());
 
     if (r.hasEffectiveDateTimeType())
@@ -128,7 +180,7 @@ public class FHIRImport extends DataImport {
   private void importCondition(Condition r) {
     SubjectResourceDao dao = new SubjectResourceDao(dataSourceId, FHIRUtil.getId(r));
     if (r.hasSubject()) dao.subjectId(FHIRUtil.getId(r.getSubject()));
-    if (r.hasEncounter()) dao.encounterId(FHIRUtil.getId(r.getEncounter()));
+    if (r.hasEncounter()) dao.encounterId(getEncounterId(r.getEncounter()));
     if (r.hasCode()) setCode(dao, r.getCode().getCodingFirstRep());
 
     if (r.hasOnsetDateTimeType())
@@ -144,7 +196,7 @@ public class FHIRImport extends DataImport {
   private void importProcedure(Procedure r) {
     SubjectResourceDao dao = new SubjectResourceDao(dataSourceId, FHIRUtil.getId(r));
     if (r.hasSubject()) dao.subjectId(FHIRUtil.getId(r.getSubject()));
-    if (r.hasEncounter()) dao.encounterId(FHIRUtil.getId(r.getEncounter()));
+    if (r.hasEncounter()) dao.encounterId(getEncounterId(r.getEncounter()));
     if (r.hasCode()) setCode(dao, r.getCode().getCodingFirstRep());
 
     if (r.hasPerformedDateTimeType())
@@ -159,7 +211,7 @@ public class FHIRImport extends DataImport {
   private void importMedicationAdministration(MedicationAdministration r) {
     SubjectResourceDao dao = new SubjectResourceDao(dataSourceId, FHIRUtil.getId(r));
     if (r.hasSubject()) dao.subjectId(FHIRUtil.getId(r.getSubject()));
-    if (r.hasContext()) dao.encounterId(FHIRUtil.getId(r.getContext()));
+    if (r.hasContext()) dao.encounterId(getEncounterId(r.getContext()));
 
     if (r.hasEffectiveDateTimeType())
       dao.dateTime(DateUtil.ofDate(r.getEffectiveDateTimeType().getValue()));
@@ -176,14 +228,14 @@ public class FHIRImport extends DataImport {
       if (c != null) {
         setCode(dao, c);
         saveSubjectResource(dao);
-      } else medicationResources.add(dao.code(medicationId));
+      }
     }
   }
 
   private void importMedicationStatement(MedicationStatement r) {
     SubjectResourceDao dao = new SubjectResourceDao(dataSourceId, FHIRUtil.getId(r));
     if (r.hasSubject()) dao.subjectId(FHIRUtil.getId(r.getSubject()));
-    if (r.hasContext()) dao.encounterId(FHIRUtil.getId(r.getContext()));
+    if (r.hasContext()) dao.encounterId(getEncounterId(r.getContext()));
 
     if (r.hasEffectiveDateTimeType())
       dao.dateTime(DateUtil.ofDate(r.getEffectiveDateTimeType().getValue()));
@@ -200,14 +252,14 @@ public class FHIRImport extends DataImport {
       if (c != null) {
         setCode(dao, c);
         saveSubjectResource(dao);
-      } else medicationResources.add(dao.code(medicationId));
+      }
     }
   }
 
   private void importMedicationRequest(MedicationRequest r) {
     SubjectResourceDao dao = new SubjectResourceDao(dataSourceId, FHIRUtil.getId(r));
     if (r.hasSubject()) dao.subjectId(FHIRUtil.getId(r.getSubject()));
-    if (r.hasEncounter()) dao.encounterId(FHIRUtil.getId(r.getEncounter()));
+    if (r.hasEncounter()) dao.encounterId(getEncounterId(r.getEncounter()));
 
     if (r.hasDosageInstruction()) {
       Dosage d = r.getDosageInstructionFirstRep();
@@ -231,12 +283,8 @@ public class FHIRImport extends DataImport {
       if (c != null) {
         setCode(dao, c);
         saveSubjectResource(dao);
-      } else medicationResources.add(dao.code(medicationId));
+      }
     }
-  }
-
-  private void saveMedication(Medication r) {
-    if (r.hasCode()) medications.put(FHIRUtil.getId(r), r.getCode().getCodingFirstRep());
   }
 
   private void setCode(SubjectResourceDao dao, Coding c) {
