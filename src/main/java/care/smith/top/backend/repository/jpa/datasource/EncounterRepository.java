@@ -8,5 +8,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface EncounterRepository
     extends JpaRepository<EncounterDao, EncounterDao.EncounterKey> {
-  Optional<EncounterDao> findByDataSourceIdAndEncounterId(String dataSourceId, String encounterId);
+  Optional<EncounterDao> findByEncounterKeyDataSourceIdAndEncounterKeyEncounterId(
+      String dataSourceId, String encounterId);
 }

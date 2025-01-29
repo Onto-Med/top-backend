@@ -5,20 +5,13 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import javax.persistence.CascadeType;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.IdClass;
-import javax.persistence.Index;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
+import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 
 @Entity(name = "subject")
 @Table(indexes = @Index(columnList = "dataSourceId"))
-@IdClass(SubjectDao.SubjectKey.class)
 public class SubjectDao {
-  @Id private String dataSourceId;
-  @Id private String subjectId;
+  @EmbeddedId private SubjectKey subjectKey;
 
   private LocalDateTime birthDate;
   private String sex;
@@ -31,25 +24,20 @@ public class SubjectDao {
 
   public SubjectDao() {}
 
-  public SubjectDao(String dataSourceId) {
-    this.dataSourceId = dataSourceId;
+  public SubjectDao(@NotNull String dataSourceId, String subjectId) {
+    subjectKey = new SubjectKey(dataSourceId, subjectId);
   }
 
-  public SubjectDao(String dataSourceId, String subjectId) {
-    this.dataSourceId = dataSourceId;
-    this.subjectId = subjectId;
-  }
-
-  public SubjectDao(String dataSourceId, String subjectId, LocalDateTime birthDate, String sex) {
-    this.dataSourceId = dataSourceId;
-    this.subjectId = subjectId;
+  public SubjectDao(
+      @NotNull String dataSourceId, String subjectId, LocalDateTime birthDate, String sex) {
+    this(dataSourceId, subjectId);
     this.birthDate = birthDate;
     this.sex = sex;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(birthDate, dataSourceId, sex, subjectId);
+    return Objects.hash(birthDate, sex, subjectKey);
   }
 
   @Override
@@ -59,26 +47,25 @@ public class SubjectDao {
     if (getClass() != obj.getClass()) return false;
     SubjectDao other = (SubjectDao) obj;
     return Objects.equals(birthDate, other.birthDate)
-        && Objects.equals(dataSourceId, other.dataSourceId)
         && Objects.equals(sex, other.sex)
-        && Objects.equals(subjectId, other.subjectId);
+        && Objects.equals(subjectKey, other.subjectKey);
   }
 
   @Override
   public String toString() {
-    StringBuffer sb = new StringBuffer("[SubjectDao|" + dataSourceId + "|" + subjectId);
+    StringBuffer sb = new StringBuffer("[SubjectDao|" + getDataSourceId() + "|" + getSubjectId());
     if (birthDate != null) sb.append("|" + birthDate);
     if (sex != null) sb.append("|" + sex);
     return sb.append("]").toString();
   }
 
-  public SubjectDao dataSourceId(String dataSourceId) {
-    this.dataSourceId = dataSourceId;
+  public SubjectDao dataSourceId(@NotNull String dataSourceId) {
+    subjectKey.dataSourceId(dataSourceId);
     return this;
   }
 
   public SubjectDao subjectId(String subjectId) {
-    this.subjectId = subjectId;
+    subjectKey.setSubjectId(subjectId);
     return this;
   }
 
@@ -115,11 +102,11 @@ public class SubjectDao {
   }
 
   public String getDataSourceId() {
-    return dataSourceId;
+    return subjectKey.getDataSourceId();
   }
 
   public String getSubjectId() {
-    return subjectId;
+    return subjectKey.getSubjectId();
   }
 
   public LocalDateTime getBirthDate() {
@@ -138,15 +125,34 @@ public class SubjectDao {
     return subjectResources;
   }
 
+  @Embeddable
   public static class SubjectKey implements Serializable {
     private String dataSourceId;
     private String subjectId;
 
     public SubjectKey() {}
 
-    public SubjectKey(String dataSourceId, String subjectId) {
+    public SubjectKey(@NotNull String dataSourceId, String subjectId) {
       this.dataSourceId = dataSourceId;
       this.subjectId = subjectId;
+    }
+
+    public String getDataSourceId() {
+      return dataSourceId;
+    }
+
+    public SubjectKey dataSourceId(@NotNull String dataSourceId) {
+      this.dataSourceId = dataSourceId;
+      return this;
+    }
+
+    public String getSubjectId() {
+      return subjectId;
+    }
+
+    public SubjectKey setSubjectId(String subjectId) {
+      this.subjectId = subjectId;
+      return this;
     }
 
     @Override
@@ -160,8 +166,8 @@ public class SubjectDao {
       if (obj == null) return false;
       if (getClass() != obj.getClass()) return false;
       SubjectKey other = (SubjectKey) obj;
-      return Objects.equals(dataSourceId, other.dataSourceId)
-          && Objects.equals(subjectId, other.subjectId);
+      return Objects.equals(getDataSourceId(), other.getDataSourceId())
+          && Objects.equals(getSubjectId(), other.getSubjectId());
     }
   }
 }

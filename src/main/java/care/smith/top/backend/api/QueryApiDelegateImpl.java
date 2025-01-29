@@ -104,7 +104,7 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
   @Transactional
   public ResponseEntity<Void> deleteDataSource(String dataSourceId) {
     dataSourceRepository.deleteById(dataSourceId);
-    subjectRepository.deleteAllByDataSourceId(dataSourceId);
+    subjectRepository.deleteAllBySubjectKeyDataSourceId(dataSourceId);
     return new ResponseEntity<>(HttpStatus.NO_CONTENT);
   }
 

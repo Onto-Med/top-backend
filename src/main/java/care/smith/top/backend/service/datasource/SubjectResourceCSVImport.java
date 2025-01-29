@@ -47,7 +47,7 @@ public class SubjectResourceCSVImport extends CSVImport {
 
   @Override
   public void run(String[] values) {
-    SubjectResourceDao subjectResource = new SubjectResourceDao(dataSourceId);
+    SubjectResourceDao subjectResource = new SubjectResourceDao(dataSourceId, null);
     setFields(subjectResource, values);
     saveSubjectResource(subjectResource);
   }

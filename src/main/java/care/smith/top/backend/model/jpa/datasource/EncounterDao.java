@@ -5,25 +5,30 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import javax.persistence.CascadeType;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.IdClass;
-import javax.persistence.Index;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
-import javax.persistence.Transient;
+import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 
 @Entity(name = "encounter")
 @Table(indexes = @Index(columnList = "dataSourceId"))
-@IdClass(EncounterDao.EncounterKey.class)
 public class EncounterDao {
-  @Id private String dataSourceId;
-  @Id private String encounterId;
+  @EmbeddedId private EncounterKey encounterKey;
 
-  @Transient private String subjectId;
-  @ManyToOne private SubjectDao subject;
+  private String subjectId;
+
+  @JoinColumns({
+    @JoinColumn(
+        name = "dataSourceId",
+        referencedColumnName = "dataSourceId",
+        insertable = false,
+        updatable = false),
+    @JoinColumn(
+        name = "subjectId",
+        referencedColumnName = "subjectId",
+        insertable = false,
+        updatable = false)
+  })
+  @ManyToOne
+  private SubjectDao subject;
 
   private String type;
   private LocalDateTime startDateTime;
@@ -34,31 +39,26 @@ public class EncounterDao {
 
   public EncounterDao() {}
 
-  public EncounterDao(String dataSourceId) {
-    this.dataSourceId = dataSourceId;
+  public EncounterDao(@NotNull String dataSourceId, String encounterId) {
+    encounterKey = new EncounterKey(dataSourceId, encounterId);
   }
 
-  public EncounterDao(String dataSourceId, String encounterId) {
-    this.dataSourceId = dataSourceId;
-    this.encounterId = encounterId;
-  }
-
-  public EncounterDao(String dataSourceId, String encounterId, SubjectDao subject) {
-    this.dataSourceId = dataSourceId;
-    this.encounterId = encounterId;
-    this.subject = subject;
+  public EncounterDao(@NotNull String dataSourceId, String encounterId, SubjectDao subject) {
+    this(dataSourceId, encounterId);
+    if (subject != null) {
+      this.subject = subject;
+      subjectId = subject.getSubjectId();
+    }
   }
 
   public EncounterDao(
-      String dataSourceId,
+      @NotNull String dataSourceId,
       String encounterId,
       SubjectDao subject,
       String type,
       LocalDateTime startDateTime,
       LocalDateTime endDateTime) {
-    this.dataSourceId = dataSourceId;
-    this.encounterId = encounterId;
-    this.subject = subject;
+    this(dataSourceId, encounterId, subject);
     this.type = type;
     this.startDateTime = startDateTime;
     this.endDateTime = endDateTime;
@@ -66,7 +66,7 @@ public class EncounterDao {
 
   @Override
   public int hashCode() {
-    return Objects.hash(dataSourceId, encounterId, endDateTime, startDateTime, subject, type);
+    return Objects.hash(encounterKey, endDateTime, startDateTime, subject, type);
   }
 
   @Override
@@ -75,31 +75,32 @@ public class EncounterDao {
     if (obj == null) return false;
     if (getClass() != obj.getClass()) return false;
     EncounterDao other = (EncounterDao) obj;
-    return Objects.equals(dataSourceId, other.getDataSourceId())
-        && Objects.equals(encounterId, other.getEncounterId())
-        && Objects.equals(endDateTime, other.getEndDateTime())
-        && Objects.equals(startDateTime, other.getStartDateTime())
-        && Objects.equals(subject, other.getSubject())
-        && Objects.equals(type, other.getType());
+    return Objects.equals(getDataSourceId(), other.getDataSourceId())
+        && Objects.equals(getEncounterId(), other.getEncounterId())
+        && Objects.equals(getEndDateTime(), other.getEndDateTime())
+        && Objects.equals(getStartDateTime(), other.getStartDateTime())
+        && Objects.equals(getSubject(), other.getSubject())
+        && Objects.equals(getType(), other.getType());
   }
 
   @Override
   public String toString() {
     StringBuffer sb =
-        new StringBuffer("[EncounterDao|" + dataSourceId + "|" + encounterId + "|" + subject);
+        new StringBuffer(
+            "[EncounterDao|" + getDataSourceId() + "|" + getEncounterId() + "|" + subject);
     if (type != null) sb.append("|" + type);
     if (startDateTime != null) sb.append("|" + startDateTime);
     if (endDateTime != null) sb.append("|" + endDateTime);
     return sb.append("]").toString();
   }
 
-  public EncounterDao dataSourceId(String dataSourceId) {
-    this.dataSourceId = dataSourceId;
+  public EncounterDao dataSourceId(@NotNull String dataSourceId) {
+    encounterKey.dataSourceId(dataSourceId);
     return this;
   }
 
   public EncounterDao encounterId(String encounterId) {
-    this.encounterId = encounterId;
+    encounterKey.encounterId(encounterId);
     return this;
   }
 
@@ -109,7 +110,10 @@ public class EncounterDao {
   }
 
   public EncounterDao subject(SubjectDao subject) {
-    this.subject = subject;
+    if (subject != null) {
+      this.subject = subject;
+      subjectId = subject.getSubjectId();
+    }
     return this;
   }
 
@@ -140,11 +144,11 @@ public class EncounterDao {
   }
 
   public String getDataSourceId() {
-    return dataSourceId;
+    return encounterKey.getDataSourceId();
   }
 
   public String getEncounterId() {
-    return encounterId;
+    return encounterKey.getEncounterId();
   }
 
   public String getSubjectId() {
@@ -171,15 +175,26 @@ public class EncounterDao {
     return subjectResources;
   }
 
+  @Embeddable
   public static class EncounterKey implements Serializable {
     private String dataSourceId;
     private String encounterId;
 
     public EncounterKey() {}
 
-    public EncounterKey(String dataSourceId, String encounterId) {
+    public EncounterKey(@NotNull String dataSourceId, String encounterId) {
       this.dataSourceId = dataSourceId;
       this.encounterId = encounterId;
+    }
+
+    public EncounterKey dataSourceId(@NotNull String dataSourceId) {
+      this.dataSourceId = dataSourceId;
+      return this;
+    }
+
+    public EncounterKey encounterId(String encounterId) {
+      this.encounterId = encounterId;
+      return this;
     }
 
     @Override
@@ -193,8 +208,16 @@ public class EncounterDao {
       if (obj == null) return false;
       if (getClass() != obj.getClass()) return false;
       EncounterKey other = (EncounterKey) obj;
-      return Objects.equals(dataSourceId, other.dataSourceId)
-          && Objects.equals(encounterId, other.encounterId);
+      return Objects.equals(getDataSourceId(), other.getDataSourceId())
+          && Objects.equals(getEncounterId(), other.getEncounterId());
+    }
+
+    public String getDataSourceId() {
+      return dataSourceId;
+    }
+
+    public String getEncounterId() {
+      return encounterId;
     }
   }
 }

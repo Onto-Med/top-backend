@@ -4,27 +4,47 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Objects;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.IdClass;
-import javax.persistence.Index;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
-import javax.persistence.Transient;
+import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 
 @Entity(name = "subject_resource")
 @Table(indexes = @Index(columnList = "dataSourceId"))
-@IdClass(SubjectResourceDao.SubjectResourceKey.class)
 public class SubjectResourceDao {
-  @Id private String dataSourceId;
-  @Id private String subjectResourceId;
+  @EmbeddedId private SubjectResourceKey subjectResourceKey;
 
-  @Transient private String subjectId;
-  @ManyToOne private SubjectDao subject;
+  private String subjectId;
 
-  @Transient private String encounterId;
-  @ManyToOne private EncounterDao encounter;
+  @JoinColumns({
+    @JoinColumn(
+        name = "dataSourceId",
+        referencedColumnName = "dataSourceId",
+        insertable = false,
+        updatable = false),
+    @JoinColumn(
+        name = "subjectId",
+        referencedColumnName = "subjectId",
+        insertable = false,
+        updatable = false)
+  })
+  @ManyToOne
+  private SubjectDao subject;
+
+  private String encounterId;
+
+  @JoinColumns({
+    @JoinColumn(
+        name = "dataSourceId",
+        referencedColumnName = "dataSourceId",
+        insertable = false,
+        updatable = false),
+    @JoinColumn(
+        name = "encounterId",
+        referencedColumnName = "encounterId",
+        insertable = false,
+        updatable = false)
+  })
+  @ManyToOne
+  private EncounterDao encounter;
 
   @NotNull private String codeSystem;
   @NotNull private String code;
@@ -41,13 +61,8 @@ public class SubjectResourceDao {
 
   public SubjectResourceDao() {}
 
-  public SubjectResourceDao(String dataSourceId) {
-    this.dataSourceId = dataSourceId;
-  }
-
-  public SubjectResourceDao(@NotNull String dataSourceId, @NotNull String subjectResourceId) {
-    this.dataSourceId = dataSourceId;
-    this.subjectResourceId = subjectResourceId;
+  public SubjectResourceDao(@NotNull String dataSourceId, String subjectResourceId) {
+    subjectResourceKey = new SubjectResourceKey(dataSourceId, subjectResourceId);
   }
 
   public SubjectResourceDao(
@@ -56,11 +71,7 @@ public class SubjectResourceDao {
       SubjectDao subject,
       @NotNull String codeSystem,
       @NotNull String code) {
-    this.dataSourceId = dataSourceId;
-    this.subjectResourceId = subjectResourceId;
-    this.subject = subject;
-    this.codeSystem = codeSystem;
-    this.code = code;
+    this(dataSourceId, subjectResourceId, subject, null, codeSystem, code);
   }
 
   public SubjectResourceDao(
@@ -69,11 +80,7 @@ public class SubjectResourceDao {
       EncounterDao encounter,
       @NotNull String codeSystem,
       @NotNull String code) {
-    this.dataSourceId = dataSourceId;
-    this.subjectResourceId = subjectResourceId;
-    this.encounter = encounter;
-    this.codeSystem = codeSystem;
-    this.code = code;
+    this(dataSourceId, subjectResourceId, null, encounter, codeSystem, code);
   }
 
   public SubjectResourceDao(
@@ -83,10 +90,15 @@ public class SubjectResourceDao {
       EncounterDao encounter,
       @NotNull String codeSystem,
       @NotNull String code) {
-    this.dataSourceId = dataSourceId;
-    this.subjectResourceId = subjectResourceId;
-    this.subject = subject;
-    this.encounter = encounter;
+    this(dataSourceId, subjectResourceId);
+    if (subject != null) {
+      this.subject = subject;
+      subjectId = subject.getSubjectId();
+    }
+    if (encounter != null) {
+      this.encounter = encounter;
+      encounterId = encounter.getEncounterId();
+    }
     this.codeSystem = codeSystem;
     this.code = code;
   }
@@ -97,7 +109,6 @@ public class SubjectResourceDao {
         booleanValue,
         code,
         codeSystem,
-        dataSourceId,
         dateTime,
         dateTimeValue,
         encounter,
@@ -105,7 +116,7 @@ public class SubjectResourceDao {
         numberValue,
         startDateTime,
         subject,
-        subjectResourceId,
+        subjectResourceKey,
         textValue,
         unit);
   }
@@ -116,20 +127,20 @@ public class SubjectResourceDao {
     if (obj == null) return false;
     if (getClass() != obj.getClass()) return false;
     SubjectResourceDao other = (SubjectResourceDao) obj;
-    return Objects.equals(booleanValue, other.booleanValue)
-        && Objects.equals(code, other.code)
-        && Objects.equals(codeSystem, other.codeSystem)
-        && Objects.equals(dataSourceId, other.dataSourceId)
-        && Objects.equals(dateTime, other.dateTime)
-        && Objects.equals(dateTimeValue, other.dateTimeValue)
-        && Objects.equals(encounter, other.encounter)
-        && Objects.equals(endDateTime, other.endDateTime)
-        && Objects.equals(numberValue, other.numberValue)
-        && Objects.equals(startDateTime, other.startDateTime)
-        && Objects.equals(subject, other.subject)
-        && Objects.equals(subjectResourceId, other.subjectResourceId)
-        && Objects.equals(textValue, other.textValue)
-        && Objects.equals(unit, other.unit);
+    return Objects.equals(getBooleanValue(), other.getBooleanValue())
+        && Objects.equals(getCode(), other.getCode())
+        && Objects.equals(getCodeSystem(), other.getCodeSystem())
+        && Objects.equals(getDataSourceId(), other.getDataSourceId())
+        && Objects.equals(getDateTime(), other.getDateTime())
+        && Objects.equals(getDateTimeValue(), other.getDateTimeValue())
+        && Objects.equals(getEncounter(), other.getEncounter())
+        && Objects.equals(getEndDateTime(), other.getEndDateTime())
+        && Objects.equals(getNumberValue(), other.getNumberValue())
+        && Objects.equals(getStartDateTime(), other.getStartDateTime())
+        && Objects.equals(getSubject(), other.getSubject())
+        && Objects.equals(getSubjectResourceId(), other.getSubjectResourceId())
+        && Objects.equals(getTextValue(), other.getTextValue())
+        && Objects.equals(getUnit(), other.getUnit());
   }
 
   @Override
@@ -138,9 +149,9 @@ public class SubjectResourceDao {
     StringBuffer sb =
         new StringBuffer(
             "SubjectResourceDao|"
-                + dataSourceId
+                + getDataSourceId()
                 + "|"
-                + subjectResourceId
+                + getSubjectResourceId()
                 + "|"
                 + codeSystem
                 + "|"
@@ -160,13 +171,13 @@ public class SubjectResourceDao {
     return sb.toString();
   }
 
-  public SubjectResourceDao dataSourceId(String dataSourceId) {
-    this.dataSourceId = dataSourceId;
+  public SubjectResourceDao dataSourceId(@NotNull String dataSourceId) {
+    subjectResourceKey.dataSourceId(dataSourceId);
     return this;
   }
 
   public SubjectResourceDao subjectResourceId(String subjectResourceId) {
-    this.subjectResourceId = subjectResourceId;
+    subjectResourceKey.subjectResourceId(subjectResourceId);
     return this;
   }
 
@@ -176,7 +187,10 @@ public class SubjectResourceDao {
   }
 
   public SubjectResourceDao subject(SubjectDao subject) {
-    this.subject = subject;
+    if (subject != null) {
+      this.subject = subject;
+      subjectId = subject.getSubjectId();
+    }
     return this;
   }
 
@@ -186,7 +200,10 @@ public class SubjectResourceDao {
   }
 
   public SubjectResourceDao encounter(EncounterDao encounter) {
-    this.encounter = encounter;
+    if (encounter != null) {
+      this.encounter = encounter;
+      encounterId = encounter.getEncounterId();
+    }
     return this;
   }
 
@@ -245,11 +262,11 @@ public class SubjectResourceDao {
   }
 
   public String getDataSourceId() {
-    return dataSourceId;
+    return subjectResourceKey.getDataSourceId();
   }
 
   public String getSubjectResourceId() {
-    return subjectResourceId;
+    return subjectResourceKey.getSubjectResourceId();
   }
 
   public String getSubjectId() {
@@ -308,15 +325,26 @@ public class SubjectResourceDao {
     return dateTimeValue;
   }
 
+  @Embeddable
   public static class SubjectResourceKey implements Serializable {
     private String dataSourceId;
     private String subjectResourceId;
 
     public SubjectResourceKey() {}
 
-    public SubjectResourceKey(String dataSourceId, String subjectResourceId) {
+    public SubjectResourceKey(@NotNull String dataSourceId, String subjectResourceId) {
       this.dataSourceId = dataSourceId;
       this.subjectResourceId = subjectResourceId;
+    }
+
+    public SubjectResourceKey dataSourceId(@NotNull String dataSourceId) {
+      this.dataSourceId = dataSourceId;
+      return this;
+    }
+
+    public SubjectResourceKey subjectResourceId(String subjectResourceId) {
+      this.subjectResourceId = subjectResourceId;
+      return this;
     }
 
     @Override
@@ -330,8 +358,16 @@ public class SubjectResourceDao {
       if (obj == null) return false;
       if (getClass() != obj.getClass()) return false;
       SubjectResourceKey other = (SubjectResourceKey) obj;
-      return Objects.equals(dataSourceId, other.dataSourceId)
-          && Objects.equals(subjectResourceId, other.subjectResourceId);
+      return Objects.equals(getDataSourceId(), other.getDataSourceId())
+          && Objects.equals(getSubjectResourceId(), other.getSubjectResourceId());
+    }
+
+    public String getDataSourceId() {
+      return dataSourceId;
+    }
+
+    public String getSubjectResourceId() {
+      return subjectResourceId;
     }
   }
 }

@@ -3,8 +3,7 @@ package care.smith.top.backend.model.jpa.datasource;
 import care.smith.top.model.DataSource;
 import care.smith.top.model.QueryType;
 import java.util.Objects;
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import org.apache.commons.lang3.StringUtils;
 
@@ -16,8 +15,7 @@ public class DataSourceDao {
   public DataSourceDao() {}
 
   public DataSourceDao(@NotNull String dataSourceId) {
-    this.dataSourceId = dataSourceId;
-    this.title = StringUtils.capitalize(dataSourceId);
+    this(dataSourceId, StringUtils.capitalize(dataSourceId));
   }
 
   public DataSourceDao(@NotNull String dataSourceId, String title) {
@@ -51,7 +49,7 @@ public class DataSourceDao {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     DataSourceDao that = (DataSourceDao) o;
-    return Objects.equals(dataSourceId, that.dataSourceId);
+    return Objects.equals(getDataSourceId(), that.getDataSourceId());
   }
 
   @Override

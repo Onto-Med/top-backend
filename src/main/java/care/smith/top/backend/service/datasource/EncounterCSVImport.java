@@ -44,7 +44,7 @@ public class EncounterCSVImport extends CSVImport {
 
   @Override
   public void run(String[] values) {
-    EncounterDao encounter = new EncounterDao(dataSourceId);
+    EncounterDao encounter = new EncounterDao(dataSourceId, null);
     setFields(encounter, values);
     saveEncounter(encounter);
   }

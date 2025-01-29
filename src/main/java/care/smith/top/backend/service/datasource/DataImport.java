@@ -120,14 +120,14 @@ public abstract class DataImport {
 
   private SubjectDao getSubject(String subjectId) {
     Optional<SubjectDao> subject =
-        subjectRepository.findByDataSourceIdAndSubjectId(dataSourceId, subjectId);
+        subjectRepository.findBySubjectKeyDataSourceIdAndSubjectKeySubjectId(dataSourceId, subjectId);
     if (subject.isPresent()) return subject.get();
     return subjectRepository.save(new SubjectDao(dataSourceId, subjectId));
   }
 
   private EncounterDao getEncounter(String encounterId, SubjectDao subject) {
     Optional<EncounterDao> encounter =
-        encounterRepository.findByDataSourceIdAndEncounterId(dataSourceId, encounterId);
+        encounterRepository.findByEncounterKeyDataSourceIdAndEncounterKeyEncounterId(dataSourceId, encounterId);
     if (encounter.isPresent()) return encounter.get();
     if (subject == null)
       return encounterRepository.save(new EncounterDao(dataSourceId, encounterId));

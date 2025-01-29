@@ -1,0 +1,134 @@
+databaseChangeLog:
+- changeSet:
+    id: 1738320642000-14
+    author: ChristophB
+    changes:
+    - dropForeignKeyConstraint:
+        baseTableName: SUBJECT_RESOURCE
+        constraintName: FK7kierwumapym4x2csuhvmcfa8
+- changeSet:
+    id: 1738320642000-15
+    author: ChristophB
+    changes:
+    - dropForeignKeyConstraint:
+        baseTableName: SUBJECT_RESOURCE
+        constraintName: FK82tb8nfwudk8dio3iujtx1ir3
+- changeSet:
+    id: 1738320642000-16
+    author: ChristophB
+    changes:
+    - dropForeignKeyConstraint:
+        baseTableName: ENCOUNTER
+        constraintName: FKeubnrljdpvhqmtr69bqw7b2dg
+- changeSet:
+    id: 1738320642000-8
+    author: ChristophB
+    changes:
+    - addColumn:
+        columns:
+        - column:
+            name: encounter_id
+            type: varchar(255)
+        tableName: subject_resource
+- changeSet:
+    id: 1738320642000-9
+    author: ChristophB
+    changes:
+    - addColumn:
+        columns:
+        - column:
+            name: subject_id
+            type: varchar(255)
+        tableName: encounter
+- changeSet:
+    id: 1738320642000-10
+    author: ChristophB
+    changes:
+    - addColumn:
+        columns:
+        - column:
+            name: subject_id
+            type: varchar(255)
+        tableName: subject_resource
+- changeSet:
+    id: 1738320642000-11
+    author: ChristophB
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: data_source_id,subject_id
+        baseTableName: subject_resource
+        constraintName: FKfhwsyw4pj6vyan81jj6sayxf
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: data_source_id,subject_id
+        referencedTableName: subject
+        validate: true
+- changeSet:
+    id: 1738320642000-12
+    author: ChristophB
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: data_source_id,subject_id
+        baseTableName: encounter
+        constraintName: FKr42bmif6ke6bfpb4pvxqm3p6p
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: data_source_id,subject_id
+        referencedTableName: subject
+        validate: true
+- changeSet:
+    id: 1738320642000-13
+    author: ChristophB
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: data_source_id,encounter_id
+        baseTableName: subject_resource
+        constraintName: FKt2mm6aw5l09l2vtvc6mb9q71h
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: data_source_id,encounter_id
+        referencedTableName: encounter
+        validate: true
+- changeSet:
+    id: 1738320642000-17
+    author: ChristophB
+    changes:
+    - dropColumn:
+        columnName: ENCOUNTER_DATA_SOURCE_ID
+        tableName: SUBJECT_RESOURCE
+- changeSet:
+    id: 1738320642000-18
+    author: ChristophB
+    changes:
+    - dropColumn:
+        columnName: ENCOUNTER_ENCOUNTER_ID
+        tableName: SUBJECT_RESOURCE
+- changeSet:
+    id: 1738320642000-19
+    author: ChristophB
+    changes:
+    - dropColumn:
+        columnName: SUBJECT_DATA_SOURCE_ID
+        tableName: ENCOUNTER
+- changeSet:
+    id: 1738320642000-20
+    author: ChristophB
+    changes:
+    - dropColumn:
+        columnName: SUBJECT_DATA_SOURCE_ID
+        tableName: SUBJECT_RESOURCE
+- changeSet:
+    id: 1738320642000-21
+    author: ChristophB
+    changes:
+    - dropColumn:
+        columnName: SUBJECT_SUBJECT_ID
+        tableName: ENCOUNTER
+- changeSet:
+    id: 1738320642000-22
+    author: ChristophB
+    changes:
+    - dropColumn:
+        columnName: SUBJECT_SUBJECT_ID
+        tableName: SUBJECT_RESOURCE
+
