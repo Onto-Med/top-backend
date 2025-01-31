@@ -48,7 +48,7 @@ public abstract class DataImport {
       String dataSourceId,
       String config)
       throws IOException {
-    DataImport importer = null;
+    DataImport importer;
     switch (fileType) {
       case CSV_SUBJECT:
         importer =
@@ -75,10 +75,19 @@ public abstract class DataImport {
                 configToCsvFieldMapping(config));
         break;
       case FHIR:
-        throw new NotImplementedException();
+        importer =
+            new FHIRImport(
+                dataSourceId,
+                reader,
+                subjectRepository,
+                encounterRepository,
+                subjectResourceRepository,
+                config != null && config.contains("mergeEncounters=true"));
+        break;
+      default:
+        throw new NotImplementedException(
+            "The specified data source file or type are not supported.");
     }
-    if (importer == null)
-      throw new IOException("The specified data source file or type are not supported.");
     return importer;
   }
 

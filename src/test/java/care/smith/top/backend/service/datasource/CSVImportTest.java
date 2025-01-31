@@ -1,24 +1,19 @@
 package care.smith.top.backend.service.datasource;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
-import care.smith.top.backend.AbstractTest;
 import care.smith.top.backend.model.jpa.datasource.EncounterDao;
 import care.smith.top.backend.model.jpa.datasource.SubjectDao;
 import care.smith.top.backend.model.jpa.datasource.SubjectResourceDao;
 import care.smith.top.top_document_query.util.DateUtil;
 import java.io.StringReader;
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.IntStream;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 
 @SpringBootTest
 @ContextConfiguration
-class CSVImportTest extends AbstractTest {
+class CSVImportTest extends ImportTest {
   public static final String SUBJECT_CSV =
       "pat_id; birth_date; gender"
           + System.lineSeparator()
@@ -188,24 +183,6 @@ class CSVImportTest extends AbstractTest {
     return new SubjectResourceDao(DATA_SOURCE_ID, "r2", subject, encounter, "codesystem2", "code2")
         .dateTime(DateUtil.parse("2004-05-06T01:02:03"))
         .numberValue(new BigDecimal("56.780"));
-  }
-
-  private void assertEncounters(EncounterDao... expected) {
-    List<EncounterDao> actual = encounterRepository.findAll();
-    assertEquals(expected.length, actual.size());
-    IntStream.range(0, expected.length).forEach(i -> assertEquals(expected[i], actual.get(i)));
-  }
-
-  private void assertSubjectResources(SubjectResourceDao... expected) {
-    List<SubjectResourceDao> actual = subjectResourceRepository.findAll();
-    assertEquals(expected.length, actual.size());
-    IntStream.range(0, expected.length).forEach(i -> assertEquals(expected[i], actual.get(i)));
-  }
-
-  private void assertSubjects(SubjectDao... expected) {
-    List<SubjectDao> actual = subjectRepository.findAll();
-    assertEquals(expected.length, actual.size());
-    IntStream.range(0, expected.length).forEach(i -> assertEquals(expected[i], actual.get(i)));
   }
 
   private void importSubjectData(String csv) {
