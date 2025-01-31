@@ -35,9 +35,9 @@ import org.hl7.fhir.r4.model.Timing.TimingRepeatComponent;
 
 public class FHIRImport extends DataImport {
 
-  private Map<String, Coding> medications = new HashMap<>();
-  private Map<String, String> encounters = new HashMap<>();
-  private boolean mergeEncounters;
+  private final Map<String, Coding> medications = new HashMap<>();
+  private final Map<String, String> encounters = new HashMap<>();
+  private final boolean mergeEncounters;
 
   public FHIRImport(
       String dataSourceId,
@@ -75,7 +75,7 @@ public class FHIRImport extends DataImport {
   }
 
   private void mergeEncounters() {
-    for (String enc : encounters.keySet()) encounters.put(enc, getRootParent(enc));
+    encounters.replaceAll((e, v) -> getRootParent(e));
   }
 
   private String getRootParent(String child) {
