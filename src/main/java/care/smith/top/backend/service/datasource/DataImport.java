@@ -81,7 +81,8 @@ public abstract class DataImport {
                 reader,
                 subjectRepository,
                 encounterRepository,
-                subjectResourceRepository);
+                subjectResourceRepository,
+                config != null && config.contains("mergeEncounters=true"));
         break;
       default:
         throw new NotImplementedException(
