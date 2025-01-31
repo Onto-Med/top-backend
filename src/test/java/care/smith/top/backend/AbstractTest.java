@@ -1,7 +1,18 @@
 package care.smith.top.backend;
 
 import care.smith.top.backend.api.OrganisationApiDelegateImpl;
-import care.smith.top.backend.repository.jpa.*;
+import care.smith.top.backend.repository.jpa.CategoryRepository;
+import care.smith.top.backend.repository.jpa.ConceptRepository;
+import care.smith.top.backend.repository.jpa.EntityRepository;
+import care.smith.top.backend.repository.jpa.EntityVersionRepository;
+import care.smith.top.backend.repository.jpa.OrganisationMembershipRepository;
+import care.smith.top.backend.repository.jpa.OrganisationRepository;
+import care.smith.top.backend.repository.jpa.PhenotypeRepository;
+import care.smith.top.backend.repository.jpa.RepositoryRepository;
+import care.smith.top.backend.repository.jpa.UserRepository;
+import care.smith.top.backend.repository.jpa.datasource.EncounterRepository;
+import care.smith.top.backend.repository.jpa.datasource.SubjectRepository;
+import care.smith.top.backend.repository.jpa.datasource.SubjectResourceRepository;
 import care.smith.top.backend.service.EntityService;
 import care.smith.top.backend.service.OrganisationService;
 import care.smith.top.backend.service.RepositoryService;
@@ -35,6 +46,9 @@ public abstract class AbstractTest {
   @Autowired protected UserRepository userRepository;
   @Autowired protected UserService userService;
   @Autowired protected OrganisationMembershipRepository organisationMembershipRepository;
+  @Autowired protected SubjectRepository subjectRepository;
+  @Autowired protected EncounterRepository encounterRepository;
+  @Autowired protected SubjectResourceRepository subjectResourceRepository;
 
   @BeforeAll
   static void initializeOLS() throws IOException {
@@ -54,5 +68,8 @@ public abstract class AbstractTest {
   public void resetState() {
     organisationRepository.deleteAll();
     userRepository.deleteAll();
+    subjectRepository.deleteAll();
+    encounterRepository.deleteAll();
+    subjectResourceRepository.deleteAll();
   }
 }

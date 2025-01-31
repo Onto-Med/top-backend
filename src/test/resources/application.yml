@@ -18,6 +18,8 @@ spring:
     open-in-view: false
   datasource:
     url: jdbc:hsqldb:mem:test
+    username: sa
+    password:
   security:
     cors:
       allowed-origins: "*"

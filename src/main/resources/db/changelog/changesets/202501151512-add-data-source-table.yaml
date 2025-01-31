@@ -1,0 +1,19 @@
+databaseChangeLog:
+- changeSet:
+    id: 1736950360950-8
+    author: ChristophB (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: data_sourcePK
+            name: data_source_id
+            type: VARCHAR(255)
+        - column:
+            name: title
+            type: VARCHAR(255)
+        tableName: data_source
+

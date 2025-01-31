@@ -296,7 +296,11 @@ class EntityServiceTest extends AbstractTest {
             entityRepository.findByRepositoryIdAndOriginId(
                 forkingInstruction.getRepositoryId(), origin.getId()))
         .isPresent()
-        .satisfies(f -> assertThat(f.get().getCurrentVersion().getVersion()).isEqualTo(2));
+        .satisfies(
+            f -> {
+              assertThat(f.isPresent()).isTrue();
+              assertThat(f.get().getCurrentVersion().getVersion()).isEqualTo(2);
+            });
 
     assertThat(entityVersionRepository.findAll()).isNotEmpty().size().isEqualTo(5);
 
@@ -478,7 +482,7 @@ class EntityServiceTest extends AbstractTest {
                             .isEqualTo(RestrictionOperator.GREATER_THAN);
                         assertThat(((NumberRestriction) r).getValues()).size().isEqualTo(2);
                         assertThat(((NumberRestriction) r).getValues().get(0))
-                            .isEqualTo(BigDecimal.valueOf(50.025));
+                            .isEqualByComparingTo(BigDecimal.valueOf(50.025));
                         assertThat(((NumberRestriction) r).getValues().get(1)).isNull();
                       });
             });
@@ -526,7 +530,7 @@ class EntityServiceTest extends AbstractTest {
                         assertThat(((NumberRestriction) r).getValues()).size().isEqualTo(2);
                         assertThat(((NumberRestriction) r).getValues().get(0)).isNull();
                         assertThat(((NumberRestriction) r).getValues().get(1))
-                            .isEqualTo(BigDecimal.valueOf(50));
+                            .isEqualByComparingTo(BigDecimal.valueOf(50));
                       });
             });
 

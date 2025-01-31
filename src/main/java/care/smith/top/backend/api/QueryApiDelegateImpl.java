@@ -1,17 +1,23 @@
 package care.smith.top.backend.api;
 
+import care.smith.top.backend.model.jpa.datasource.DataSourceDao;
 import care.smith.top.backend.repository.jpa.QueryRepository;
+import care.smith.top.backend.repository.jpa.datasource.DataSourceRepository;
+import care.smith.top.backend.repository.jpa.datasource.EncounterRepository;
+import care.smith.top.backend.repository.jpa.datasource.SubjectRepository;
+import care.smith.top.backend.repository.jpa.datasource.SubjectResourceRepository;
 import care.smith.top.backend.service.OrganisationService;
 import care.smith.top.backend.service.PhenotypeQueryService;
 import care.smith.top.backend.service.QueryService;
+import care.smith.top.backend.service.datasource.*;
 import care.smith.top.backend.service.nlp.DocumentQueryService;
 import care.smith.top.backend.util.ApiModelMapper;
 import care.smith.top.model.*;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.FileSystemException;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -21,6 +27,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
@@ -29,6 +37,10 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
   @Autowired private DocumentQueryService documentQueryService;
   @Autowired private OrganisationService organisationService;
   @Autowired private QueryRepository queryRepository;
+  @Autowired private SubjectRepository subjectRepository;
+  @Autowired private EncounterRepository encounterRepository;
+  @Autowired private SubjectResourceRepository subjectResourceRepository;
+  @Autowired private DataSourceRepository dataSourceRepository;
 
   @Override
   public ResponseEntity<Void> deleteQuery(
@@ -85,6 +97,57 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<List<DataSource>> getDataSources(QueryType queryType) {
     return new ResponseEntity<>(new ArrayList<>(loadDataSources(queryType)), HttpStatus.OK);
+  }
+
+  @Override
+  @PreAuthorize("hasRole('ADMIN')")
+  @Transactional
+  public ResponseEntity<Void> deleteDataSource(String dataSourceId) {
+    dataSourceRepository.deleteById(dataSourceId);
+    subjectRepository.deleteAllBySubjectKeyDataSourceId(dataSourceId);
+    return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+  }
+
+  @Override
+  @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<Void> uploadDataSource(
+      MultipartFile file, DataSourceFileType fileType, String dataSourceId, String config) {
+    try {
+      BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream()));
+      DataImport.getInstance(
+              subjectRepository,
+              encounterRepository,
+              subjectResourceRepository,
+              reader,
+              fileType,
+              dataSourceId,
+              Stream.of(
+                      "subjectId",
+                      "birthDate",
+                      "sex",
+                      "encounterId",
+                      "type",
+                      "startDateTime",
+                      "endDateTime",
+                      "subjectResourceId",
+                      "codeSystem",
+                      "code",
+                      "dateTime",
+                      "unit",
+                      "numberValue",
+                      "textValue",
+                      "booleanValue",
+                      "dateTimeValue")
+                  .map(c -> c + "=" + c)
+                  .collect(Collectors.joining(";")))
+          .run();
+      dataSourceRepository.save(new DataSourceDao(dataSourceId));
+    } catch (IOException e) {
+      throw new ResponseStatusException(
+          HttpStatus.INTERNAL_SERVER_ERROR,
+          String.format("Could not read uploaded file. (%s)", e.getMessage()));
+    }
+    return new ResponseEntity<>(HttpStatus.CREATED);
   }
 
   @Override

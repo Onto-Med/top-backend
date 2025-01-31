@@ -1,0 +1,226 @@
+databaseChangeLog:
+- changeSet:
+    id: 1733855764753-8
+    author: ChristophB (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: encounterPK
+            name: data_source_id
+            type: VARCHAR(5000)
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: encounterPK
+            name: encounter_id
+            type: VARCHAR(5000)
+        - column:
+            name: end_date_time
+            type: TIMESTAMP
+        - column:
+            name: start_date_time
+            type: TIMESTAMP
+        - column:
+            name: type
+            type: VARCHAR(5000)
+        - column:
+            name: subject_data_source_id
+            type: VARCHAR(5000)
+        - column:
+            name: subject_subject_id
+            type: VARCHAR(5000)
+        tableName: encounter
+- changeSet:
+    id: 1733855764753-9
+    author: ChristophB (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: subjectPK
+            name: data_source_id
+            type: VARCHAR(5000)
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: subjectPK
+            name: subject_id
+            type: VARCHAR(5000)
+        - column:
+            name: birth_date
+            type: TIMESTAMP
+        - column:
+            name: sex
+            type: VARCHAR(255)
+        tableName: subject
+- changeSet:
+    id: 1733855764753-10
+    author: ChristophB (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: subject_resourcePK
+            name: data_source_id
+            type: VARCHAR(5000)
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: subject_resourcePK
+            name: subject_resource_id
+            type: VARCHAR(5000)
+        - column:
+            name: boolean_value
+            type: BOOLEAN
+        - column:
+            constraints:
+              nullable: false
+            name: code
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: code_system
+            type: VARCHAR(5000)
+        - column:
+            name: date_time
+            type: TIMESTAMP
+        - column:
+            name: date_time_value
+            type: TIMESTAMP
+        - column:
+            name: end_date_time
+            type: TIMESTAMP
+        - column:
+            name: number_value
+            type: decimal
+        - column:
+            name: start_date_time
+            type: TIMESTAMP
+        - column:
+            name: text_value
+            type: VARCHAR(5000)
+        - column:
+            name: unit
+            type: VARCHAR(255)
+        - column:
+            name: encounter_data_source_id
+            type: VARCHAR(5000)
+        - column:
+            name: encounter_encounter_id
+            type: VARCHAR(5000)
+        - column:
+            name: subject_data_source_id
+            type: VARCHAR(5000)
+        - column:
+            name: subject_subject_id
+            type: VARCHAR(5000)
+        tableName: subject_resource
+- changeSet:
+    id: 1733855764753-11
+    author: ChristophB (generated)
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: data_source_id
+        indexName: IDXdnphs32fxqgb64w3rbq2sa6eo
+        tableName: subject_resource
+- changeSet:
+    id: 1733855764753-12
+    author: ChristophB (generated)
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: data_source_id
+        indexName: IDXds8vnhku3fbq5jtof3ea99bm8
+        tableName: encounter
+- changeSet:
+    id: 1733855764753-13
+    author: ChristophB (generated)
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: data_source_id
+        indexName: IDXt4k56ftei9k1e3e66jevgfnci
+        tableName: subject
+- changeSet:
+    id: 1733855764753-14
+    author: ChristophB (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: subject_data_source_id,subject_subject_id
+        baseTableName: subject_resource
+        constraintName: FK7kierwumapym4x2csuhvmcfa8
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: data_source_id,subject_id
+        referencedTableName: subject
+        validate: true
+- changeSet:
+    id: 1733855764753-15
+    author: ChristophB (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: encounter_data_source_id,encounter_encounter_id
+        baseTableName: subject_resource
+        constraintName: FK82tb8nfwudk8dio3iujtx1ir3
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: data_source_id,encounter_id
+        referencedTableName: encounter
+        validate: true
+- changeSet:
+    id: 1733855764753-16
+    author: ChristophB (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: subject_data_source_id,subject_subject_id
+        baseTableName: encounter
+        constraintName: FKeubnrljdpvhqmtr69bqw7b2dg
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: data_source_id,subject_id
+        referencedTableName: subject
+        validate: true
+-  changeSet:
+    id: 1733855764753-17
+    author:  ChristophB
+    dbms: '!postgresql'
+    changes:
+    - modifyDataType:
+         columnName: number_value
+         newDataType: decimal(20, 3)
+         tableName: subject_resource
+    -  modifyDataType:
+         columnName:  number_value
+         newDataType:  decimal(20, 3)
+         tableName:  value
+    - modifyDataType:
+         columnName: number_values
+         newDataType: decimal(20, 3)
+         tableName: restriction_number_values
+    - modifyDataType:
+         columnName: minimum_number_value
+         newDataType: decimal(20, 3)
+         tableName: restriction
+    - modifyDataType:
+         columnName: maximum_number_value
+         newDataType: decimal(20, 3)
+         tableName: restriction
+
