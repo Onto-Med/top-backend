@@ -22,7 +22,11 @@ public class ResourcePathHttpHandler implements HttpHandler {
 
   @Override
   public void handle(HttpExchange exchange) throws IOException {
-    Path resourcePath = mapper.map(Path.of(exchange.getRequestURI().getRawPath()));
+    StringBuilder resourcePath = new StringBuilder();
+    mapper
+        .map(Path.of(exchange.getRequestURI().getRawPath()))
+        .iterator()
+        .forEachRemaining(p -> resourcePath.append("/").append(p.toString()));
     try (InputStream resource =
         ResourcePathHttpHandler.class.getResourceAsStream(resourcePath.toString())) {
       assert resource != null;
