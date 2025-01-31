@@ -20,20 +20,30 @@ class SubjectRepositoryTest extends AbstractTest {
   void testfindBySubjectKeyDataSourceIdAndSubjectKeySubjectId() {
     String subjectId = "subject_1";
 
-    assertThat(subjectRepository.findBySubjectKeyDataSourceIdAndSubjectKeySubjectId(dataSourceId, subjectId)).isEmpty();
+    assertThat(
+            subjectRepository.findBySubjectKeyDataSourceIdAndSubjectKeySubjectId(
+                dataSourceId, subjectId))
+        .isEmpty();
 
     SubjectDao subject = new SubjectDao(dataSourceId, subjectId, LocalDateTime.now(), "female");
     subjectRepository.save(subject);
 
-    assertThat(subjectRepository.findBySubjectKeyDataSourceIdAndSubjectKeySubjectId(dataSourceId, subjectId))
+    assertThat(
+            subjectRepository.findBySubjectKeyDataSourceIdAndSubjectKeySubjectId(
+                dataSourceId, subjectId))
         .isNotEmpty();
 
     // This should fail, because no subject with ID "subject_2" exists:
-    assertThat(subjectRepository.findBySubjectKeyDataSourceIdAndSubjectKeySubjectId(dataSourceId, "subject_2"))
+    assertThat(
+            subjectRepository.findBySubjectKeyDataSourceIdAndSubjectKeySubjectId(
+                dataSourceId, "subject_2"))
         .isEmpty();
 
     assertThatCode(() -> subjectRepository.delete(subject)).doesNotThrowAnyException();
-    assertThat(subjectRepository.findBySubjectKeyDataSourceIdAndSubjectKeySubjectId(dataSourceId, subjectId)).isEmpty();
+    assertThat(
+            subjectRepository.findBySubjectKeyDataSourceIdAndSubjectKeySubjectId(
+                dataSourceId, subjectId))
+        .isEmpty();
   }
 
   @Test

@@ -39,8 +39,6 @@ public abstract class DataImport {
     this.subjectResourceRepository = subjectResourceRepository;
   }
 
-  public abstract void run();
-
   public static DataImport getInstance(
       SubjectRepository subjectRepository,
       EncounterRepository encounterRepository,
@@ -96,6 +94,25 @@ public abstract class DataImport {
         .collect(Collectors.toMap(k -> k[0], v -> v[1]));
   }
 
+  public abstract void run();
+
+  private SubjectDao getSubject(String subjectId) {
+    Optional<SubjectDao> subject =
+        subjectRepository.findBySubjectKeyDataSourceIdAndSubjectKeySubjectId(
+            dataSourceId, subjectId);
+    return subject.orElseGet(() -> subjectRepository.save(new SubjectDao(dataSourceId, subjectId)));
+  }
+
+  private EncounterDao getEncounter(String encounterId, SubjectDao subject) {
+    Optional<EncounterDao> encounter =
+        encounterRepository.findByEncounterKeyDataSourceIdAndEncounterKeyEncounterId(
+            dataSourceId, encounterId);
+    if (encounter.isPresent()) return encounter.get();
+    if (subject == null)
+      return encounterRepository.save(new EncounterDao(dataSourceId, encounterId));
+    return encounterRepository.save(new EncounterDao(dataSourceId, encounterId, subject));
+  }
+
   protected void saveSubject(SubjectDao subject) {
     subjectRepository.save(subject);
   }
@@ -116,21 +133,5 @@ public abstract class DataImport {
       subjectResource.encounter(getEncounter(subjectResource.getEncounterId(), subject));
 
     subjectResourceRepository.save(subjectResource);
-  }
-
-  private SubjectDao getSubject(String subjectId) {
-    Optional<SubjectDao> subject =
-        subjectRepository.findBySubjectKeyDataSourceIdAndSubjectKeySubjectId(dataSourceId, subjectId);
-    if (subject.isPresent()) return subject.get();
-    return subjectRepository.save(new SubjectDao(dataSourceId, subjectId));
-  }
-
-  private EncounterDao getEncounter(String encounterId, SubjectDao subject) {
-    Optional<EncounterDao> encounter =
-        encounterRepository.findByEncounterKeyDataSourceIdAndEncounterKeyEncounterId(dataSourceId, encounterId);
-    if (encounter.isPresent()) return encounter.get();
-    if (subject == null)
-      return encounterRepository.save(new EncounterDao(dataSourceId, encounterId));
-    return encounterRepository.save(new EncounterDao(dataSourceId, encounterId, subject));
   }
 }

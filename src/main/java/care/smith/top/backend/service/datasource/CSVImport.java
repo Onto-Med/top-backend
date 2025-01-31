@@ -25,9 +25,8 @@ import org.slf4j.LoggerFactory;
 public abstract class CSVImport extends DataImport {
 
   private final Logger LOGGER = LoggerFactory.getLogger(CSVImport.class);
-
+  private final Map<String, Method> fields;
   private String[] header;
-  private Map<String, Method> fields;
   private CSVReader csvReader;
 
   protected CSVImport(
@@ -88,12 +87,6 @@ public abstract class CSVImport extends DataImport {
 
   public abstract void run(String[] values);
 
-  protected void setFields(Object dao, String[] values) {
-    for (int i = 0; i < header.length; i++)
-      if (header[i] != null && values[i] != null && !values[i].isBlank())
-        setField(dao, header[i], values[i].trim());
-  }
-
   private void setField(Object dao, String name, String value) {
     Method m = fields.get(name);
     Class<?> type = m.getParameterTypes()[0];
@@ -109,5 +102,11 @@ public abstract class CSVImport extends DataImport {
     } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
       LOGGER.warn(e.getMessage(), e);
     }
+  }
+
+  protected void setFields(Object dao, String[] values) {
+    for (int i = 0; i < header.length; i++)
+      if (header[i] != null && values[i] != null && !values[i].isBlank())
+        setField(dao, header[i], values[i].trim());
   }
 }
