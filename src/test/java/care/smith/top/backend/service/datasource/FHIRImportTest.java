@@ -1,8 +1,5 @@
 package care.smith.top.backend.service.datasource;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
-import care.smith.top.backend.AbstractTest;
 import care.smith.top.backend.model.jpa.datasource.EncounterDao;
 import care.smith.top.backend.model.jpa.datasource.SubjectDao;
 import care.smith.top.backend.model.jpa.datasource.SubjectResourceDao;
@@ -11,7 +8,6 @@ import care.smith.top.top_phenotypic_query.adapter.fhir.FHIRUtil;
 import java.io.Reader;
 import java.io.StringReader;
 import java.math.BigDecimal;
-import java.util.List;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.CodeableConcept;
 import org.hl7.fhir.r4.model.Coding;
@@ -40,9 +36,8 @@ import org.springframework.test.context.ContextConfiguration;
 
 @SpringBootTest
 @ContextConfiguration
-class FHIRImportTest extends AbstractTest {
-  String dataSourceId = "data_source_1";
-
+class FHIRImportTest extends ImportTest {
+  static final String DATA_SOURCE_ID = "data_source_1";
   static String FHIR;
 
   @BeforeAll
@@ -196,7 +191,7 @@ class FHIRImportTest extends AbstractTest {
 
     FHIRImport imp =
         new FHIRImport(
-            dataSourceId,
+            DATA_SOURCE_ID,
             reader,
             subjectRepository,
             encounterRepository,
@@ -204,53 +199,53 @@ class FHIRImportTest extends AbstractTest {
     imp.run();
 
     SubjectDao sub1 =
-        new SubjectDao(dataSourceId, "Patient/p1", DateUtil.parse("1974-12-25"), "male");
+        new SubjectDao(DATA_SOURCE_ID, "Patient/p1", DateUtil.parse("1974-12-25"), "male");
     SubjectDao sub2 =
-        new SubjectDao(dataSourceId, "Patient/p2", DateUtil.parse("1982-01-23"), "female");
+        new SubjectDao(DATA_SOURCE_ID, "Patient/p2", DateUtil.parse("1982-01-23"), "female");
 
     EncounterDao enc11 =
         new EncounterDao(
-            dataSourceId,
+            DATA_SOURCE_ID,
             "Encounter/p1e1",
             sub1,
             "IMP",
             DateUtil.parse("2015-02-01T10:00"),
             DateUtil.parse("2015-02-05T18:30"));
-    EncounterDao enc12 = new EncounterDao(dataSourceId, "Encounter/p1e2", sub1).type("AMB");
-    EncounterDao enc13 = new EncounterDao(dataSourceId, "Encounter/p1e3", sub1).type("AMB");
+    EncounterDao enc12 = new EncounterDao(DATA_SOURCE_ID, "Encounter/p1e2", sub1).type("AMB");
+    EncounterDao enc13 = new EncounterDao(DATA_SOURCE_ID, "Encounter/p1e3", sub1).type("AMB");
 
     EncounterDao enc21 =
         new EncounterDao(
-            dataSourceId,
+            DATA_SOURCE_ID,
             "Encounter/p2e1",
             sub2,
             "IMP",
             DateUtil.parse("2016-02-01T10:00"),
             DateUtil.parse("2016-02-05T18:30"));
-    EncounterDao enc22 = new EncounterDao(dataSourceId, "Encounter/p2e2", sub2).type("AMB");
-    EncounterDao enc23 = new EncounterDao(dataSourceId, "Encounter/p2e3", sub2).type("AMB");
+    EncounterDao enc22 = new EncounterDao(DATA_SOURCE_ID, "Encounter/p2e2", sub2).type("AMB");
+    EncounterDao enc23 = new EncounterDao(DATA_SOURCE_ID, "Encounter/p2e3", sub2).type("AMB");
 
     SubjectResourceDao p1o =
         new SubjectResourceDao(
-                dataSourceId, "Observation/p1o", sub1, enc11, "http://loinc.org", "711-2")
-            .numberValue(new BigDecimal("0.92"))
+                DATA_SOURCE_ID, "Observation/p1o", sub1, enc11, "http://loinc.org", "711-2")
+            .numberValue(new BigDecimal("0.920"))
             .unit("x10*9/L")
             .dateTime(DateUtil.parse("2015-02-01T12:00"));
     SubjectResourceDao p1p =
         new SubjectResourceDao(
-                dataSourceId, "Procedure/p1p", sub1, enc12, "http://snomed.info/sct", "399010004")
+                DATA_SOURCE_ID, "Procedure/p1p", sub1, enc12, "http://snomed.info/sct", "399010004")
             .booleanValue(true)
             .startDateTime(DateUtil.parse("2015-02-02T11:00"))
             .endDateTime(DateUtil.parse("2015-02-02T12:00"));
     SubjectResourceDao p1c =
         new SubjectResourceDao(
-                dataSourceId, "Condition/p1c", sub1, enc13, "http://snomed.info/sct", "39065001")
+                DATA_SOURCE_ID, "Condition/p1c", sub1, enc13, "http://snomed.info/sct", "39065001")
             .booleanValue(true)
             .dateTime(DateUtil.parse("2015-02-03T12:00"));
 
     SubjectResourceDao p2ma =
         new SubjectResourceDao(
-                dataSourceId,
+                DATA_SOURCE_ID,
                 "MedicationAdministration/p2ma",
                 sub2,
                 enc21,
@@ -260,7 +255,7 @@ class FHIRImportTest extends AbstractTest {
             .dateTime(DateUtil.parse("2016-02-01T12:00"));
     SubjectResourceDao p2ms =
         new SubjectResourceDao(
-                dataSourceId,
+                DATA_SOURCE_ID,
                 "MedicationStatement/p2ms",
                 sub2,
                 enc22,
@@ -271,7 +266,7 @@ class FHIRImportTest extends AbstractTest {
             .endDateTime(DateUtil.parse("2016-02-02T12:00"));
     SubjectResourceDao p2mr =
         new SubjectResourceDao(
-                dataSourceId,
+                DATA_SOURCE_ID,
                 "MedicationRequest/p2mr",
                 sub2,
                 enc23,
@@ -281,28 +276,9 @@ class FHIRImportTest extends AbstractTest {
             .startDateTime(DateUtil.parse("2016-02-03T11:00"))
             .endDateTime(DateUtil.parse("2016-02-03T12:00"));
 
-    List<SubjectDao> subjects = subjectRepository.findAll();
-    assertEquals(2, subjects.size());
-    assertEquals(sub1, subjects.get(0));
-    assertEquals(sub2, subjects.get(1));
-
-    List<EncounterDao> encounters = encounterRepository.findAll();
-    assertEquals(6, encounters.size());
-    assertEquals(enc11, encounters.get(0));
-    assertEquals(enc12, encounters.get(1));
-    assertEquals(enc13, encounters.get(2));
-    assertEquals(enc21, encounters.get(3));
-    assertEquals(enc22, encounters.get(4));
-    assertEquals(enc23, encounters.get(5));
-
-    List<SubjectResourceDao> resources = subjectResourceRepository.findAll();
-    assertEquals(6, resources.size());
-    assertEquals(p1c, resources.get(0));
-    assertEquals(p2ma, resources.get(1));
-    assertEquals(p2mr, resources.get(2));
-    assertEquals(p2ms, resources.get(3));
-    assertEquals(p1o, resources.get(4));
-    assertEquals(p1p, resources.get(5));
+    assertSubjects(sub1, sub2);
+    assertEncounters(enc11, enc12, enc13, enc21, enc22, enc23);
+    assertSubjectResources(p1c, p2ma, p2mr, p2ms, p1o, p1p);
   }
 
   @Test
@@ -311,7 +287,7 @@ class FHIRImportTest extends AbstractTest {
 
     FHIRImport imp =
         new FHIRImport(
-            dataSourceId,
+            DATA_SOURCE_ID,
             reader,
             subjectRepository,
             encounterRepository,
@@ -320,53 +296,53 @@ class FHIRImportTest extends AbstractTest {
     imp.run();
 
     SubjectDao sub1 =
-        new SubjectDao(dataSourceId, "Patient/p1", DateUtil.parse("1974-12-25"), "male");
+        new SubjectDao(DATA_SOURCE_ID, "Patient/p1", DateUtil.parse("1974-12-25"), "male");
     SubjectDao sub2 =
-        new SubjectDao(dataSourceId, "Patient/p2", DateUtil.parse("1982-01-23"), "female");
+        new SubjectDao(DATA_SOURCE_ID, "Patient/p2", DateUtil.parse("1982-01-23"), "female");
 
     EncounterDao enc11 =
         new EncounterDao(
-            dataSourceId,
+            DATA_SOURCE_ID,
             "Encounter/p1e1",
             sub1,
             "IMP",
             DateUtil.parse("2015-02-01T10:00"),
             DateUtil.parse("2015-02-05T18:30"));
-    EncounterDao enc12 = new EncounterDao(dataSourceId, "Encounter/p1e2", sub1).type("AMB");
-    EncounterDao enc13 = new EncounterDao(dataSourceId, "Encounter/p1e3", sub1).type("AMB");
+    EncounterDao enc12 = new EncounterDao(DATA_SOURCE_ID, "Encounter/p1e2", sub1).type("AMB");
+    EncounterDao enc13 = new EncounterDao(DATA_SOURCE_ID, "Encounter/p1e3", sub1).type("AMB");
 
     EncounterDao enc21 =
         new EncounterDao(
-            dataSourceId,
+            DATA_SOURCE_ID,
             "Encounter/p2e1",
             sub2,
             "IMP",
             DateUtil.parse("2016-02-01T10:00"),
             DateUtil.parse("2016-02-05T18:30"));
-    EncounterDao enc22 = new EncounterDao(dataSourceId, "Encounter/p2e2", sub2).type("AMB");
-    EncounterDao enc23 = new EncounterDao(dataSourceId, "Encounter/p2e3", sub2).type("AMB");
+    EncounterDao enc22 = new EncounterDao(DATA_SOURCE_ID, "Encounter/p2e2", sub2).type("AMB");
+    EncounterDao enc23 = new EncounterDao(DATA_SOURCE_ID, "Encounter/p2e3", sub2).type("AMB");
 
     SubjectResourceDao p1o =
         new SubjectResourceDao(
-                dataSourceId, "Observation/p1o", sub1, enc11, "http://loinc.org", "711-2")
-            .numberValue(new BigDecimal("0.92"))
+                DATA_SOURCE_ID, "Observation/p1o", sub1, enc11, "http://loinc.org", "711-2")
+            .numberValue(new BigDecimal("0.920"))
             .unit("x10*9/L")
             .dateTime(DateUtil.parse("2015-02-01T12:00"));
     SubjectResourceDao p1p =
         new SubjectResourceDao(
-                dataSourceId, "Procedure/p1p", sub1, enc11, "http://snomed.info/sct", "399010004")
+                DATA_SOURCE_ID, "Procedure/p1p", sub1, enc11, "http://snomed.info/sct", "399010004")
             .booleanValue(true)
             .startDateTime(DateUtil.parse("2015-02-02T11:00"))
             .endDateTime(DateUtil.parse("2015-02-02T12:00"));
     SubjectResourceDao p1c =
         new SubjectResourceDao(
-                dataSourceId, "Condition/p1c", sub1, enc11, "http://snomed.info/sct", "39065001")
+                DATA_SOURCE_ID, "Condition/p1c", sub1, enc11, "http://snomed.info/sct", "39065001")
             .booleanValue(true)
             .dateTime(DateUtil.parse("2015-02-03T12:00"));
 
     SubjectResourceDao p2ma =
         new SubjectResourceDao(
-                dataSourceId,
+                DATA_SOURCE_ID,
                 "MedicationAdministration/p2ma",
                 sub2,
                 enc21,
@@ -376,7 +352,7 @@ class FHIRImportTest extends AbstractTest {
             .dateTime(DateUtil.parse("2016-02-01T12:00"));
     SubjectResourceDao p2ms =
         new SubjectResourceDao(
-                dataSourceId,
+                DATA_SOURCE_ID,
                 "MedicationStatement/p2ms",
                 sub2,
                 enc21,
@@ -387,7 +363,7 @@ class FHIRImportTest extends AbstractTest {
             .endDateTime(DateUtil.parse("2016-02-02T12:00"));
     SubjectResourceDao p2mr =
         new SubjectResourceDao(
-                dataSourceId,
+                DATA_SOURCE_ID,
                 "MedicationRequest/p2mr",
                 sub2,
                 enc21,
@@ -397,27 +373,8 @@ class FHIRImportTest extends AbstractTest {
             .startDateTime(DateUtil.parse("2016-02-03T11:00"))
             .endDateTime(DateUtil.parse("2016-02-03T12:00"));
 
-    List<SubjectDao> subjects = subjectRepository.findAll();
-    assertEquals(2, subjects.size());
-    assertEquals(sub1, subjects.get(0));
-    assertEquals(sub2, subjects.get(1));
-
-    List<EncounterDao> encounters = encounterRepository.findAll();
-    assertEquals(6, encounters.size());
-    assertEquals(enc11, encounters.get(0));
-    assertEquals(enc12, encounters.get(1));
-    assertEquals(enc13, encounters.get(2));
-    assertEquals(enc21, encounters.get(3));
-    assertEquals(enc22, encounters.get(4));
-    assertEquals(enc23, encounters.get(5));
-
-    List<SubjectResourceDao> resources = subjectResourceRepository.findAll();
-    assertEquals(6, resources.size());
-    assertEquals(p1c, resources.get(0));
-    assertEquals(p2ma, resources.get(1));
-    assertEquals(p2mr, resources.get(2));
-    assertEquals(p2ms, resources.get(3));
-    assertEquals(p1o, resources.get(4));
-    assertEquals(p1p, resources.get(5));
+    assertSubjects(sub1, sub2);
+    assertEncounters(enc11, enc12, enc13, enc21, enc22, enc23);
+    assertSubjectResources(p1c, p2ma, p2mr, p2ms, p1o, p1p);
   }
 }
