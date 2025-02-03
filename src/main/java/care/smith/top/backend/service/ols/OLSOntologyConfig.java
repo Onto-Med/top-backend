@@ -7,6 +7,7 @@ import java.net.URI;
  */
 public class OLSOntologyConfig {
   private URI id;
+  private URI versionId;
   private String title;
   private String description;
   private String preferredPrefix;
@@ -17,6 +18,14 @@ public class OLSOntologyConfig {
 
   public void setId(URI id) {
     this.id = id;
+  }
+
+  public URI getVersionId() {
+    return versionId;
+  }
+
+  public void setVersionId(URI versionId) {
+    this.versionId = versionId;
   }
 
   public String getTitle() {
