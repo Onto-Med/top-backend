@@ -39,7 +39,7 @@ public class DocumentQueryService extends QueryService {
   @Value("${top.documents.data-source-config-dir:config/data_sources/nlp}")
   private String dataSourceConfigDir;
 
-  @Value("${top.documents.max-term-count:15000}")
+  @Value("${top.documents.max-term-count:10000}")
   private Integer maxTermCount;
 
   @Autowired private ConceptRepository conceptRepository;
