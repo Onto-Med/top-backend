@@ -2,10 +2,7 @@ package care.smith.top.backend.api;
 
 import care.smith.top.backend.model.jpa.datasource.DataSourceDao;
 import care.smith.top.backend.repository.jpa.QueryRepository;
-import care.smith.top.backend.repository.jpa.datasource.DataSourceRepository;
-import care.smith.top.backend.repository.jpa.datasource.EncounterRepository;
-import care.smith.top.backend.repository.jpa.datasource.SubjectRepository;
-import care.smith.top.backend.repository.jpa.datasource.SubjectResourceRepository;
+import care.smith.top.backend.repository.jpa.datasource.*;
 import care.smith.top.backend.service.OrganisationService;
 import care.smith.top.backend.service.PhenotypeQueryService;
 import care.smith.top.backend.service.QueryService;
@@ -40,6 +37,7 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
   @Autowired private SubjectRepository subjectRepository;
   @Autowired private EncounterRepository encounterRepository;
   @Autowired private SubjectResourceRepository subjectResourceRepository;
+  @Autowired private ExpectedResultRepository expectedResultRepository;
   @Autowired private DataSourceRepository dataSourceRepository;
 
   @Override
@@ -118,6 +116,7 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
               subjectRepository,
               encounterRepository,
               subjectResourceRepository,
+              expectedResultRepository,
               reader,
               fileType,
               dataSourceId,
@@ -137,7 +136,9 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
                       "numberValue",
                       "textValue",
                       "booleanValue",
-                      "dateTimeValue")
+                      "dateTimeValue",
+                      "expectedResultId",
+                      "phenotypeId")
                   .map(c -> c + "=" + c)
                   .collect(Collectors.joining(";")))
           .run();
