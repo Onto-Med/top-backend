@@ -19,6 +19,7 @@ public class SubjectCSVImport extends CSVImport {
         subjectRepository,
         null,
         null,
+        null,
         SubjectDao.class,
         fieldsMapping,
         separator);
@@ -29,7 +30,8 @@ public class SubjectCSVImport extends CSVImport {
       Reader reader,
       SubjectRepository subjectRepository,
       Map<String, String> fieldsMapping) {
-    super(dataSourceId, reader, subjectRepository, null, null, SubjectDao.class, fieldsMapping);
+    super(
+        dataSourceId, reader, subjectRepository, null, null, null, SubjectDao.class, fieldsMapping);
   }
 
   @Override

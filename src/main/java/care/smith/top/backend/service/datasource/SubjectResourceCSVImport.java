@@ -23,6 +23,7 @@ public class SubjectResourceCSVImport extends CSVImport {
         subjectRepository,
         encounterRepository,
         subjectResourceRepository,
+        null,
         SubjectResourceDao.class,
         fieldsMapping,
         separator);
@@ -41,6 +42,7 @@ public class SubjectResourceCSVImport extends CSVImport {
         subjectRepository,
         encounterRepository,
         subjectResourceRepository,
+        null,
         SubjectResourceDao.class,
         fieldsMapping);
   }
