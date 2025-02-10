@@ -1,0 +1,97 @@
+databaseChangeLog:
+- changeSet:
+    id: 1737967794472-8
+    author: ChristophB
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: expected_resultPK
+            name: data_source_id
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: expected_resultPK
+            name: expected_result_id
+            type: VARCHAR(255)
+        - column:
+            name: boolean_value
+            type: BOOLEAN
+        - column:
+            name: date_time_value
+            type: TIMESTAMP
+        - column:
+            name: number_value
+            type: numeric
+        - column:
+            constraints:
+              nullable: false
+            name: phenotype_id
+            type: VARCHAR(255)
+        - column:
+            name: text_value
+            type: VARCHAR(255)
+        - column:
+            name: encounter_data_source_id
+            type: VARCHAR(255)
+        - column:
+            name: encounter_encounter_id
+            type: VARCHAR(255)
+        - column:
+            name: subject_data_source_id
+            type: VARCHAR(255)
+        - column:
+            name: subject_subject_id
+            type: VARCHAR(255)
+        tableName: expected_result
+- changeSet:
+    id: 1737967794472-9
+    author: ChristophB
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: data_source_id
+        indexName: IDXstxe26t55bm6593qtleosdmp6
+        tableName: expected_result
+- changeSet:
+    id: 1737967794472-10
+    author: ChristophB
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: subject_data_source_id,subject_subject_id
+        baseTableName: expected_result
+        constraintName: FK512w2n5ve2cb9unel4j8umtly
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: data_source_id,subject_id
+        referencedTableName: subject
+        validate: true
+- changeSet:
+    id: 1737967794472-11
+    author: ChristophB
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: encounter_data_source_id,encounter_encounter_id
+        baseTableName: expected_result
+        constraintName: FKcf2gm7u2sueednd9dkukt7mb2
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: data_source_id,encounter_id
+        referencedTableName: encounter
+        validate: true
+-  changeSet:
+    id: 1737967794472-12
+    author:  ChristophB
+    dbms: '!postgresql'
+    changes:
+    - modifyDataType:
+        columnName: number_value
+        newDataType: numeric(20, 3)
+        tableName: expected_result
+

@@ -1,6 +1,7 @@
 package care.smith.top.backend.service.datasource;
 
 import care.smith.top.backend.repository.jpa.datasource.EncounterRepository;
+import care.smith.top.backend.repository.jpa.datasource.ExpectedResultRepository;
 import care.smith.top.backend.repository.jpa.datasource.SubjectRepository;
 import care.smith.top.backend.repository.jpa.datasource.SubjectResourceRepository;
 import care.smith.top.top_document_query.util.DateUtil;
@@ -35,10 +36,17 @@ public abstract class CSVImport extends DataImport {
       SubjectRepository subjectRepository,
       EncounterRepository encounterRepository,
       SubjectResourceRepository subjectResourceRepository,
+      ExpectedResultRepository expectedResultRepository,
       Class<?> daoClass,
       Map<String, String> fieldsMapping,
       char separator) {
-    super(dataSourceId, reader, subjectRepository, encounterRepository, subjectResourceRepository);
+    super(
+        dataSourceId,
+        reader,
+        subjectRepository,
+        encounterRepository,
+        subjectResourceRepository,
+        expectedResultRepository);
     try {
       CSVParser parser = new CSVParserBuilder().withSeparator(separator).build();
       csvReader = new CSVReaderBuilder(reader).withCSVParser(parser).build();
@@ -61,6 +69,7 @@ public abstract class CSVImport extends DataImport {
       SubjectRepository subjectRepository,
       EncounterRepository encounterRepository,
       SubjectResourceRepository subjectResourceRepository,
+      ExpectedResultRepository expectedResultRepository,
       Class<?> daoClass,
       Map<String, String> fieldsMapping) {
     this(
@@ -69,6 +78,7 @@ public abstract class CSVImport extends DataImport {
         subjectRepository,
         encounterRepository,
         subjectResourceRepository,
+        expectedResultRepository,
         daoClass,
         fieldsMapping,
         ';');
