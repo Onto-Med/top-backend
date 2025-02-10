@@ -1,9 +1,11 @@
 package care.smith.top.backend.service.datasource;
 
 import care.smith.top.backend.model.jpa.datasource.EncounterDao;
+import care.smith.top.backend.model.jpa.datasource.ExpectedResultDao;
 import care.smith.top.backend.model.jpa.datasource.SubjectDao;
 import care.smith.top.backend.model.jpa.datasource.SubjectResourceDao;
 import care.smith.top.backend.repository.jpa.datasource.EncounterRepository;
+import care.smith.top.backend.repository.jpa.datasource.ExpectedResultRepository;
 import care.smith.top.backend.repository.jpa.datasource.SubjectRepository;
 import care.smith.top.backend.repository.jpa.datasource.SubjectResourceRepository;
 import care.smith.top.model.DataSourceFileType;
@@ -25,24 +27,28 @@ public abstract class DataImport {
   protected final SubjectRepository subjectRepository;
   protected final EncounterRepository encounterRepository;
   protected final SubjectResourceRepository subjectResourceRepository;
+  protected final ExpectedResultRepository expectedResultRepository;
 
   protected DataImport(
       String dataSourceId,
       Reader reader,
       SubjectRepository subjectRepository,
       EncounterRepository encounterRepository,
-      SubjectResourceRepository subjectResourceRepository) {
+      SubjectResourceRepository subjectResourceRepository,
+      ExpectedResultRepository expectedResultRepository) {
     this.dataSourceId = dataSourceId;
     this.reader = reader;
     this.subjectRepository = subjectRepository;
     this.encounterRepository = encounterRepository;
     this.subjectResourceRepository = subjectResourceRepository;
+    this.expectedResultRepository = expectedResultRepository;
   }
 
   public static DataImport getInstance(
       SubjectRepository subjectRepository,
       EncounterRepository encounterRepository,
       SubjectResourceRepository subjectResourceRepository,
+      ExpectedResultRepository expectedResultRepository,
       Reader reader,
       DataSourceFileType fileType,
       String dataSourceId,
@@ -72,6 +78,17 @@ public abstract class DataImport {
                 subjectRepository,
                 encounterRepository,
                 subjectResourceRepository,
+                configToCsvFieldMapping(config));
+        break;
+      case CSV_EXPECTED_RESULT:
+        importer =
+            new ExpectedResultCSVImport(
+                dataSourceId,
+                reader,
+                subjectRepository,
+                encounterRepository,
+                subjectResourceRepository,
+                expectedResultRepository,
                 configToCsvFieldMapping(config));
         break;
       case FHIR:
@@ -142,5 +159,18 @@ public abstract class DataImport {
       subjectResource.encounter(getEncounter(subjectResource.getEncounterId(), subject));
 
     subjectResourceRepository.save(subjectResource);
+  }
+
+  protected void saveExpectedResult(ExpectedResultDao expectedResult) {
+    SubjectDao subject = null;
+    if (expectedResult.getSubjectId() != null) {
+      subject = getSubject(expectedResult.getSubjectId());
+      expectedResult.subject(subject);
+    }
+
+    if (expectedResult.getEncounterId() != null)
+      expectedResult.encounter(getEncounter(expectedResult.getEncounterId(), subject));
+
+    expectedResultRepository.save(expectedResult);
   }
 }
