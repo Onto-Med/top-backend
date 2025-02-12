@@ -3,10 +3,7 @@ package care.smith.top.backend.repository.ols;
 import care.smith.top.backend.service.ols.OLSOntologiesResponse;
 import care.smith.top.model.CodeSystem;
 import java.net.URI;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Function;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -39,7 +36,9 @@ public class CodeSystemRepository extends OlsRepository {
               ontology ->
                   new CodeSystem()
                       .externalId(ontology.getOntologyId())
-                      .uri(ontology.getConfig().getId())
+                      .uri(
+                          Optional.ofNullable(ontology.getConfig().getVersionId())
+                              .orElse(ontology.getConfig().getId()))
                       .name(ontology.getConfig().getTitle())
                       .shortName(ontology.getConfig().getPreferredPrefix()))
           .collect(

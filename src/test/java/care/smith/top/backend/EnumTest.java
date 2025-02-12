@@ -82,5 +82,8 @@ public class EnumTest {
               RestrictionOperator.GREATER_THAN,
               RestrictionOperator.GREATER_THAN_OR_EQUAL_TO
             });
+
+    assertThat(CodeScope.values())
+        .isEqualTo(new CodeScope[] {CodeScope.SELF, CodeScope.SUBTREE, CodeScope.LEAVES});
   }
 }

@@ -3,10 +3,7 @@ package care.smith.top.backend.service;
 import care.smith.top.backend.repository.ols.CodeRepository;
 import care.smith.top.backend.repository.ols.CodeSystemRepository;
 import care.smith.top.backend.repository.ols.OlsRepository;
-import care.smith.top.model.Code;
-import care.smith.top.model.CodePage;
-import care.smith.top.model.CodeSystem;
-import care.smith.top.model.CodeSystemPage;
+import care.smith.top.model.*;
 import java.net.URI;
 import java.util.*;
 import java.util.function.Predicate;
@@ -24,11 +21,11 @@ import org.springframework.stereotype.Service;
 @Service
 @Primary
 public class OLSCodeService {
-  @Value("${spring.paging.page-size:10}")
-  private int ontologyPageSize;
-
   @Autowired protected CodeSystemRepository codeSystemRepository;
   @Autowired protected CodeRepository codeRepository;
+
+  @Value("${spring.paging.page-size:10}")
+  private int ontologyPageSize;
 
   @NotNull
   private static Predicate<CodeSystem> filterByName(String name) {
@@ -38,8 +35,8 @@ public class OLSCodeService {
             || cs.getShortName() != null && StringUtils.containsIgnoreCase(cs.getShortName(), name);
   }
 
-  public Code getCode(URI uri, String codeSystemId, List<String> include) {
-    return codeRepository.getCode(uri, codeSystemId);
+  public Code getCode(URI uri, String codeSystemId, CodeScope scope) {
+    return codeRepository.getCode(uri, codeSystemId, scope);
   }
 
   public CodePage getCodes(

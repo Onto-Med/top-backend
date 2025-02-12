@@ -12,6 +12,7 @@ import java.io.InputStream;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.validation.constraints.NotNull;
 import org.reflections.Reflections;
 import org.reflections.util.ConfigurationBuilder;
@@ -907,13 +908,15 @@ public class EntityService implements ContentService {
     return e -> {
       if (e.getCodes() == null) return e;
       return e.codes(
-          e.getCodes().stream()
-              .peek(
-                  c ->
-                      codeRepository
-                          .getCodeSystem(c.getCodeSystem().getUri())
-                          .ifPresent(c::codeSystem))
-              .collect(Collectors.toList()));
+          e.getCodes().stream().peek(this::populateWithCodeSystems).collect(Collectors.toList()));
     };
+  }
+
+  private void populateWithCodeSystems(Code c) {
+    codeRepository.getCodeSystem(c.getCodeSystem().getUri()).ifPresent(c::codeSystem);
+    Optional.ofNullable(c.getChildren())
+        .map(Collection::stream)
+        .orElseGet(Stream::empty)
+        .forEach(this::populateWithCodeSystems);
   }
 }
