@@ -7,13 +7,22 @@ import care.smith.top.backend.util.ApiModelMapper;
 import care.smith.top.model.*;
 import care.smith.top.top_phenotypic_query.converter.PhenotypeExporter;
 import care.smith.top.top_phenotypic_query.converter.PhenotypeImporter;
+import java.awt.*;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.net.URI;
 import java.util.*;
+import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.validation.constraints.NotNull;
+import org.jgrapht.Graph;
+import org.jgrapht.Graphs;
+import org.jgrapht.alg.connectivity.ConnectivityInspector;
+import org.jgrapht.graph.AsSubgraph;
+import org.jgrapht.graph.DefaultDirectedGraph;
+import org.jgrapht.graph.DefaultEdge;
 import org.reflections.Reflections;
 import org.reflections.util.ConfigurationBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -914,9 +923,123 @@ public class EntityService implements ContentService {
 
   private void populateWithCodeSystems(Code c) {
     codeRepository.getCodeSystem(c.getCodeSystem().getUri()).ifPresent(c::codeSystem);
-    Optional.ofNullable(c.getChildren())
-        .map(Collection::stream)
-        .orElseGet(Stream::empty)
+    Optional.ofNullable(c.getChildren()).stream()
+        .flatMap(Collection::stream)
         .forEach(this::populateWithCodeSystems);
+  }
+
+  private void mergeCodeDuplicates(Entity entity) {
+    Graph<CodeVertexAttributes, DefaultEdge> graph = new DefaultDirectedGraph(DefaultEdge.class);
+    HashMap<URI, CodeVertexAttributes> vertexCache = new HashMap<>();
+    entity.getCodes().stream()
+        .map(code -> getGraph(code, vertexCache))
+        .forEach(
+            g -> {
+              Graphs.addGraph(graph, g);
+            });
+
+    ConnectivityInspector<CodeVertexAttributes, DefaultEdge> ci = new ConnectivityInspector(graph);
+    ci.connectedSets().stream()
+        .map(vertices -> new AsSubgraph<CodeVertexAttributes, DefaultEdge>(graph, vertices))
+        .forEach(
+            subGraph -> {
+              subGraph.outgoingEdgesOf(getRoot(subGraph)).stream()
+                  .flatMap(edge -> getSuperfluousEdges(subGraph, edge, 1))
+                  .collect(Collectors.toList())
+                  .forEach(
+                      edge -> {
+                        subGraph.removeEdge(edge);
+                      });
+            });
+  }
+
+  // helper class for code duplicate resolution
+  private class CodeVertexAttributes {
+    Code code;
+    int depth = 0;
+    DefaultEdge bestIncomingEdge;
+
+    CodeVertexAttributes(@NotNull Code code) {
+      this.code = code;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      return code.getUri().equals(((CodeVertexAttributes) obj).code.getUri());
+    }
+
+    @Override
+    public int hashCode() {
+      return code.getUri().hashCode();
+    }
+  }
+
+  // helper method for code duplicate resolution
+  private Graph<CodeVertexAttributes, DefaultEdge> getGraph(
+      Code code, HashMap<URI, CodeVertexAttributes> vertexCache) {
+    Graph<CodeVertexAttributes, DefaultEdge> graph = new DefaultDirectedGraph<>(DefaultEdge.class);
+    CodeVertexAttributes attributes = getVertex(code, vertexCache);
+    graph.addVertex(attributes);
+    fillInChildren(graph, code, vertexCache);
+    return graph;
+  }
+
+  private CodeVertexAttributes getVertex(
+      Code code, HashMap<URI, CodeVertexAttributes> vertexCache) {
+    if (vertexCache.containsKey(code.getUri())) {
+      return vertexCache.get(code.getUri());
+    }
+    CodeVertexAttributes attributes = new CodeVertexAttributes(code);
+    vertexCache.put(code.getUri(), attributes);
+    return attributes;
+  }
+
+  // helper method for code duplicate resolution
+  private void fillInChildren(
+      Graph<CodeVertexAttributes, DefaultEdge> graph,
+      Code parentCode,
+      HashMap<URI, CodeVertexAttributes> vertexCache) {
+    parentCode
+        .getChildren()
+        .forEach(
+            child -> {
+              CodeVertexAttributes childAttributes = getVertex(child, vertexCache);
+              graph.addVertex(childAttributes);
+              graph.addEdge(getVertex(parentCode, vertexCache), childAttributes);
+              fillInChildren(graph, child, vertexCache);
+            });
+  }
+
+  // helper method for code duplicate resolution
+  private CodeVertexAttributes getRoot(Graph<CodeVertexAttributes, DefaultEdge> graph) {
+    Set<CodeVertexAttributes> rootCandidates =
+        graph.vertexSet().stream()
+            .filter(vertex -> graph.incomingEdgesOf(vertex).isEmpty())
+            .collect(Collectors.toSet());
+    assert rootCandidates.size() == 1;
+    return rootCandidates.stream().findFirst().get();
+  }
+
+  // helper method for code duplicate resolution
+  private Stream<DefaultEdge> getSuperfluousEdges(
+      Graph<CodeVertexAttributes, DefaultEdge> graph, DefaultEdge incoming, int depth) {
+    CodeVertexAttributes node = graph.getEdgeTarget(incoming);
+    if (node.depth == 0) {
+      // first visit of this node
+      node.bestIncomingEdge = incoming;
+      node.depth = depth;
+      return graph.outgoingEdgesOf(node).stream()
+          .flatMap(outgoing -> getSuperfluousEdges(graph, outgoing, depth + 1));
+    }
+    if (depth > node.depth) {
+      // This path is better. Replace bestIncomingEdge and return the old one for deletion.
+      DefaultEdge worseEdge = node.bestIncomingEdge;
+      node.bestIncomingEdge = incoming;
+      node.depth = depth;
+      return Stream.of(worseEdge);
+    } else {
+      // This path is worse. Return it for deletion.
+      return Stream.of(incoming);
+    }
   }
 }
