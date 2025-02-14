@@ -96,9 +96,7 @@ public class DocumentQueryService extends QueryService {
     }
 
     if (subConceptDepth > 0) {
-      // ToDo: populate only up to specific depth -> depth needs to be calculated/returned properly
-      //   in top-document-query
-      conceptRepository.populateEntities(conceptMap, subDependencies);
+      conceptRepository.populateEntities(conceptMap, subDependencies, subConceptDepth);
       if (calculateTermCount(conceptMap, query.getLanguage()) > maxTermCount) {
         result =
             new QueryResultDao(queryDao, createdAt, null, OffsetDateTime.now(), QueryState.FAILED)
@@ -287,6 +285,7 @@ public class DocumentQueryService extends QueryService {
   private int calculateTermCount(Map<String, Entity> conceptMap, String language) {
     int termCount = 0;
     for (Entity concept : conceptMap.values()) {
+      if (concept.getEntityType().equals(EntityType.COMPOSITE_CONCEPT)) continue;
       termCount +=
           ((int)
                   concept.getSynonyms().stream()
