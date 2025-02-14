@@ -531,7 +531,8 @@ public class EntityService implements ContentService {
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
     EntityVersionDao latestVersion = entityVersionRepository.findByEntityIdAndNextVersionNull(id);
-    EntityVersionDao newVersion = new EntityVersionDao(data).entity(entity);
+    EntityVersionDao newVersion =
+        new EntityVersionDao(mergeCodeDuplicates().apply(data)).entity(entity);
 
     if (latestVersion != null) {
       if (latestVersion.getDataType() != newVersion.getDataType())
@@ -553,8 +554,7 @@ public class EntityService implements ContentService {
       setSuperEntities(entity, superEntities);
     }
 
-    return mergeCodeDuplicates()
-        .andThen(populateWithCodeSystems())
+    return populateWithCodeSystems()
         .andThen(populateSubEntities())
         .apply(entityRepository.save(entity.currentVersion(newVersion)).toApiModel());
   }
@@ -805,7 +805,8 @@ public class EntityService implements ContentService {
               "entityType '%s' is invalid for concept repository",
               data.getEntityType().getValue()));
 
-    EntityDao entity = new EntityDao(data).id(id).repository(repository);
+    EntityDao entity =
+        new EntityDao(mergeCodeDuplicates().apply(data)).id(id).repository(repository);
 
     if (data instanceof Category && ((Category) data).getSuperCategories() != null)
       for (Category category : ((Category) data).getSuperCategories())
@@ -833,8 +834,7 @@ public class EntityService implements ContentService {
         entityVersionRepository.save(new EntityVersionDao(data).version(1).entity(entity));
     entity.currentVersion(entityVersion);
 
-    return mergeCodeDuplicates()
-        .andThen(populateWithCodeSystems())
+    return populateWithCodeSystems()
         .andThen(populateSubEntities())
         .apply(entityRepository.save(entity).toApiModel());
   }
@@ -1011,15 +1011,16 @@ public class EntityService implements ContentService {
       Graph<CodeVertexAttributes, DefaultEdge> graph,
       Code parentCode,
       Map<URI, CodeVertexAttributes> vertexCache) {
-    parentCode
-        .getChildren()
-        .forEach(
-            child -> {
-              CodeVertexAttributes childAttributes = getVertex(child, vertexCache);
-              graph.addVertex(childAttributes);
-              graph.addEdge(getVertex(parentCode, vertexCache), childAttributes);
-              fillInChildren(graph, child, vertexCache);
-            });
+    Optional.ofNullable(parentCode.getChildren())
+        .ifPresent(
+            children ->
+                children.forEach(
+                    child -> {
+                      CodeVertexAttributes childAttributes = getVertex(child, vertexCache);
+                      graph.addVertex(childAttributes);
+                      graph.addEdge(getVertex(parentCode, vertexCache), childAttributes);
+                      fillInChildren(graph, child, vertexCache);
+                    }));
   }
 
   // helper method for code duplicate resolution
