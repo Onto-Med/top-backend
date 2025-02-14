@@ -7,13 +7,13 @@ import care.smith.top.backend.util.ApiModelMapper;
 import care.smith.top.model.*;
 import care.smith.top.top_phenotypic_query.converter.PhenotypeExporter;
 import care.smith.top.top_phenotypic_query.converter.PhenotypeImporter;
-import java.awt.*;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.*;
 import java.util.List;
 import java.util.function.Function;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.validation.constraints.NotNull;
@@ -44,6 +44,8 @@ import org.springframework.web.server.ResponseStatusException;
 @Transactional
 public class EntityService implements ContentService {
   private static final String PLUGIN_PACKAGE = "care.smith.top";
+
+  private final Logger LOGGER = Logger.getLogger(EntityService.class.getName());
 
   @Value("${spring.paging.page-size:10}")
   private int pageSize;
@@ -551,7 +553,8 @@ public class EntityService implements ContentService {
       setSuperEntities(entity, superEntities);
     }
 
-    return populateWithCodeSystems()
+    return mergeCodeDuplicates()
+        .andThen(populateWithCodeSystems())
         .andThen(populateSubEntities())
         .apply(entityRepository.save(entity.currentVersion(newVersion)).toApiModel());
   }
@@ -830,7 +833,8 @@ public class EntityService implements ContentService {
         entityVersionRepository.save(new EntityVersionDao(data).version(1).entity(entity));
     entity.currentVersion(entityVersion);
 
-    return populateWithCodeSystems()
+    return mergeCodeDuplicates()
+        .andThen(populateWithCodeSystems())
         .andThen(populateSubEntities())
         .apply(entityRepository.save(entity).toApiModel());
   }
@@ -928,33 +932,41 @@ public class EntityService implements ContentService {
         .forEach(this::populateWithCodeSystems);
   }
 
-  private void mergeCodeDuplicates(Entity entity) {
-    Graph<CodeVertexAttributes, DefaultEdge> graph = new DefaultDirectedGraph(DefaultEdge.class);
-    HashMap<URI, CodeVertexAttributes> vertexCache = new HashMap<>();
+  private Function<Entity, Entity> mergeCodeDuplicates() {
+    return e -> e.codes(getMergedCodes(e));
+  }
+
+  private List<Code> getMergedCodes(Entity entity) {
+    Graph<CodeVertexAttributes, DefaultEdge> graph = new DefaultDirectedGraph<>(DefaultEdge.class);
+    Map<URI, CodeVertexAttributes> vertexCache = new HashMap<>();
     entity.getCodes().stream()
         .map(code -> getGraph(code, vertexCache))
-        .forEach(
-            g -> {
-              Graphs.addGraph(graph, g);
-            });
+        .forEach(g -> Graphs.addGraph(graph, g));
 
-    ConnectivityInspector<CodeVertexAttributes, DefaultEdge> ci = new ConnectivityInspector(graph);
-    ci.connectedSets().stream()
-        .map(vertices -> new AsSubgraph<CodeVertexAttributes, DefaultEdge>(graph, vertices))
-        .forEach(
-            subGraph -> {
-              subGraph.outgoingEdgesOf(getRoot(subGraph)).stream()
-                  .flatMap(edge -> getSuperfluousEdges(subGraph, edge, 1))
-                  .collect(Collectors.toList())
-                  .forEach(
-                      edge -> {
-                        subGraph.removeEdge(edge);
-                      });
-            });
+    ConnectivityInspector<CodeVertexAttributes, DefaultEdge> ci =
+        new ConnectivityInspector<>(graph);
+    try {
+      ci.connectedSets().stream()
+          .map(vertices -> new AsSubgraph<>(graph, vertices))
+          .forEach(
+              subGraph ->
+                  subGraph
+                      .outgoingEdgesOf(
+                          roots(subGraph).findFirst().orElseThrow(NoSuchElementException::new))
+                      .stream()
+                      .flatMap(edge -> getSuperfluousEdges(subGraph, edge, 1))
+                      .collect(Collectors.toList())
+                      .forEach(graph::removeEdge));
+    } catch (NoSuchElementException e) {
+      LOGGER.warning("Unable to find code tree root for entity " + entity.getId());
+      return entity.getCodes();
+    }
+
+    return roots(graph).map(root -> assembleCodeTree(graph, root)).collect(Collectors.toList());
   }
 
   // helper class for code duplicate resolution
-  private class CodeVertexAttributes {
+  private static class CodeVertexAttributes {
     Code code;
     int depth = 0;
     DefaultEdge bestIncomingEdge;
@@ -965,6 +977,7 @@ public class EntityService implements ContentService {
 
     @Override
     public boolean equals(Object obj) {
+      if (!(obj instanceof CodeVertexAttributes)) return false;
       return code.getUri().equals(((CodeVertexAttributes) obj).code.getUri());
     }
 
@@ -976,7 +989,7 @@ public class EntityService implements ContentService {
 
   // helper method for code duplicate resolution
   private Graph<CodeVertexAttributes, DefaultEdge> getGraph(
-      Code code, HashMap<URI, CodeVertexAttributes> vertexCache) {
+      Code code, Map<URI, CodeVertexAttributes> vertexCache) {
     Graph<CodeVertexAttributes, DefaultEdge> graph = new DefaultDirectedGraph<>(DefaultEdge.class);
     CodeVertexAttributes attributes = getVertex(code, vertexCache);
     graph.addVertex(attributes);
@@ -984,8 +997,7 @@ public class EntityService implements ContentService {
     return graph;
   }
 
-  private CodeVertexAttributes getVertex(
-      Code code, HashMap<URI, CodeVertexAttributes> vertexCache) {
+  private CodeVertexAttributes getVertex(Code code, Map<URI, CodeVertexAttributes> vertexCache) {
     if (vertexCache.containsKey(code.getUri())) {
       return vertexCache.get(code.getUri());
     }
@@ -998,7 +1010,7 @@ public class EntityService implements ContentService {
   private void fillInChildren(
       Graph<CodeVertexAttributes, DefaultEdge> graph,
       Code parentCode,
-      HashMap<URI, CodeVertexAttributes> vertexCache) {
+      Map<URI, CodeVertexAttributes> vertexCache) {
     parentCode
         .getChildren()
         .forEach(
@@ -1011,13 +1023,8 @@ public class EntityService implements ContentService {
   }
 
   // helper method for code duplicate resolution
-  private CodeVertexAttributes getRoot(Graph<CodeVertexAttributes, DefaultEdge> graph) {
-    Set<CodeVertexAttributes> rootCandidates =
-        graph.vertexSet().stream()
-            .filter(vertex -> graph.incomingEdgesOf(vertex).isEmpty())
-            .collect(Collectors.toSet());
-    assert rootCandidates.size() == 1;
-    return rootCandidates.stream().findFirst().get();
+  private Stream<CodeVertexAttributes> roots(Graph<CodeVertexAttributes, DefaultEdge> graph) {
+    return graph.vertexSet().stream().filter(vertex -> graph.incomingEdgesOf(vertex).isEmpty());
   }
 
   // helper method for code duplicate resolution
@@ -1041,5 +1048,14 @@ public class EntityService implements ContentService {
       // This path is worse. Return it for deletion.
       return Stream.of(incoming);
     }
+  }
+
+  private Code assembleCodeTree(
+      Graph<CodeVertexAttributes, DefaultEdge> graph, CodeVertexAttributes vertex) {
+    return vertex.code.children(
+        graph.outgoingEdgesOf(vertex).stream()
+            .map(graph::getEdgeTarget)
+            .map(childVertex -> assembleCodeTree(graph, childVertex))
+            .collect(Collectors.toList()));
   }
 }
