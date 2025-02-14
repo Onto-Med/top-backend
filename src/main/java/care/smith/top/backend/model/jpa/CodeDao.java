@@ -3,12 +3,29 @@ package care.smith.top.backend.model.jpa;
 import care.smith.top.model.Code;
 import care.smith.top.model.CodeSystem;
 import java.net.URI;
-import javax.persistence.Column;
-import javax.persistence.Embeddable;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 
-@Embeddable
+@Entity(name = "code")
 public class CodeDao {
+
+  @Id @GeneratedValue private Long id;
+
+  @ManyToOne(optional = true)
+  @JoinColumn(name = "parent_id", referencedColumnName = "id")
+  private CodeDao parent;
+
+  @OrderColumn
+  @OneToMany(
+      cascade = {CascadeType.ALL},
+      orphanRemoval = true)
+  @JoinColumn(name = "parent_id")
+  private List<CodeDao> children;
+
   @Column(nullable = false)
   private String code;
 
@@ -39,6 +56,10 @@ public class CodeDao {
     name = code.getName();
     if (code.getUri() != null) uri = code.getUri().toString();
     if (code.getCodeSystem() != null) codeSystemUri = code.getCodeSystem().getUri().toString();
+    this.children =
+        Optional.ofNullable(code.getChildren()).orElse(Collections.emptyList()).stream()
+            .map(this::deepTranslate)
+            .collect(Collectors.toList());
   }
 
   public Code toApiModel() {
@@ -46,11 +67,24 @@ public class CodeDao {
         .code(code)
         .uri(uri != null ? URI.create(uri) : null)
         .name(name)
-        .codeSystem(new CodeSystem().uri(URI.create(codeSystemUri)));
+        .codeSystem(new CodeSystem().uri(URI.create(codeSystemUri)))
+        .children(getChildren().stream().map(CodeDao::toApiModel).collect(Collectors.toList()))
+        .synonyms(Collections.emptyList());
   }
 
-  public String getCode() {
-    return code;
+  public CodeDao id(@NotNull Long id) {
+    this.id = id;
+    return this;
+  }
+
+  public CodeDao parent(@NotNull CodeDao parent) {
+    this.parent = parent;
+    return this;
+  }
+
+  public CodeDao children(List<CodeDao> children) {
+    this.children = children;
+    return this;
   }
 
   public CodeDao code(@NotNull String code) {
@@ -58,26 +92,14 @@ public class CodeDao {
     return this;
   }
 
-  public String getName() {
-    return name;
-  }
-
   public CodeDao name(String name) {
     this.name = name;
     return this;
   }
 
-  public String getUri() {
-    return uri;
-  }
-
   public CodeDao uri(String uri) {
     this.uri = uri;
     return this;
-  }
-
-  public String getCodeSystemUri() {
-    return codeSystemUri;
   }
 
   public CodeDao codeSystemUri(@NotNull String codeSystemUri) {
@@ -107,5 +129,41 @@ public class CodeDao {
     result = 31 * result + (getUri() != null ? getUri().hashCode() : 0);
     result = 31 * result + getCodeSystemUri().hashCode();
     return result;
+  }
+
+  public Long getId() {
+    return id;
+  }
+
+  public CodeDao getParent() {
+    return parent;
+  }
+
+  public List<CodeDao> getChildren() {
+    return children;
+  }
+
+  public String getCode() {
+    return code;
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public String getUri() {
+    return uri;
+  }
+
+  public String getCodeSystemUri() {
+    return codeSystemUri;
+  }
+
+  private CodeDao deepTranslate(Code code) {
+    final CodeDao codeDao = new CodeDao(code);
+    return codeDao.children(
+        Optional.ofNullable(code.getChildren()).orElse(Collections.emptyList()).stream()
+            .map(childCode -> deepTranslate(childCode).parent(codeDao))
+            .collect(Collectors.toList()));
   }
 }

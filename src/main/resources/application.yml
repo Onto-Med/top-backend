@@ -81,3 +81,5 @@ top:
 
 coding:
   terminology-service: ${TERMINOLOGY_SERVICE_ENDPOINT:https://www.ebi.ac.uk/ols4/api}
+  suggestions-page-size: 1000
+  code-children-page-size: 500

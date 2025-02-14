@@ -1,0 +1,60 @@
+{
+  "iri" : "https://top.smith.care/test/terminology#test-31",
+  "lang" : "en",
+  "description" : [ ],
+  "synonyms" : [ ],
+  "annotation" : {
+    "prefLabel" : [ "test-31" ]
+  },
+  "label" : "test-31",
+  "ontology_name" : "test",
+  "ontology_prefix" : "TEST",
+  "ontology_iri" : "https://top.smith.care/test/terminology",
+  "is_obsolete" : false,
+  "term_replaced_by" : null,
+  "is_defining_ontology" : true,
+  "has_children" : true,
+  "is_root" : false,
+  "short_form" : "TEST_#test-31",
+  "obo_id" : "TEST:#test-31",
+  "in_subset" : null,
+  "obo_definition_citation" : null,
+  "obo_xref" : null,
+  "obo_synonym" : null,
+  "is_preferred_root" : false,
+  "_links" : {
+    "self" : {
+      "href" : "http://localhost:9000/api/ontologies/test/terms/https%253A%252F%252Ftop.smith.care%252Ftest%252Fterminology%2523test-31?lang=en"
+    },
+    "parents" : {
+      "href" : "http://localhost:9000/api/ontologies/test/terms/https%253A%252F%252Ftop.smith.care%252Ftest%252Fterminology%2523test-31/parents"
+    },
+    "ancestors" : {
+      "href" : "http://localhost:9000/api/ontologies/test/terms/https%253A%252F%252Ftop.smith.care%252Ftest%252Fterminology%2523test-31/ancestors"
+    },
+    "hierarchicalParents" : {
+      "href" : "http://localhost:9000/api/ontologies/test/terms/https%253A%252F%252Ftop.smith.care%252Ftest%252Fterminology%2523test-31/hierarchicalParents"
+    },
+    "hierarchicalAncestors" : {
+      "href" : "http://localhost:9000/api/ontologies/test/terms/https%253A%252F%252Ftop.smith.care%252Ftest%252Fterminology%2523test-31/hierarchicalAncestors"
+    },
+    "jstree" : {
+      "href" : "http://localhost:9000/api/ontologies/test/terms/https%253A%252F%252Ftop.smith.care%252Ftest%252Fterminology%2523test-31/jstree"
+    },
+    "children" : {
+      "href" : "http://localhost:9000/api/ontologies/test/terms/https%253A%252F%252Ftop.smith.care%252Ftest%252Fterminology%2523test-31/children"
+    },
+    "descendants" : {
+      "href" : "http://localhost:9000/api/ontologies/test/terms/https%253A%252F%252Ftop.smith.care%252Ftest%252Fterminology%2523test-31/descendants"
+    },
+    "hierarchicalChildren" : {
+      "href" : "http://localhost:9000/api/ontologies/test/terms/https%253A%252F%252Ftop.smith.care%252Ftest%252Fterminology%2523test-31/hierarchicalChildren"
+    },
+    "hierarchicalDescendants" : {
+      "href" : "http://localhost:9000/api/ontologies/test/terms/https%253A%252F%252Ftop.smith.care%252Ftest%252Fterminology%2523test-31/hierarchicalDescendants"
+    },
+    "graph" : {
+      "href" : "http://localhost:9000/api/ontologies/test/terms/https%253A%252F%252Ftop.smith.care%252Ftest%252Fterminology%2523test-31/graph"
+    }
+  }
+}
