@@ -81,13 +81,13 @@ public class DocumentQueryService extends QueryService {
     QueryResultDao result =
         new QueryResultDao(queryDao, createdAt, null, OffsetDateTime.now(), QueryState.FAILED)
             .message("Cause: Probably, TextFinder didn't run.");
-    int subConceptDepth = 0;
+    Map<String, Integer> subConceptDepths = Map.of();
     TextAdapterConfig config = getTextAdapterConfig(query.getDataSource()).orElseThrow();
     TextAdapter adapter = null;
 
     try {
       adapter = TextAdapter.getInstance(config);
-      subConceptDepth = adapter.getSubconceptDepth(query, Entities.of(concepts));
+      subConceptDepths = adapter.getSubconceptDepth(query, Entities.of(concepts));
     } catch (Throwable e) {
       LOGGER.severe(e.getMessage());
       result =
@@ -95,8 +95,8 @@ public class DocumentQueryService extends QueryService {
               .message("Cause: " + (e.getMessage() != null ? e.getMessage() : e.toString()));
     }
 
-    if (subConceptDepth > 0) {
-      conceptRepository.populateEntities(conceptMap, subDependencies, subConceptDepth);
+    if (!subConceptDepths.isEmpty()) {
+      conceptRepository.populateEntities(conceptMap, subDependencies, subConceptDepths);
       if (calculateTermCount(conceptMap, query.getLanguage()) > maxTermCount) {
         result =
             new QueryResultDao(queryDao, createdAt, null, OffsetDateTime.now(), QueryState.FAILED)
