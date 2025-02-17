@@ -87,7 +87,7 @@ public class DocumentQueryService extends QueryService {
 
     try {
       adapter = TextAdapter.getInstance(config);
-      subConceptDepths = adapter.getSubconceptDepth(query, Entities.of(concepts));
+      subConceptDepths = adapter.getSubconceptDepths(query, Entities.of(concepts));
     } catch (Throwable e) {
       LOGGER.severe(e.getMessage());
       result =
