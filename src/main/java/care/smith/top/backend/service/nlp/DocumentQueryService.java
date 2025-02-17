@@ -10,6 +10,7 @@ import care.smith.top.model.*;
 import care.smith.top.top_document_query.adapter.*;
 import care.smith.top.top_document_query.adapter.config.TextAdapterConfig;
 import care.smith.top.top_document_query.converter.csv.DocumentCSV;
+import care.smith.top.top_document_query.util.Entities;
 import java.io.IOException;
 import java.nio.file.FileSystemException;
 import java.nio.file.Files;
@@ -39,7 +40,7 @@ public class DocumentQueryService extends QueryService {
   @Value("${top.documents.data-source-config-dir:config/data_sources/nlp}")
   private String dataSourceConfigDir;
 
-  @Value("${top.documents.max-term-count:15000}")
+  @Value("${top.documents.max-term-count:10000}")
   private Integer maxTermCount;
 
   @Autowired private ConceptRepository conceptRepository;
@@ -76,42 +77,56 @@ public class DocumentQueryService extends QueryService {
     Map<String, Set<String>> subDependencies = new HashMap<>();
     Map<String, Entity> conceptMap =
         concepts.stream().collect(Collectors.toMap(Entity::getId, Function.identity()));
-    conceptRepository.populateEntities(conceptMap, subDependencies);
 
+    QueryResultDao result =
+        new QueryResultDao(queryDao, createdAt, null, OffsetDateTime.now(), QueryState.FAILED)
+            .message("Cause: Probably, TextFinder didn't run.");
+    Map<String, Integer> subConceptDepths = Map.of();
     TextAdapterConfig config = getTextAdapterConfig(query.getDataSource()).orElseThrow();
-    QueryResultDao result;
+    TextAdapter adapter = null;
 
-    if (calculateTermCount(conceptMap, query.getLanguage()) > maxTermCount) {
+    try {
+      adapter = TextAdapter.getInstance(config);
+      subConceptDepths = adapter.getSubconceptDepths(query, Entities.of(concepts));
+    } catch (Throwable e) {
+      LOGGER.severe(e.getMessage());
       result =
           new QueryResultDao(queryDao, createdAt, null, OffsetDateTime.now(), QueryState.FAILED)
-              .message(
-                  String.format(
-                      "Cause: The constructed query consists of more terms than the allowed count of '%s'",
-                      maxTermCount));
-    } else {
-      try {
-        TextAdapter adapter = TextAdapter.getInstance(config);
-        TextFinder finder = new TextFinder(query, conceptMap, subDependencies, adapter);
-        List<DocumentHit> documents = finder.execute();
-        result =
-            new QueryResultDao(
-                queryDao,
-                createdAt,
-                (long) documents.size(),
-                OffsetDateTime.now(),
-                QueryState.FINISHED);
+              .message("Cause: " + (e.getMessage() != null ? e.getMessage() : e.toString()));
+    }
 
+    if (!subConceptDepths.isEmpty()) {
+      conceptRepository.populateEntities(conceptMap, subDependencies, subConceptDepths);
+      if (calculateTermCount(conceptMap, query.getLanguage()) > maxTermCount) {
+        result =
+            new QueryResultDao(queryDao, createdAt, null, OffsetDateTime.now(), QueryState.FAILED)
+                .message(
+                    String.format(
+                        "Cause: The constructed query consists of more terms than the allowed count of '%s'",
+                        maxTermCount));
+      }
+    }
+
+    if (adapter != null) {
+      TextFinder finder = new TextFinder(query, conceptMap, subDependencies, adapter);
+      List<DocumentHit> documents = finder.execute();
+      result =
+          new QueryResultDao(
+              queryDao,
+              createdAt,
+              (long) documents.size(),
+              OffsetDateTime.now(),
+              QueryState.FINISHED);
+
+      try {
         storeResult(
             queryDao.getRepository().getOrganisation().getId(),
             queryDao.getRepository().getId(),
             queryId.toString(),
             documents,
             concepts.toArray(new Concept[0]));
-      } catch (Throwable e) {
-        LOGGER.severe(e.getMessage());
-        result =
-            new QueryResultDao(queryDao, createdAt, null, OffsetDateTime.now(), QueryState.FAILED)
-                .message("Cause: " + (e.getMessage() != null ? e.getMessage() : e.toString()));
+      } catch (IOException e) {
+        LOGGER.warning(String.format("Couldn't store results to disk:\n'%s'", e.getMessage()));
       }
     }
     queryDao.result(result);
@@ -270,6 +285,7 @@ public class DocumentQueryService extends QueryService {
   private int calculateTermCount(Map<String, Entity> conceptMap, String language) {
     int termCount = 0;
     for (Entity concept : conceptMap.values()) {
+      if (concept.getEntityType().equals(EntityType.COMPOSITE_CONCEPT)) continue;
       termCount +=
           ((int)
                   concept.getSynonyms().stream()

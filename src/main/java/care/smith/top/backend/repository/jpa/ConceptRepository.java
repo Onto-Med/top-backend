@@ -27,16 +27,53 @@ public interface ConceptRepository extends EntityRepository {
               + " FROM entity"
               + "   JOIN entity_super_entities ON (id = sub_entities_id)"
               + "   JOIN tree t ON (t.id = super_entities_id)"
-              + ")"
-              + "SELECT *"
-              + "FROM tree")
+              + "   WHERE level < :levelCap"
+              + ") SELECT * FROM tree")
+  List<EntityDao> getEntityTreeByEntityId(String entityId, Integer levelCap);
+
+  @Query(
+      nativeQuery = true,
+      value =
+          "WITH RECURSIVE tree AS ("
+              + " SELECT *, NULL\\:\\:character varying AS parent_id, 0 AS level"
+              + " FROM entity e"
+              + " WHERE id = :entityId"
+              + " UNION"
+              + " SELECT entity.*, super_entities_id AS parent_id, level + 1 AS level"
+              + " FROM entity"
+              + "   JOIN entity_super_entities ON (id = sub_entities_id)"
+              + "   JOIN tree t ON (t.id = super_entities_id)"
+              + ") SELECT * FROM tree")
   List<EntityDao> getEntityTreeByEntityId(String entityId);
 
+  /**
+   * If the depth of an entity
+   *
+   * <ul>
+   *   <li>== 0 -> subConcepts won't be resolved.
+   *   <li>> 0 -> subConcepts will be resolved up until and including the depth
+   *   <li>< 0 -> all subConcepts will be resolved
+   * </ul>
+   *
+   * @param concepts
+   * @param dependencies
+   * @param depthMap
+   */
   default void populateEntities(
-      Map<String, Entity> concepts, Map<String, Set<String>> dependencies) {
+      Map<String, Entity> concepts,
+      Map<String, Set<String>> dependencies,
+      Map<String, Integer> depthMap) {
     Set<String> conceptIter = concepts.keySet().stream().collect(Collectors.toUnmodifiableSet());
     for (String conceptId : conceptIter) {
-      for (EntityDao entity : getEntityTreeByEntityId(conceptId)) {
+      if (!depthMap.containsKey(conceptId)) continue;
+      Integer depth = depthMap.get(conceptId);
+      if (depth == 0) continue;
+
+      List<EntityDao> entities =
+          depth > 0
+              ? getEntityTreeByEntityId(conceptId, depthMap.get(conceptId))
+              : getEntityTreeByEntityId(conceptId);
+      for (EntityDao entity : entities) {
         String entityId = entity.getId();
         if (!concepts.containsKey(entityId)) {
           concepts.put(entityId, entity.toApiModel());
