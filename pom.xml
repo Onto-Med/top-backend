@@ -5,7 +5,7 @@
 
     <groupId>care.smith.top</groupId>
     <artifactId>top-backend</artifactId>
-    <version>0.8.0</version>
+    <version>0.8.1</version>
     <packaging>jar</packaging>
 
     <name>TOP Backend</name>
@@ -77,7 +77,7 @@
         <dependency>
             <groupId>care.smith.top</groupId>
             <artifactId>top-document-query</artifactId>
-            <version>0.8.5-SNAPSHOT</version>
+            <version>0.8.5</version>
             <exclusions>
                 <exclusion>
                     <groupId>care.smith.top</groupId>
