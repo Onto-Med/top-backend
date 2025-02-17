@@ -29,13 +29,14 @@ public interface ConceptRepository extends EntityRepository {
               + "   JOIN tree t ON (t.id = super_entities_id)"
               + "   WHERE level < :levelCap"
               + ") SELECT * FROM tree")
-  List<EntityDao> getEntityTreeByEntityId(String entityId, Integer levelCap); //, String levelCap
+  List<EntityDao> getEntityTreeByEntityId(String entityId, Integer levelCap);
 
   default void populateEntities(
-      Map<String, Entity> concepts, Map<String, Set<String>> dependencies, int levelCap) {
+      Map<String, Entity> concepts, Map<String, Set<String>> dependencies, Map<String, Integer> depthMap) {
     Set<String> conceptIter = concepts.keySet().stream().collect(Collectors.toUnmodifiableSet());
     for (String conceptId : conceptIter) {
-      for (EntityDao entity : getEntityTreeByEntityId(conceptId, levelCap)) { // , Integer.toString(levelCap)
+      if (!depthMap.containsKey(conceptId)) continue;
+      for (EntityDao entity : getEntityTreeByEntityId(conceptId, depthMap.get(conceptId))) {
         String entityId = entity.getId();
         if (!concepts.containsKey(entityId)) {
           concepts.put(entityId, entity.toApiModel());
