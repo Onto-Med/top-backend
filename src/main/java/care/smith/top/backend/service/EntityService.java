@@ -335,19 +335,32 @@ public class EntityService implements ContentService {
       Boolean includePrimary,
       Integer page) {
     PageRequest pageRequest = PageRequest.of(page != null ? page - 1 : 0, pageSize);
-    return phenotypeRepository
-        .findAllByRepositoryIdsAndRepository_PrimaryAndTitleAndEntityTypeAndDataTypeAndItemType(
-            repositoryIds,
-            includePrimary,
-            name,
-            type,
-            dataType,
-            itemType,
-            userService.getCurrentUser(),
-            pageRequest)
-        .map(EntityDao::toApiModel)
-        .map(populateSubEntities())
-        .map(populateWithCodeSystems());
+    boolean isPhenotype = true;
+    isPhenotype = repositoryIds.stream().anyMatch(id -> repositoryRepository.findById(id).filter(d -> d.getRepositoryType().equals(RepositoryType.PHENOTYPE_REPOSITORY)).isPresent());
+    boolean isConcept = repositoryIds.stream().anyMatch(id -> repositoryRepository.findById(id).filter(d -> d.getRepositoryType().equals(RepositoryType.CONCEPT_REPOSITORY)).isPresent());
+
+    if (isPhenotype) return phenotypeRepository
+      .findAllByRepositoryIdsAndRepository_PrimaryAndTitleAndEntityTypeAndDataTypeAndItemType(
+          repositoryIds,
+          includePrimary,
+          name,
+          type,
+          dataType,
+          itemType,
+          userService.getCurrentUser(),
+          pageRequest)
+      .map(EntityDao::toApiModel)
+      .map(populateSubEntities())
+      .map(populateWithCodeSystems());
+    return conceptRepository
+      .findAllByRepositoryIdsAndRepository_PrimaryAndTitleAndEntityType(
+          repositoryIds,
+          includePrimary,
+          name,
+          type,
+          userService.getCurrentUser(),
+          pageRequest)
+      .map(EntityDao::toApiModel);
   }
 
   @PreAuthorize(
