@@ -1,10 +1,13 @@
 package care.smith.top.backend.repository.jpa;
 
 import care.smith.top.backend.model.jpa.EntityDao;
+import care.smith.top.backend.model.jpa.UserDao;
 import care.smith.top.model.Entity;
 import care.smith.top.model.EntityType;
 import java.util.*;
 import java.util.stream.Collectors;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
@@ -94,5 +97,20 @@ public interface ConceptRepository extends EntityRepository {
         }
       }
     }
+  }
+
+  default Page<EntityDao> findAllByRepositoryIdsAndRepository_PrimaryAndTitleAndEntityType(
+      List<String> repositoryIds,
+      Boolean includePrimary,
+      String title,
+      List<EntityType> entityTypes,
+      UserDao user,
+      Pageable pageable) {
+    return findAll(
+        EntityRepository.byRepositoryIds(repositoryIds, includePrimary)
+            .and(EntityRepository.byTitle(title))
+            .and(EntityRepository.byEntityType(entityTypes))
+            .and(EntityRepository.byUser(user)),
+        pageable);
   }
 }

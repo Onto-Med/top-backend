@@ -9,6 +9,7 @@ import care.smith.top.backend.service.QueryService;
 import care.smith.top.model.*;
 import care.smith.top.top_document_query.adapter.*;
 import care.smith.top.top_document_query.adapter.config.TextAdapterConfig;
+import care.smith.top.top_document_query.converter.csv.CSVDataRecord;
 import care.smith.top.top_document_query.converter.csv.DocumentCSV;
 import care.smith.top.top_document_query.util.Entities;
 import java.io.IOException;
@@ -48,6 +49,7 @@ public class DocumentQueryService extends QueryService {
   @Override
   @org.jobrunr.jobs.annotations.Job(name = "Document query", retries = 0)
   public void executeQuery(UUID queryId) {
+    boolean runTextFinder = true;
     OffsetDateTime createdAt = OffsetDateTime.now();
     QueryDao queryDao =
         queryRepository
@@ -93,23 +95,26 @@ public class DocumentQueryService extends QueryService {
       result =
           new QueryResultDao(queryDao, createdAt, null, OffsetDateTime.now(), QueryState.FAILED)
               .message("Cause: " + (e.getMessage() != null ? e.getMessage() : e.toString()));
+      runTextFinder = false;
     }
 
-    if (!subConceptDepths.isEmpty()) {
+    if (!subConceptDepths.isEmpty() && runTextFinder) {
       conceptRepository.populateEntities(conceptMap, subDependencies, subConceptDepths);
       if (calculateTermCount(conceptMap, query.getLanguage()) > maxTermCount) {
         result =
             new QueryResultDao(queryDao, createdAt, null, OffsetDateTime.now(), QueryState.FAILED)
                 .message(
                     String.format(
-                        "Cause: The constructed query consists of more terms than the allowed count of '%s'",
+                        "Cause: The resulting query will consist of more terms than the allowed count of '%s'",
                         maxTermCount));
+        runTextFinder = false;
       }
     }
 
-    if (adapter != null) {
+    if ((adapter != null) && runTextFinder) {
       TextFinder finder = new TextFinder(query, conceptMap, subDependencies, adapter);
-      List<DocumentHit> documents = finder.execute();
+      List<DocumentHit> documents =
+          finder.execute().flatMap(List::stream).collect(Collectors.toList());
       result =
           new QueryResultDao(
               queryDao,
@@ -169,8 +174,8 @@ public class DocumentQueryService extends QueryService {
     return getTextAdapterConfigs().stream().filter(a -> id.equals(a.getId())).findFirst();
   }
 
-  public List<String> getDocumentIds(String organisationId, String repositoryId, UUID queryId)
-      throws IOException {
+  public Map<String, List<String>> getDocumentIdsAndOffsets(
+      String organisationId, String repositoryId, UUID queryId) throws IOException {
     Path queryPath =
         Paths.get(resultDir, organisationId, repositoryId, String.format("%s.zip", queryId));
     if (!queryPath.toFile().exists())
@@ -179,6 +184,7 @@ public class DocumentQueryService extends QueryService {
       throw new FileSystemException("Repository directory isn't a child of the results directory.");
 
     ArrayList<String> ids = new ArrayList<>();
+    ArrayList<String> offsets = new ArrayList<>();
     try {
       ZipFile zip = new ZipFile(queryPath.toFile());
       Enumeration<? extends ZipEntry> entries = zip.entries();
@@ -186,13 +192,20 @@ public class DocumentQueryService extends QueryService {
         ZipEntry content = entries.nextElement();
         if (content.getName().equals("data.csv")) {
           ids.addAll(csvConverter.readFirstColumn(zip.getInputStream(content)));
+          offsets.addAll(
+              csvConverter.readColumn(
+                  zip.getInputStream(content), CSVDataRecord.Field.OFFSETS.columnIndex));
         }
       }
       zip.close();
     } catch (IOException e) {
       LOGGER.warning(e.getMessage());
     }
-    return ids;
+    HashMap<String, List<String>> result = new HashMap<>();
+    for (int i = 0; i < ids.size(); i++) {
+      result.put(ids.get(i), List.of(offsets.get(i).split(DocumentCSV.entryPartsDelimiter)));
+    }
+    return result;
   }
 
   public Optional<TextAdapter> getTextAdapter(

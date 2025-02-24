@@ -87,10 +87,10 @@ class DocumentApiDelegateImplTest extends AbstractNLPTest {
   @Test
   void getSingleDocumentById() {
     ResponseEntity<Document> response1 =
-        documentApi.getSingleDocumentById("d1", "exampleDataSource", null, null);
+        documentApi.getSingleDocumentById("d1", "exampleDataSource", null, null, null);
     Assertions.assertEquals(documents1, Set.of(Objects.requireNonNull(response1.getBody())));
     ResponseEntity<Document> response2 =
-        documentApi.getSingleDocumentById("d2", "exampleDataSource", null, null);
+        documentApi.getSingleDocumentById("d2", "exampleDataSource", null, null, null);
     Assertions.assertEquals(documents2, Set.of(Objects.requireNonNull(response2.getBody())));
   }
 }

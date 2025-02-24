@@ -193,16 +193,16 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
   }
 
   @Override
-  public ResponseEntity<List<String>> getQueryResultIds(
+  public ResponseEntity<Map<String, List<String>>> getQueryResultIds(
       String organisationId, String repositoryId, UUID queryId) {
     try {
       if (getQueryType(organisationId, repositoryId, queryId) == QueryType.CONCEPT) {
         return ResponseEntity.ok(
-            documentQueryService.getDocumentIds(organisationId, repositoryId, queryId));
+            documentQueryService.getDocumentIdsAndOffsets(organisationId, repositoryId, queryId));
       } else {
         // ToDo: this should not be reached by non-ConceptQueries, but maybe another response
         // necessary
-        return ResponseEntity.ok(new ArrayList<>());
+        return ResponseEntity.ok(Map.of());
       }
     } catch (IOException e) {
       throw new RuntimeException(e);
