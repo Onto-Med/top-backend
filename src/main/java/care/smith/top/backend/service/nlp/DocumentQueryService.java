@@ -48,6 +48,7 @@ public class DocumentQueryService extends QueryService {
   @Override
   @org.jobrunr.jobs.annotations.Job(name = "Document query", retries = 0)
   public void executeQuery(UUID queryId) {
+    boolean runTextFinder = true;
     OffsetDateTime createdAt = OffsetDateTime.now();
     QueryDao queryDao =
         queryRepository
@@ -93,23 +94,26 @@ public class DocumentQueryService extends QueryService {
       result =
           new QueryResultDao(queryDao, createdAt, null, OffsetDateTime.now(), QueryState.FAILED)
               .message("Cause: " + (e.getMessage() != null ? e.getMessage() : e.toString()));
+      runTextFinder = false;
     }
 
-    if (!subConceptDepths.isEmpty()) {
+    if (!subConceptDepths.isEmpty() && runTextFinder) {
       conceptRepository.populateEntities(conceptMap, subDependencies, subConceptDepths);
       if (calculateTermCount(conceptMap, query.getLanguage()) > maxTermCount) {
         result =
             new QueryResultDao(queryDao, createdAt, null, OffsetDateTime.now(), QueryState.FAILED)
                 .message(
                     String.format(
-                        "Cause: The constructed query consists of more terms than the allowed count of '%s'",
+                        "Cause: The resulting query will consist of more terms than the allowed count of '%s'",
                         maxTermCount));
+        runTextFinder = false;
       }
     }
 
-    if (adapter != null) {
+    if ((adapter != null) && runTextFinder) {
       TextFinder finder = new TextFinder(query, conceptMap, subDependencies, adapter);
-      List<DocumentHit> documents = finder.execute();
+      List<DocumentHit> documents =
+          finder.execute().flatMap(List::stream).collect(Collectors.toList());
       result =
           new QueryResultDao(
               queryDao,
