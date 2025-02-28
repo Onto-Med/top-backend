@@ -10,8 +10,6 @@ import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.util.*;
 import java.util.stream.Collectors;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -22,8 +20,6 @@ import reactor.core.publisher.Mono;
 
 @Repository
 public class CodeRepository extends OlsRepository {
-  private static final Logger log = LoggerFactory.getLogger(CodeRepository.class);
-
   @Value("${coding.suggestions-page-size}")
   private int suggestionsPageSize;
 
@@ -70,10 +66,7 @@ public class CodeRepository extends OlsRepository {
             .bodyToMono(OLSTerm.class)
             .onErrorResume(
                 WebClientResponseException.class,
-                e ->
-                    e.getRawStatusCode() == HttpStatus.NOT_FOUND.value()
-                        ? Mono.empty()
-                        : Mono.error(e))
+                e -> e.getStatusCode() == HttpStatus.NOT_FOUND ? Mono.empty() : Mono.error(e))
             .block();
 
     if (term == null)
@@ -82,7 +75,7 @@ public class CodeRepository extends OlsRepository {
           String.format("Code could not be found in terminology '%s'.", codeSystemId));
 
     String primaryLabel =
-        term.getSynonyms() != null && term.getSynonyms().size() != 0
+        term.getSynonyms() != null && !term.getSynonyms().isEmpty()
             ? term.getSynonyms().get(0)
             : term.getLabel();
 
@@ -152,7 +145,7 @@ public class CodeRepository extends OlsRepository {
         .collect(Collectors.toList());
   }
 
-  class PageCounter {
+  static class PageCounter {
     private Integer page = 0;
 
     Integer getPage() {
@@ -191,10 +184,7 @@ public class CodeRepository extends OlsRepository {
                   .bodyToMono(OLSHierarchicalChildrenResponse.class)
                   .onErrorResume(
                       WebClientResponseException.class,
-                      e ->
-                          e.getRawStatusCode() == HttpStatus.NOT_FOUND.value()
-                              ? Mono.empty()
-                              : Mono.error(e))
+                      e -> e.getStatusCode() == HttpStatus.NOT_FOUND ? Mono.empty() : Mono.error(e))
                   .block());
 
       if (response.get_embedded() == null) {
@@ -206,7 +196,7 @@ public class CodeRepository extends OlsRepository {
           .forEach(
               term -> {
                 String primaryLabel =
-                    term.getSynonyms() != null && term.getSynonyms().size() != 0
+                    term.getSynonyms() != null && !term.getSynonyms().isEmpty()
                         ? term.getSynonyms().get(0)
                         : term.getLabel();
 
@@ -259,7 +249,7 @@ public class CodeRepository extends OlsRepository {
             .map(
                 responseItem -> {
                   String primaryLabel =
-                      responseItem.getSynonym() != null && responseItem.getSynonym().size() != 0
+                      responseItem.getSynonym() != null && !responseItem.getSynonym().isEmpty()
                           ? responseItem.getSynonym().get(0)
                           : responseItem.getLabel();
 
@@ -276,17 +266,18 @@ public class CodeRepository extends OlsRepository {
                               : null)
                       .highlightLabel(
                           responseItem.getAutoSuggestion().getLabel_autosuggest() != null
-                                  && responseItem.getAutoSuggestion().getLabel_autosuggest().size()
-                                      != 0
+                                  && !responseItem
+                                      .getAutoSuggestion()
+                                      .getLabel_autosuggest()
+                                      .isEmpty()
                               ? responseItem.getAutoSuggestion().getLabel_autosuggest().get(0)
                               : null)
                       .highlightSynonym(
                           responseItem.getAutoSuggestion().getSynonym_autosuggest() != null
-                                  && responseItem
-                                          .getAutoSuggestion()
-                                          .getSynonym_autosuggest()
-                                          .size()
-                                      != 0
+                                  && !responseItem
+                                      .getAutoSuggestion()
+                                      .getSynonym_autosuggest()
+                                      .isEmpty()
                               ? responseItem.getAutoSuggestion().getSynonym_autosuggest().get(0)
                               : null)
                       .codeSystem(getCodeSystem(responseItem.getOntology_name()).orElse(null));
