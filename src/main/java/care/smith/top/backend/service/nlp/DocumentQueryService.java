@@ -25,6 +25,7 @@ import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
+import org.jobrunr.jobs.annotations.Job;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -46,7 +47,7 @@ public class DocumentQueryService extends QueryService {
   @Autowired private ConceptRepository conceptRepository;
 
   @Override
-  @org.jobrunr.jobs.annotations.Job(name = "Document query", retries = 0)
+  @Job(name = "Document query", retries = 0)
   public void executeQuery(UUID queryId) {
     OffsetDateTime createdAt = OffsetDateTime.now();
     QueryDao queryDao =
