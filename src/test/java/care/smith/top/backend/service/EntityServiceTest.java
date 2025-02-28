@@ -19,30 +19,23 @@ import org.springframework.web.server.ResponseStatusException;
 class EntityServiceTest extends AbstractTest {
   @Test
   void exportRepository() {
-    Organisation organisation =
-        organisationService.createOrganisation(new Organisation().id("org"));
+    Organisation organisation = organisationService.createOrganisation(new Organisation("org"));
     Repository repository1 =
         repositoryService.createRepository(
             organisation.getId(),
-            new Repository()
-                .id("repo1")
+            new Repository("repo1")
                 .organisation(organisation)
                 .repositoryType(RepositoryType.PHENOTYPE_REPOSITORY),
             null);
     Repository repository2 =
         repositoryService.createRepository(
             organisation.getId(),
-            new Repository()
-                .id("repo2")
+            new Repository("repo2")
                 .organisation(organisation)
                 .repositoryType(RepositoryType.PHENOTYPE_REPOSITORY),
             null);
     Phenotype phenotype =
-        (Phenotype)
-            new Phenotype()
-                .dataType(DataType.STRING)
-                .id("single_phen")
-                .entityType(EntityType.SINGLE_PHENOTYPE);
+        new Phenotype(EntityType.SINGLE_PHENOTYPE).dataType(DataType.STRING).id("single_phen");
     entityService.createEntity(organisation.getId(), repository1.getId(), phenotype);
 
     ByteArrayInputStream export =
@@ -72,79 +65,52 @@ class EntityServiceTest extends AbstractTest {
 
   @Test
   void createEntities() {
-    Organisation organisation =
-        organisationService.createOrganisation(new Organisation().id("org"));
+    Organisation organisation = organisationService.createOrganisation(new Organisation("org"));
     Repository repository =
         repositoryService.createRepository(
             organisation.getId(),
-            new Repository()
-                .id("repo")
+            new Repository("repo")
                 .organisation(organisation)
                 .repositoryType(RepositoryType.PHENOTYPE_REPOSITORY),
             null);
     entityService.createEntity(
         organisation.getId(),
         repository.getId(),
-        new Phenotype()
-            .dataType(DataType.STRING)
-            .id("single_phen")
-            .entityType(EntityType.SINGLE_PHENOTYPE));
+        new Phenotype(EntityType.SINGLE_PHENOTYPE).dataType(DataType.STRING).id("single_phen"));
 
-    Category invalidCategory = (Category) new Category().id("invalid_cat");
+    Category invalidCategory = new Category().id("invalid_cat");
     Category superCategory =
-        (Category)
-            new Category()
-                .addSuperCategoriesItem(invalidCategory)
-                .id("super_cat")
-                .entityType(EntityType.CATEGORY);
+        new Category(EntityType.CATEGORY).addSuperCategoriesItem(invalidCategory).id("super_cat");
     Category subCategory =
-        (Category)
-            new Category()
-                .addSubCategoriesItem(superCategory)
-                .id("sub_cat")
-                .entityType(EntityType.CATEGORY);
+        new Category(EntityType.CATEGORY).addSubCategoriesItem(superCategory).id("sub_cat");
     Phenotype singlePhenotype =
-        (Phenotype)
-            new Phenotype()
-                .dataType(DataType.NUMBER)
-                .entityType(EntityType.SINGLE_PHENOTYPE)
-                .id("single_phen");
+        new Phenotype(EntityType.SINGLE_PHENOTYPE).dataType(DataType.NUMBER).id("single_phen");
     Phenotype compositePhenotype =
-        (Phenotype)
-            new Phenotype()
-                .expression(new Expression().entityId(singlePhenotype.getId()))
-                .entityType(EntityType.COMPOSITE_PHENOTYPE)
-                .id("composite_phen");
+        new Phenotype(EntityType.COMPOSITE_PHENOTYPE)
+            .expression(new Expression().entityId(singlePhenotype.getId()))
+            .id("composite_phen");
     Phenotype restriction =
-        (Phenotype)
-            new Phenotype()
-                .restriction(
-                    new NumberRestriction()
-                        .minOperator(RestrictionOperator.GREATER_THAN)
-                        .addValuesItem(BigDecimal.valueOf(15))
-                        .type(DataType.NUMBER))
-                .dataType(DataType.BOOLEAN)
-                .entityType(EntityType.COMPOSITE_RESTRICTION)
-                .id("res");
+        new Phenotype(EntityType.COMPOSITE_RESTRICTION)
+            .restriction(
+                new NumberRestriction(DataType.NUMBER)
+                    .minOperator(RestrictionOperator.GREATER_THAN)
+                    .addValuesItem(BigDecimal.valueOf(15)))
+            .dataType(DataType.BOOLEAN)
+            .id("res");
 
     SingleConcept singleConcept =
-        (SingleConcept)
-            new SingleConcept()
-                .titles(List.of(new LocalisableText().text("Single Concept 1").lang("en")))
-                .entityType(EntityType.SINGLE_CONCEPT)
-                .id("sing_con");
+        new SingleConcept(EntityType.SINGLE_CONCEPT)
+            .titles(List.of(new LocalisableText("en", "Single Concept 1")))
+            .id("sing_con");
     SingleConcept subConcept =
-        (SingleConcept)
-            new SingleConcept()
-                .superConcepts(List.of(singleConcept))
-                .entityType(EntityType.SINGLE_CONCEPT)
-                .id("sub_con");
+        new SingleConcept(EntityType.SINGLE_CONCEPT)
+            .superConcepts(List.of(singleConcept))
+            .id("sub_con");
     CompositeConcept compositeConcept =
-        (CompositeConcept)
-            new CompositeConcept()
-                .expression(care.smith.top.top_document_query.functions.Not.of(singleConcept))
-                .entityType(EntityType.COMPOSITE_CONCEPT)
-                .id("comp_con");
+        new CompositeConcept(
+                care.smith.top.top_document_query.functions.Not.of(singleConcept),
+                EntityType.COMPOSITE_CONCEPT)
+            .id("comp_con");
 
     List<Entity> bulk =
         Arrays.asList(
@@ -187,40 +153,35 @@ class EntityServiceTest extends AbstractTest {
 
   @Test
   void createFork() {
-    Organisation organisation =
-        organisationService.createOrganisation(new Organisation().id("org"));
+    Organisation organisation = organisationService.createOrganisation(new Organisation("org"));
     Repository repository1 =
         repositoryService.createRepository(
             organisation.getId(),
-            new Repository()
-                .id("repo1")
+            new Repository("repo1")
                 .primary(true)
                 .repositoryType(RepositoryType.PHENOTYPE_REPOSITORY),
             null);
     Repository repository2 =
         repositoryService.createRepository(
             organisation.getId(),
-            new Repository().id("repo2").repositoryType(RepositoryType.PHENOTYPE_REPOSITORY),
+            new Repository("repo2").repositoryType(RepositoryType.PHENOTYPE_REPOSITORY),
             null);
     Repository repository3 =
         repositoryService.createRepository(
             organisation.getId(),
-            new Repository().id("repo3").repositoryType(RepositoryType.PHENOTYPE_REPOSITORY),
+            new Repository("repo3").repositoryType(RepositoryType.PHENOTYPE_REPOSITORY),
             null);
 
     Entity origin =
         entityService.createEntity(
             organisation.getId(),
             repository1.getId(),
-            new Entity()
+            new Entity(EntityType.CATEGORY)
                 .id(UUID.randomUUID().toString())
-                .entityType(EntityType.CATEGORY)
-                .addTitlesItem(new LocalisableText().lang("en").text("title")));
+                .addTitlesItem(new LocalisableText("en", "title")));
 
     ForkingInstruction forkingInstruction =
-        new ForkingInstruction()
-            .organisationId(organisation.getId())
-            .repositoryId(repository1.getId());
+        new ForkingInstruction(organisation.getId(), repository1.getId());
 
     assertThatThrownBy(
             () ->
@@ -274,7 +235,7 @@ class EntityServiceTest extends AbstractTest {
             .findFirst();
     assertThat(fork1).isPresent();
 
-    origin.addTitlesItem(new LocalisableText().lang("de").text("Titel"));
+    origin.addTitlesItem(new LocalisableText("de", "Titel"));
     assertThatCode(
             () ->
                 entityService.updateEntityById(
@@ -332,28 +293,22 @@ class EntityServiceTest extends AbstractTest {
 
   @Test
   void createEntity() {
-    Organisation organisation =
-        organisationService.createOrganisation(new Organisation().id("org"));
+    Organisation organisation = organisationService.createOrganisation(new Organisation("org"));
     Repository repository =
         repositoryService.createRepository(
             organisation.getId(),
-            new Repository().id("repo").repositoryType(RepositoryType.PHENOTYPE_REPOSITORY),
+            new Repository("repo").repositoryType(RepositoryType.PHENOTYPE_REPOSITORY),
             null);
-    CodeSystem codeSystem = new CodeSystem().uri(URI.create("http://loinc.org"));
+    CodeSystem codeSystem = new CodeSystem(URI.create("http://loinc.org"));
 
     /* Create category */
-    Category category = new Category();
-    category
-        .id(UUID.randomUUID().toString())
-        .entityType(EntityType.CATEGORY)
-        .addTitlesItem(new LocalisableText().text("Category").lang("en"))
-        .addDescriptionsItem(new LocalisableText().text("Some description").lang("en"))
-        .addSynonymsItem(new LocalisableText().text("Some synonym").lang("en"))
-        .addCodesItem(
-            new Code()
-                .code("1234")
-                .uri(URI.create("http://loing.org/1234"))
-                .codeSystem(codeSystem));
+    Category category =
+        new Category(EntityType.CATEGORY)
+            .id(UUID.randomUUID().toString())
+            .addTitlesItem(new LocalisableText("en", "Category"))
+            .addDescriptionsItem(new LocalisableText("en", "Some description"))
+            .addSynonymsItem(new LocalisableText("en", "Some synonym"))
+            .addCodesItem(new Code(codeSystem, "1234").uri(URI.create("http://loing.org/1234")));
 
     assertThatThrownBy(
             () -> entityService.createEntity("does not exist", repository.getId(), category))
@@ -398,16 +353,14 @@ class EntityServiceTest extends AbstractTest {
 
     /* Create abstract phenotype */
     Phenotype abstractPhenotype =
-        (Phenotype)
-            new Phenotype()
-                .unit("cm")
-                .expression(
-                    new Expression()
-                        .functionId(Not.get().getFunction().getId())
-                        .addArgumentsItem(new Expression().functionId("entity")))
-                .addSuperCategoriesItem(category)
-                .id(UUID.randomUUID().toString())
-                .entityType(EntityType.SINGLE_PHENOTYPE);
+        new Phenotype(EntityType.SINGLE_PHENOTYPE)
+            .unit("cm")
+            .expression(
+                new Expression()
+                    .functionId(Not.get().getFunction().getId())
+                    .addArgumentsItem(new Expression().functionId("entity")))
+            .addSuperCategoriesItem(category)
+            .id(UUID.randomUUID().toString());
 
     assertThat(
             entityService.createEntity(organisation.getId(), repository.getId(), abstractPhenotype))
@@ -435,20 +388,17 @@ class EntityServiceTest extends AbstractTest {
 
     /* Create restricted phenotype */
     Phenotype restrictedPhenotype1 =
-        (Phenotype)
-            new Phenotype()
-                .restriction(
-                    new NumberRestriction()
-                        .addValuesItem(BigDecimal.valueOf(50.025))
-                        .minOperator(RestrictionOperator.GREATER_THAN)
-                        .quantifier(Quantifier.MIN)
-                        .cardinality(1)
-                        .type(DataType.NUMBER))
-                .dataType(DataType.BOOLEAN)
-                .superPhenotype(abstractPhenotype)
-                .id(UUID.randomUUID().toString())
-                .entityType(EntityType.SINGLE_RESTRICTION)
-                .addTitlesItem(new LocalisableText().text("> 50cm").lang("en"));
+        new Phenotype(EntityType.SINGLE_RESTRICTION)
+            .restriction(
+                new NumberRestriction(DataType.NUMBER)
+                    .addValuesItem(BigDecimal.valueOf(50.025))
+                    .minOperator(RestrictionOperator.GREATER_THAN)
+                    .quantifier(Quantifier.MIN)
+                    .cardinality(1))
+            .dataType(DataType.BOOLEAN)
+            .superPhenotype(abstractPhenotype)
+            .id(UUID.randomUUID().toString())
+            .addTitlesItem(new LocalisableText("en", "> 50cm"));
 
     assertThat(
             entityService.createEntity(
@@ -488,20 +438,17 @@ class EntityServiceTest extends AbstractTest {
             });
 
     Phenotype restrictedPhenotype2 =
-        new Phenotype()
+        new Phenotype(EntityType.SINGLE_RESTRICTION)
             .restriction(
-                new NumberRestriction()
+                new NumberRestriction(DataType.NUMBER)
                     .addValuesItem(null)
                     .addValuesItem(BigDecimal.valueOf(50))
                     .maxOperator(RestrictionOperator.LESS_THAN_OR_EQUAL_TO)
-                    .quantifier(Quantifier.ALL)
-                    .type(DataType.NUMBER))
-            .dataType(DataType.BOOLEAN);
-    restrictedPhenotype2
-        .superPhenotype(abstractPhenotype)
-        .id(UUID.randomUUID().toString())
-        .entityType(EntityType.SINGLE_RESTRICTION)
-        .addTitlesItem(new LocalisableText().text("<= 50cm").lang("en"));
+                    .quantifier(Quantifier.ALL))
+            .dataType(DataType.BOOLEAN)
+            .superPhenotype(abstractPhenotype)
+            .id(UUID.randomUUID().toString())
+            .addTitlesItem(new LocalisableText("en", "<= 50cm"));
 
     assertThat(
             entityService.createEntity(
@@ -548,10 +495,7 @@ class EntityServiceTest extends AbstractTest {
 
     /* Create single concept */
     SingleConcept singleConcept =
-        (SingleConcept)
-            new SingleConcept()
-                .id(UUID.randomUUID().toString())
-                .entityType(EntityType.SINGLE_CONCEPT);
+        new SingleConcept(EntityType.SINGLE_CONCEPT).id(UUID.randomUUID().toString());
 
     assertThat(entityService.createEntity(organisation.getId(), repository.getId(), singleConcept))
         .isNotNull()
@@ -565,13 +509,11 @@ class EntityServiceTest extends AbstractTest {
             });
     /* Create single concept */
     Concept compositeConcept =
-        (CompositeConcept)
-            new CompositeConcept()
-                .expression(
-                    care.smith.top.top_document_query.functions.Not.of(singleConcept.getId()))
-                .superConcepts(List.of(singleConcept))
-                .id(UUID.randomUUID().toString())
-                .entityType(EntityType.COMPOSITE_CONCEPT);
+        new CompositeConcept(
+                care.smith.top.top_document_query.functions.Not.of(singleConcept.getId()),
+                EntityType.COMPOSITE_CONCEPT)
+            .superConcepts(List.of(singleConcept))
+            .id(UUID.randomUUID().toString());
 
     assertThat(
             entityService.createEntity(organisation.getId(), repository.getId(), compositeConcept))
@@ -593,18 +535,14 @@ class EntityServiceTest extends AbstractTest {
 
   @Test
   void deleteVersion() {
-    Organisation organisation =
-        organisationService.createOrganisation(new Organisation().id("org"));
+    Organisation organisation = organisationService.createOrganisation(new Organisation("org"));
     Repository repository =
         repositoryService.createRepository(
             organisation.getId(),
-            new Repository().id("repo").repositoryType(RepositoryType.PHENOTYPE_REPOSITORY),
+            new Repository("repo").repositoryType(RepositoryType.PHENOTYPE_REPOSITORY),
             null);
     Phenotype phenotype =
-        (Phenotype)
-            new Phenotype()
-                .id(UUID.randomUUID().toString())
-                .entityType(EntityType.SINGLE_PHENOTYPE);
+        new Phenotype(EntityType.SINGLE_PHENOTYPE).id(UUID.randomUUID().toString());
 
     assertThat(entityService.createEntity(organisation.getId(), repository.getId(), phenotype))
         .isNotNull()
@@ -675,18 +613,14 @@ class EntityServiceTest extends AbstractTest {
 
   @Test
   void deleteEntity() {
-    Organisation organisation =
-        organisationService.createOrganisation(new Organisation().id("org"));
+    Organisation organisation = organisationService.createOrganisation(new Organisation("org"));
     Repository repository =
         repositoryService.createRepository(
             organisation.getId(),
-            new Repository().id("repo").repositoryType(RepositoryType.PHENOTYPE_REPOSITORY),
+            new Repository("repo").repositoryType(RepositoryType.PHENOTYPE_REPOSITORY),
             null);
     Phenotype phenotype =
-        (Phenotype)
-            new Phenotype()
-                .id(UUID.randomUUID().toString())
-                .entityType(EntityType.SINGLE_PHENOTYPE);
+        new Phenotype(EntityType.SINGLE_PHENOTYPE).id(UUID.randomUUID().toString());
 
     assertThat(entityService.createEntity(organisation.getId(), repository.getId(), phenotype))
         .isNotNull()
@@ -723,42 +657,32 @@ class EntityServiceTest extends AbstractTest {
 
   @Test
   void getEntities() {
-    Organisation organisation =
-        organisationService.createOrganisation(new Organisation().id("org"));
+    Organisation organisation = organisationService.createOrganisation(new Organisation("org"));
     Repository repository1 =
         repositoryService.createRepository(
             organisation.getId(),
-            new Repository()
-                .id("repo1")
+            new Repository("repo1")
                 .primary(true)
                 .repositoryType(RepositoryType.PHENOTYPE_REPOSITORY),
             null);
     Repository repository2 =
         repositoryService.createRepository(
             organisation.getId(),
-            new Repository()
-                .id("repo2")
+            new Repository("repo2")
                 .primary(false)
                 .repositoryType(RepositoryType.PHENOTYPE_REPOSITORY),
             null);
     Phenotype entity1 =
-        (Phenotype)
-            new Phenotype()
-                .dataType(DataType.NUMBER)
-                .itemType(ItemType.OBSERVATION)
-                .id(UUID.randomUUID().toString())
-                .entityType(EntityType.SINGLE_PHENOTYPE)
-                .titles(
-                    Collections.singletonList(
-                        new LocalisableText().lang("en").text("example test")));
+        new Phenotype(EntityType.SINGLE_PHENOTYPE)
+            .dataType(DataType.NUMBER)
+            .itemType(ItemType.OBSERVATION)
+            .id(UUID.randomUUID().toString())
+            .titles(Collections.singletonList(new LocalisableText("en", "example test")));
 
     Category entity2 =
-        (Category)
-            new Category()
-                .id(UUID.randomUUID().toString())
-                .entityType(EntityType.CATEGORY)
-                .titles(
-                    Collections.singletonList(new LocalisableText().lang("en").text("example")));
+        new Category(EntityType.CATEGORY)
+            .id(UUID.randomUUID().toString())
+            .titles(Collections.singletonList(new LocalisableText("en", "example")));
 
     assertThat(entityService.createEntity(organisation.getId(), repository1.getId(), entity1))
         .isNotNull()
@@ -863,33 +787,26 @@ class EntityServiceTest extends AbstractTest {
 
   @Test
   void getSubclasses() {
-    Organisation organisation =
-        organisationService.createOrganisation(new Organisation().id("org"));
+    Organisation organisation = organisationService.createOrganisation(new Organisation("org"));
     Repository repository =
         repositoryService.createRepository(
             organisation.getId(),
-            new Repository().id("repo").repositoryType(RepositoryType.PHENOTYPE_REPOSITORY),
+            new Repository("repo").repositoryType(RepositoryType.PHENOTYPE_REPOSITORY),
             null);
 
-    Category superCat = (Category) new Category().entityType(EntityType.CATEGORY).id("super_cat");
+    Category superCat = new Category(EntityType.CATEGORY).id("super_cat");
     Category subCat1 =
-        (Category)
-            new Category()
-                .superCategories(Collections.singletonList(superCat))
-                .entityType(EntityType.CATEGORY)
-                .id("sub_cat_1");
+        new Category(EntityType.CATEGORY)
+            .superCategories(Collections.singletonList(superCat))
+            .id("sub_cat_1");
     Category subCat2 =
-        (Category)
-            new Category()
-                .superCategories(Collections.singletonList(superCat))
-                .entityType(EntityType.CATEGORY)
-                .id("sub_cat_2");
+        new Category(EntityType.CATEGORY)
+            .superCategories(Collections.singletonList(superCat))
+            .id("sub_cat_2");
     Category subCat3 =
-        (Category)
-            new Category()
-                .superCategories(Collections.singletonList(subCat1))
-                .entityType(EntityType.CATEGORY)
-                .id("sub_cat_3");
+        new Category(EntityType.CATEGORY)
+            .superCategories(Collections.singletonList(subCat1))
+            .id("sub_cat_3");
 
     assertThatCode(
             () -> entityService.createEntity(organisation.getId(), repository.getId(), superCat))
@@ -929,19 +846,16 @@ class EntityServiceTest extends AbstractTest {
 
   @Test
   void loadEntity() {
-    Organisation organisation =
-        organisationService.createOrganisation(new Organisation().id("org"));
+    Organisation organisation = organisationService.createOrganisation(new Organisation("org"));
     Repository repository =
         repositoryService.createRepository(
             organisation.getId(),
-            new Repository().id("repo").repositoryType(RepositoryType.PHENOTYPE_REPOSITORY),
+            new Repository("repo").repositoryType(RepositoryType.PHENOTYPE_REPOSITORY),
             null);
     Category category =
-        (Category)
-            new Category()
-                .id(UUID.randomUUID().toString())
-                .entityType(EntityType.CATEGORY)
-                .addTitlesItem(new LocalisableText().text("category").lang("en"));
+        new Category(EntityType.CATEGORY)
+            .id(UUID.randomUUID().toString())
+            .addTitlesItem(new LocalisableText("en", "category"));
 
     assertThat(entityService.createEntity(organisation.getId(), repository.getId(), category))
         .isNotNull();
@@ -967,28 +881,24 @@ class EntityServiceTest extends AbstractTest {
 
   @Test
   void updateEntityById() {
-    Organisation organisation =
-        organisationService.createOrganisation(new Organisation().id("org"));
+    Organisation organisation = organisationService.createOrganisation(new Organisation("org"));
     Repository repository =
         repositoryService.createRepository(
             organisation.getId(),
-            new Repository().id("repo").repositoryType(RepositoryType.PHENOTYPE_REPOSITORY),
+            new Repository("repo").repositoryType(RepositoryType.PHENOTYPE_REPOSITORY),
             null);
-    Category category =
-        (Category) new Category().id(UUID.randomUUID().toString()).entityType(EntityType.CATEGORY);
+    Category category = new Category(EntityType.CATEGORY).id(UUID.randomUUID().toString());
 
     assertThatCode(
             () -> entityService.createEntity(organisation.getId(), repository.getId(), category))
         .doesNotThrowAnyException();
 
     Phenotype phenotype =
-        (Phenotype)
-            new Phenotype()
-                .dataType(DataType.NUMBER)
-                .addSuperCategoriesItem(category)
-                .id(UUID.randomUUID().toString())
-                .entityType(EntityType.SINGLE_PHENOTYPE)
-                .addTitlesItem(new LocalisableText().text("Height").lang("en"));
+        new Phenotype(EntityType.SINGLE_PHENOTYPE)
+            .dataType(DataType.NUMBER)
+            .addSuperCategoriesItem(category)
+            .id(UUID.randomUUID().toString())
+            .addTitlesItem(new LocalisableText("en", "Height"));
 
     assertThat(entityService.createEntity(organisation.getId(), repository.getId(), phenotype))
         .isNotNull()
@@ -999,7 +909,7 @@ class EntityServiceTest extends AbstractTest {
               assertThat(p.getTitles()).size().isEqualTo(1);
             });
 
-    phenotype.addTitlesItem(new LocalisableText().text("Größe").lang("de"));
+    phenotype.addTitlesItem(new LocalisableText("de", "Größe"));
 
     assertThat(
             entityService.updateEntityById(
@@ -1013,7 +923,7 @@ class EntityServiceTest extends AbstractTest {
               assertThat(((Phenotype) p).getSuperCategories()).size().isEqualTo(1);
             });
 
-    phenotype.setTitles(List.of(new LocalisableText().text("大きさ").lang("jp")));
+    phenotype.setTitles(List.of(new LocalisableText("jp", "大きさ")));
 
     assertThat(
             entityService.updateEntityById(
