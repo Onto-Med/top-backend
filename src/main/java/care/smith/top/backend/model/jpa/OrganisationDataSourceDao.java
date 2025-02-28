@@ -2,9 +2,9 @@ package care.smith.top.backend.model.jpa;
 
 import care.smith.top.backend.model.jpa.key.OrganisationDataSourceKeyDao;
 import care.smith.top.model.QueryType;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import java.time.OffsetDateTime;
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;

@@ -2,13 +2,13 @@ package care.smith.top.backend.model.jpa;
 
 import care.smith.top.backend.util.ApiModelMapper;
 import care.smith.top.model.*;
+import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import javax.persistence.*;
-import javax.persistence.Entity;
-import javax.validation.constraints.NotNull;
 import org.hibernate.TypeMismatchException;
 
 @Entity(name = "entity")

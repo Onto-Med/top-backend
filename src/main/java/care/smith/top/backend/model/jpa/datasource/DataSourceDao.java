@@ -2,9 +2,9 @@ package care.smith.top.backend.model.jpa.datasource;
 
 import care.smith.top.model.DataSource;
 import care.smith.top.model.QueryType;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import java.util.Objects;
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
 import org.apache.commons.lang3.StringUtils;
 
 @Entity(name = "data_source")

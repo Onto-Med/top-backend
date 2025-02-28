@@ -4,13 +4,13 @@ import care.smith.top.model.ConceptQuery;
 import care.smith.top.model.PhenotypeQuery;
 import care.smith.top.model.Query;
 import care.smith.top.model.QueryType;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 

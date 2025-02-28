@@ -2,13 +2,13 @@ package care.smith.top.backend.model.jpa;
 
 import care.smith.top.model.Code;
 import care.smith.top.model.CodeSystem;
+import jakarta.persistence.*;
 import java.net.URI;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
+import org.jetbrains.annotations.NotNull;
 
 @Entity(name = "code")
 public class CodeDao {

@@ -1,11 +1,11 @@
 package care.smith.top.backend.model.jpa;
 
 import care.smith.top.model.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
 
 @Entity(name = "value")
 public class ValueDao {

@@ -1,12 +1,12 @@
 package care.smith.top.backend.model.jpa.datasource;
 
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
 
 @Entity(name = "subject")
 @Table(indexes = @Index(columnList = "dataSourceId"))

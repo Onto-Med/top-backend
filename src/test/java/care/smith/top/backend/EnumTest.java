@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 public class EnumTest {
   /**
    * This test checks if enumerations provided by top-api have changed. Because these enumerations
-   * are stored as {@link javax.persistence.Enumerated} with type ORDINAL, rearranging them will
+   * are stored as {@link jakarta.persistence.Enumerated} with type ORDINAL, rearranging them will
    * lead to data inconsistency.
    *
    * <p>Measures required if this test fails for an enumeration:

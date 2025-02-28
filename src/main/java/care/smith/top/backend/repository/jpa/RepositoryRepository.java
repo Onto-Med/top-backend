@@ -2,11 +2,11 @@ package care.smith.top.backend.repository.jpa;
 
 import care.smith.top.backend.model.jpa.*;
 import care.smith.top.model.RepositoryType;
+import jakarta.annotation.Nullable;
+import jakarta.persistence.criteria.JoinType;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import javax.annotation.Nullable;
-import javax.persistence.criteria.JoinType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;

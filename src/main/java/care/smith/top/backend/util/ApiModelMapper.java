@@ -1,9 +1,9 @@
 package care.smith.top.backend.util;
 
 import care.smith.top.model.*;
+import jakarta.validation.constraints.NotNull;
 import java.util.*;
 import java.util.stream.Collectors;
-import javax.validation.constraints.NotNull;
 import org.springframework.data.domain.Page;
 
 public abstract class ApiModelMapper {
