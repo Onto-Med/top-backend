@@ -238,7 +238,8 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
   }
 
   private void buildTextWithHighlights(Document document, String[] colors, List<String> terms) {
-    // ToDo: surrounding es highlights span with concept cluster highlight span needs to be seen if it works for all cases
+    // ToDo: surrounding es highlights span with concept cluster highlight span needs to be seen if
+    // it works for all cases
     String colorBackgroundValue = colors[0];
     String colorForegroundValue = colors.length > 1 ? colors[1] : "black";
     String markTag =
