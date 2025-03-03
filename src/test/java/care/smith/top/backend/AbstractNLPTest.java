@@ -34,8 +34,20 @@ import org.springframework.test.context.DynamicPropertySource;
 
 @SpringBootTest
 public abstract class AbstractNLPTest {
-  protected static Set<Document> documents1 = Set.of(new Document().id("d1").name("Document 1"));
-  protected static Set<Document> documents2 = Set.of(new Document().id("d2").name("Document 2"));
+  protected static Set<Document> documents1 =
+      Set.of(
+          new Document()
+              .id("d1")
+              .name("Document 1")
+              .text("Document 1")
+              .highlightedText("Document 1"));
+  protected static Set<Document> documents2 =
+      Set.of(
+          new Document()
+              .id("d2")
+              .name("Document 2")
+              .text("Document 2")
+              .highlightedText("Document 2"));
   public static Set<Document> documents1_2 =
       Set.of(documents1.iterator().next(), documents2.iterator().next());
   protected static List<ConceptCluster> concepts1 =
@@ -83,21 +95,21 @@ public abstract class AbstractNLPTest {
 
   protected static DocumentService mockedDocumentService()
       throws IOException, InstantiationException {
-    PageImpl<Document> page1 = new PageImpl<>(List.of(new Document().id("d1").name("Document 1")));
-    PageImpl<Document> page2 = new PageImpl<>(List.of(new Document().id("d2").name("Document 2")));
+    PageImpl<Document> page1 = new PageImpl<>(List.copyOf(documents1));
+    PageImpl<Document> page2 = new PageImpl<>(List.copyOf(documents2));
     PageImpl<Document> page1_2 =
         new PageImpl<>(
             List.of(
-                new Document().id("d1").name("Document 1"),
-                new Document().id("d2").name("Document 2")));
+                documents1.stream().findFirst().orElseGet(Document::new),
+                documents2.stream().findFirst().orElseGet(Document::new)));
     DocumentNodeEntity d1 = new DocumentNodeEntity("d1", "Document 1", Set.of());
     DocumentNodeEntity d2 = new DocumentNodeEntity("d2", "Document 2", Set.of());
 
     TextAdapter adapter = mock(TextAdapter.class);
     when(adapter.getDocumentById(eq("d1"), anyBoolean()))
-        .thenReturn(Optional.ofNullable(new Document().id("d1").name("Document 1")));
+        .thenReturn(Optional.of(documents1.stream().findFirst().orElseGet(Document::new)));
     when(adapter.getDocumentById(eq("d2"), anyBoolean()))
-        .thenReturn(Optional.ofNullable(new Document().id("d2").name("Document 2")));
+        .thenReturn(Optional.of(documents2.stream().findFirst().orElseGet(Document::new)));
     when(adapter.getDocumentsByIdsPaged(eq(Set.of("d1", "d2")), anyInt(), anyBoolean()))
         .thenReturn(page1_2);
     when(adapter.getDocumentsByIdsPaged(eq(Set.of("d1")), anyInt(), anyBoolean()))

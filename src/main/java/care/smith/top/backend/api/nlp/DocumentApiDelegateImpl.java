@@ -164,6 +164,7 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
       String[] colors = new String[] {"yellow", "black"};
       String conceptId = null;
 
+      if (document.getHighlightedText() == null) document.setHighlightedText(document.getText());
       addBorderToHighlights(document, offsets);
 
       for (String concept : highlightConcepts) {
