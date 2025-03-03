@@ -103,9 +103,7 @@ public class QueryResultDao {
   }
 
   public QueryResult toApiModel() {
-    return new QueryResult()
-        .id(UUID.fromString(getQuery().getId()))
-        .createdAt(getCreatedAt())
+    return new QueryResult(UUID.fromString(getQuery().getId()), getCreatedAt())
         .count(getCount())
         .finishedAt(getFinishedAt())
         .message(getMessage())

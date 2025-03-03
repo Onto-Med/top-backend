@@ -60,7 +60,7 @@ public class ConceptNodeEntity {
   }
 
   public ConceptCluster toApiModel() {
-    return new ConceptCluster().id(this.conceptId).labels(this.labels);
+    return new ConceptCluster(this.conceptId).labels(this.labels);
   }
 
   public static ConceptNodeEntity nullConceptNode() {

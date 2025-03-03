@@ -37,10 +37,8 @@ public class DataSourceDao {
   }
 
   public DataSource toApiModel() {
-    return new DataSource()
-        .id(this.getDataSourceId())
+    return new DataSource(this.getDataSourceId(), QueryType.PHENOTYPE)
         .title(this.getTitle())
-        .queryType(QueryType.PHENOTYPE)
         .local(true);
   }
 
