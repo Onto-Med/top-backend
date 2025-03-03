@@ -72,8 +72,7 @@ public class PhraseNodeEntity {
   }
 
   public Phrase toApiModel() {
-    return new Phrase()
-        .id(this.phraseId)
+    return new Phrase(this.phraseId)
         .text(this.phraseText)
         .exemplar(this.exemplar)
         .attributes(this.phraseAttributes);
