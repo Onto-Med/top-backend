@@ -30,6 +30,8 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
   private final DocumentService documentService;
   private final String COLOR_PRE = "$color::";
   private final String COLOR_AFTER = "::color$";
+  private final String BORDER_MARKUP =
+      "<span style=\"border: 2px solid black; padding: 3px; border-radius: 5px\">";
   private final Map<Character, String> REGEX_SPECIAL =
       Map.ofEntries(
           Map.entry('.', "\\."),
@@ -142,7 +144,11 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
 
   @Override
   public ResponseEntity<Document> getSingleDocumentById(
-      String documentId, String dataSource, List<String> highlightConcepts, List<String> include) {
+      String documentId,
+      String dataSource,
+      List<String> highlightConcepts,
+      List<String> offsets,
+      List<String> include) {
     TextAdapter adapter;
     try {
       adapter = documentService.getAdapterForDataSource(dataSource);
@@ -152,27 +158,31 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
     }
     try {
       Document document = adapter.getDocumentById(documentId, false).orElseThrow();
-      if (highlightConcepts != null && !highlightConcepts.isEmpty()) {
-        String[] colors = new String[] {"yellow", "black"};
-        String conceptId = null;
-        for (String concept : highlightConcepts) {
-          if (concept.startsWith(COLOR_PRE)) {
-            colors =
-                concept
-                    .substring(COLOR_PRE.length(), concept.lastIndexOf(COLOR_AFTER))
-                    .split("\\|");
-            conceptId = concept.substring(concept.lastIndexOf(COLOR_AFTER) + COLOR_AFTER.length());
-          } else {
-            conceptId = concept;
-          }
-          String finalConceptId = conceptId;
-          buildTextWithHighlights(
-              document,
-              colors,
-              phraseService.getPhrasesForConcept(finalConceptId).stream()
-                  .map(Phrase::getText)
-                  .collect(Collectors.toList()));
+      if (highlightConcepts == null) highlightConcepts = new ArrayList<>();
+      if (offsets == null) offsets = new ArrayList<>();
+
+      String[] colors = new String[] {"yellow", "black"};
+      String conceptId = null;
+
+      if (document.getHighlightedText() == null) document.setHighlightedText(document.getText());
+      addBorderToHighlights(document, offsets);
+
+      for (String concept : highlightConcepts) {
+        if (concept.startsWith(COLOR_PRE)) {
+          colors =
+              concept.substring(COLOR_PRE.length(), concept.lastIndexOf(COLOR_AFTER)).split("\\|");
+          conceptId = concept.substring(concept.lastIndexOf(COLOR_AFTER) + COLOR_AFTER.length());
+        } else {
+          conceptId = concept;
         }
+        String finalConceptId = conceptId;
+
+        buildTextWithHighlights(
+            document,
+            colors,
+            phraseService.getPhrasesForConcept(finalConceptId).stream()
+                .map(Phrase::getText)
+                .collect(Collectors.toList()));
       }
       return ResponseEntity.ok(document);
     } catch (IOException e) {
@@ -212,7 +222,25 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
     }
   }
 
+  private void addBorderToHighlights(Document document, List<String> offsets) {
+    String highlightTag = BORDER_MARKUP + "%s</span>";
+    StringBuilder highlightBuilder = new StringBuilder();
+    int curr = 0;
+    for (String offset : offsets) {
+      int begin = Integer.parseInt(offset.split("-")[0]);
+      int end = Integer.parseInt(offset.split("-")[1]);
+      highlightBuilder.append(document.getHighlightedText(), curr, begin);
+      highlightBuilder.append(
+          String.format(highlightTag, document.getHighlightedText().substring(begin, end)));
+      curr = end;
+    }
+    highlightBuilder.append(document.getHighlightedText().substring(curr));
+    document.setHighlightedText(highlightBuilder.toString());
+  }
+
   private void buildTextWithHighlights(Document document, String[] colors, List<String> terms) {
+    // ToDo: surrounding es highlights span with concept cluster highlight span needs to be seen if
+    // it works for all cases
     String colorBackgroundValue = colors[0];
     String colorForegroundValue = colors.length > 1 ? colors[1] : "black";
     String markTag =
@@ -229,7 +257,8 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
       }
       String repl =
           Pattern.compile(
-                  String.format("\\b%s\\b", escapedString), Pattern.CASE_INSENSITIVE | UNICODE_CASE)
+                  String.format("\\b(%s)?%s(</span>)?\\b", BORDER_MARKUP, escapedString),
+                  Pattern.CASE_INSENSITIVE | UNICODE_CASE)
               .matcher(document.getHighlightedText())
               .replaceAll(
                   matchResult ->

@@ -3,9 +3,11 @@ package care.smith.top.backend.service.nlp;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import care.smith.top.backend.AbstractNLPTest;
+import care.smith.top.model.Document;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -14,6 +16,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 @SpringBootTest
 class DocumentServiceTest extends AbstractNLPTest {
   private static DocumentService documentService;
+  private final Set<String> documentIds1 =
+      documents1.stream().map(Document::getId).collect(Collectors.toSet());
+  private final Set<String> documentIds2 =
+      documents2.stream().map(Document::getId).collect(Collectors.toSet());
+  private final Set<String> documentIds1_2 =
+      documents1_2.stream().map(Document::getId).collect(Collectors.toSet());
 
   @BeforeEach
   void provideDocumentService() throws IOException, InstantiationException {
@@ -29,28 +37,46 @@ class DocumentServiceTest extends AbstractNLPTest {
 
   @Test
   void getDocumentsForConceptIds() {
-    assertThat(new HashSet<>(documentService.getDocumentsForConceptIds(Set.of("c2"), false)))
-        .isEqualTo(documents1_2);
+    assertThat(
+            new HashSet<>(
+                documentService.getDocumentsForConceptIds(Set.of("c2"), false).stream()
+                    .map(Document::getId)
+                    .collect(Collectors.toSet())))
+        .isEqualTo(documentIds1_2);
 
-    assertThat(new HashSet<>(documentService.getDocumentsForConceptIds(Set.of("c2"), true)))
+    assertThat(
+            new HashSet<>(
+                documentService.getDocumentsForConceptIds(Set.of("c2"), true).stream()
+                    .map(Document::getId)
+                    .collect(Collectors.toSet())))
         .isEqualTo(Set.of());
   }
 
   @Test
   void getDocumentsForPhraseIds() {
-    assertThat(new HashSet<>(documentService.getDocumentsForPhraseIds(Set.of("p1", "p2"), true)))
-        .isEqualTo(documents2);
+    assertThat(
+            new HashSet<>(
+                documentService.getDocumentsForPhraseIds(Set.of("p1", "p2"), true).stream()
+                    .map(Document::getId)
+                    .collect(Collectors.toSet())))
+        .isEqualTo(documentIds2);
   }
 
   @Test
   void getDocumentsForPhraseTexts() {
-    assertThat(new HashSet<>(documentService.getDocumentsForPhraseTexts(Set.of("phrase"), false)))
-        .isEqualTo(documents1_2);
+    assertThat(
+            new HashSet<>(
+                documentService.getDocumentsForPhraseTexts(Set.of("phrase"), false).stream()
+                    .map(Document::getId)
+                    .collect(Collectors.toSet())))
+        .isEqualTo(documentIds1_2);
 
     assertThat(
             new HashSet<>(
-                documentService.getDocumentsForPhraseTexts(Set.of("there", "here"), true)))
-        .isEqualTo(documents2);
+                documentService.getDocumentsForPhraseTexts(Set.of("there", "here"), true).stream()
+                    .map(Document::getId)
+                    .collect(Collectors.toSet())))
+        .isEqualTo(documentIds2);
   }
 
   @Test

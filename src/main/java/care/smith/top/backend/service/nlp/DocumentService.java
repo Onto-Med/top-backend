@@ -148,6 +148,9 @@ public class DocumentService implements ContentService {
 
   public List<String> getDocumentIdsForQuery(
       String organisationId, String repositoryId, UUID queryId) throws IOException {
-    return getDocumentQueryService().getDocumentIds(organisationId, repositoryId, queryId);
+    return new ArrayList<>(
+        getDocumentQueryService()
+            .getDocumentIdsAndOffsets(organisationId, repositoryId, queryId)
+            .keySet());
   }
 }
