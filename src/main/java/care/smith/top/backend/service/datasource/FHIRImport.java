@@ -61,7 +61,13 @@ public class FHIRImport extends DataImport {
       EncounterRepository encounterRepository,
       SubjectResourceRepository subjectResourceRepository,
       boolean mergeEncounters) {
-    super(dataSourceId, reader, subjectRepository, encounterRepository, subjectResourceRepository);
+    super(
+        dataSourceId,
+        reader,
+        subjectRepository,
+        encounterRepository,
+        subjectResourceRepository,
+        null);
     this.mergeEncounters = mergeEncounters;
   }
 
