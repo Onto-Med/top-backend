@@ -23,6 +23,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import static care.smith.top.backend.util.NLPUtils.stringConformity;
+
 @Service
 public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegate {
   private final Logger LOGGER = Logger.getLogger(ConceptPipelineApiDelegateImpl.class.getName());
@@ -266,12 +268,5 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
     createDocumentServerConfigMap(textAdapterConfig)
         .forEach((k, v) -> l.add(String.format("\"%s\": \"%s\"", k, v)));
     return l;
-  }
-
-  // ToDo: would be better if this conversion would be done via the concept graphs api to be in
-  // accordance with every change to the pipeline name that's done there
-  private String stringConformity(String s) {
-    if (s == null || s.isEmpty()) return null;
-    return s.toLowerCase().replaceAll("\\s+", "_");
   }
 }

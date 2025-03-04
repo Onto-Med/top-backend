@@ -14,6 +14,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import static care.smith.top.backend.util.NLPUtils.stringConformity;
+
 @Service
 public class ConceptClusterApiDelegateImpl implements ConceptclusterApiDelegate {
   private final Logger LOGGER = Logger.getLogger(ConceptClusterApiDelegateImpl.class.getName());
@@ -157,12 +159,5 @@ public class ConceptClusterApiDelegateImpl implements ConceptclusterApiDelegate 
           .response("Finished Concept Cluster creation for this process.");
     }
     return response;
-  }
-
-  // ToDo: would be better if this conversion would be done via the concept graphs api to be in
-  // accordance with every change to the pipeline name that's done there
-  private String stringConformity(String s) {
-    if (s == null || s.isEmpty()) return null;
-    return s.toLowerCase().replaceAll("\\s+", "_");
   }
 }
