@@ -38,7 +38,7 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
   public ResponseEntity<Map<String, ConceptGraphStat>> getConceptGraphStatistics(
       String pipelineId) {
     Map<String, ConceptGraphStat> statistics =
-        conceptGraphsService.getAllConceptGraphStatistics(pipelineId);
+        conceptGraphsService.getAllConceptGraphStatistics(stringConformity(pipelineId));
     if (statistics == null) return ResponseEntity.of(Optional.empty());
     return ResponseEntity.ok(statistics);
   }
@@ -46,7 +46,7 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
   @Override
   public ResponseEntity<ConceptGraph> getConceptGraph(String pipelineId, String graphId) {
     return ResponseEntity.ok(
-        conceptGraphsService.getConceptGraphForIdAndProcess(graphId, pipelineId));
+        conceptGraphsService.getConceptGraphForIdAndProcess(graphId, stringConformity(pipelineId)));
   }
 
   @Override
@@ -56,14 +56,15 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
 
   @Override
   public ResponseEntity<Void> deleteConceptPipelineById(String pipelineId) {
+    final String finalPipelineId = stringConformity(pipelineId);
     PipelineResponse clusterResponse =
-        conceptClusterService.deleteCompletePipelineAndResults(pipelineId);
-    PipelineResponse graphResponse = conceptGraphsService.deletePipeline(pipelineId);
+        conceptClusterService.deleteCompletePipelineAndResults(finalPipelineId);
+    PipelineResponse graphResponse = conceptGraphsService.deletePipeline(finalPipelineId);
     if ((clusterResponse.getStatus().equals(PipelineResponseStatus.SUCCESSFUL)
             && graphResponse.getStatus().equals(PipelineResponseStatus.SUCCESSFUL))
         || graphResponse
             .getResponse()
-            .contains(String.format("no such process '%s'", pipelineId.toLowerCase())))
+            .contains(String.format("no such process '%s'", finalPipelineId)))
       return ResponseEntity.ok().build();
     return ResponseEntity.internalServerError().build();
   }
@@ -71,16 +72,17 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
   @Override
   public ResponseEntity<ConceptGraphPipeline> getConceptGraphPipelineById(String pipelineId) {
     ConceptGraphPipeline pipeline = new ConceptGraphPipeline();
+    final String finalPipelineId = stringConformity(pipelineId);
     try {
       pipeline =
           conceptGraphsService.getAllStoredProcesses().stream()
               .filter(
                   conceptGraphPipeline ->
-                      conceptGraphPipeline.getPipelineId().equalsIgnoreCase(pipelineId))
+                      conceptGraphPipeline.getPipelineId().equalsIgnoreCase(finalPipelineId))
               .findFirst()
               .orElseThrow();
     } catch (NoSuchElementException e) {
-      LOGGER.fine(String.format("A pipeline with id '%s' was not found", pipelineId));
+      LOGGER.fine(String.format("A pipeline with id '%s' was not found", finalPipelineId));
     }
     return ResponseEntity.ok(pipeline);
   }
@@ -88,7 +90,7 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
   @Override
   public ResponseEntity<String> getConceptGraphPipelineConfiguration(
       String pipelineId, String language) {
-    String config = conceptGraphsService.getPipelineConfig(pipelineId, language);
+    String config = conceptGraphsService.getPipelineConfig(stringConformity(pipelineId), language);
     if (Objects.equals(config, "{}")) return ResponseEntity.notFound().build();
     JSONObject jsonObject = new JSONObject(config);
     String configStr = jsonObject.has("config") ? jsonObject.get("config").toString() : "{}";
@@ -165,11 +167,12 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
       MultipartFile embeddingConfig,
       MultipartFile clusteringConfig,
       MultipartFile graphConfig) {
+    String finalPipelineId = stringConformity(pipelineId);
     if (data == null && dataSourceId == null && defaultDataSourceId == null) {
       return ResponseEntity.badRequest()
           .body(
               new PipelineResponse()
-                  .pipelineId(pipelineId != null ? pipelineId : "default")
+                  .pipelineId(finalPipelineId)
                   .response(
                       "Neither 'data' nor configuration for a document server ('dataSourceId') were provided. "
                           + "There also seems no default document server to be available. One of either is needed.")
@@ -218,7 +221,7 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
               data != null ? data.getResource().getFile() : null,
               labels != null ? labels.getResource().getFile() : null,
               configMap,
-              pipelineId,
+              finalPipelineId,
               language,
               skipPresent,
               returnStatistics);
@@ -233,7 +236,7 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
 
   @Override
   public ResponseEntity<Void> stopConceptGraphPipeline(String pipelineId) {
-    conceptGraphsService.stopPipeline(pipelineId);
+    conceptGraphsService.stopPipeline(stringConformity(pipelineId));
     return ResponseEntity.ok().build();
   }
 
@@ -264,4 +267,11 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
         .forEach((k, v) -> l.add(String.format("\"%s\": \"%s\"", k, v)));
     return l;
   }
+
+  //ToDo: would be better if this conversion would be done via the concept graphs api to be in accordance with every change to the pipeline name that's done there
+  private String stringConformity(String s) {
+    if (s == null || s.isEmpty()) return "default";
+    return s.toLowerCase().replaceAll("\\s+", "_");
+  }
 }
+

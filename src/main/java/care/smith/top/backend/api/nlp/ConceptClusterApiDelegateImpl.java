@@ -52,7 +52,7 @@ public class ConceptClusterApiDelegateImpl implements ConceptclusterApiDelegate 
   @Override
   public ResponseEntity<ConceptCluster> getConceptClusterById(
       String conceptId, String corpusId, List<String> include) {
-    return ResponseEntity.ok(conceptClusterService.conceptById(conceptId, corpusId));
+    return ResponseEntity.ok(conceptClusterService.conceptById(conceptId, stringConformity(corpusId)));
   }
 
   @Override
@@ -63,8 +63,9 @@ public class ConceptClusterApiDelegateImpl implements ConceptclusterApiDelegate 
       String corpusId,
       Integer page,
       List<String> include) {
+    final String finalCorpusId = stringConformity(corpusId);
     if (Boolean.TRUE.equals(recalculateCache))
-      conceptClusterService.evictConceptsFromCache(corpusId);
+      conceptClusterService.evictConceptsFromCache(finalCorpusId);
 
     boolean labels = !(labelsText == null || labelsText.isEmpty());
     boolean phrases = !(phraseId == null || phraseId.isEmpty());
@@ -72,13 +73,13 @@ public class ConceptClusterApiDelegateImpl implements ConceptclusterApiDelegate 
     Page<ConceptCluster> conceptClusterPage;
     if (labels && phrases) {
       conceptClusterPage =
-          conceptClusterService.conceptsByLabelsAndPhrases(labelsText, phraseId, corpusId, page);
+          conceptClusterService.conceptsByLabelsAndPhrases(labelsText, phraseId, finalCorpusId, page);
     } else if (labels) {
-      conceptClusterPage = conceptClusterService.conceptsByLabels(labelsText, corpusId, page);
+      conceptClusterPage = conceptClusterService.conceptsByLabels(labelsText, finalCorpusId, page);
     } else if (phrases) {
-      conceptClusterPage = conceptClusterService.conceptsByPhraseIds(phraseId, corpusId, page);
+      conceptClusterPage = conceptClusterService.conceptsByPhraseIds(phraseId, finalCorpusId, page);
     } else {
-      conceptClusterPage = conceptClusterService.conceptsForPage(corpusId, page);
+      conceptClusterPage = conceptClusterService.conceptsForPage(finalCorpusId, page);
     }
     return ResponseEntity.ok(ApiModelMapper.toConceptClusterPage(conceptClusterPage));
   }
@@ -90,48 +91,50 @@ public class ConceptClusterApiDelegateImpl implements ConceptclusterApiDelegate 
 
   @Override
   public ResponseEntity<PipelineResponse> getConceptClusterProcess(String pipelineId) {
-    PipelineResponse response = new PipelineResponse().pipelineId(pipelineId);
-    if (pipelineId == null || !conceptClusterService.conceptClusterProcessesContainsKey(pipelineId))
+    final String finalPipelineId = stringConformity(pipelineId);
+    PipelineResponse response = new PipelineResponse().pipelineId(finalPipelineId);
+    if (pipelineId == null || !conceptClusterService.conceptClusterProcessesContainsKey(finalPipelineId))
       return ResponseEntity.of(
           Optional.of(
               response.response(
-                  String.format("Process '%s' not found or no pipelineId provided.", pipelineId))));
-    return ResponseEntity.ok(checkConceptClusterProcess(pipelineId, response));
+                  String.format("Process '%s' not found or no pipelineId provided.", finalPipelineId))));
+    return ResponseEntity.ok(checkConceptClusterProcess(finalPipelineId, response));
   }
 
   @Override
   public ResponseEntity<PipelineResponse> createConceptClustersForPipelineId(
       String pipelineId, List<String> graphIds) {
-    PipelineResponse response = new PipelineResponse().pipelineId(pipelineId);
+    final String finalPipelineId = stringConformity(pipelineId);
+    PipelineResponse response = new PipelineResponse().pipelineId(finalPipelineId);
     TextAdapter adapter;
 
     try {
       adapter = documentService.getAdapterForDataSource(pipelineId);
     } catch (InstantiationException e) {
-      String message = "No text adapter for '" + pipelineId + "' could be initialized.";
+      String message = "No text adapter for '" + finalPipelineId + "' could be initialized.";
       LOGGER.severe(message);
       response.status(PipelineResponseStatus.FAILED).response(message);
       return ResponseEntity.of(Optional.of(response));
     }
 
-    if (!conceptClusterService.conceptClusterProcessesContainsKey(pipelineId)) {
+    if (!conceptClusterService.conceptClusterProcessesContainsKey(finalPipelineId)) {
       conceptClusterService.addToClusterProcesses(
-          pipelineId,
+          finalPipelineId,
           conceptClusterService
-              .createSpecificGraphsInNeo4j(pipelineId, graphIds, adapter)
+              .createSpecificGraphsInNeo4j(finalPipelineId, graphIds, adapter)
               .getRight());
       response
           .status(PipelineResponseStatus.RUNNING)
           .response("Started Concept Clusters creation ...");
     } else {
-      checkConceptClusterProcess(pipelineId, response);
+      checkConceptClusterProcess(finalPipelineId, response);
     }
     return ResponseEntity.ok(response);
   }
 
   @Override
   public ResponseEntity<Void> deleteConceptClustersForPipelineId(String pipelineId) {
-    PipelineResponse response = conceptClusterService.deleteCompletePipelineAndResults(pipelineId);
+    PipelineResponse response = conceptClusterService.deleteCompletePipelineAndResults(stringConformity(pipelineId));
     if (response.getStatus().equals(PipelineResponseStatus.SUCCESSFUL))
       return ResponseEntity.ok().build();
     return ResponseEntity.internalServerError().build();
@@ -139,7 +142,7 @@ public class ConceptClusterApiDelegateImpl implements ConceptclusterApiDelegate 
 
   private PipelineResponse checkConceptClusterProcess(
       String pipelineId, PipelineResponse response) {
-    if (conceptClusterService.getConceptClusterProcess(pipelineId).isAlive()) {
+    if (conceptClusterService.getConceptClusterProcess(stringConformity(pipelineId)).isAlive()) {
       response
           .status(PipelineResponseStatus.RUNNING)
           .response("Concept Clusters creation is still running ...");
@@ -149,5 +152,11 @@ public class ConceptClusterApiDelegateImpl implements ConceptclusterApiDelegate 
           .response("Finished Concept Cluster creation for this process.");
     }
     return response;
+  }
+
+  //ToDo: would be better if this conversion would be done via the concept graphs api to be in accordance with every change to the pipeline name that's done there
+  private String stringConformity(String s) {
+    if (s == null || s.isEmpty()) return "default";
+    return s.toLowerCase().replaceAll("\\s+", "_");
   }
 }
