@@ -271,7 +271,7 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
   // ToDo: would be better if this conversion would be done via the concept graphs api to be in
   // accordance with every change to the pipeline name that's done there
   private String stringConformity(String s) {
-    if (s == null || s.isEmpty()) return "default";
+    if (s == null || s.isEmpty()) return null;
     return s.toLowerCase().replaceAll("\\s+", "_");
   }
 }
