@@ -1,5 +1,7 @@
 package care.smith.top.backend.api.nlp;
 
+import static care.smith.top.backend.util.NLPUtils.stringConformity;
+
 import care.smith.top.backend.api.ConceptPipelineApiDelegate;
 import care.smith.top.backend.service.nlp.ConceptClusterService;
 import care.smith.top.backend.service.nlp.ConceptGraphsService;
@@ -22,8 +24,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
-import static care.smith.top.backend.util.NLPUtils.stringConformity;
 
 @Service
 public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegate {

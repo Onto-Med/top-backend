@@ -1,5 +1,7 @@
 package care.smith.top.backend.api.nlp;
 
+import static care.smith.top.backend.util.NLPUtils.stringConformity;
+
 import care.smith.top.backend.api.ConceptclusterApiDelegate;
 import care.smith.top.backend.service.nlp.ConceptClusterService;
 import care.smith.top.backend.service.nlp.DocumentService;
@@ -13,8 +15,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-
-import static care.smith.top.backend.util.NLPUtils.stringConformity;
 
 @Service
 public class ConceptClusterApiDelegateImpl implements ConceptclusterApiDelegate {
