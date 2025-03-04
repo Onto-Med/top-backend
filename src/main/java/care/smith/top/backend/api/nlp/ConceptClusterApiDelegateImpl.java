@@ -52,7 +52,8 @@ public class ConceptClusterApiDelegateImpl implements ConceptclusterApiDelegate 
   @Override
   public ResponseEntity<ConceptCluster> getConceptClusterById(
       String conceptId, String corpusId, List<String> include) {
-    return ResponseEntity.ok(conceptClusterService.conceptById(conceptId, stringConformity(corpusId)));
+    return ResponseEntity.ok(
+        conceptClusterService.conceptById(conceptId, stringConformity(corpusId)));
   }
 
   @Override
@@ -73,7 +74,8 @@ public class ConceptClusterApiDelegateImpl implements ConceptclusterApiDelegate 
     Page<ConceptCluster> conceptClusterPage;
     if (labels && phrases) {
       conceptClusterPage =
-          conceptClusterService.conceptsByLabelsAndPhrases(labelsText, phraseId, finalCorpusId, page);
+          conceptClusterService.conceptsByLabelsAndPhrases(
+              labelsText, phraseId, finalCorpusId, page);
     } else if (labels) {
       conceptClusterPage = conceptClusterService.conceptsByLabels(labelsText, finalCorpusId, page);
     } else if (phrases) {
@@ -93,11 +95,13 @@ public class ConceptClusterApiDelegateImpl implements ConceptclusterApiDelegate 
   public ResponseEntity<PipelineResponse> getConceptClusterProcess(String pipelineId) {
     final String finalPipelineId = stringConformity(pipelineId);
     PipelineResponse response = new PipelineResponse().pipelineId(finalPipelineId);
-    if (pipelineId == null || !conceptClusterService.conceptClusterProcessesContainsKey(finalPipelineId))
+    if (pipelineId == null
+        || !conceptClusterService.conceptClusterProcessesContainsKey(finalPipelineId))
       return ResponseEntity.of(
           Optional.of(
               response.response(
-                  String.format("Process '%s' not found or no pipelineId provided.", finalPipelineId))));
+                  String.format(
+                      "Process '%s' not found or no pipelineId provided.", finalPipelineId))));
     return ResponseEntity.ok(checkConceptClusterProcess(finalPipelineId, response));
   }
 
@@ -134,7 +138,8 @@ public class ConceptClusterApiDelegateImpl implements ConceptclusterApiDelegate 
 
   @Override
   public ResponseEntity<Void> deleteConceptClustersForPipelineId(String pipelineId) {
-    PipelineResponse response = conceptClusterService.deleteCompletePipelineAndResults(stringConformity(pipelineId));
+    PipelineResponse response =
+        conceptClusterService.deleteCompletePipelineAndResults(stringConformity(pipelineId));
     if (response.getStatus().equals(PipelineResponseStatus.SUCCESSFUL))
       return ResponseEntity.ok().build();
     return ResponseEntity.internalServerError().build();
@@ -154,7 +159,8 @@ public class ConceptClusterApiDelegateImpl implements ConceptclusterApiDelegate 
     return response;
   }
 
-  //ToDo: would be better if this conversion would be done via the concept graphs api to be in accordance with every change to the pipeline name that's done there
+  // ToDo: would be better if this conversion would be done via the concept graphs api to be in
+  // accordance with every change to the pipeline name that's done there
   private String stringConformity(String s) {
     if (s == null || s.isEmpty()) return "default";
     return s.toLowerCase().replaceAll("\\s+", "_");

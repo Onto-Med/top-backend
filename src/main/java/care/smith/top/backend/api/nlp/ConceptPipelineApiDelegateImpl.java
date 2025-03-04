@@ -268,10 +268,10 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
     return l;
   }
 
-  //ToDo: would be better if this conversion would be done via the concept graphs api to be in accordance with every change to the pipeline name that's done there
+  // ToDo: would be better if this conversion would be done via the concept graphs api to be in
+  // accordance with every change to the pipeline name that's done there
   private String stringConformity(String s) {
     if (s == null || s.isEmpty()) return "default";
     return s.toLowerCase().replaceAll("\\s+", "_");
   }
 }
-
