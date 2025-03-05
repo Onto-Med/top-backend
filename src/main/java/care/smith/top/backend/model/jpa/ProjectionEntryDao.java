@@ -66,7 +66,7 @@ public class ProjectionEntryDao {
         new ProjectionEntry()
             .subjectId(getSubjectId())
             .defaultAggregationFunctionId(getDefaultAggregationFunctionId())
-            .type(ProjectionEntry.TypeEnum.PROJECTIONENTRY);
+            .type(ProjectionEntry.TypeEnum.PROJECTION_ENTRY);
     if (getDateTimeRestriction() != null)
       entry.dateTimeRestriction((DateTimeRestriction) getDateTimeRestriction().toApiModel());
     return entry;
