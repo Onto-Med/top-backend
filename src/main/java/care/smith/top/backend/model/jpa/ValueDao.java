@@ -44,12 +44,10 @@ public class ValueDao {
   }
 
   public Value toApiModel() {
-    if (booleanValue != null)
-      return new BooleanValue().value(booleanValue).dataType(DataType.BOOLEAN);
-    if (dateTimeValue != null)
-      return new DateTimeValue().value(dateTimeValue).dataType(DataType.DATE_TIME);
-    if (numberValue != null) return new NumberValue().value(numberValue).dataType(DataType.NUMBER);
-    if (stringValue != null) return new StringValue().value(stringValue).dataType(DataType.STRING);
+    if (booleanValue != null) return new BooleanValue(DataType.BOOLEAN).value(booleanValue);
+    if (dateTimeValue != null) return new DateTimeValue(DataType.DATE_TIME).value(dateTimeValue);
+    if (numberValue != null) return new NumberValue(DataType.NUMBER).value(numberValue);
+    if (stringValue != null) return new StringValue(DataType.STRING).value(stringValue);
     return null;
   }
 }

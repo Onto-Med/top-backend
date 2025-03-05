@@ -77,12 +77,8 @@ public class QueryCriterionDao {
 
   public QueryCriterion toApiModel() {
     QueryCriterion queryCriterion =
-        (QueryCriterion)
-            new QueryCriterion()
-                .inclusion(isInclusion())
-                .subjectId(getSubjectId())
-                .defaultAggregationFunctionId(getDefaultAggregationFunctionId())
-                .type(ProjectionEntry.TypeEnum.QUERY_CRITERION);
+        new QueryCriterion(isInclusion(), getSubjectId(), ProjectionEntry.TypeEnum.QUERY_CRITERION)
+            .defaultAggregationFunctionId(getDefaultAggregationFunctionId());
     if (getDateTimeRestriction() != null)
       queryCriterion.dateTimeRestriction(
           (DateTimeRestriction) getDateTimeRestriction().toApiModel());

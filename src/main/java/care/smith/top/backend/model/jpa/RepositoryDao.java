@@ -150,8 +150,7 @@ public class RepositoryDao {
 
   public Repository toApiModel() {
     Repository repository =
-        new Repository()
-            .id(id)
+        new Repository(id)
             .name(name)
             .description(description)
             .createdAt(createdAt)
@@ -159,8 +158,7 @@ public class RepositoryDao {
             .primary(primary)
             .repositoryType(repositoryType);
     if (organisation != null)
-      repository.organisation(
-          new Organisation().id(organisation.getId()).name(organisation.getName()));
+      repository.organisation(new Organisation(organisation.getId()).name(organisation.getName()));
     return repository;
   }
 

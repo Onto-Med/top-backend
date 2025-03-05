@@ -95,10 +95,8 @@ public class UserDao implements UserDetails {
   }
 
   public User toApiModel() {
-    return new User()
-        .id(getId())
+    return new User(getId(), getRole().toApiModel())
         .username(getUsername())
-        .role(getRole().toApiModel())
         .organisations(
             getMemberships().stream()
                 .map(m -> m.getOrganisation().toApiModel())

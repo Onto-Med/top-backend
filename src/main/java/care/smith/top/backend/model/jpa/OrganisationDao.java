@@ -154,8 +154,7 @@ public class OrganisationDao {
 
   public Organisation toApiModel() {
     Organisation organisation =
-        new Organisation()
-            .id(id)
+        new Organisation(id)
             .name(name)
             .description(description)
             .createdAt(createdAt)
