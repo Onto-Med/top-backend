@@ -187,28 +187,21 @@ public class EntityDao {
                     .collect(Collectors.toList());
           ((Phenotype) entity)
               .superPhenotype(
-                  ((Phenotype)
-                      new Phenotype()
-                          .id(superPhenotype.getId())
-                          .entityType(superPhenotype.getEntityType())
-                          .titles(titles)));
+                  new Phenotype(superPhenotype.getEntityType())
+                      .id(superPhenotype.getId())
+                      .titles(titles));
         }
       } else if (ApiModelMapper.isConcept(entityDao.getEntityType())) {
         ((Concept) entity)
             .setSuperConcepts(
                 entityDao.getSuperEntities().stream()
-                    .map(
-                        c ->
-                            ((SingleConcept)
-                                new SingleConcept().id(c.getId()).entityType(c.getEntityType())))
+                    .map(c -> new SingleConcept(c.getEntityType()).id(c.getId()))
                     .collect(Collectors.toList()));
       } else {
         ((Category) entity)
             .setSuperCategories(
                 entityDao.getSuperEntities().stream()
-                    .map(
-                        c ->
-                            ((Category) new Category().id(c.getId()).entityType(c.getEntityType())))
+                    .map(c -> new Category(c.getEntityType()).id(c.getId()))
                     .collect(Collectors.toList()));
       }
     }

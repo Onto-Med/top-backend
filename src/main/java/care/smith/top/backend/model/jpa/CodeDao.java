@@ -63,11 +63,9 @@ public class CodeDao {
   }
 
   public Code toApiModel() {
-    return new Code()
-        .code(code)
+    return new Code(new CodeSystem(URI.create(codeSystemUri)), code)
         .uri(uri != null ? URI.create(uri) : null)
         .name(name)
-        .codeSystem(new CodeSystem().uri(URI.create(codeSystemUri)))
         .children(getChildren().stream().map(CodeDao::toApiModel).collect(Collectors.toList()))
         .synonyms(Collections.emptyList());
   }
