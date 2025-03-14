@@ -14,12 +14,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
@@ -159,7 +158,8 @@ public class RepositoryService implements ContentService {
   @Transactional
   @PreAuthorize(
       "hasRole('ADMIN') or hasPermission(#repositoryId, 'care.smith.top.backend.model.jpa.RepositoryDao', 'WRITE')")
-  public boolean testRepository(String organisationId, String repositoryId, String dataSourceId) {
+  public List<TestReport> testRepository(
+      String organisationId, String repositoryId, String dataSourceId) {
     RepositoryDao repository =
         repositoryRepository
             .findByIdAndOrganisationId(repositoryId, organisationId)
@@ -176,7 +176,7 @@ public class RepositoryService implements ContentService {
     List<ExpectedResultDao> expectedResults =
         expectedResultRepository.findAllByExpectedResultKeyDataSourceId(dataSourceId);
 
-    if (expectedResults.isEmpty()) return true;
+    if (expectedResults.isEmpty()) return new ArrayList<>();
 
     List<ProjectionEntry> projection =
         expectedResults.stream()
@@ -199,19 +199,24 @@ public class RepositoryService implements ContentService {
           "Could not test repository. Query has failed for the provided test data.");
     }
 
-    Map<String, Boolean> report =
-        expectedResults.stream()
-            .collect(
-                Collectors.toMap(
-                    ExpectedResultDao::getExpectedResultId,
-                    er ->
-                        resultSet
-                            .getPhenotypes(er.getSubjectId())
-                            .getValues(er.getPhenotypeId())
-                            .getValues(null)
-                            .contains(er.toValue())));
+    return expectedResults.stream()
+        .map(
+            er -> {
+              care.smith.top.model.Value expected = er.toValue();
+              DateTimeRestriction dateRange =
+                  er.getEncounter() != null ? er.getEncounter().toDateRange() : null;
+              care.smith.top.model.Value actual =
+                  resultSet
+                      .getValues(er.getSubjectId(), er.getPhenotypeId())
+                      .getValues(dateRange)
+                      .stream()
+                      .findFirst() // TODO: all actual values should be compared to expected values
+                      .orElse(null);
 
-    // TODO: build test report
-    return !report.containsValue(false);
+              return new TestReport(er.getExpectedResultId(), expected.equals(actual))
+                  .expected(expected)
+                  .actual(actual);
+            })
+        .toList();
   }
 }

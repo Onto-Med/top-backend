@@ -8,6 +8,7 @@ import care.smith.top.backend.util.ApiModelMapper;
 import care.smith.top.model.Repository;
 import care.smith.top.model.RepositoryPage;
 import care.smith.top.model.RepositoryType;
+import care.smith.top.model.TestReport;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
@@ -104,5 +105,12 @@ public class RepositoryApiDelegateImpl implements RepositoryApiDelegate {
           e);
     }
     return new ResponseEntity<>(HttpStatus.CREATED);
+  }
+
+  @Override
+  public ResponseEntity<List<TestReport>> testRepository(
+      String organisationId, String repositoryId, String dataSourceId) {
+    return ResponseEntity.ok(
+        repositoryService.testRepository(organisationId, repositoryId, dataSourceId));
   }
 }
