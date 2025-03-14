@@ -195,8 +195,12 @@ public class PhenotypeQueryService extends QueryService {
 
   private List<Entity> getQueryRelatedPhenotypes(PhenotypeQuery query, String repositoryId) {
     return Stream.concat(
-            query.getProjection().stream().map(ProjectionEntry::getSubjectId),
-            query.getCriteria().stream().map(QueryCriterion::getSubjectId))
+            Objects.requireNonNullElse(query.getProjection(), new ArrayList<ProjectionEntry>())
+                .stream()
+                .map(ProjectionEntry::getSubjectId),
+            Objects.requireNonNullElse(query.getCriteria(), new ArrayList<QueryCriterion>())
+                .stream()
+                .map(QueryCriterion::getSubjectId))
         .distinct()
         .flatMap(
             id ->
