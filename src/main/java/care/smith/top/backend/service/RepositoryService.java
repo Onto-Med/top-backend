@@ -1,5 +1,6 @@
 package care.smith.top.backend.service;
 
+import care.smith.top.backend.model.jpa.EntityDao;
 import care.smith.top.backend.model.jpa.OrganisationDao;
 import care.smith.top.backend.model.jpa.RepositoryDao;
 import care.smith.top.backend.model.jpa.RepositoryDao_;
@@ -25,6 +26,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -178,10 +180,17 @@ public class RepositoryService implements ContentService {
 
     if (expectedResults.isEmpty()) return new ArrayList<>();
 
+    List<String> phenotypes =
+        phenotypeRepository
+            .findAllByRepositoryId(repositoryId, Pageable.unpaged())
+            .map(EntityDao::getId)
+            .toList();
+
     List<ProjectionEntry> projection =
         expectedResults.stream()
             .map(ExpectedResultDao::getPhenotypeId)
             .distinct()
+            .filter(phenotypes::contains)
             .map(id -> new ProjectionEntry(id, ProjectionEntry.TypeEnum.PROJECTION_ENTRY))
             .toList();
 
