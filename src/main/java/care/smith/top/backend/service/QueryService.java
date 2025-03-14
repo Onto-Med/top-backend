@@ -66,6 +66,8 @@ public abstract class QueryService {
    *
    * @param queryId ID of the query to be executed.
    */
+  @PreAuthorize(
+      "hasPermission(#organisationId, 'care.smith.top.backend.model.jpa.OrganisationDao', 'WRITE')")
   public abstract void executeQuery(UUID queryId);
 
   @PreAuthorize(
