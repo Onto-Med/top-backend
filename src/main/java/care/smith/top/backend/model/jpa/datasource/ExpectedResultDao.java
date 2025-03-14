@@ -1,10 +1,12 @@
 package care.smith.top.backend.model.jpa.datasource;
 
+import care.smith.top.model.*;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Objects;
 import javax.persistence.*;
+import javax.persistence.Entity;
 import javax.validation.constraints.NotNull;
 
 @Entity(name = "expected_result")
@@ -243,6 +245,19 @@ public class ExpectedResultDao {
 
   public LocalDateTime getDateTimeValue() {
     return dateTimeValue;
+  }
+
+  public Value toValue() {
+    if (getBooleanValue() != null) {
+      return new BooleanValue(DataType.BOOLEAN).value(getBooleanValue());
+    } else if (getDateTimeValue() != null) {
+      return new DateTimeValue(DataType.DATE_TIME).value(getDateTimeValue());
+    } else if (getNumberValue() != null) {
+      return new NumberValue(DataType.NUMBER).value(getNumberValue());
+    } else if (getTextValue() != null) {
+      return new StringValue(DataType.STRING).value(getTextValue());
+    }
+    return new Value();
   }
 
   @Embeddable

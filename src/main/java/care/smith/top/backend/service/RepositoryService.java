@@ -3,16 +3,23 @@ package care.smith.top.backend.service;
 import care.smith.top.backend.model.jpa.OrganisationDao;
 import care.smith.top.backend.model.jpa.RepositoryDao;
 import care.smith.top.backend.model.jpa.RepositoryDao_;
+import care.smith.top.backend.model.jpa.datasource.ExpectedResultDao;
 import care.smith.top.backend.repository.jpa.OrganisationRepository;
+import care.smith.top.backend.repository.jpa.PhenotypeRepository;
 import care.smith.top.backend.repository.jpa.RepositoryRepository;
-import care.smith.top.model.Repository;
-import care.smith.top.model.RepositoryType;
+import care.smith.top.backend.repository.jpa.datasource.ExpectedResultRepository;
+import care.smith.top.model.*;
+import care.smith.top.top_phenotypic_query.result.ResultSet;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
@@ -38,7 +45,10 @@ public class RepositoryService implements ContentService {
 
   @Autowired private RepositoryRepository repositoryRepository;
   @Autowired private OrganisationRepository organisationRepository;
+  @Autowired private ExpectedResultRepository expectedResultRepository;
+  @Autowired private PhenotypeRepository phenotypeRepository;
   @Autowired private UserService userService;
+  @Autowired private PhenotypeQueryService phenotypeQueryService;
 
   @Override
   public long count() {
@@ -144,5 +154,64 @@ public class RepositoryService implements ContentService {
             .findByIdAndOrganisationId(repositoryId, organisationId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     return repositoryRepository.saveAndFlush(repository.update(data)).toApiModel();
+  }
+
+  @Transactional
+  @PreAuthorize(
+      "hasRole('ADMIN') or hasPermission(#repositoryId, 'care.smith.top.backend.model.jpa.RepositoryDao', 'WRITE')")
+  public boolean testRepository(String organisationId, String repositoryId, String dataSourceId) {
+    RepositoryDao repository =
+        repositoryRepository
+            .findByIdAndOrganisationId(repositoryId, organisationId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+    if (!RepositoryType.PHENOTYPE_REPOSITORY.equals(repository.getRepositoryType()))
+      throw new ResponseStatusException(
+          HttpStatus.NOT_ACCEPTABLE, "Only phenotype repositories can be tested!");
+
+    if (!repository.getOrganisation().hasDataSource(dataSourceId))
+      throw new ResponseStatusException(
+          HttpStatus.NOT_ACCEPTABLE, "Data source does not exist for organisation!");
+
+    List<ExpectedResultDao> expectedResults =
+        expectedResultRepository.findAllByExpectedResultKeyDataSourceId(dataSourceId);
+
+    if (expectedResults.isEmpty()) return true;
+
+    List<ProjectionEntry> projection =
+        expectedResults.stream()
+            .map(ExpectedResultDao::getPhenotypeId)
+            .distinct()
+            .map(id -> new ProjectionEntry(id, ProjectionEntry.TypeEnum.PROJECTION_ENTRY))
+            .toList();
+
+    PhenotypeQuery query =
+        new PhenotypeQuery(UUID.randomUUID(), QueryType.PHENOTYPE, dataSourceId)
+            .projection(projection);
+
+    ResultSet resultSet;
+    try {
+      resultSet = phenotypeQueryService.executeQuery(query, repositoryId);
+    } catch (Throwable e) {
+      LOGGER.log(Level.WARNING, e.getMessage(), e);
+      throw new ResponseStatusException(
+          HttpStatus.INTERNAL_SERVER_ERROR,
+          "Could not test repository. Query has failed for the provided test data.");
+    }
+
+    Map<String, Boolean> report =
+        expectedResults.stream()
+            .collect(
+                Collectors.toMap(
+                    ExpectedResultDao::getExpectedResultId,
+                    er ->
+                        resultSet
+                            .getPhenotypes(er.getSubjectId())
+                            .getValues(er.getPhenotypeId())
+                            .getValues(null)
+                            .contains(er.toValue())));
+
+    // TODO: build test report
+    return !report.containsValue(false);
   }
 }
