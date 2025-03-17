@@ -10,6 +10,7 @@ import care.smith.top.backend.repository.jpa.PhenotypeRepository;
 import care.smith.top.backend.repository.jpa.RepositoryRepository;
 import care.smith.top.backend.repository.jpa.datasource.ExpectedResultRepository;
 import care.smith.top.model.*;
+import care.smith.top.top_phenotypic_query.result.PhenotypeValues;
 import care.smith.top.top_phenotypic_query.result.ResultSet;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -17,6 +18,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -175,22 +177,23 @@ public class RepositoryService implements ContentService {
       throw new ResponseStatusException(
           HttpStatus.NOT_ACCEPTABLE, "Data source does not exist for organisation!");
 
-    List<ExpectedResultDao> expectedResults =
-        expectedResultRepository.findAllByExpectedResultKeyDataSourceId(dataSourceId);
-
-    if (expectedResults.isEmpty()) return new ArrayList<>();
-
     List<String> phenotypes =
         phenotypeRepository
             .findAllByRepositoryId(repositoryId, Pageable.unpaged())
             .map(EntityDao::getId)
             .toList();
 
+    List<ExpectedResultDao> expectedResults =
+        expectedResultRepository.findAllByExpectedResultKeyDataSourceId(dataSourceId).stream()
+            .filter(er -> phenotypes.contains(er.getPhenotypeId()))
+            .toList();
+
+    if (expectedResults.isEmpty()) return new ArrayList<>();
+
     List<ProjectionEntry> projection =
         expectedResults.stream()
             .map(ExpectedResultDao::getPhenotypeId)
             .distinct()
-            .filter(phenotypes::contains)
             .map(id -> new ProjectionEntry(id, ProjectionEntry.TypeEnum.PROJECTION_ENTRY))
             .toList();
 
@@ -211,20 +214,20 @@ public class RepositoryService implements ContentService {
     return expectedResults.stream()
         .map(
             er -> {
-              care.smith.top.model.Value expected = er.toValue();
               DateTimeRestriction dateRange =
                   er.getEncounter() != null ? er.getEncounter().toDateRange() : null;
+              List<care.smith.top.model.Value> values =
+                  Objects.requireNonNullElse(
+                          resultSet.getValues(er.getEncounterId(), er.getPhenotypeId()),
+                          new PhenotypeValues(er.getPhenotypeId()))
+                      .getValues(dateRange);
+
               care.smith.top.model.Value actual =
-                  resultSet
-                      .getValues(er.getSubjectId(), er.getPhenotypeId())
-                      .getValues(dateRange)
-                      .stream()
+                  values.stream()
                       .findFirst() // TODO: all actual values should be compared to expected values
                       .orElse(null);
 
-              return new TestReport(er.getExpectedResultId(), expected.equals(actual))
-                  .expected(expected)
-                  .actual(actual);
+              return er.toReport(actual);
             })
         .toList();
   }
