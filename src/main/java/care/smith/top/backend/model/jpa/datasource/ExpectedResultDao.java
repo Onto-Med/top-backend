@@ -260,6 +260,18 @@ public class ExpectedResultDao {
     return new Value();
   }
 
+  public TestReport toReport(Value actual) {
+    Value expected = toValue();
+    return new TestReport(
+            getExpectedResultId(),
+            getPhenotypeId(),
+            getSubjectId(),
+            getEncounterId(),
+            expected.equals(actual))
+        .expected(expected)
+        .actual(actual);
+  }
+
   @Embeddable
   public static class ExpectedResultKey implements Serializable {
     private String dataSourceId;

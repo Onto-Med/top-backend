@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import javax.annotation.Nullable;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 
@@ -178,7 +179,9 @@ public class EncounterDao {
     return subjectResources;
   }
 
+  @Nullable
   public DateTimeRestriction toDateRange() {
+    if (getStartDateTime() == null && getEndDateTime() == null) return null;
     return new DateTimeRestriction(DataType.DATE_TIME)
         .minOperator(RestrictionOperator.LESS_THAN_OR_EQUAL_TO)
         .maxOperator(RestrictionOperator.LESS_THAN_OR_EQUAL_TO)
