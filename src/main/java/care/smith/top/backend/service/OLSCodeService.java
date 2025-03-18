@@ -2,6 +2,7 @@ package care.smith.top.backend.service;
 
 import care.smith.top.backend.repository.ols.CodeRepository;
 import care.smith.top.backend.repository.ols.CodeSystemRepository;
+import care.smith.top.backend.repository.ols.OlsConnectionException;
 import care.smith.top.backend.repository.ols.OlsRepository;
 import care.smith.top.model.*;
 import java.net.URI;
@@ -40,12 +41,14 @@ public class OLSCodeService {
   }
 
   public CodePage getCodes(
-      List<String> include, String label, List<String> codeSystemIds, Integer page) {
+      List<String> include, String label, List<String> codeSystemIds, Integer page)
+      throws OlsConnectionException {
     return codeRepository.getCodes(label, codeSystemIds, page, OlsRepository.SEARCH_METHOD.SEARCH);
   }
 
   public CodePage getCodeSuggestions(
-      List<String> include, String label, List<String> codeSystemIds, Integer page) {
+      List<String> include, String label, List<String> codeSystemIds, Integer page)
+      throws OlsConnectionException {
     return codeRepository.getCodes(label, codeSystemIds, page, OlsRepository.SEARCH_METHOD.SUGGEST);
   }
 
@@ -61,7 +64,8 @@ public class OLSCodeService {
    * @param page Requested page
    * @return A {@link CodeSystemPage} containing matching code systems.
    */
-  public CodeSystemPage getCodeSystems(List<String> include, URI uri, String name, Integer page) {
+  public CodeSystemPage getCodeSystems(List<String> include, URI uri, String name, Integer page)
+      throws OlsConnectionException {
     int requestedPage = page == null ? 1 : page;
     int skipCount = (requestedPage - 1) * ontologyPageSize;
 

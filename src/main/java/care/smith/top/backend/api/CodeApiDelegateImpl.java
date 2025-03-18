@@ -1,5 +1,6 @@
 package care.smith.top.backend.api;
 
+import care.smith.top.backend.repository.ols.OlsConnectionException;
 import care.smith.top.backend.service.OLSCodeService;
 import care.smith.top.model.Code;
 import care.smith.top.model.CodePage;
@@ -33,18 +34,30 @@ public class CodeApiDelegateImpl implements CodeApiDelegate {
   @Override
   public ResponseEntity<CodePage> getCodes(
       List<String> include, String label, List<String> codeSystemIds, Integer page) {
-    return ResponseEntity.ok(codeService.getCodes(include, label, codeSystemIds, page));
+    try {
+      return ResponseEntity.ok(codeService.getCodes(include, label, codeSystemIds, page));
+    } catch (OlsConnectionException e) {
+      return ResponseEntity.internalServerError().build();
+    }
   }
 
   @Override
   public ResponseEntity<CodePage> getCodeSuggestions(
       List<String> include, String term, List<String> codeSystemIds, Integer page) {
-    return ResponseEntity.ok(codeService.getCodeSuggestions(include, term, codeSystemIds, page));
+    try {
+      return ResponseEntity.ok(codeService.getCodeSuggestions(include, term, codeSystemIds, page));
+    } catch (OlsConnectionException e) {
+      return ResponseEntity.internalServerError().build();
+    }
   }
 
   @Override
   public ResponseEntity<CodeSystemPage> getCodeSystems(
       List<String> include, URI uri, String name, Integer page) {
-    return ResponseEntity.ok(codeService.getCodeSystems(include, uri, name, page));
+    try {
+      return ResponseEntity.ok(codeService.getCodeSystems(include, uri, name, page));
+    } catch (Exception e) {
+      return ResponseEntity.internalServerError().build();
+    }
   }
 }

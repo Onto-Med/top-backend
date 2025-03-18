@@ -9,9 +9,8 @@ import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.util.*;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -22,7 +21,8 @@ import reactor.core.publisher.Mono;
 
 @Repository
 public class CodeRepository extends OlsRepository {
-  private static final Logger log = LoggerFactory.getLogger(CodeRepository.class);
+  private static final java.util.logging.Logger LOGGER =
+      Logger.getLogger(CodeRepository.class.getName());
 
   @Value("${coding.suggestions-page-size}")
   private int suggestionsPageSize;
@@ -230,28 +230,35 @@ public class CodeRepository extends OlsRepository {
   }
 
   public CodePage getCodes(
-      String term, List<String> codeSystemIds, Integer page, SEARCH_METHOD searchMethod) {
-    OLSSuggestResponseBody response =
-        Objects.requireNonNull(
-                terminologyService
-                    .get()
-                    .uri(
-                        uriBuilder ->
-                            uriBuilder
-                                .path(searchMethod.getEndpoint())
-                                .queryParam("q", term)
-                                .queryParam(
-                                    "fieldList", "id,iri,short_form,ontology_name,label,synonym")
-                                .queryParam("start", toOlsPage(page, suggestionsPageSize))
-                                .queryParam("rows", suggestionsPageSize)
-                                .queryParam(
-                                    "ontology",
-                                    codeSystemIds == null ? "" : String.join(",", codeSystemIds))
-                                .build())
-                    .retrieve()
-                    .bodyToMono(OLSSuggestResponse.class)
-                    .block())
-            .getResponse();
+      String term, List<String> codeSystemIds, Integer page, SEARCH_METHOD searchMethod)
+      throws OlsConnectionException {
+    OLSSuggestResponseBody response = null;
+    try {
+      response =
+          Objects.requireNonNull(
+                  terminologyService
+                      .get()
+                      .uri(
+                          uriBuilder ->
+                              uriBuilder
+                                  .path(searchMethod.getEndpoint())
+                                  .queryParam("q", term)
+                                  .queryParam(
+                                      "fieldList", "id,iri,short_form,ontology_name,label,synonym")
+                                  .queryParam("start", toOlsPage(page, suggestionsPageSize))
+                                  .queryParam("rows", suggestionsPageSize)
+                                  .queryParam(
+                                      "ontology",
+                                      codeSystemIds == null ? "" : String.join(",", codeSystemIds))
+                                  .build())
+                      .retrieve()
+                      .bodyToMono(OLSSuggestResponse.class)
+                      .block())
+              .getResponse();
+    } catch (Exception e) {
+      LOGGER.severe("Could not retrieve codes from terminology server: " + e.getMessage());
+      throw new OlsConnectionException(e);
+    }
 
     int totalPages = (int) Math.ceil((double) response.getNumFound() / suggestionsPageSize);
     List<Code> content =
@@ -304,14 +311,21 @@ public class CodeRepository extends OlsRepository {
 
   public Optional<CodeSystem> getCodeSystem(String externalId) {
     if (externalId == null) return Optional.empty();
-    return codeSystemRepository.getAllCodeSystems().values().stream()
-        .filter(cs -> externalId.equals(cs.getExternalId()))
-        .findFirst();
+    try {
+      return codeSystemRepository.getAllCodeSystems().values().stream()
+          .filter(cs -> externalId.equals(cs.getExternalId()))
+          .findFirst();
+    } catch (OlsConnectionException e) {
+      return Optional.empty();
+    }
   }
 
   public Optional<CodeSystem> getCodeSystem(URI codeSystemUri) {
-    if (codeSystemRepository.getAllCodeSystems().containsKey(codeSystemUri))
-      return Optional.of(codeSystemRepository.getAllCodeSystems().get(codeSystemUri));
+    try {
+      if (codeSystemRepository.getAllCodeSystems().containsKey(codeSystemUri))
+        return Optional.of(codeSystemRepository.getAllCodeSystems().get(codeSystemUri));
+    } catch (OlsConnectionException ignored) {
+    }
     return Optional.empty();
   }
 }

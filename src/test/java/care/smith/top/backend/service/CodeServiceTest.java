@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import care.smith.top.backend.AbstractTest;
 import care.smith.top.backend.repository.ols.CodeRepository;
 import care.smith.top.backend.repository.ols.CodeSystemRepository;
+import care.smith.top.backend.repository.ols.OlsConnectionException;
 import care.smith.top.model.*;
 import java.net.URI;
 import java.util.*;
@@ -86,13 +87,13 @@ public class CodeServiceTest extends AbstractTest {
   @Autowired OLSCodeService codeService;
 
   @Test
-  void getSuggestions() {
+  void getSuggestions() throws OlsConnectionException {
     CodePage suggestions = codeService.getCodeSuggestions(null, "term", Collections.emptyList(), 1);
     assertThat(suggestions).isNotNull().satisfies(s -> assertThat(s.getContent()).isNotEmpty());
   }
 
   @Test
-  void getCodeSystems() {
+  void getCodeSystems() throws OlsConnectionException {
     CodeSystemPage codeSystems = codeService.getCodeSystems(null, null, null, 1);
     assertThat(codeSystems).isNotNull().satisfies(cs -> assertThat(cs.getContent()).isNotEmpty());
   }
