@@ -939,7 +939,7 @@ public class EntityService implements ContentService {
   private List<Code> getMergedCodes(Entity entity) {
     Graph<CodeVertexAttributes, DefaultEdge> graph = new DefaultDirectedGraph<>(DefaultEdge.class);
     Map<URI, CodeVertexAttributes> vertexCache = new HashMap<>();
-    entity.getCodes().stream()
+    Optional.ofNullable(entity.getCodes()).orElse(Collections.emptyList()).stream()
         .map(code -> getGraph(code, vertexCache))
         .forEach(g -> Graphs.addGraph(graph, g));
 
