@@ -31,10 +31,21 @@ public interface ConceptClusterNodeRepository
       "MATCH (d:Document {docId: $documentId})-[:HAS_PHRASE]->(p:Phrase)-[:IN_CONCEPT]->(c:Concept) RETURN c;")
   List<ConceptNodeEntity> getConceptNodesByDocumentId(String documentId);
 
+  @Query(
+      "MATCH (d:Document {docId: $documentId})-[:HAS_PHRASE]->(p:Phrase)-[:IN_CONCEPT]->(c:Concept {corpusId: $corpusId}) RETURN c;")
+  List<ConceptNodeEntity> getConceptNodesByDocumentIdAndCorpusId(String documentId, String corpusId);
+
   @Query("UNWIND $labels as l MATCH (c:Concept) WHERE (l in c.labels) RETURN DISTINCT c;")
   List<ConceptNodeEntity> getConceptNodesByLabels(List<String> labels);
+
+  @Query("UNWIND $labels as l MATCH (c:Concept {corpusId: $corpusId}) WHERE (l in c.labels) RETURN DISTINCT c;")
+  List<ConceptNodeEntity> getConceptNodesByLabelsAndCorpusId(List<String> labels, String corpusId);
 
   @Query(
       "UNWIND $phraseIds as pid MATCH (c:Concept)<-[:IN_CONCEPT]-(p:Phrase {phraseId: pid}) RETURN DISTINCT c;")
   List<ConceptNodeEntity> getConceptNodesByPhrases(List<String> phraseIds);
+
+  @Query(
+      "UNWIND $phraseIds as pid MATCH (c:Concept {corpusId: $corpusId})<-[:IN_CONCEPT]-(p:Phrase {phraseId: pid}) RETURN DISTINCT c;")
+  List<ConceptNodeEntity> getConceptNodesByPhrasesAndCorpusId(List<String> phraseIds, String corpusId);
 }

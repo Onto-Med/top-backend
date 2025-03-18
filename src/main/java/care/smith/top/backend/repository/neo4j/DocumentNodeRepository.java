@@ -14,7 +14,7 @@ public interface DocumentNodeRepository
         CypherdslStatementExecutor<DocumentNodeEntity> {
 
   @Query(
-      "MATCH (c:Concept)<-[:IN_CONCEPT]-(p:Phrase)<-[:HAS_PHRASE]-(d:Document)\n"
+      "MATCH (c:Concept {corpusId: $corpusId})<-[:IN_CONCEPT]-(p:Phrase)<-[:HAS_PHRASE]-(d:Document)\n"
           + "WITH d, p,\n"
           + "CASE $exemplarOnly\n"
           + "  WHEN true  THEN (p.exemplar AND $exemplarOnly)\n"
@@ -23,10 +23,10 @@ public interface DocumentNodeRepository
           + "WHERE (c.conceptId IN $conceptIds)\n"
           + "  AND returnBool\n"
           + "RETURN DISTINCT d;")
-  List<DocumentNodeEntity> getDocumentsForConceptIds(Set<String> conceptIds, Boolean exemplarOnly);
+  List<DocumentNodeEntity> getDocumentsForConceptIds(Set<String> conceptIds, String corpusId, Boolean exemplarOnly);
 
   @Query(
-      "MATCH (d:Document)-[:HAS_PHRASE]->(p:Phrase)\n"
+      "MATCH (d:Document)-[:HAS_PHRASE]->(p:Phrase)-[:IN_CONCEPT]->(c:Concept {corpusId: $corpusId})\n"
           + "WITH d, p,\n"
           + "CASE $exemplarOnly\n"
           + "  WHEN true  THEN (p.exemplar AND $exemplarOnly)\n"
@@ -35,11 +35,11 @@ public interface DocumentNodeRepository
           + "WHERE (p.phraseId IN $phraseIds)\n"
           + "  AND returnBool\n"
           + "RETURN DISTINCT d;")
-  List<DocumentNodeEntity> getDocumentsForPhraseIds(Set<String> phraseIds, Boolean exemplarOnly);
+  List<DocumentNodeEntity> getDocumentsForPhraseIds(Set<String> phraseIds, String corpusIds, Boolean exemplarOnly);
 
   @Query(
       "UNWIND $phraseTexts as labels\n"
-          + "MATCH (d:Document)-[:HAS_PHRASE]->(p:Phrase)\n"
+          + "MATCH (d:Document)-[:HAS_PHRASE]->(p:Phrase)-[:IN_CONCEPT]->(c:Concept {corpusId: $corpusId})\n"
           + "WITH d, p,\n"
           + "CASE $exemplarOnly\n"
           + "  WHEN true  THEN (p.exemplar AND $exemplarOnly)\n"
@@ -49,7 +49,7 @@ public interface DocumentNodeRepository
           + "  AND returnBool\n"
           + "RETURN DISTINCT d;")
   List<DocumentNodeEntity> getDocumentsForPhrasesText(
-      Set<String> phraseTexts, Boolean exemplarOnly);
+      Set<String> phraseTexts, String corpusIds, Boolean exemplarOnly);
 
   @Query(
       "OPTIONAL MATCH (n:Document {docId: $documentId})\n" + "RETURN n IS NOT NULL AS Predicate;")
