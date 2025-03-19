@@ -2,6 +2,8 @@ package care.smith.top.backend.model.neo4j;
 
 import care.smith.top.model.Document;
 import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.springframework.data.neo4j.core.schema.*;
 
 @Node("Document")
@@ -15,13 +17,13 @@ public class DocumentNodeEntity {
   private final String documentName;
 
   @Relationship(type = "HAS_PHRASE", direction = Relationship.Direction.OUTGOING)
-  private Set<PhraseNodeEntity> documentPhrases;
+  private Set<HasPhraseRelationship> documentPhrases;
 
   public DocumentNodeEntity(
       String documentId, String documentName, Set<PhraseNodeEntity> documentPhrases) {
     this.documentName = documentName;
     this.documentId = documentId;
-    this.documentPhrases = documentPhrases;
+    documentPhrases.forEach(phrase -> this.documentPhrases.add(new HasPhraseRelationship(phrase)));
   }
 
   public String documentId() {
@@ -33,16 +35,16 @@ public class DocumentNodeEntity {
   }
 
   public Set<PhraseNodeEntity> documentPhrases() {
-    return documentPhrases;
+    return documentPhrases.stream().map(HasPhraseRelationship::getPhrase).collect(Collectors.toSet());
   }
 
   public DocumentNodeEntity addPhrase(PhraseNodeEntity phraseNode) {
-    this.documentPhrases.add(phraseNode);
+    this.documentPhrases.add(new HasPhraseRelationship(phraseNode));
     return this;
   }
 
   public DocumentNodeEntity removePhrase(PhraseNodeEntity phraseNode) {
-    this.documentPhrases.remove(phraseNode);
+    this.documentPhrases.stream().filter(r -> r.getPhrase().equals(phraseNode)).findFirst().ifPresent(r -> this.documentPhrases.remove(r));
     return this;
   }
 
