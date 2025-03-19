@@ -84,4 +84,9 @@ class ConceptClusterServiceTest extends AbstractNLPTest {
                 .conceptsByLabelsAndPhrases(List.of("good"), List.of("p1", "p2"), null, 0)
                 .getContent()));
   }
+
+  @Test
+  void createNeo4jGraph() {
+
+  }
 }
