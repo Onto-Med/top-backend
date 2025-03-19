@@ -68,8 +68,11 @@ public class ConceptClusterApiDelegateImpl implements ConceptclusterApiDelegate 
       List<String> include) {
     final String finalCorpusId = stringConformity(corpusId);
     if (Boolean.TRUE.equals(recalculateCache)) {
-      if (finalCorpusId == null) {conceptClusterService.evictAllConceptsFromCache();}
-      else {conceptClusterService.evictConceptsFromCache(finalCorpusId);}
+      if (finalCorpusId == null) {
+        conceptClusterService.evictAllConceptsFromCache();
+      } else {
+        conceptClusterService.evictConceptsFromCache(finalCorpusId);
+      }
     }
 
     boolean labels = !(labelsText == null || labelsText.isEmpty());

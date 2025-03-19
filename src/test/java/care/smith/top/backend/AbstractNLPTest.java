@@ -125,15 +125,15 @@ public abstract class AbstractNLPTest {
         .thenReturn(page1_2);
 
     DocumentNodeRepository documentNodeRepository = mock(DocumentNodeRepository.class);
-    when(documentNodeRepository.getDocumentsForPhraseIds(Set.of("p1", "p2"), false))
+    when(documentNodeRepository.getDocumentsForPhraseIds(Set.of("p1", "p2"), null, false))
         .thenReturn(List.of(d1, d2));
-    when(documentNodeRepository.getDocumentsForPhraseIds(Set.of("p1", "p2"), true))
+    when(documentNodeRepository.getDocumentsForPhraseIds(Set.of("p1", "p2"), null, true))
         .thenReturn(List.of(d2));
-    when(documentNodeRepository.getDocumentsForConceptIds(Set.of("c1", "c2"), false))
+    when(documentNodeRepository.getDocumentsForConceptIds(Set.of("c1", "c2"), null, false))
         .thenReturn(List.of(d1, d2));
-    when(documentNodeRepository.getDocumentsForConceptIds(Set.of("c1"), false))
+    when(documentNodeRepository.getDocumentsForConceptIds(Set.of("c1"), null, false))
         .thenReturn(List.of(d2));
-    when(documentNodeRepository.getDocumentsForConceptIds(Set.of("c2"), false))
+    when(documentNodeRepository.getDocumentsForConceptIds(Set.of("c2"), null, false))
         .thenReturn(List.of(d1, d2));
 
     DocumentQueryService documentQueryService = mock(DocumentQueryService.class);
@@ -156,11 +156,14 @@ public abstract class AbstractNLPTest {
 
     // CallRealMethod
     when(documentService.count()).thenCallRealMethod();
-    when(documentService.getDocumentsForConceptIds(anySet(), anyBoolean())).thenCallRealMethod();
-    when(documentService.getDocumentsForConceptIds(anySet(), anyBoolean(), any()))
+    when(documentService.getDocumentsForConceptIds(anySet(), null, anyBoolean()))
         .thenCallRealMethod();
-    when(documentService.getDocumentsForPhraseIds(anySet(), anyBoolean())).thenCallRealMethod();
-    when(documentService.getDocumentsForPhraseTexts(anySet(), anyBoolean())).thenCallRealMethod();
+    when(documentService.getDocumentsForConceptIds(anySet(), null, anyBoolean(), any()))
+        .thenCallRealMethod();
+    when(documentService.getDocumentsForPhraseIds(anySet(), null, anyBoolean()))
+        .thenCallRealMethod();
+    when(documentService.getDocumentsForPhraseTexts(anySet(), null, anyBoolean()))
+        .thenCallRealMethod();
 
     return documentService;
   }

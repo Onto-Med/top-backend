@@ -4,6 +4,7 @@ import care.smith.top.backend.api.PhraseApiDelegate;
 import care.smith.top.backend.service.nlp.DocumentService;
 import care.smith.top.backend.service.nlp.PhraseService;
 import care.smith.top.backend.util.ApiModelMapper;
+import care.smith.top.backend.util.NLPUtils;
 import care.smith.top.model.Document;
 import care.smith.top.model.Phrase;
 import care.smith.top.model.PhrasePage;
@@ -40,7 +41,9 @@ public class PhraseApiDelegateImpl implements PhraseApiDelegate {
   }
 
   @Override
-  public ResponseEntity<PhrasePage> getPhrases(String text, String conceptClusterId, Integer page) {
+  public ResponseEntity<PhrasePage> getPhrases(
+      String text, String corpusId, String conceptClusterId, Integer page) {
+    String finalCorpusId = NLPUtils.stringConformity(corpusId);
     HashSet<Phrase> phraseSet = new HashSet<>();
     boolean textFilter = !(text == null || text.trim().isEmpty());
     boolean conceptClusterFilter = !(conceptClusterId == null || conceptClusterId.trim().isEmpty());
@@ -48,11 +51,11 @@ public class PhraseApiDelegateImpl implements PhraseApiDelegate {
     if (!textFilter && !conceptClusterFilter) {
       phraseSet.addAll(phraseService.getAllPhrases());
     } else if (conceptClusterFilter && !textFilter) {
-      phraseSet.addAll(phraseService.getPhrasesForConcept(conceptClusterId));
+      phraseSet.addAll(phraseService.getPhrasesForConcept(conceptClusterId, finalCorpusId));
     } else if (!conceptClusterFilter) {
       phraseSet.addAll(phraseService.getPhraseByText(text, false));
     } else {
-      phraseSet.addAll(phraseService.getPhrasesForConcept(conceptClusterId));
+      phraseSet.addAll(phraseService.getPhrasesForConcept(conceptClusterId, finalCorpusId));
       phraseSet.retainAll(phraseService.getPhraseByText(text, false));
     }
     return ResponseEntity.ok(ApiModelMapper.toPhrasePage(pageFromSet(phraseSet, page)));
@@ -61,6 +64,7 @@ public class PhraseApiDelegateImpl implements PhraseApiDelegate {
   @Override
   public ResponseEntity<PhrasePage> getPhrasesByDocumentId(
       String documentId, String dataSource, List<String> include, String text, Integer page) {
+    String corpusId = NLPUtils.stringConformity(dataSource);
     if ((documentId == null || documentId.trim().isEmpty())
         || (dataSource == null || dataSource.trim().isEmpty())) {
       LOGGER.severe("Either 'documentId', 'dataSource' or both are missing.");
@@ -82,14 +86,16 @@ public class PhraseApiDelegateImpl implements PhraseApiDelegate {
     boolean textFilter = !(text == null || text.trim().isEmpty());
 
     HashSet<Phrase> phraseSet =
-        new HashSet<>(phraseService.getPhrasesForDocument(document.get().getId(), false));
+        new HashSet<>(phraseService.getPhrasesForDocument(document.get().getId(), corpusId, false));
     if (textFilter) phraseSet.retainAll(phraseService.getPhraseByText(text, false));
     return ResponseEntity.ok(ApiModelMapper.toPhrasePage(pageFromSet(phraseSet, page)));
   }
 
   @Override
-  public ResponseEntity<Phrase> getPhraseById(String phraseId, List<String> include) {
-    return ResponseEntity.of(phraseService.getPhraseById(phraseId));
+  public ResponseEntity<Phrase> getPhraseById(
+      String phraseId, String corpusId, List<String> include) {
+    String finalCorpusId = NLPUtils.stringConformity(corpusId);
+    return ResponseEntity.of(phraseService.getPhraseById(phraseId, finalCorpusId));
   }
 
   private Page<Phrase> pageFromSet(Set<Phrase> phraseSet, Integer page) {

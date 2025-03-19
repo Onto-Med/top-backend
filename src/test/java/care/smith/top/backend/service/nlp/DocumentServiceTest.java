@@ -39,14 +39,14 @@ class DocumentServiceTest extends AbstractNLPTest {
   void getDocumentsForConceptIds() {
     assertThat(
             new HashSet<>(
-                documentService.getDocumentsForConceptIds(Set.of("c2"), false).stream()
+                documentService.getDocumentsForConceptIds(Set.of("c2"), null, false).stream()
                     .map(Document::getId)
                     .collect(Collectors.toSet())))
         .isEqualTo(documentIds1_2);
 
     assertThat(
             new HashSet<>(
-                documentService.getDocumentsForConceptIds(Set.of("c2"), true).stream()
+                documentService.getDocumentsForConceptIds(Set.of("c2"), null, true).stream()
                     .map(Document::getId)
                     .collect(Collectors.toSet())))
         .isEqualTo(Set.of());
@@ -56,7 +56,7 @@ class DocumentServiceTest extends AbstractNLPTest {
   void getDocumentsForPhraseIds() {
     assertThat(
             new HashSet<>(
-                documentService.getDocumentsForPhraseIds(Set.of("p1", "p2"), true).stream()
+                documentService.getDocumentsForPhraseIds(Set.of("p1", "p2"), null, true).stream()
                     .map(Document::getId)
                     .collect(Collectors.toSet())))
         .isEqualTo(documentIds2);
@@ -66,14 +66,16 @@ class DocumentServiceTest extends AbstractNLPTest {
   void getDocumentsForPhraseTexts() {
     assertThat(
             new HashSet<>(
-                documentService.getDocumentsForPhraseTexts(Set.of("phrase"), false).stream()
+                documentService.getDocumentsForPhraseTexts(Set.of("phrase"), null, false).stream()
                     .map(Document::getId)
                     .collect(Collectors.toSet())))
         .isEqualTo(documentIds1_2);
 
     assertThat(
             new HashSet<>(
-                documentService.getDocumentsForPhraseTexts(Set.of("there", "here"), true).stream()
+                documentService
+                    .getDocumentsForPhraseTexts(Set.of("there", "here"), null, true)
+                    .stream()
                     .map(Document::getId)
                     .collect(Collectors.toSet())))
         .isEqualTo(documentIds2);

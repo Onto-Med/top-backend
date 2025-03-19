@@ -16,12 +16,15 @@ public interface PhraseNodeRepository
           + "WHERE (d.docId = $documentId)"
           + "AND (NOT $exemplarOnly OR NOT (p.exemplar XOR $exemplarOnly))"
           + "RETURN DISTINCT p;")
-  List<PhraseNodeEntity> getPhrasesForDocument(String documentId, String corpusIds, Boolean exemplarOnly);
+  List<PhraseNodeEntity> getPhrasesForDocument(
+      String documentId, String corpusIds, Boolean exemplarOnly);
 
-  @Query("OPTIONAL MATCH (n:Phrase {phraseId: $phraseId})-[:IN_CONCEPT]->(c:Concept {corpusId: $corpusId})"
+  @Query(
+      "OPTIONAL MATCH (n:Phrase {phraseId: $phraseId})-[:IN_CONCEPT]->(c:Concept {corpusId: $corpusId})"
           + "RETURN n IS NOT NULL AS Predicate;")
   Boolean phraseNodeExists(String phraseId, String corpusIds);
 
-  @Query("MATCH (n:Phrase WHERE n.phraseId IN $phraseIds)-[:IN_CONCEPT]->(c:Concept {corpusId: $corpusId}) RETURN DISTINCT n")
+  @Query(
+      "MATCH (n:Phrase WHERE n.phraseId IN $phraseIds)-[:IN_CONCEPT]->(c:Concept {corpusId: $corpusId}) RETURN DISTINCT n")
   List<PhraseNodeEntity> getPhrasesForIds(List<String> phraseIds, String corpusIds);
 }
