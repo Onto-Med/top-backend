@@ -15,7 +15,7 @@ public class CodeSystemRepository extends OlsRepository {
   private static final Logger LOGGER = Logger.getLogger(CodeSystemRepository.class.getName());
 
   @Cacheable("olsOntologies")
-  public Map<URI, CodeSystem> getAllCodeSystems() {
+  public Map<URI, CodeSystem> getAllCodeSystems() throws OlsConnectionException {
     try {
       OLSOntologiesResponse response =
           terminologyService
@@ -45,8 +45,8 @@ public class CodeSystemRepository extends OlsRepository {
               Collectors.toMap(
                   CodeSystem::getUri, Function.identity(), (existing, replacement) -> existing));
     } catch (Exception e) {
-      LOGGER.severe(e.getMessage());
+      LOGGER.severe("Could not retrieve code systems from terminology server: " + e.getMessage());
+      throw new OlsConnectionException(e);
     }
-    return new HashMap<>();
   }
 }
