@@ -6,6 +6,7 @@ import care.smith.top.backend.api.DocumentApiDelegate;
 import care.smith.top.backend.service.nlp.DocumentService;
 import care.smith.top.backend.service.nlp.PhraseService;
 import care.smith.top.backend.util.ApiModelMapper;
+import care.smith.top.backend.util.NLPUtils;
 import care.smith.top.model.Document;
 import care.smith.top.model.DocumentGatheringMode;
 import care.smith.top.model.DocumentPage;
@@ -67,6 +68,7 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
       List<String> include) {
     page -= 1;
     TextAdapter adapter;
+    String corpusId = NLPUtils.stringConformity(dataSource);
     try {
       adapter = documentService.getAdapterForDataSource(dataSource);
     } catch (InstantiationException e) {
@@ -80,7 +82,9 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
     HashSet<String> finalDocumentIds = new HashSet<>();
     if (phraseIds != null && !phraseIds.isEmpty()) {
       finalDocumentIds.addAll(
-          documentService.getDocumentsForPhraseIds(Set.copyOf(phraseIds), exemplarOnly).stream()
+          documentService
+              .getDocumentsForPhraseIds(Set.copyOf(phraseIds), corpusId, exemplarOnly)
+              .stream()
               .map(Document::getId)
               .collect(Collectors.toSet()));
       neo4jFilterOn = true;
@@ -89,7 +93,8 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
       // 'gatheringMode' is only relevant for getting documents by 'conceptClusterIds'
       Set<String> conceptClusterIdSet =
           documentService
-              .getDocumentsForConceptIds(Set.copyOf(conceptClusterIds), exemplarOnly, gatheringMode)
+              .getDocumentsForConceptIds(
+                  Set.copyOf(conceptClusterIds), corpusId, exemplarOnly, gatheringMode)
               .stream()
               .map(Document::getId)
               .collect(Collectors.toSet());
@@ -102,7 +107,9 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
     }
     if (phraseText != null && !phraseText.isEmpty()) {
       Set<String> phraseTextSet =
-          documentService.getDocumentsForPhraseTexts(Set.copyOf(phraseText), exemplarOnly).stream()
+          documentService
+              .getDocumentsForPhraseTexts(Set.copyOf(phraseText), corpusId, exemplarOnly)
+              .stream()
               .map(Document::getId)
               .collect(Collectors.toSet());
       if (neo4jFilterOn) {
@@ -150,6 +157,7 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
       List<String> offsets,
       List<String> include) {
     TextAdapter adapter;
+    String corpusId = NLPUtils.stringConformity(dataSource);
     try {
       adapter = documentService.getAdapterForDataSource(dataSource);
     } catch (InstantiationException e) {
@@ -180,7 +188,7 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
         buildTextWithHighlights(
             document,
             colors,
-            phraseService.getPhrasesForConcept(finalConceptId).stream()
+            phraseService.getPhrasesForConcept(finalConceptId, corpusId).stream()
                 .map(Phrase::getText)
                 .collect(Collectors.toList()));
       }

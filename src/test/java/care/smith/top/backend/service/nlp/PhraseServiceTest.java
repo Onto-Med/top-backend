@@ -21,8 +21,8 @@ class PhraseServiceTest extends AbstractNLPTest {
 
   @Test
   void getPhrasesForConcept() {
-    assertThat(phraseService.getPhrasesForConcept("c1")).isEqualTo(phrases1);
-    assertThat(phraseService.getPhrasesForConcept("c2")).isEqualTo(phrases2);
+    assertThat(phraseService.getPhrasesForConcept("c1", null)).isEqualTo(phrases1);
+    assertThat(phraseService.getPhrasesForConcept("c2", null)).isEqualTo(phrases2);
   }
 
   @Test
@@ -32,8 +32,8 @@ class PhraseServiceTest extends AbstractNLPTest {
 
   @Test
   void getPhraseById() {
-    assertThat(phraseService.getPhraseById("p1").orElseThrow()).isEqualTo(phrases1.get(0));
-    assertThat(phraseService.getPhraseById("p2").orElseThrow()).isEqualTo(phrases2.get(0));
+    assertThat(phraseService.getPhraseById("p1", null).orElseThrow()).isEqualTo(phrases1.get(0));
+    assertThat(phraseService.getPhraseById("p2", null).orElseThrow()).isEqualTo(phrases2.get(0));
   }
 
   @Test
@@ -51,15 +51,15 @@ class PhraseServiceTest extends AbstractNLPTest {
 
   @Test
   void getPhrasesForDocument() {
-    assertThat(phraseService.getPhrasesForDocument("d1", false)).isEqualTo(phrases2);
-    assertThat(Set.copyOf(phraseService.getPhrasesForDocument("d2", false)))
+    assertThat(phraseService.getPhrasesForDocument("d1", null, false)).isEqualTo(phrases2);
+    assertThat(Set.copyOf(phraseService.getPhrasesForDocument("d2", null, false)))
         .isEqualTo(Set.copyOf(phrases1_2));
-    assertThat(phraseService.getPhrasesForDocument("d2", true)).isEqualTo(phrases1);
+    assertThat(phraseService.getPhrasesForDocument("d2", null, true)).isEqualTo(phrases1);
   }
 
   @Test
   void getPhrasesByIds() {
-    assertThat(Set.copyOf(phraseService.getPhrasesByIds(List.of("p1", "p2"))))
+    assertThat(Set.copyOf(phraseService.getPhrasesByIds(List.of("p1", "p2"), null)))
         .isEqualTo(Set.copyOf(phrases1_2));
   }
 }

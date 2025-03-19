@@ -22,11 +22,11 @@ class PhraseApiDelegateImplTest extends AbstractNLPTest {
   void getPhrases() {
     Assertions.assertEquals(
         phrases1,
-        Objects.requireNonNull(phraseApi.getPhrases(null, "c1", 0).getBody()).getContent());
+        Objects.requireNonNull(phraseApi.getPhrases(null, null, "c1", 0).getBody()).getContent());
 
     Assertions.assertEquals(
         phrases2,
-        Objects.requireNonNull(phraseApi.getPhrases(null, "c2", 0).getBody()).getContent());
+        Objects.requireNonNull(phraseApi.getPhrases(null, null, "c2", 0).getBody()).getContent());
   }
 
   @Test
@@ -49,7 +49,7 @@ class PhraseApiDelegateImplTest extends AbstractNLPTest {
 
   @Test
   void getPhraseById() {
-    Assertions.assertEquals(phrases1.get(0), phraseApi.getPhraseById("p1", null).getBody());
-    Assertions.assertEquals(phrases2.get(0), phraseApi.getPhraseById("p2", null).getBody());
+    Assertions.assertEquals(phrases1.get(0), phraseApi.getPhraseById("p1", null, null).getBody());
+    Assertions.assertEquals(phrases2.get(0), phraseApi.getPhraseById("p2", null, null).getBody());
   }
 }
