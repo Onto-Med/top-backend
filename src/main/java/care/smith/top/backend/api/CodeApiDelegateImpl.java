@@ -11,8 +11,10 @@ import java.net.URLDecoder;
 import java.nio.charset.Charset;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 /**
  * @author ralph
@@ -37,7 +39,9 @@ public class CodeApiDelegateImpl implements CodeApiDelegate {
     try {
       return ResponseEntity.ok(codeService.getCodes(include, label, codeSystemIds, page));
     } catch (OlsConnectionException e) {
-      return ResponseEntity.internalServerError().build();
+      throw new ResponseStatusException(
+          HttpStatus.INTERNAL_SERVER_ERROR,
+          "Could not retrieve codes from the external terminology service.");
     }
   }
 
@@ -47,7 +51,9 @@ public class CodeApiDelegateImpl implements CodeApiDelegate {
     try {
       return ResponseEntity.ok(codeService.getCodeSuggestions(include, term, codeSystemIds, page));
     } catch (OlsConnectionException e) {
-      return ResponseEntity.internalServerError().build();
+      throw new ResponseStatusException(
+          HttpStatus.INTERNAL_SERVER_ERROR,
+          "Could not retrieve code suggestions from the external terminology service.");
     }
   }
 
@@ -56,8 +62,10 @@ public class CodeApiDelegateImpl implements CodeApiDelegate {
       List<String> include, URI uri, String name, Integer page) {
     try {
       return ResponseEntity.ok(codeService.getCodeSystems(include, uri, name, page));
-    } catch (Exception e) {
-      return ResponseEntity.internalServerError().build();
+    } catch (OlsConnectionException e) {
+      throw new ResponseStatusException(
+          HttpStatus.INTERNAL_SERVER_ERROR,
+          "Could not retrieve code systems from the external terminology service.");
     }
   }
 }
