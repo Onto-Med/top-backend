@@ -1,5 +1,6 @@
 package care.smith.top.backend.model.neo4j;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.data.neo4j.core.schema.*;
@@ -25,42 +26,20 @@ public class HasPhraseRelationship {
 
   public HasPhraseRelationship(PhraseNodeEntity phrase, Integer begin, Integer end) {
     this.phrase = phrase;
-    this.offsets = String.format("[[%s-%s]]", begin, end);
+    this.offsets = new OffsetEntity().addOffset(begin, end).toJsonString();
   }
 
-  public HasPhraseRelationship(PhraseNodeEntity phrase, Pair<Integer, Integer> offset) {
+  public HasPhraseRelationship(PhraseNodeEntity phrase, List<Integer> offset) {
     this.phrase = phrase;
-    this.offsets = String.format("[[%s-%s]]", offset.getLeft(), offset.getRight());
+    this.offsets = new OffsetEntity().addOffset(offset).toJsonString();
   }
 
-  public HasPhraseRelationship(PhraseNodeEntity phrase, Integer[] offset) {
+  public HasPhraseRelationship(PhraseNodeEntity phrase, Iterable<List<Integer>> offsets) {
     this.phrase = phrase;
-    this.offsets = String.format("[[%s-%s]]", offset[0], offset[1]);
-  }
-
-  public HasPhraseRelationship(PhraseNodeEntity phrase, Iterable<int[]> offsets) {
-    this.phrase = phrase;
-    this.offsets = "[" + StreamSupport.stream(offsets.spliterator(), false).map(i -> String.format("[%s-%s]", i[0], i[1])).collect(Collectors.joining(",")) + "]";
-  }
-
-  public HasPhraseRelationship addOffset(int[] offset) {
-    this.offsets = this.offsets.substring(0, this.offsets.length() - 1) + String.format(",[%s-%s]]", offset[0], offset[1]);
-    return this;
+    this.offsets = new OffsetEntity().addOffsets(offsets).toJsonString();
   }
 
   public PhraseNodeEntity getPhrase() {
     return phrase;
-  }
-
-  public String getOffsetsAsString() {
-    return offsets;
-  }
-
-  public List<int[]> getOffsetsAsInts() {
-    return Arrays.stream(offsets.substring(1, this.offsets.length() - 1).split(",")).map(s -> {
-      String[] sArray = s.substring(1, s.length() -1 ).split("-");
-      return new int[]{Integer.parseInt(sArray[0]), Integer.parseInt(sArray[1])};
-    }
-    ).collect(Collectors.toList());
   }
 }
