@@ -8,11 +8,13 @@ import care.smith.top.backend.repository.neo4j.DocumentNodeRepository;
 import care.smith.top.backend.repository.neo4j.PhraseNodeRepository;
 import care.smith.top.backend.service.ContentService;
 import care.smith.top.model.ConceptCluster;
+import care.smith.top.model.Document;
 import care.smith.top.model.PipelineResponse;
 import care.smith.top.model.PipelineResponseStatus;
 import care.smith.top.top_document_query.adapter.TextAdapter;
 import care.smith.top.top_document_query.concept_cluster.ConceptPipelineManager;
 import care.smith.top.top_document_query.concept_cluster.model.ConceptGraphEntity;
+import care.smith.top.top_document_query.concept_cluster.model.PhraseDocumentObject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -255,36 +257,37 @@ public class ConceptClusterService implements ContentService {
   private void createGraphInNeo4j(
       String graphId, String processId, ConceptGraphEntity conceptGraph, TextAdapter adapter) {
     Map<String, List<String>> documentId2PhraseIdMap = new HashMap<>();
-    Map<String, Integer> phrasesDocumentCount = new HashMap<>();
+//    Map<String, Integer> phrasesDocumentCount = new HashMap<>();
     Map<String, PhraseNodeEntity> phraseNodeEntityMap = new HashMap<>();
+    Map<String, PhraseDocumentObject[]> phraseDocumentObjectsMap = new HashMap<>();
 
     Arrays.stream(conceptGraph.getNodes())
         .forEach(
             phraseNodeObject -> {
               Arrays.stream(phraseNodeObject.getDocuments())
                   .forEach(
-                      documentId -> {
-                        if (!documentId2PhraseIdMap.containsKey(documentId)) {
+                      documentObject -> {
+                        if (!documentId2PhraseIdMap.containsKey(documentObject.getId())) {
                           documentId2PhraseIdMap.put(
-                              documentId, Lists.newArrayList(phraseNodeObject.getId()));
+                                  documentObject.getId(), Lists.newArrayList(phraseNodeObject.getId()));
                         } else {
-                          documentId2PhraseIdMap.get(documentId).add(phraseNodeObject.getId());
+                          documentId2PhraseIdMap.get(documentObject.getId()).add(phraseNodeObject.getId());
                         }
                       });
               phraseNodeEntityMap.put(
                   phraseNodeObject.getId(),
                   new PhraseNodeEntity(
                       null, false, phraseNodeObject.getLabel(), phraseNodeObject.getId()));
-              phrasesDocumentCount.put(
-                  phraseNodeObject.getId(), phraseNodeObject.getDocuments().length);
+              phraseDocumentObjectsMap.put(
+                  phraseNodeObject.getId(), phraseNodeObject.getDocuments());
             });
 
     // Save Concept Nodes (and by extension create relationships 'PHRASE--IN_CONCEPT->CONCEPT' as
     // well as Phrase nodes)
     if (!conceptNodeRepository.conceptNodeExists(processId, graphId)) {
       List<String> labels =
-          phrasesDocumentCount.entrySet().stream()
-              .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
+              phraseDocumentObjectsMap.entrySet().stream()
+              .sorted(Collections.reverseOrder(Comparator.comparingInt(entry -> entry.getValue().length)))
               .filter(nodeEntry -> phraseNodeEntityMap.containsKey(nodeEntry.getKey()))
               .map(nodeEntry -> phraseNodeEntityMap.get(nodeEntry.getKey()).phraseText())
               .limit(3)
@@ -309,19 +312,35 @@ public class ConceptClusterService implements ContentService {
 
     // Save Document Nodes and by extension relationships 'DOCUMENT--HAS_PHRASE->PHRASE'
     try {
-      adapter
-          .getDocumentsByIdsBatched(documentId2PhraseIdMap.keySet(), null, true)
-          .forEach(
-              documentEntityList ->
-                  documentEntityList.forEach(
-                      documentEntity ->
-                          documentNodeRepository.save(
-                              new DocumentNodeEntity(
-                                  documentEntity.getId(),
-                                  documentEntity.getName(),
-                                  documentId2PhraseIdMap.get(documentEntity.getId()).stream()
-                                      .map(phraseNodeEntityMap::get)
-                                      .collect(Collectors.toSet())))));
+      for (List<Document> docList : adapter.getDocumentsByIdsBatched(documentId2PhraseIdMap.keySet(), null, true).collect(Collectors.toSet())) {
+        for (Document documentEntity : docList) {
+          DocumentNodeEntity dne = new DocumentNodeEntity(documentEntity.getId(), documentEntity.getName());
+          documentId2PhraseIdMap.get(documentEntity.getId()).forEach(s -> {
+            PhraseNodeEntity pne = phraseNodeEntityMap.get(s);
+            Arrays.stream(phraseDocumentObjectsMap.get(s)).forEach(obj -> {
+              dne.addPhrases(pne, obj.getOffsets());
+            });
+          });
+          documentNodeRepository.save(dne);
+        }
+      }
+//      adapter
+//          .getDocumentsByIdsBatched(documentId2PhraseIdMap.keySet(), null, true)
+//          .forEach(
+//              documentEntityList ->
+//                  documentEntityList.forEach(
+//                      documentEntity -> {
+//                        DocumentNodeEntity dne = new DocumentNodeEntity(documentEntity.getId(), documentEntity.getName());
+//                        documentId2PhraseIdMap.get(documentEntity.getId()).forEach(s -> {
+//                          PhraseNodeEntity pne = phraseNodeEntityMap.get(s);
+//                          Arrays.stream(phraseDocumentObjectsMap.get(s)).forEach(obj -> {
+//                            dne.addPhrases(pne, obj.getOffsets());
+//                          });
+//                        });
+//                        documentNodeRepository.save(dne);
+//                      }
+//                  )
+//          );
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

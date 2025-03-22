@@ -1,0 +1,77 @@
+{
+  "adjacency": [
+    {
+      "id":12,
+      "neighbors": [
+        {
+          "id":185,
+          "significance":12.912279647151603,
+          "weight":0.7684571962356567
+        }
+      ]
+    },
+    {
+      "id":18,
+      "neighbors": [
+        {
+          "id":185,
+          "significance":6.571214768887976,
+          "weight":0.5997220339775086
+        }
+      ]
+    },
+    {
+      "id":185,
+      "neighbors": [
+        {
+          "id":12,
+          "significance":12.912279647151603,
+          "weight":0.7684571962356567
+        },
+        {
+          "id":18,
+          "significance":6.571214768887976,
+          "weight":0.5997220339775086
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "documents": [
+        {
+          "id":"66cbfac2-d992-4a16-9c4f-f832ac913580",
+          "offsets": [
+            [287,301]
+          ]
+        }
+      ],
+      "id":12,
+      "label":"akute psychose"
+    },
+    {
+      "documents": [
+        {
+          "id":"66cbfac2-d992-4a16-9c4f-f832ac913580",
+          "offsets": [
+            [421,450]
+          ]
+        }
+      ],
+      "id":18,
+      "label":"symptomatisches anfallsleiden"
+    },
+    {
+      "documents": [
+        {
+          "id":"66cbfac2-d992-4a16-9c4f-f832ac913580",
+          "offsets": [
+            [7417,7438]
+          ]
+        }
+      ],
+      "id":185,
+      "label":"psychotischem erleben"
+    }
+  ]
+}

@@ -1,6 +1,9 @@
 package care.smith.top.backend.model.neo4j;
 
 import care.smith.top.model.Document;
+
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -23,7 +26,15 @@ public class DocumentNodeEntity {
       String documentId, String documentName, Set<PhraseNodeEntity> documentPhrases) {
     this.documentName = documentName;
     this.documentId = documentId;
-    documentPhrases.forEach(phrase -> this.documentPhrases.add(new HasPhraseRelationship(phrase)));
+    this.documentPhrases = new HashSet<>();
+    if (documentPhrases != null) documentPhrases.forEach(this::addPhrase);
+  }
+
+  public DocumentNodeEntity(
+      String documentId, String documentName) {
+    this.documentName = documentName;
+    this.documentId = documentId;
+    this.documentPhrases = new HashSet<>();
   }
 
   public String documentId() {
@@ -40,6 +51,32 @@ public class DocumentNodeEntity {
 
   public DocumentNodeEntity addPhrase(PhraseNodeEntity phraseNode) {
     this.documentPhrases.add(new HasPhraseRelationship(phraseNode));
+    return this;
+  }
+
+  public DocumentNodeEntity addPhrase(PhraseNodeEntity phraseNode, Integer begin, Integer end) {
+    if (begin != null && end != null) {
+      this.documentPhrases.add(new HasPhraseRelationship(phraseNode, begin, end));
+    } else {
+      this.documentPhrases.add(new HasPhraseRelationship(phraseNode));
+    }
+    return this;
+  }
+
+  public DocumentNodeEntity addPhrase(PhraseNodeEntity phraseNode, Integer[] offset) {
+    if (offset == null || offset.length <= 1) {
+      this.documentPhrases.add(new HasPhraseRelationship(phraseNode));
+    } else {
+      this.documentPhrases.add(new HasPhraseRelationship(phraseNode, offset));
+    }
+    return this;
+  }
+  public DocumentNodeEntity addPhrases(PhraseNodeEntity phraseNode, List<Integer[]> offsets) {
+    if (offsets == null) {
+      this.documentPhrases.add(new HasPhraseRelationship(phraseNode));
+    } else {
+      this.documentPhrases.add(new HasPhraseRelationship(phraseNode, offsets.stream().map(integers -> new int[]{integers[0], integers[1]}).toList()));
+    }
     return this;
   }
 
