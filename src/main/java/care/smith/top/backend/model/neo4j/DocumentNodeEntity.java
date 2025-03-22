@@ -2,6 +2,7 @@ package care.smith.top.backend.model.neo4j;
 
 import care.smith.top.model.Document;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -67,7 +68,7 @@ public class DocumentNodeEntity {
     if (offset == null || offset.length <= 1) {
       this.documentPhrases.add(new HasPhraseRelationship(phraseNode));
     } else {
-      this.documentPhrases.add(new HasPhraseRelationship(phraseNode, offset));
+      this.documentPhrases.add(new HasPhraseRelationship(phraseNode, Arrays.stream(offset).toList()));
     }
     return this;
   }
@@ -75,7 +76,7 @@ public class DocumentNodeEntity {
     if (offsets == null) {
       this.documentPhrases.add(new HasPhraseRelationship(phraseNode));
     } else {
-      this.documentPhrases.add(new HasPhraseRelationship(phraseNode, offsets.stream().map(integers -> new int[]{integers[0], integers[1]}).toList()));
+      this.documentPhrases.add(new HasPhraseRelationship(phraseNode, offsets.stream().map(integers -> Arrays.stream(integers).toList()).toList()));
     }
     return this;
   }

@@ -316,10 +316,10 @@ public class ConceptClusterService implements ContentService {
         for (Document documentEntity : docList) {
           DocumentNodeEntity dne = new DocumentNodeEntity(documentEntity.getId(), documentEntity.getName());
           documentId2PhraseIdMap.get(documentEntity.getId()).forEach(s -> {
+            //ToDo: this works with jsonifying and storing and all but reading and combining of the offsets is wrong!
+            // HAS_PHRASE relations get offsets from across all documents
             PhraseNodeEntity pne = phraseNodeEntityMap.get(s);
-            Arrays.stream(phraseDocumentObjectsMap.get(s)).forEach(obj -> {
-              dne.addPhrases(pne, obj.getOffsets());
-            });
+            dne.addPhrases(pne, Arrays.stream(phraseDocumentObjectsMap.get(s)).flatMap(pdo -> pdo.getOffsets().stream()).collect(Collectors.toList()));
           });
           documentNodeRepository.save(dne);
         }
