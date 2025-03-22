@@ -11,9 +11,11 @@ import care.smith.top.top_phenotypic_query.adapter.sql.SQLAdapterDataSource;
 import care.smith.top.top_phenotypic_query.converter.csv.CSV;
 import care.smith.top.top_phenotypic_query.result.ResultSet;
 import care.smith.top.top_phenotypic_query.search.PhenotypeFinder;
+import care.smith.top.top_phenotypic_query.util.Entities;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.logging.Level;
@@ -100,40 +102,12 @@ public class PhenotypeQueryService extends QueryService {
             "Running %s query '%s' for repository '%s'...",
             getClass().getSimpleName(), queryId, queryDao.getRepository().getDisplayName()));
 
-    Entity[] phenotypes =
-        Stream.concat(
-                queryDao.getProjection().stream().map(ProjectionEntryDao::getSubjectId),
-                queryDao.getCriteria().stream().map(QueryCriterionDao::getSubjectId))
-            .distinct()
-            .flatMap(
-                id ->
-                    phenotypeRepository
-                        .findByIdAndRepositoryId(id, queryDao.getRepository().getId())
-                        .map(
-                            entityDao -> {
-                              Set<EntityDao> result =
-                                  phenotypeRepository.getDependencies(entityDao);
-                              result.add(entityDao);
-                              return result.stream();
-                            })
-                        .orElse(null))
-            .filter(Objects::nonNull)
-            .map(EntityDao::toApiModel)
-            .toArray(Entity[]::new);
-
     PhenotypeQuery query = (PhenotypeQuery) queryDao.toApiModel();
-    DataAdapterConfig config = getDataAdapterConfig(query.getDataSource()).orElseThrow();
-
     QueryResultDao result;
     try {
       ResultSet rs;
       if (executeQueries) {
-        DataAdapter adapter = DataAdapter.getInstance(config);
-        if (adapter == null) throw new NullPointerException("Adaptor type could not be derived.");
-
-        PhenotypeFinder finder = new PhenotypeFinder(query, phenotypes, adapter);
-        rs = finder.execute();
-        adapter.close();
+        rs = executeQuery(query, queryDao.getRepository().getId());
         result =
             new QueryResultDao(
                 queryDao, createdAt, (long) rs.size(), OffsetDateTime.now(), QueryState.FINISHED);
@@ -143,7 +117,7 @@ public class PhenotypeQueryService extends QueryService {
             new QueryResultDao(queryDao, createdAt, 0L, OffsetDateTime.now(), QueryState.FINISHED)
                 .message("Query execution is disabled.");
       }
-      storeResult(queryDao, rs, phenotypes);
+      storeResult(queryDao, rs);
     } catch (Throwable e) {
       LOGGER.log(Level.WARNING, e.getMessage(), e);
       result =
@@ -153,6 +127,25 @@ public class PhenotypeQueryService extends QueryService {
 
     queryDao.result(result);
     queryRepository.save(queryDao);
+  }
+
+  public ResultSet executeQuery(PhenotypeQuery query, String repositoryId)
+      throws InstantiationException, SQLException, Entities.NoCodesException {
+    Entity[] phenotypes = getQueryRelatedPhenotypes(query, repositoryId).toArray(Entity[]::new);
+
+    DataAdapterConfig config = getDataAdapterConfig(query.getDataSource()).orElseThrow();
+
+    ResultSet resultSet = new ResultSet();
+    if (executeQueries) {
+      DataAdapter adapter = DataAdapter.getInstance(config);
+      if (adapter == null) throw new NullPointerException("Adaptor type could not be derived.");
+
+      PhenotypeFinder finder = new PhenotypeFinder(query, phenotypes, adapter);
+      resultSet = finder.execute();
+      adapter.close();
+    }
+
+    return resultSet;
   }
 
   public Optional<DataAdapterConfig> getDataAdapterConfig(String id) {
@@ -200,13 +193,42 @@ public class PhenotypeQueryService extends QueryService {
         .title(dataAdapterConfig.getId().replace('_', ' '));
   }
 
-  private void storeResult(QueryDao queryDao, ResultSet resultSet, Entity[] phenotypes)
-      throws IOException {
+  private List<Entity> getQueryRelatedPhenotypes(PhenotypeQuery query, String repositoryId) {
+    return Stream.concat(
+            Objects.requireNonNullElse(query.getProjection(), new ArrayList<ProjectionEntry>())
+                .stream()
+                .map(ProjectionEntry::getSubjectId),
+            Objects.requireNonNullElse(query.getCriteria(), new ArrayList<QueryCriterion>())
+                .stream()
+                .map(QueryCriterion::getSubjectId))
+        .distinct()
+        .flatMap(
+            id ->
+                phenotypeRepository
+                    .findByIdAndRepositoryId(id, repositoryId)
+                    .map(
+                        entityDao -> {
+                          Set<EntityDao> result = phenotypeRepository.getDependencies(entityDao);
+                          result.add(entityDao);
+                          return result.stream();
+                        })
+                    .orElse(null))
+        .filter(Objects::nonNull)
+        .map(EntityDao::toApiModel)
+        .toList();
+  }
+
+  private void storeResult(QueryDao queryDao, ResultSet resultSet) throws IOException {
     ZipOutputStream zipStream =
         createZipStream(
             queryDao.getRepository().getOrganisation().getId(),
             queryDao.getRepository().getId(),
             queryDao.getId());
+
+    Entity[] phenotypes =
+        getQueryRelatedPhenotypes(
+                (PhenotypeQuery) queryDao.toApiModel(), queryDao.getRepository().getId())
+            .toArray(new Entity[0]);
 
     zipStream.putNextEntry(new ZipEntry("metadata.csv"));
     csvConverter.writeMetadata(phenotypes, zipStream);

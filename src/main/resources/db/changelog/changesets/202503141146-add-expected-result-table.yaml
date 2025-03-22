@@ -1,0 +1,90 @@
+databaseChangeLog:
+- changeSet:
+    id: 1741949208069-11
+    author: ChristophB (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: expected_resultPK
+            name: data_source_id
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: expected_resultPK
+            name: expected_result_id
+            type: VARCHAR(255)
+        - column:
+            name: boolean_value
+            type: BOOLEAN
+        - column:
+            name: date_time_value
+            type: TIMESTAMP
+        - column:
+            name: encounter_id
+            type: VARCHAR(255)
+        - column:
+            name: number_value
+            type: numeric(19, 2)
+        - column:
+            constraints:
+              nullable: false
+            name: phenotype_id
+            type: VARCHAR(255)
+        - column:
+            name: subject_id
+            type: VARCHAR(255)
+        - column:
+            name: text_value
+            type: VARCHAR(255)
+        tableName: expected_result
+- changeSet:
+    id: 1741949208069-12
+    author: ChristophB (generated)
+    changes:
+    - addUniqueConstraint:
+        columnNames: codes_id
+        constraintName: UK_4s011cpyhgyincw0r4gw0pa0k
+        tableName: entity_version_codes
+- changeSet:
+    id: 1741949208069-13
+    author: ChristophB (generated)
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: data_source_id
+        indexName: IDXstxe26t55bm6593qtleosdmp6
+        tableName: expected_result
+- changeSet:
+    id: 1741949208069-14
+    author: ChristophB (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: data_source_id,encounter_id
+        baseTableName: expected_result
+        constraintName: FKj3jakdmjtd1y8d7du2d7e7ueg
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: data_source_id,encounter_id
+        referencedTableName: encounter
+        validate: true
+- changeSet:
+    id: 1741949208069-15
+    author: ChristophB (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: data_source_id,subject_id
+        baseTableName: expected_result
+        constraintName: FKlqs0j44wcl6hn4cmhxqnfa577
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: data_source_id,subject_id
+        referencedTableName: subject
+        validate: true
+
