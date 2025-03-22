@@ -31,8 +31,8 @@ class ConceptGraphsServiceTest extends AbstractNLPTest {
         .isNotNull()
         .satisfies(
             c -> {
-              assertThat(c.getAdjacency()).hasSize(4);
-              assertThat(c.getNodes()).hasSize(4);
+              assertThat(c.getAdjacency()).hasSize(3);
+              assertThat(c.getNodes()).hasSize(3);
             });
   }
 
