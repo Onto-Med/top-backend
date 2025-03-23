@@ -1,23 +1,13 @@
 package care.smith.top.backend.model.neo4j;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
-import org.springframework.data.neo4j.core.schema.*;
-
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
+import org.springframework.data.neo4j.core.schema.*;
 
 @RelationshipProperties
 public class HasPhraseRelationship {
-  @GeneratedValue @Id
-  private Long id;
+  @GeneratedValue @Id private Long id;
   private String offsets;
-  @TargetNode
-  private PhraseNodeEntity phrase;
+  @TargetNode private PhraseNodeEntity phrase;
 
   public HasPhraseRelationship(PhraseNodeEntity phrase) {
     this.phrase = phrase;

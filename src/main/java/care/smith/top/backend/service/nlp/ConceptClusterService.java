@@ -8,7 +8,6 @@ import care.smith.top.backend.repository.neo4j.DocumentNodeRepository;
 import care.smith.top.backend.repository.neo4j.PhraseNodeRepository;
 import care.smith.top.backend.service.ContentService;
 import care.smith.top.model.ConceptCluster;
-import care.smith.top.model.Document;
 import care.smith.top.model.PipelineResponse;
 import care.smith.top.model.PipelineResponseStatus;
 import care.smith.top.top_document_query.adapter.TextAdapter;
@@ -22,6 +21,7 @@ import com.google.common.collect.Lists;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.neo4j.cypherdsl.core.Cypher;
@@ -257,7 +257,7 @@ public class ConceptClusterService implements ContentService {
   private void createGraphInNeo4j(
       String graphId, String processId, ConceptGraphEntity conceptGraph, TextAdapter adapter) {
     Map<String, List<String>> documentId2PhraseIdMap = new HashMap<>();
-//    Map<String, Integer> phrasesDocumentCount = new HashMap<>();
+    //    Map<String, Integer> phrasesDocumentCount = new HashMap<>();
     Map<String, PhraseNodeEntity> phraseNodeEntityMap = new HashMap<>();
     Map<String, PhraseDocumentObject[]> phraseDocumentObjectsMap = new HashMap<>();
 
@@ -269,9 +269,11 @@ public class ConceptClusterService implements ContentService {
                       documentObject -> {
                         if (!documentId2PhraseIdMap.containsKey(documentObject.getId())) {
                           documentId2PhraseIdMap.put(
-                                  documentObject.getId(), Lists.newArrayList(phraseNodeObject.getId()));
+                              documentObject.getId(), Lists.newArrayList(phraseNodeObject.getId()));
                         } else {
-                          documentId2PhraseIdMap.get(documentObject.getId()).add(phraseNodeObject.getId());
+                          documentId2PhraseIdMap
+                              .get(documentObject.getId())
+                              .add(phraseNodeObject.getId());
                         }
                       });
               phraseNodeEntityMap.put(
@@ -286,8 +288,10 @@ public class ConceptClusterService implements ContentService {
     // well as Phrase nodes)
     if (!conceptNodeRepository.conceptNodeExists(processId, graphId)) {
       List<String> labels =
-              phraseDocumentObjectsMap.entrySet().stream()
-              .sorted(Collections.reverseOrder(Comparator.comparingInt(entry -> entry.getValue().length)))
+          phraseDocumentObjectsMap.entrySet().stream()
+              .sorted(
+                  Collections.reverseOrder(
+                      Comparator.comparingInt(entry -> entry.getValue().length)))
               .filter(nodeEntry -> phraseNodeEntityMap.containsKey(nodeEntry.getKey()))
               .map(nodeEntry -> phraseNodeEntityMap.get(nodeEntry.getKey()).phraseText())
               .limit(3)
@@ -312,35 +316,50 @@ public class ConceptClusterService implements ContentService {
 
     // Save Document Nodes and by extension relationships 'DOCUMENT--HAS_PHRASE->PHRASE'
     try {
-      for (List<Document> docList : adapter.getDocumentsByIdsBatched(documentId2PhraseIdMap.keySet(), null, true).collect(Collectors.toSet())) {
-        for (Document documentEntity : docList) {
-          DocumentNodeEntity dne = new DocumentNodeEntity(documentEntity.getId(), documentEntity.getName());
-          documentId2PhraseIdMap.get(documentEntity.getId()).forEach(s -> {
-            //ToDo: this works with jsonifying and storing and all but reading and combining of the offsets is wrong!
-            // HAS_PHRASE relations get offsets from across all documents
-            PhraseNodeEntity pne = phraseNodeEntityMap.get(s);
-            dne.addPhrases(pne, Arrays.stream(phraseDocumentObjectsMap.get(s)).flatMap(pdo -> pdo.getOffsets().stream()).collect(Collectors.toList()));
-          });
-          documentNodeRepository.save(dne);
-        }
-      }
-//      adapter
-//          .getDocumentsByIdsBatched(documentId2PhraseIdMap.keySet(), null, true)
-//          .forEach(
-//              documentEntityList ->
-//                  documentEntityList.forEach(
-//                      documentEntity -> {
-//                        DocumentNodeEntity dne = new DocumentNodeEntity(documentEntity.getId(), documentEntity.getName());
-//                        documentId2PhraseIdMap.get(documentEntity.getId()).forEach(s -> {
-//                          PhraseNodeEntity pne = phraseNodeEntityMap.get(s);
-//                          Arrays.stream(phraseDocumentObjectsMap.get(s)).forEach(obj -> {
-//                            dne.addPhrases(pne, obj.getOffsets());
-//                          });
-//                        });
-//                        documentNodeRepository.save(dne);
-//                      }
-//                  )
-//          );
+      //      for (List<Document> docList :
+      // adapter.getDocumentsByIdsBatched(documentId2PhraseIdMap.keySet(), null,
+      // true).collect(Collectors.toSet())) {
+      //        for (Document documentEntity : docList) {
+      //          String docId = documentEntity.getId();
+      //          DocumentNodeEntity dne = new DocumentNodeEntity(docId, documentEntity.getName());
+      //          documentId2PhraseIdMap.get(docId).forEach(s -> {
+      //            PhraseNodeEntity pne = phraseNodeEntityMap.get(s);
+      //            dne.addPhrases(pne, Arrays.stream(phraseDocumentObjectsMap.get(s)).flatMap(pdo
+      // -> {
+      //              if (Objects.equals(pdo.getId(), docId)) return pdo.getOffsets().stream();
+      //              return Stream.empty();
+      //            }).collect(Collectors.toList()));
+      //          });
+      //          documentNodeRepository.save(dne);
+      //        }
+      //      }
+      adapter
+          .getDocumentsByIdsBatched(documentId2PhraseIdMap.keySet(), null, true)
+          .forEach(
+              documentEntityList ->
+                  documentEntityList.forEach(
+                      documentEntity -> {
+                        String docId = documentEntity.getId();
+                        DocumentNodeEntity dne =
+                            new DocumentNodeEntity(docId, documentEntity.getName());
+                        documentId2PhraseIdMap
+                            .get(docId)
+                            .forEach(
+                                s -> {
+                                  PhraseNodeEntity pne = phraseNodeEntityMap.get(s);
+                                  dne.addPhrases(
+                                      pne,
+                                      Arrays.stream(phraseDocumentObjectsMap.get(s))
+                                          .flatMap(
+                                              pdo -> {
+                                                if (Objects.equals(pdo.getId(), docId))
+                                                  return pdo.getOffsets().stream();
+                                                return Stream.empty();
+                                              })
+                                          .collect(Collectors.toList()));
+                                });
+                        documentNodeRepository.save(dne);
+                      }));
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

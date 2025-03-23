@@ -6,7 +6,6 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -23,9 +22,16 @@ public class Neo4JExtension implements BeforeAllCallback, ExtensionContext.Store
   private static final Map<String, List<Triple<String, String, String>>> relations =
       Map.of(
           "d1", List.of(Triple.of(HAS_PHRASE_REL, " {begin: 0, end: 5}", "p2")),
-          "d2", List.of(Triple.of(HAS_PHRASE_REL, " {begin: 6, end: 10}", "p1"), Triple.of(HAS_PHRASE_REL, " {begin: 11, end: 15}", "p2")),
-          "p1", List.of(Triple.of(IN_CONCEPT_REL, null, "c1"), Triple.of(NEIGHBOR_OF_REL, null, "p2")),
-          "p2", List.of(Triple.of(IN_CONCEPT_REL, null, "c2"), Triple.of(NEIGHBOR_OF_REL, null, "p1")));
+          "d2",
+              List.of(
+                  Triple.of(HAS_PHRASE_REL, " {begin: 6, end: 10}", "p1"),
+                  Triple.of(HAS_PHRASE_REL, " {begin: 11, end: 15}", "p2")),
+          "p1",
+              List.of(
+                  Triple.of(IN_CONCEPT_REL, null, "c1"), Triple.of(NEIGHBOR_OF_REL, null, "p2")),
+          "p2",
+              List.of(
+                  Triple.of(IN_CONCEPT_REL, null, "c2"), Triple.of(NEIGHBOR_OF_REL, null, "p1")));
   private static boolean started = false;
   private static Neo4j embeddedNeo4j;
   private static Session neo4jSession;
@@ -74,7 +80,14 @@ public class Neo4JExtension implements BeforeAllCallback, ExtensionContext.Store
                   String query =
                       String.format(
                           "MATCH (s:%s), (t:%s) WHERE s.%s = '%s' AND t.%s = '%s' CREATE (s)-[:%s%s]->(t)",
-                          sType, tType, sId, key, tId, triple.getRight(), rType, rParam != null ? rParam : "");
+                          sType,
+                          tType,
+                          sId,
+                          key,
+                          tId,
+                          triple.getRight(),
+                          rType,
+                          rParam != null ? rParam : "");
                   neo4jSession.run(query);
                 });
           });
