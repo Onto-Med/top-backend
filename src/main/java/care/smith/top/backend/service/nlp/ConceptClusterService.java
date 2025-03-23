@@ -257,7 +257,6 @@ public class ConceptClusterService implements ContentService {
   private void createGraphInNeo4j(
       String graphId, String processId, ConceptGraphEntity conceptGraph, TextAdapter adapter) {
     Map<String, List<String>> documentId2PhraseIdMap = new HashMap<>();
-    //    Map<String, Integer> phrasesDocumentCount = new HashMap<>();
     Map<String, PhraseNodeEntity> phraseNodeEntityMap = new HashMap<>();
     Map<String, PhraseDocumentObject[]> phraseDocumentObjectsMap = new HashMap<>();
 
@@ -316,23 +315,6 @@ public class ConceptClusterService implements ContentService {
 
     // Save Document Nodes and by extension relationships 'DOCUMENT--HAS_PHRASE->PHRASE'
     try {
-      //      for (List<Document> docList :
-      // adapter.getDocumentsByIdsBatched(documentId2PhraseIdMap.keySet(), null,
-      // true).collect(Collectors.toSet())) {
-      //        for (Document documentEntity : docList) {
-      //          String docId = documentEntity.getId();
-      //          DocumentNodeEntity dne = new DocumentNodeEntity(docId, documentEntity.getName());
-      //          documentId2PhraseIdMap.get(docId).forEach(s -> {
-      //            PhraseNodeEntity pne = phraseNodeEntityMap.get(s);
-      //            dne.addPhrases(pne, Arrays.stream(phraseDocumentObjectsMap.get(s)).flatMap(pdo
-      // -> {
-      //              if (Objects.equals(pdo.getId(), docId)) return pdo.getOffsets().stream();
-      //              return Stream.empty();
-      //            }).collect(Collectors.toList()));
-      //          });
-      //          documentNodeRepository.save(dne);
-      //        }
-      //      }
       adapter
           .getDocumentsByIdsBatched(documentId2PhraseIdMap.keySet(), null, true)
           .forEach(
