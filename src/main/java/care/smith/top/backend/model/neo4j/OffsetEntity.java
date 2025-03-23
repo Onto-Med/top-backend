@@ -3,7 +3,6 @@ package care.smith.top.backend.model.neo4j;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -12,8 +11,7 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 public class OffsetEntity {
-  @JsonIgnore
-  private static final Logger logger = Logger.getLogger(OffsetEntity.class.getName());
+  @JsonIgnore private static final Logger logger = Logger.getLogger(OffsetEntity.class.getName());
   private List<List<Integer>> offsets;
 
   public OffsetEntity() {
@@ -41,7 +39,8 @@ public class OffsetEntity {
   }
 
   public OffsetEntity addOffsets(Iterable<List<Integer>> offsets) {
-    if (offsets != null) StreamSupport.stream(offsets.spliterator(), false).forEach(this::addOffset);
+    if (offsets != null)
+      StreamSupport.stream(offsets.spliterator(), false).forEach(this::addOffset);
     return this;
   }
 
@@ -49,8 +48,13 @@ public class OffsetEntity {
     try {
       return new ObjectMapper().writeValueAsString(this);
     } catch (JsonProcessingException e) {
-      logger.warning("Couldn't write offset in proper JSON string. Try to imitate with String concatenation.");
+      logger.warning(
+          "Couldn't write offset in proper JSON string. Try to imitate with String concatenation.");
     }
-    return "{" + this.offsets.stream().map(l -> String.format("[%s,%s]", l.get(0), l.get(1))).collect(Collectors.joining(",")) + "}";
+    return "{"
+        + this.offsets.stream()
+            .map(l -> String.format("[%s,%s]", l.get(0), l.get(1)))
+            .collect(Collectors.joining(","))
+        + "}";
   }
 }

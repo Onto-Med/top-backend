@@ -84,7 +84,8 @@ public abstract class AbstractNLPTest {
         "/graph/statistics",
         new ResourceHttpHandler("/concept_graphs_api_fixtures/get_statistics.json"));
     conceptGraphsApiService.createContext(
-        "/graph/0", new ResourceHttpHandler("/concept_graphs_api_fixtures/get_concept_graph_new.json"));
+        "/graph/0",
+        new ResourceHttpHandler("/concept_graphs_api_fixtures/get_concept_graph_new.json"));
     conceptGraphsApiService.start();
   }
 

@@ -86,7 +86,5 @@ class ConceptClusterServiceTest extends AbstractNLPTest {
   }
 
   @Test
-  void createNeo4jGraph() {
-
-  }
+  void createNeo4jGraph() {}
 }
