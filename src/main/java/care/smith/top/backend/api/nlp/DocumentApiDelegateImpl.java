@@ -1,6 +1,5 @@
 package care.smith.top.backend.api.nlp;
 
-
 import care.smith.top.backend.api.DocumentApiDelegate;
 import care.smith.top.backend.service.nlp.DocumentService;
 import care.smith.top.backend.service.nlp.PhraseService;
@@ -161,30 +160,22 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
       LOGGER.severe("The text adapter '" + dataSource + "' could not be initialized.");
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
     }
+
+    Map<List<Integer>, String[]> offsetHighlightMap = new HashMap<>();
     try {
       Document document = adapter.getDocumentById(documentId, false).orElseThrow();
       if (highlightConcepts == null) highlightConcepts = new ArrayList<>();
       if (offsets == null) offsets = new ArrayList<>();
 
-      String[] colors = new String[] {"yellow", "black"};
-      String conceptId;
-
       if (document.getHighlightedText() == null) document.setHighlightedText(document.getText());
       addBorderToHighlights(document, offsets);
 
-      for (String concept : highlightConcepts) {
-        if (concept.startsWith(COLOR_PRE)) {
-          colors =
-              concept.substring(COLOR_PRE.length(), concept.lastIndexOf(COLOR_AFTER)).split("\\|");
-          conceptId = concept.substring(concept.lastIndexOf(COLOR_AFTER) + COLOR_AFTER.length());
-        } else {
-          conceptId = concept;
-        }
-        buildTextWithHighlights(
-            document,
-            colors,
-            phraseService.getAllOffsetsForConceptInDocument(documentId, corpusId, conceptId));
-      }
+      highlightConcepts.forEach(
+          highlighString ->
+              addConceptToOffsetHighlightMap(
+                  highlighString, corpusId, document, offsetHighlightMap));
+      buildTextWithHighlights(document, offsetHighlightMap);
+
       return ResponseEntity.ok(document);
     } catch (IOException e) {
       LOGGER.fine("Server Instance could not be reached/queried.");
@@ -223,6 +214,61 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
     }
   }
 
+  private void addConceptToOffsetHighlightMap(
+      String highlightString,
+      String corpusId,
+      Document document,
+      Map<List<Integer>, String[]> map) {
+    String[] colors;
+    String conceptId;
+
+    if (highlightString.startsWith(COLOR_PRE)) {
+      colors =
+          highlightString
+              .substring(COLOR_PRE.length(), highlightString.lastIndexOf(COLOR_AFTER))
+              .split("\\|");
+      conceptId =
+          highlightString.substring(
+              highlightString.lastIndexOf(COLOR_AFTER) + COLOR_AFTER.length());
+    } else {
+      colors = new String[] {"yellow", "black"};
+      conceptId = highlightString;
+    }
+    phraseService
+        .getAllOffsetsForConceptInDocument(document.getId(), corpusId, conceptId)
+        .forEach(
+            offset -> {
+              map.put(offset, getMarkTags(colors));
+            });
+  }
+
+  private String[] getMarkTags(String[] colors) {
+    String colorBackgroundValue = colors[0];
+    String colorForegroundValue = colors.length > 1 ? colors[1] : "black";
+    return new String[] {
+      String.format(
+          "<span style=\"background: %s; color: %s; padding: 2px; border-radius: 5px\">",
+          colorBackgroundValue, colorForegroundValue),
+      "</span>"
+    };
+  }
+
+  private void buildTextWithHighlights(
+      Document document, Map<List<Integer>, String[]> offsetHighlightMap) {
+    // ToDo: surrounding es highlights span with concept cluster highlight span needs to be seen if
+    // it works for all cases
+    if (offsetHighlightMap == null || offsetHighlightMap.isEmpty()) return;
+    StringBuilder textBuilder = new StringBuilder(document.getHighlightedText());
+    offsetHighlightMap.keySet().stream()
+        .sorted(((o1, o2) -> Integer.compare(o2.get(0), o1.get(0))))
+        .forEach(
+            offset -> {
+              textBuilder.insert(offset.get(1), offsetHighlightMap.get(offset)[1]);
+              textBuilder.insert(offset.get(0), offsetHighlightMap.get(offset)[0]);
+            });
+    document.highlightedText(textBuilder.toString());
+  }
+
   private void addBorderToHighlights(Document document, List<String> offsets) {
     String highlightTag = BORDER_MARKUP + "%s</span>";
     StringBuilder highlightBuilder = new StringBuilder();
@@ -237,30 +283,5 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
     }
     highlightBuilder.append(document.getHighlightedText().substring(curr));
     document.setHighlightedText(highlightBuilder.toString());
-  }
-
-  private void buildTextWithHighlights(
-      Document document, String[] colors, List<List<Integer>> offsets) {
-    // ToDo: surrounding es highlights span with concept cluster highlight span needs to be seen if
-    // it works for all cases
-    String colorBackgroundValue = colors[0];
-    String colorForegroundValue = colors.length > 1 ? colors[1] : "black";
-    String[] markTag =
-        new String[] {
-          String.format(
-              "<span style=\"background: %s; color: %s; padding: 2px; border-radius: 5px\">",
-              colorBackgroundValue, colorForegroundValue),
-          "</span>"
-        };
-    if (offsets == null) return;
-    StringBuilder textBuilder = new StringBuilder(document.getHighlightedText());
-    offsets.stream()
-        .sorted(((o1, o2) -> Integer.compare(o2.get(0), o1.get(0))))
-        .forEach(
-            offset -> {
-              textBuilder.insert(offset.get(1), markTag[1]);
-              textBuilder.insert(offset.get(0), markTag[0]);
-            });
-    document.highlightedText(textBuilder.toString());
   }
 }
