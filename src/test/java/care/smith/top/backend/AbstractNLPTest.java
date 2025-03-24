@@ -103,8 +103,8 @@ public abstract class AbstractNLPTest {
             List.of(
                 documents1.stream().findFirst().orElseGet(Document::new),
                 documents2.stream().findFirst().orElseGet(Document::new)));
-    DocumentNodeEntity d1 = new DocumentNodeEntity("d1", "Document 1", Set.of());
-    DocumentNodeEntity d2 = new DocumentNodeEntity("d2", "Document 2", Set.of());
+    DocumentNodeEntity d1 = new DocumentNodeEntity("d1", "Document 1");
+    DocumentNodeEntity d2 = new DocumentNodeEntity("d2", "Document 2");
 
     TextAdapter adapter = mock(TextAdapter.class);
     when(adapter.getDocumentById(eq("d1"), anyBoolean()))
