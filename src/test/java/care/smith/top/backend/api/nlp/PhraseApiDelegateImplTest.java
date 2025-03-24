@@ -14,7 +14,7 @@ class PhraseApiDelegateImplTest extends AbstractNLPTest {
 
   @BeforeEach
   void setUp() throws IOException, InstantiationException {
-    phraseService = new PhraseService(phraseRepository);
+    phraseService = new PhraseService(phraseRepository, relationRepository);
     phraseApi = new PhraseApiDelegateImpl(phraseService, mockedDocumentService());
   }
 

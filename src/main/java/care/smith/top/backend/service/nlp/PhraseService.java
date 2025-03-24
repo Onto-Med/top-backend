@@ -1,6 +1,7 @@
 package care.smith.top.backend.service.nlp;
 
 import care.smith.top.backend.model.neo4j.PhraseNodeEntity;
+import care.smith.top.backend.repository.neo4j.PhraseDocumentRelationRepository;
 import care.smith.top.backend.repository.neo4j.PhraseNodeRepository;
 import care.smith.top.backend.service.ContentService;
 import care.smith.top.model.Phrase;
@@ -9,6 +10,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import org.neo4j.cypherdsl.core.Cypher;
 import org.neo4j.cypherdsl.core.Node;
@@ -19,10 +21,15 @@ import org.springframework.stereotype.Service;
 @Service
 public class PhraseService implements ContentService {
 
-  private final PhraseNodeRepository phraseRepository;
+  private static final Logger logger = Logger.getLogger(PhraseService.class.getName());
 
-  public PhraseService(PhraseNodeRepository phraseRepository) {
+  private final PhraseNodeRepository phraseRepository;
+  private final PhraseDocumentRelationRepository relationRepository;
+
+  public PhraseService(
+      PhraseNodeRepository phraseRepository, PhraseDocumentRelationRepository relationRepository) {
     this.phraseRepository = phraseRepository;
+    this.relationRepository = relationRepository;
   }
 
   static Statement phraseInDocument(String documentId, Boolean mostImportantOnly) {
@@ -97,6 +104,15 @@ public class PhraseService implements ContentService {
     return phraseRepository.findAll(phraseInConcept(conceptId, corpusId)).stream()
         .map(phraseMapper)
         .collect(Collectors.toList());
+  }
+
+  public List<List<Integer>> getAllOffsetsForConceptInDocument(
+      String documentId, String corpusId, String conceptId) {
+    return relationRepository
+        .getPhraseRelationshipsByDocumentAndConcept(documentId, corpusId, conceptId)
+        .stream()
+        .flatMap(r -> r.toOffsetEntity().getOffsets().stream())
+        .toList();
   }
 
   public List<Phrase> getAllPhrases() {
