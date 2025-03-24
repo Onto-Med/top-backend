@@ -6,6 +6,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import org.springframework.data.annotation.PersistenceCreator;
 import org.springframework.data.neo4j.core.schema.*;
 
 @Node("Document")
@@ -19,20 +21,27 @@ public class DocumentNodeEntity {
   private final String documentName;
 
   @Relationship(type = "HAS_PHRASE", direction = Relationship.Direction.OUTGOING)
-  private Set<HasPhraseRelationship> documentPhrases;
+  private Set<HasPhraseRelationship> phraseRelationships;
 
-  public DocumentNodeEntity(
-      String documentId, String documentName, Set<PhraseNodeEntity> documentPhrases) {
+  @PersistenceCreator
+  public DocumentNodeEntity(String documentId, String documentName, Set<HasPhraseRelationship> phraseRelationships) {
     this.documentName = documentName;
     this.documentId = documentId;
-    this.documentPhrases = new HashSet<>();
+    this.phraseRelationships = phraseRelationships;
+  }
+
+  public DocumentNodeEntity(
+      String documentId, String documentName, Iterable<PhraseNodeEntity> documentPhrases) {
+    this.documentName = documentName;
+    this.documentId = documentId;
+    this.phraseRelationships = new HashSet<>();
     if (documentPhrases != null) documentPhrases.forEach(this::addPhrase);
   }
 
   public DocumentNodeEntity(String documentId, String documentName) {
     this.documentName = documentName;
     this.documentId = documentId;
-    this.documentPhrases = new HashSet<>();
+    this.phraseRelationships = new HashSet<>();
   }
 
   public String documentId() {
@@ -44,30 +53,30 @@ public class DocumentNodeEntity {
   }
 
   public Set<PhraseNodeEntity> documentPhrases() {
-    return documentPhrases.stream()
+    return phraseRelationships.stream()
         .map(HasPhraseRelationship::getPhrase)
         .collect(Collectors.toSet());
   }
 
   public DocumentNodeEntity addPhrase(PhraseNodeEntity phraseNode) {
-    this.documentPhrases.add(new HasPhraseRelationship(phraseNode));
+    this.phraseRelationships.add(new HasPhraseRelationship(phraseNode));
     return this;
   }
 
   public DocumentNodeEntity addPhrase(PhraseNodeEntity phraseNode, Integer begin, Integer end) {
     if (begin != null && end != null) {
-      this.documentPhrases.add(new HasPhraseRelationship(phraseNode, begin, end));
+      this.phraseRelationships.add(new HasPhraseRelationship(phraseNode, begin, end));
     } else {
-      this.documentPhrases.add(new HasPhraseRelationship(phraseNode));
+      this.phraseRelationships.add(new HasPhraseRelationship(phraseNode));
     }
     return this;
   }
 
   public DocumentNodeEntity addPhrase(PhraseNodeEntity phraseNode, Integer[] offset) {
     if (offset == null || offset.length <= 1) {
-      this.documentPhrases.add(new HasPhraseRelationship(phraseNode));
+      this.phraseRelationships.add(new HasPhraseRelationship(phraseNode));
     } else {
-      this.documentPhrases.add(
+      this.phraseRelationships.add(
           new HasPhraseRelationship(phraseNode, Arrays.stream(offset).toList()));
     }
     return this;
@@ -75,9 +84,9 @@ public class DocumentNodeEntity {
 
   public DocumentNodeEntity addPhrases(PhraseNodeEntity phraseNode, List<Integer[]> offsets) {
     if (offsets == null) {
-      this.documentPhrases.add(new HasPhraseRelationship(phraseNode));
+      this.phraseRelationships.add(new HasPhraseRelationship(phraseNode));
     } else {
-      this.documentPhrases.add(
+      this.phraseRelationships.add(
           new HasPhraseRelationship(
               phraseNode,
               offsets.stream().map(integers -> Arrays.stream(integers).toList()).toList()));
@@ -86,10 +95,10 @@ public class DocumentNodeEntity {
   }
 
   public DocumentNodeEntity removePhrase(PhraseNodeEntity phraseNode) {
-    this.documentPhrases.stream()
+    this.phraseRelationships.stream()
         .filter(r -> r.getPhrase().equals(phraseNode))
         .findFirst()
-        .ifPresent(r -> this.documentPhrases.remove(r));
+        .ifPresent(r -> this.phraseRelationships.remove(r));
     return this;
   }
 

@@ -5,8 +5,11 @@ import org.springframework.data.neo4j.core.schema.*;
 
 @RelationshipProperties
 public class HasPhraseRelationship {
+
   @GeneratedValue @Id private Long id;
+
   private String offsets;
+
   @TargetNode private PhraseNodeEntity phrase;
 
   public HasPhraseRelationship(PhraseNodeEntity phrase) {
