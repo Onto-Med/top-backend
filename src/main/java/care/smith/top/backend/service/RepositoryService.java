@@ -222,10 +222,7 @@ public class RepositoryService implements ContentService {
                           new PhenotypeValues(er.getPhenotypeId()))
                       .getValues(dateRange);
 
-              care.smith.top.model.Value actual =
-                  values.stream()
-                      .findFirst() // TODO: all actual values should be compared to expected values
-                      .orElse(null);
+              care.smith.top.model.Value actual = values.stream().findFirst().orElse(null);
 
               return er.toReport(actual);
             })
