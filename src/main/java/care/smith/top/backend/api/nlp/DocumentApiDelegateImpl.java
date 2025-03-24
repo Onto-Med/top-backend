@@ -1,6 +1,5 @@
 package care.smith.top.backend.api.nlp;
 
-import static java.util.regex.Pattern.UNICODE_CASE;
 
 import care.smith.top.backend.api.DocumentApiDelegate;
 import care.smith.top.backend.service.nlp.DocumentService;
@@ -10,13 +9,11 @@ import care.smith.top.backend.util.NLPUtils;
 import care.smith.top.model.Document;
 import care.smith.top.model.DocumentGatheringMode;
 import care.smith.top.model.DocumentPage;
-import care.smith.top.model.Phrase;
 import care.smith.top.top_document_query.adapter.TextAdapter;
 import care.smith.top.top_document_query.elasticsearch.DocumentEntity;
 import java.io.IOException;
 import java.util.*;
 import java.util.logging.Logger;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -170,7 +167,7 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
       if (offsets == null) offsets = new ArrayList<>();
 
       String[] colors = new String[] {"yellow", "black"};
-      String conceptId = null;
+      String conceptId;
 
       if (document.getHighlightedText() == null) document.setHighlightedText(document.getText());
       addBorderToHighlights(document, offsets);
@@ -183,14 +180,10 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
         } else {
           conceptId = concept;
         }
-        String finalConceptId = conceptId;
-
         buildTextWithHighlights(
             document,
             colors,
-            phraseService.getPhrasesForConcept(finalConceptId, corpusId).stream()
-                .map(Phrase::getText)
-                .collect(Collectors.toList()));
+            phraseService.getAllOffsetsForConceptInDocument(documentId, corpusId, conceptId));
       }
       return ResponseEntity.ok(document);
     } catch (IOException e) {
@@ -246,38 +239,28 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
     document.setHighlightedText(highlightBuilder.toString());
   }
 
-  private void buildTextWithHighlights(Document document, String[] colors, List<String> terms) {
+  private void buildTextWithHighlights(
+      Document document, String[] colors, List<List<Integer>> offsets) {
     // ToDo: surrounding es highlights span with concept cluster highlight span needs to be seen if
     // it works for all cases
     String colorBackgroundValue = colors[0];
     String colorForegroundValue = colors.length > 1 ? colors[1] : "black";
-    String markTag =
-        "<span style=\"background: %s; color: %s; padding: 2px; border-radius: 5px\">%s</span>";
-    if (terms == null) return;
-    for (String mark : terms) {
-      StringBuilder escapedString = new StringBuilder();
-      for (char character : mark.toCharArray()) {
-        if (REGEX_SPECIAL.containsKey(character)) {
-          escapedString.append(REGEX_SPECIAL.get(character));
-        } else {
-          escapedString.append(character);
-        }
-      }
-      String repl =
-          Pattern.compile(
-                  String.format("\\b(%s)?%s(</span>)?\\b", BORDER_MARKUP, escapedString),
-                  Pattern.CASE_INSENSITIVE | UNICODE_CASE)
-              .matcher(document.getHighlightedText())
-              .replaceAll(
-                  matchResult ->
-                      String.format(
-                          markTag,
-                          colorBackgroundValue,
-                          colorForegroundValue,
-                          document
-                              .getHighlightedText()
-                              .substring(matchResult.start(), matchResult.end())));
-      document.highlightedText(repl);
-    }
+    String[] markTag =
+        new String[] {
+          String.format(
+              "<span style=\"background: %s; color: %s; padding: 2px; border-radius: 5px\">",
+              colorBackgroundValue, colorForegroundValue),
+          "</span>"
+        };
+    if (offsets == null) return;
+    StringBuilder textBuilder = new StringBuilder(document.getHighlightedText());
+    offsets.stream()
+        .sorted(((o1, o2) -> Integer.compare(o2.get(0), o1.get(0))))
+        .forEach(
+            offset -> {
+              textBuilder.insert(offset.get(1), markTag[1]);
+              textBuilder.insert(offset.get(0), markTag[0]);
+            });
+    document.highlightedText(textBuilder.toString());
   }
 }

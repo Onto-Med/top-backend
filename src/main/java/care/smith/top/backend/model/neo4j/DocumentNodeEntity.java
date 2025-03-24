@@ -6,7 +6,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-
 import org.springframework.data.annotation.PersistenceCreator;
 import org.springframework.data.neo4j.core.schema.*;
 
@@ -24,7 +23,8 @@ public class DocumentNodeEntity {
   private Set<HasPhraseRelationship> phraseRelationships;
 
   @PersistenceCreator
-  public DocumentNodeEntity(String documentId, String documentName, Set<HasPhraseRelationship> phraseRelationships) {
+  public DocumentNodeEntity(
+      String documentId, String documentName, Set<HasPhraseRelationship> phraseRelationships) {
     this.documentName = documentName;
     this.documentId = documentId;
     this.phraseRelationships = phraseRelationships;

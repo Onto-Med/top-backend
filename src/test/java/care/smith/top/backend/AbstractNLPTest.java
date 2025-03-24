@@ -9,6 +9,7 @@ import care.smith.top.backend.extension.Neo4JExtension;
 import care.smith.top.backend.model.neo4j.DocumentNodeEntity;
 import care.smith.top.backend.repository.neo4j.ConceptClusterNodeRepository;
 import care.smith.top.backend.repository.neo4j.DocumentNodeRepository;
+import care.smith.top.backend.repository.neo4j.PhraseDocumentRelationRepository;
 import care.smith.top.backend.repository.neo4j.PhraseNodeRepository;
 import care.smith.top.backend.service.nlp.DocumentQueryService;
 import care.smith.top.backend.service.nlp.DocumentService;
@@ -67,6 +68,7 @@ public abstract class AbstractNLPTest {
   @Autowired protected ConceptClusterNodeRepository conceptClusterNodeRepository;
   @Autowired protected PhraseNodeRepository phraseRepository;
   @Autowired protected DocumentNodeRepository documentNodeRepository;
+  @Autowired protected PhraseDocumentRelationRepository relationRepository;
 
   @DynamicPropertySource
   static void dbProperties(DynamicPropertyRegistry registry) {

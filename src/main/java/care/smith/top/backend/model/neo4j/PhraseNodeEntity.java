@@ -20,7 +20,6 @@ public class PhraseNodeEntity {
   @Property("phrase")
   private final String phraseText;
 
-
   @Property("phraseId")
   private final String phraseId;
 
