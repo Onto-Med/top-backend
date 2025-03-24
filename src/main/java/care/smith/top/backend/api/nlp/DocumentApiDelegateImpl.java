@@ -4,6 +4,7 @@ import care.smith.top.backend.api.DocumentApiDelegate;
 import care.smith.top.backend.service.nlp.DocumentService;
 import care.smith.top.backend.service.nlp.PhraseService;
 import care.smith.top.backend.util.ApiModelMapper;
+import care.smith.top.backend.util.DocumentOffset;
 import care.smith.top.backend.util.NLPUtils;
 import care.smith.top.model.Document;
 import care.smith.top.model.DocumentGatheringMode;
@@ -159,7 +160,7 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
     }
 
-    Map<List<Integer>, String[]> offsetHighlightMap = new HashMap<>();
+    Map<DocumentOffset, String[]> offsetHighlightMap = new HashMap<>();
     try {
       Document document = adapter.getDocumentById(documentId, false).orElseThrow();
       if (highlightConcepts == null) highlightConcepts = new ArrayList<>();
@@ -213,7 +214,7 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
   }
 
   private void updateMapWithOffset(
-      List<Integer> offset, String[] highlightTags, Map<List<Integer>, String[]> map) {
+      DocumentOffset offset, String[] highlightTags, Map<DocumentOffset, String[]> map) {
     if (map.containsKey(offset)) {
       String preTag = map.get(offset)[0];
       String postTag = map.get(offset)[1];
@@ -226,25 +227,20 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
   }
 
   private void addBordersToOffsetHighlightMap(
-      List<String> offsets, Map<List<Integer>, String[]> map) {
+      List<String> offsets, Map<DocumentOffset, String[]> map) {
     String[] highlightTag =
         new String[] {
           "<span style=\"border: 2px solid black; padding: 3px; border-radius: 5px\">", "</span>"
         };
     offsets.forEach(
-        offset ->
-            updateMapWithOffset(
-                List.of(
-                    Integer.parseInt(offset.split("-")[0]), Integer.parseInt(offset.split("-")[1])),
-                highlightTag,
-                map));
+        offset -> updateMapWithOffset(DocumentOffset.of(offset, "-"), highlightTag, map));
   }
 
   private void addConceptToOffsetHighlightMap(
       String highlightString,
       String corpusId,
       String documentId,
-      Map<List<Integer>, String[]> map) {
+      Map<DocumentOffset, String[]> map) {
     String[] colors;
     String conceptId;
 
@@ -277,27 +273,17 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
   }
 
   private void buildTextWithHighlights(
-      Document document, Map<List<Integer>, String[]> offsetHighlightMap) {
+      Document document, Map<DocumentOffset, String[]> offsetHighlightMap) {
     // ToDo: surrounding es highlights span with concept cluster highlight span needs to be seen if
     //  it works for all cases -> need to handle overlapping offsets!
     if (offsetHighlightMap == null || offsetHighlightMap.isEmpty()) return;
     StringBuilder textBuilder = new StringBuilder(document.getHighlightedText());
     offsetHighlightMap.keySet().stream()
-        //        .sorted(((o1, o2) -> Integer.compare(o2.get(0), o1.get(0))))
-        .sorted(
-            (o1, o2) -> {
-              if (Objects.equals(o1.get(1), o2.get(1))) {
-                return o2.get(0).compareTo(o1.get(0));
-              } else if (o1.get(1) < o2.get(1)) {
-                return 1;
-              } else {
-                return -1;
-              }
-            })
+        .sorted((Comparator.reverseOrder()))
         .forEach(
             offset -> {
-              textBuilder.insert(offset.get(1), offsetHighlightMap.get(offset)[1]);
-              textBuilder.insert(offset.get(0), offsetHighlightMap.get(offset)[0]);
+              textBuilder.insert(offset.getEnd(), offsetHighlightMap.get(offset)[1]);
+              textBuilder.insert(offset.getBegin(), offsetHighlightMap.get(offset)[0]);
             });
     document.highlightedText(textBuilder.toString());
   }
