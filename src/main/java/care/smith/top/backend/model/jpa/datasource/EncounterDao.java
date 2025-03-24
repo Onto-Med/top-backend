@@ -1,10 +1,14 @@
 package care.smith.top.backend.model.jpa.datasource;
 
+import care.smith.top.model.DataType;
+import care.smith.top.model.DateTimeRestriction;
+import care.smith.top.model.RestrictionOperator;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import javax.annotation.Nullable;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 
@@ -137,7 +141,7 @@ public class EncounterDao {
     return this;
   }
 
-  public EncounterDao addSubjectRecouse(SubjectResourceDao... subjectResourceDaos) {
+  public EncounterDao addSubjectResources(SubjectResourceDao... subjectResourceDaos) {
     if (subjectResources == null) subjectResources = new ArrayList<>();
     subjectResources.addAll(List.of(subjectResourceDaos));
     return this;
@@ -173,6 +177,16 @@ public class EncounterDao {
 
   public List<SubjectResourceDao> getSubjectResources() {
     return subjectResources;
+  }
+
+  @Nullable
+  public DateTimeRestriction toDateRange() {
+    if (getStartDateTime() == null && getEndDateTime() == null) return null;
+    return new DateTimeRestriction(DataType.DATE_TIME)
+        .minOperator(RestrictionOperator.LESS_THAN_OR_EQUAL_TO)
+        .maxOperator(RestrictionOperator.LESS_THAN_OR_EQUAL_TO)
+        .addValuesItem(getStartDateTime())
+        .addValuesItem(getEndDateTime());
   }
 
   @Embeddable

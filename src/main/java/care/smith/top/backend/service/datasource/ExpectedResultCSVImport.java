@@ -1,18 +1,22 @@
 package care.smith.top.backend.service.datasource;
 
-import care.smith.top.backend.model.jpa.datasource.EncounterDao;
+import care.smith.top.backend.model.jpa.datasource.ExpectedResultDao;
 import care.smith.top.backend.repository.jpa.datasource.EncounterRepository;
+import care.smith.top.backend.repository.jpa.datasource.ExpectedResultRepository;
 import care.smith.top.backend.repository.jpa.datasource.SubjectRepository;
+import care.smith.top.backend.repository.jpa.datasource.SubjectResourceRepository;
 import java.io.Reader;
 import java.util.Map;
 
-public class EncounterCSVImport extends CSVImport {
+public class ExpectedResultCSVImport extends CSVImport {
 
-  public EncounterCSVImport(
+  protected ExpectedResultCSVImport(
       String dataSourceId,
       Reader reader,
       SubjectRepository subjectRepository,
       EncounterRepository encounterRepository,
+      SubjectResourceRepository subjectResourceRepository,
+      ExpectedResultRepository expectedResultRepository,
       Map<String, String> fieldsMapping,
       char separator) {
     super(
@@ -20,34 +24,36 @@ public class EncounterCSVImport extends CSVImport {
         reader,
         subjectRepository,
         encounterRepository,
-        null,
-        null,
-        EncounterDao.class,
+        subjectResourceRepository,
+        expectedResultRepository,
+        ExpectedResultDao.class,
         fieldsMapping,
         separator);
   }
 
-  public EncounterCSVImport(
+  protected ExpectedResultCSVImport(
       String dataSourceId,
       Reader reader,
       SubjectRepository subjectRepository,
       EncounterRepository encounterRepository,
+      SubjectResourceRepository subjectResourceRepository,
+      ExpectedResultRepository expectedResultRepository,
       Map<String, String> fieldsMapping) {
     super(
         dataSourceId,
         reader,
         subjectRepository,
         encounterRepository,
-        null,
-        null,
-        EncounterDao.class,
+        subjectResourceRepository,
+        expectedResultRepository,
+        ExpectedResultDao.class,
         fieldsMapping);
   }
 
   @Override
   public void run(String[] values) {
-    EncounterDao encounter = new EncounterDao(dataSourceId, null);
-    setFields(encounter, values);
-    saveEncounter(encounter);
+    ExpectedResultDao expectedResult = new ExpectedResultDao(dataSourceId, null);
+    setFields(expectedResult, values);
+    saveExpectedResult(expectedResult);
   }
 }
