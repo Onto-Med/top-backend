@@ -1,9 +1,11 @@
 package care.smith.top.backend.service.nlp;
 
+import care.smith.top.backend.model.neo4j.OffsetEntity;
 import care.smith.top.backend.model.neo4j.PhraseNodeEntity;
 import care.smith.top.backend.repository.neo4j.PhraseDocumentRelationRepository;
 import care.smith.top.backend.repository.neo4j.PhraseNodeRepository;
 import care.smith.top.backend.service.ContentService;
+import care.smith.top.backend.util.DocumentOffset;
 import care.smith.top.model.Phrase;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -106,12 +108,12 @@ public class PhraseService implements ContentService {
         .collect(Collectors.toList());
   }
 
-  public List<List<Integer>> getAllOffsetsForConceptInDocument(
+  public List<DocumentOffset> getAllOffsetsForConceptInDocument(
       String documentId, String corpusId, String conceptId) {
     return relationRepository
         .getPhraseRelationshipsByDocumentAndConcept(documentId, corpusId, conceptId)
         .stream()
-        .flatMap(r -> r.toOffsetEntity().getOffsets().stream())
+        .flatMap(r -> OffsetEntity.fromJsonString(r.getOffsets()).getOffsets().stream())
         .toList();
   }
 
