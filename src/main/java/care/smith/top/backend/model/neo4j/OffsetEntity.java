@@ -1,9 +1,11 @@
 package care.smith.top.backend.model.neo4j;
 
-import care.smith.top.backend.util.DocumentOffset;
+import care.smith.top.backend.util.nlp.DocumentOffset;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.lang3.NotImplementedException;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -69,7 +71,7 @@ public class OffsetEntity {
               "Couldn't read offsets from JSON string\n'%s'\nTrying to manually parse it.",
               jsonString));
     }
-    // ToDo: parse
-    return new OffsetEntity();
+    throw new NotImplementedException();
+//    return new OffsetEntity();
   }
 }

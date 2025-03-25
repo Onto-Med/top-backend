@@ -5,7 +5,7 @@ import care.smith.top.backend.model.neo4j.PhraseNodeEntity;
 import care.smith.top.backend.repository.neo4j.PhraseDocumentRelationRepository;
 import care.smith.top.backend.repository.neo4j.PhraseNodeRepository;
 import care.smith.top.backend.service.ContentService;
-import care.smith.top.backend.util.DocumentOffset;
+import care.smith.top.backend.util.nlp.DocumentOffset;
 import care.smith.top.model.Phrase;
 import java.util.ArrayList;
 import java.util.Collection;

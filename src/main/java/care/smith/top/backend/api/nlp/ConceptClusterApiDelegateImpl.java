@@ -1,6 +1,6 @@
 package care.smith.top.backend.api.nlp;
 
-import static care.smith.top.backend.util.NLPUtils.stringConformity;
+import static care.smith.top.backend.util.nlp.NLPUtils.stringConformity;
 
 import care.smith.top.backend.api.ConceptclusterApiDelegate;
 import care.smith.top.backend.service.nlp.ConceptClusterService;
