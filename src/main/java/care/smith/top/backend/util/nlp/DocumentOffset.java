@@ -1,4 +1,4 @@
-package care.smith.top.backend.util;
+package care.smith.top.backend.util.nlp;
 
 import java.util.Objects;
 import org.jetbrains.annotations.NotNull;
@@ -40,13 +40,6 @@ public class DocumentOffset implements Comparable<DocumentOffset> {
 
   @Override
   public int compareTo(@NotNull DocumentOffset o) {
-    //    if (Objects.equals(this.getEnd(), o.getEnd())) {
-    //      return o.getBegin().compareTo(this.getBegin());
-    //    } else if (this.getEnd() < o.getEnd()) {
-    //      return 1;
-    //    } else {
-    //      return -1;
-    //    }
     if (Objects.equals(this.getBegin(), o.getBegin())) {
       return this.getEnd().compareTo(o.getEnd());
     } else if (this.getBegin() < o.getBegin()) {

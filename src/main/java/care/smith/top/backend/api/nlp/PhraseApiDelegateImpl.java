@@ -4,7 +4,7 @@ import care.smith.top.backend.api.PhraseApiDelegate;
 import care.smith.top.backend.service.nlp.DocumentService;
 import care.smith.top.backend.service.nlp.PhraseService;
 import care.smith.top.backend.util.ApiModelMapper;
-import care.smith.top.backend.util.NLPUtils;
+import care.smith.top.backend.util.nlp.NLPUtils;
 import care.smith.top.model.Document;
 import care.smith.top.model.Phrase;
 import care.smith.top.model.PhrasePage;

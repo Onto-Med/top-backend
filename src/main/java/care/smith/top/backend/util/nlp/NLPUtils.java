@@ -1,4 +1,4 @@
-package care.smith.top.backend.util;
+package care.smith.top.backend.util.nlp;
 
 public class NLPUtils {
   public static String stringConformity(String s) {
