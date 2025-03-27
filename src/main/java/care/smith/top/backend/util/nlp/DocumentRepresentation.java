@@ -8,10 +8,7 @@ public class DocumentRepresentation {
       "<span style=\"border: 2px solid black; padding: 3px; border-radius: 5px\">";
   private static final String defaultEndTag = "</span>";
 
-  private Document document;
-  private String originalText;
-  private String markedText;
-  private List<DocumentOffset> documentOffsets;
+  private final Document document;
   private final Map<Integer, Map<DocumentOffset, Tag>> offsetHighlightMap = new HashMap<>();
 
   public static DocumentRepresentation of(Document document) {
@@ -19,25 +16,16 @@ public class DocumentRepresentation {
   }
 
   public DocumentRepresentation(Document document) {
-    this.document = document;
-    this.originalText = document.getHighlightedText();
-    this.documentOffsets = new ArrayList<>();
+    this(document, new ArrayList<>());
   }
 
   public DocumentRepresentation(Document document, List<DocumentOffset> documentOffsets) {
-    this.originalText = document.getHighlightedText();
-    this.documentOffsets = documentOffsets;
-    Integer hash = (defaultStartTag + defaultEndTag).hashCode();
-    documentOffsets.forEach(
-        offset ->
-            offsetHighlightMap.put(
-                hash, new HashMap<>(Map.of(offset, new Tag(defaultStartTag, defaultEndTag)))));
+    this(document, documentOffsets, defaultStartTag, defaultEndTag);
   }
 
   public DocumentRepresentation(
       Document document, List<DocumentOffset> documentOffsets, String startTag, String endTag) {
-    this.originalText = document.getHighlightedText();
-    this.documentOffsets = documentOffsets;
+    this.document = document;
     Integer hash = (startTag + endTag).hashCode();
     documentOffsets.forEach(
         offset ->
@@ -45,9 +33,7 @@ public class DocumentRepresentation {
   }
 
   public Document getDocument() {
-    buildTextWithHighlights();
-    this.document.setHighlightedText(markedText);
-    return document;
+    return this.document;
   }
 
   public DocumentRepresentation replaceHighlightForOffset(
@@ -103,21 +89,34 @@ public class DocumentRepresentation {
     return this;
   }
 
-  private void buildTextWithHighlights() {
+  public Document buildDocument() {
+    return new Document()
+        .id(getDocument().getId())
+        .name(getDocument().getName())
+        .score(getDocument().getScore())
+        .text(getDocument().getText())
+        .highlightedText(
+            hasHighlightedText() ? buildTextWithHighlights() : getDocument().getText());
+  }
+
+  private String buildTextWithHighlights() {
     // ToDo: surrounding es highlights span with concept cluster highlight span needs to be seen
     //  if it works for all cases -> need to handle overlapping offsets!
-    if (this.offsetHighlightMap.isEmpty()) return;
-    StringBuilder textBuilder = new StringBuilder(this.originalText);
-    for (Map<DocumentOffset, Tag> val : offsetHighlightMap.values()) {
-      val.keySet().stream()
-          .sorted(Comparator.reverseOrder())
-          .forEach(
-              offset -> {
-                textBuilder.insert(offset.getEnd(), val.get(offset).getEndTag());
-                textBuilder.insert(offset.getBegin(), val.get(offset).getStartTag());
-              });
-    }
-    this.markedText = textBuilder.toString();
+    if (!hasHighlightedText()) return null;
+    StringBuilder textBuilder = new StringBuilder(getDocument().getText());
+    offsetHighlightMap.values().stream()
+        .flatMap(m -> m.entrySet().stream())
+        .sorted(Map.Entry.comparingByKey(Comparator.reverseOrder()))
+        .forEach(
+            entry -> {
+              textBuilder.insert(entry.getKey().getEnd(), entry.getValue().getEndTag());
+              textBuilder.insert(entry.getKey().getBegin(), entry.getValue().getStartTag());
+            });
+    return textBuilder.toString();
+  }
+
+  private boolean hasHighlightedText() {
+    return !this.offsetHighlightMap.isEmpty();
   }
 
   private static class Tag {
