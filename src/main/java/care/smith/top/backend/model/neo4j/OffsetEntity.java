@@ -4,14 +4,13 @@ import care.smith.top.backend.util.nlp.DocumentOffset;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.lang3.NotImplementedException;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
+import org.apache.commons.lang3.NotImplementedException;
 
 public class OffsetEntity {
   @JsonIgnore private static final Logger logger = Logger.getLogger(OffsetEntity.class.getName());
@@ -72,6 +71,6 @@ public class OffsetEntity {
               jsonString));
     }
     throw new NotImplementedException();
-//    return new OffsetEntity();
+    //    return new OffsetEntity();
   }
 }
