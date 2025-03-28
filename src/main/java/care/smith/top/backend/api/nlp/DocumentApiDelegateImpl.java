@@ -166,7 +166,7 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
       if (offsets == null) offsets = new ArrayList<>();
 
       DocumentRepresentation documentRepresentation =
-          DocumentRepresentation.of(document).addHighlightForOffsetsFromString(offsets);
+          DocumentRepresentation.of(document).addHighlightForOffsetsFromString(offsets, 1);
       highlightConcepts.forEach(
           highlightString -> {
             String[] parsedString = parseHighlightString(highlightString);
@@ -176,7 +176,8 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
             documentRepresentation.addHighlightForOffsetsFromDocumentOffsets(
                 phraseService.getAllOffsetsForConceptInDocument(documentId, corpusId, conceptId),
                 startTag,
-                endTag);
+                endTag,
+                0);
           });
 
       return ResponseEntity.ok(documentRepresentation.buildDocument());

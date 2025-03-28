@@ -1,12 +1,10 @@
 package care.smith.top.backend.model.neo4j;
 
 import care.smith.top.backend.util.nlp.DocumentOffset;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -72,7 +70,8 @@ public class OffsetEntity {
 
   public static OffsetEntity fromJsonString(String jsonString) {
     try {
-      return new OffsetEntity(mapper.readValue(jsonString, new TypeReference<List<DocumentOffset>>(){}));
+      return new OffsetEntity(
+          mapper.readValue(jsonString, new TypeReference<List<DocumentOffset>>() {}));
     } catch (JsonProcessingException e) {
       logger.warning(
           String.format(

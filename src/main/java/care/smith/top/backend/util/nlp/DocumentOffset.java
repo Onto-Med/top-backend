@@ -1,10 +1,9 @@
 package care.smith.top.backend.util.nlp;
 
-import java.util.List;
-import java.util.Objects;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.List;
+import java.util.Objects;
 import org.jetbrains.annotations.NotNull;
 
 public class DocumentOffset implements Comparable<DocumentOffset> {
@@ -46,6 +45,23 @@ public class DocumentOffset implements Comparable<DocumentOffset> {
 
   public void setEnd(Integer end) {
     this.end = end;
+  }
+
+  public boolean overlaps(@NotNull DocumentOffset o) {
+    if (this.begin != null && this.end != null && o.begin != 0 && o.end != null) {
+      return (this.begin > o.begin && o.end > this.begin)
+          || (this.end > o.begin && o.end > this.end)
+          || (this.begin < o.begin && this.end > o.end)
+          || (this.begin > o.begin && this.end < o.end);
+    }
+    return false;
+  }
+
+  public boolean contains(@NotNull DocumentOffset o) {
+    if (this.begin != null && this.end != null && o.begin != 0 && o.end != null) {
+      return (this.begin < o.begin && this.end > o.end);
+    }
+    return false;
   }
 
   @Override
