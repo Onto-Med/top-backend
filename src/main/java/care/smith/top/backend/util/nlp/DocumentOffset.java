@@ -1,6 +1,10 @@
 package care.smith.top.backend.util.nlp;
 
+import java.util.List;
 import java.util.Objects;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.jetbrains.annotations.NotNull;
 
 public class DocumentOffset implements Comparable<DocumentOffset> {
@@ -17,7 +21,13 @@ public class DocumentOffset implements Comparable<DocumentOffset> {
     return new DocumentOffset(Integer.parseInt(parts[0].trim()), Integer.parseInt(parts[1].trim()));
   }
 
-  public DocumentOffset(Integer begin, Integer end) {
+  public static DocumentOffset of(List<Integer> offset) {
+    if (offset.size() >= 2) return new DocumentOffset(offset.get(0), offset.get(1));
+    return null;
+  }
+
+  @JsonCreator
+  public DocumentOffset(@JsonProperty("begin") Integer begin, @JsonProperty("end") Integer end) {
     this.begin = begin;
     this.end = end;
   }
