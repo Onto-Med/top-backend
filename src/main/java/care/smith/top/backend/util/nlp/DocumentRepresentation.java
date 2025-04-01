@@ -2,6 +2,7 @@ package care.smith.top.backend.util.nlp;
 
 import care.smith.top.model.Document;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class DocumentRepresentation {
   private static final String defaultStartTag =
@@ -47,16 +48,22 @@ public class DocumentRepresentation {
   }
 
   public DocumentRepresentation replaceHighlightForOffset(
-      DocumentOffset offset, String startTag, String endTag) {
-    // ToDo: this is not right, because it replaces the offset and not the tag
+      DocumentOffset offset, String startTag, String endTag, Integer tagPriority) {
     Integer hash = (startTag + endTag).hashCode();
     for (Integer key : List.copyOf(offsetHighlightMap.keySet())) {
       if (offsetHighlightMap.get(key).containsKey(offset)) {
-        Tag tag = offsetHighlightMap.get(key).remove(offset);
-        offsetHighlightMap.put(hash, new HashMap<>(Map.of(offset, tag)));
+        offsetHighlightMap.get(key).remove(offset);
+        if (offsetHighlightMap.get(key).isEmpty()) offsetHighlightMap.remove(key);
+        offsetHighlightMap.put(
+            hash, new HashMap<>(Map.of(offset, new Tag(startTag, endTag, tagPriority))));
       }
     }
     return this;
+  }
+
+  public DocumentRepresentation replaceHighlightForOffset(
+      DocumentOffset offset, String startTag, String endTag) {
+    return replaceHighlightForOffset(offset, startTag, endTag, 0);
   }
 
   public DocumentRepresentation addHighlightForOffset(
@@ -122,82 +129,119 @@ public class DocumentRepresentation {
   }
 
   public Document buildDocument() {
+    String highlightedText =
+        hasHighlightedText() ? buildTextWithHighlights() : getDocument().getText();
     return new Document()
         .id(getDocument().getId())
         .name(getDocument().getName())
         .score(getDocument().getScore())
         .text(getDocument().getText())
-        .highlightedText(
-            hasHighlightedText() ? buildTextWithHighlights() : getDocument().getText());
+        .highlightedText("<div ref='documentText'>" + highlightedText + "</div>");
   }
 
   private String buildTextWithHighlights() {
-    // ToDo: surrounding es highlights span with concept cluster highlight span needs to be seen
-    //  if it works for all cases -> need to handle overlapping offsets!
     if (!hasHighlightedText()) return null;
-    StringBuilder textBuilder = new StringBuilder(getDocument().getText());
-    List<Map.Entry<DocumentOffset, Tag>> allOffsets =
+
+    ArrayList<Map.Entry<DocumentOffset, Tag>> allOffsets =
         offsetHighlightMap.values().stream()
             .flatMap(m -> m.entrySet().stream())
+            .map(e -> correctOffsets(e, getDocument().getText()))
             .sorted(Map.Entry.comparingByKey(Comparator.reverseOrder()))
-            .toList();
+            .collect(Collectors.toCollection(ArrayList::new));
+    filterAndAdjustOffsets(allOffsets);
+    StringBuilder textBuilder = new StringBuilder(getDocument().getText());
+    allOffsets.forEach(
+        entry -> {
+          textBuilder.insert(entry.getKey().getEnd(), entry.getValue().getEndTag());
+          textBuilder.insert(entry.getKey().getBegin(), entry.getValue().getStartTag());
+        });
 
-    for (int i = 0; i < allOffsets.size(); i++) {
-      Map.Entry<DocumentOffset, Tag> thisEntry = allOffsets.get(i);
-      Map.Entry<DocumentOffset, Tag> nextEntry =
-          i < allOffsets.size() - 1 ? allOffsets.get(i + 1) : null;
-      insertInStringBuilder(textBuilder, thisEntry, nextEntry);
-    }
     return textBuilder.toString();
   }
 
-  private void insertInStringBuilder(
-      StringBuilder builder,
-      Map.Entry<DocumentOffset, Tag> thisEntry,
-      Map.Entry<DocumentOffset, Tag> nextEntry) {
-    Integer indexBefore =
-        thisEntry.getKey().getBegin() > 0 ? thisEntry.getKey().getBegin() - 1 : null;
+  private void filterAndAdjustOffsets(ArrayList<Map.Entry<DocumentOffset, Tag>> offsets) {
+    List<Map.Entry<DocumentOffset, Tag>> copy = List.copyOf(offsets);
+    Set<DocumentOffset> removedOffsets = new HashSet<>();
+    int t = 0;
+    for (Map.Entry<DocumentOffset, Tag> thisEntry : copy) {
+      ArrayList<DocumentOffset> toAdjust = new ArrayList<>();
+      if (removedOffsets.contains(thisEntry.getKey())) continue;
+      int n = t + 1;
+      for (Map.Entry<DocumentOffset, Tag> nextEntry : copy.subList(n, offsets.size())) {
+        if (removedOffsets.contains(nextEntry.getKey())) continue;
+        // If this and next don't overlap the following next entries shouldn't be worth checking
+        // either
+        if (!thisEntry.getKey().overlaps(nextEntry.getKey())) break;
+        // If this and the next element overlap but next is not just contained,
+        // one of them will be removed depending on their tag priority
+        if (thisEntry.getKey().overlaps(nextEntry.getKey())
+            && !thisEntry.getKey().contains(nextEntry.getKey())) {
+          if (thisEntry.getValue().getPriority() >= nextEntry.getValue().getPriority()) {
+            removedOffsets.add(nextEntry.getKey());
+            offsets.remove(nextEntry);
+          } else {
+            removedOffsets.add(thisEntry.getKey());
+            offsets.remove(thisEntry);
+            break;
+          }
+        }
+        // If the next entry is only contained and doesn't overlap only the offsets need to be
+        // adjusted since inserting this entry into the string beforehand will change the offsets
+        else if (thisEntry.getKey().contains(nextEntry.getKey())) {
+          toAdjust.add(offsets.get(n).getKey());
+        }
+        n++;
+      }
+      // Adjust the offsets of all following next if this was not removed
+      if (!removedOffsets.contains(thisEntry.getKey()))
+        toAdjust.forEach(
+            offset -> offset.updateAdjustmentWith(thisEntry.getValue().getStartTag().length()));
+      t++;
+      if (t >= offsets.size() - 1) break;
+    }
+  }
+
+  private Map.Entry<DocumentOffset, Tag> correctOffsets(
+      Map.Entry<DocumentOffset, Tag> offset, String documentText) {
+    Integer indexBefore = offset.getKey().getBegin() > 0 ? offset.getKey().getBegin() - 1 : null;
     Integer indexAfter =
-        thisEntry.getKey().getEnd() < builder.length() - 1 ? thisEntry.getKey().getEnd() + 1 : null;
+        offset.getKey().getEnd() < documentText.length() - 1 ? offset.getKey().getEnd() + 1 : null;
 
     String charBefore =
-        indexBefore != null ? builder.substring(indexBefore, indexBefore + 1) : null;
-    String charAtEnd = indexAfter != null ? builder.substring(indexAfter, indexAfter + 1) : null;
+        indexBefore != null ? documentText.substring(indexBefore, indexBefore + 1) : null;
+    String charAtEnd =
+        indexAfter != null ? documentText.substring(indexAfter, indexAfter + 1) : null;
 
     int moveOffset = 0;
     if (charBefore != null && charAtEnd != null && !(charBefore.isBlank() && charAtEnd.isBlank())) {
-      moveOffset = moveOffset(builder, indexBefore, indexAfter);
+      moveOffset = moveOffset(documentText, indexBefore, indexAfter);
     }
-
-    if (nextEntry != null
-        && thisEntry.getKey().overlaps(nextEntry.getKey())
-        && !thisEntry.getKey().contains(nextEntry.getKey())
-        && !nextEntry.getKey().contains(thisEntry.getKey())
-        && thisEntry.getValue().getPriority() < nextEntry.getValue().getPriority()) return;
-    builder.insert(thisEntry.getKey().getEnd() + moveOffset, thisEntry.getValue().getEndTag());
-    builder.insert(thisEntry.getKey().getBegin() + moveOffset, thisEntry.getValue().getStartTag());
+    offset.getKey().updateBeginWith(moveOffset);
+    offset.getKey().updateEndWith(moveOffset);
+    return offset;
   }
 
-  private int moveOffset(StringBuilder builder, Integer indexBefore, Integer indexAfter) {
-    int left = checkForWhitespace(builder, indexBefore + 1, -1);
-    int right = checkForWhitespace(builder, indexAfter - 1, 1);
+  private int moveOffset(String documentText, Integer indexBefore, Integer indexAfter) {
+    int left = checkForWhitespace(documentText, indexBefore + 1, -1);
+    int right = checkForWhitespace(documentText, indexAfter - 1, 1);
     int move = 0;
     if (left < right) move = left != 0 ? -left : right;
     if (right < left) move = right != 0 ? right : -left;
 
     // ToDo: heuristic for move when both space to left and right is equal
-    boolean leftIsWhitespace = checkForWhitespace(builder, indexBefore + 1 + move, -1) == 0;
-    boolean rightIsWhitespace = checkForWhitespace(builder, indexAfter - 1 + move, 1) == 0;
+    boolean leftIsWhitespace = checkForWhitespace(documentText, indexBefore + 1 + move, -1) == 0;
+    boolean rightIsWhitespace = checkForWhitespace(documentText, indexAfter - 1 + move, 1) == 0;
     if (leftIsWhitespace && rightIsWhitespace) return move;
     return (Math.abs(move) == left ? right : -left);
   }
 
-  private int checkForWhitespace(StringBuilder builder, Integer start, Integer direction) {
+  private int checkForWhitespace(String documentText, Integer start, Integer direction) {
     int count = 0;
     int dir = direction < 0 ? -1 : 1;
     for (int i = start; true; i += dir) {
-      if (i + dir <= 0 || i + dir > builder.length()) return count;
-      if (builder.substring(Math.min(i, i + dir), Math.max(i, i + dir)).isBlank()) return count;
+      if (i + dir <= 0 || i + dir > documentText.length()) return count;
+      if (documentText.substring(Math.min(i, i + dir), Math.max(i, i + dir)).isBlank())
+        return count;
       count++;
     }
   }

@@ -9,6 +9,7 @@ import org.jetbrains.annotations.NotNull;
 public class DocumentOffset implements Comparable<DocumentOffset> {
   private Integer begin;
   private Integer end;
+  private Integer adjustment = 0;
 
   public static DocumentOffset of(String offsetString) {
     return DocumentOffset.of(offsetString, ",");
@@ -32,22 +33,43 @@ public class DocumentOffset implements Comparable<DocumentOffset> {
   }
 
   public Integer getBegin() {
-    return begin;
+    return begin + adjustment;
   }
 
   public void setBegin(Integer begin) {
     this.begin = begin;
   }
 
+  public void updateBeginWith(Integer delta) {
+    this.begin += delta;
+  }
+
   public Integer getEnd() {
-    return end;
+    return end + adjustment;
   }
 
   public void setEnd(Integer end) {
     this.end = end;
   }
 
+  public void updateEndWith(Integer delta) {
+    this.end += delta;
+  }
+
+  public Integer getAdjustment() {
+    return adjustment;
+  }
+
+  public void setAdjustment(Integer adjustment) {
+    this.adjustment = adjustment;
+  }
+
+  public void updateAdjustmentWith(Integer delta) {
+    this.adjustment += delta;
+  }
+
   public boolean overlaps(@NotNull DocumentOffset o) {
+    if (this.equals(o) || this.contains(o)) return true;
     if (this.begin != null && this.end != null && o.begin != 0 && o.end != null) {
       return (this.begin > o.begin && o.end > this.begin)
           || (this.end > o.begin && o.end > this.end)
@@ -58,8 +80,9 @@ public class DocumentOffset implements Comparable<DocumentOffset> {
   }
 
   public boolean contains(@NotNull DocumentOffset o) {
+    if (this.equals(o)) return true;
     if (this.begin != null && this.end != null && o.begin != 0 && o.end != null) {
-      return (this.begin < o.begin && this.end > o.end);
+      return (this.begin <= o.begin && this.end >= o.end);
     }
     return false;
   }
@@ -69,8 +92,10 @@ public class DocumentOffset implements Comparable<DocumentOffset> {
     if (Objects.equals(this.getBegin(), o.getBegin())) {
       return this.getEnd().compareTo(o.getEnd());
     } else if (this.getBegin() < o.getBegin()) {
-      return -1;
+      if (this.getEnd() < o.getEnd()) return -1;
+      return 1;
     } else {
+      if (this.getEnd() < o.getEnd()) return -1;
       return 1;
     }
   }
