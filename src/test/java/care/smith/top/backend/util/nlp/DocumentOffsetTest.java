@@ -8,7 +8,9 @@ import org.junit.jupiter.api.Test;
 class DocumentOffsetTest {
 
   DocumentOffset offset1 = DocumentOffset.of("0-4", "-");
+  DocumentOffset offset1_std_delim = DocumentOffset.of("0,4");
   DocumentOffset offset1_int = DocumentOffset.of(List.of(0, 4));
+  DocumentOffset offset1_constructor = new DocumentOffset(0, 4);
   DocumentOffset offset2 = DocumentOffset.of("4-12", "-");
   DocumentOffset offset3 = DocumentOffset.of("7-10", "-");
   DocumentOffset offset4 = DocumentOffset.of("9-15", "-");
@@ -17,6 +19,8 @@ class DocumentOffsetTest {
   @Test
   void equals() {
     assertEquals(offset1, offset1_int);
+    assertEquals(offset1, offset1_constructor);
+    assertEquals(offset1, offset1_std_delim);
   }
 
   @Test
@@ -45,5 +49,11 @@ class DocumentOffsetTest {
     assertTrue(offset2.compareTo(offset3) > 0);
     assertTrue(offset2.compareTo(offset4) < 0);
     assertTrue(offset4.compareTo(offset3) > 0);
+  }
+
+  @Test
+  void faultyOffset() {
+    assertNull(DocumentOffset.of("4", "-"));
+    assertNull(DocumentOffset.of(List.of(0)));
   }
 }

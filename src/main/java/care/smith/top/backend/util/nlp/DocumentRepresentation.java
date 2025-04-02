@@ -99,11 +99,12 @@ public class DocumentRepresentation {
 
   public DocumentRepresentation addHighlightForOffsetsFromString(
       Iterable<String> offsets, String delimiter, Integer tagPriority) {
-    //ToDo: here and where else applicable -> handle DocumentOffset.of if null
     offsets.forEach(
-        off ->
-            addHighlightForOffset(
-                DocumentOffset.of(off, delimiter), defaultStartTag, defaultEndTag, tagPriority));
+        off -> {
+          DocumentOffset offset = DocumentOffset.of(off, delimiter);
+          if (offset != null)
+            addHighlightForOffset(offset, defaultStartTag, defaultEndTag, tagPriority);
+        });
     return this;
   }
 
