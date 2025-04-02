@@ -26,7 +26,11 @@ public class OffsetEntity {
 
   public OffsetEntity(Iterable<List<Integer>> offsets) {
     this.offsets = new ArrayList<>();
-    if (offsets != null) offsets.forEach(list -> this.offsets.add(DocumentOffset.of(list)));
+    if (offsets != null)
+      offsets.forEach(
+          list -> {
+            if (list.size() >= 2) this.offsets.add(DocumentOffset.of(list));
+          });
   }
 
   public List<DocumentOffset> getOffsets() {
