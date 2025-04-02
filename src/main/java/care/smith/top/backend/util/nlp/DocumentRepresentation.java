@@ -99,6 +99,7 @@ public class DocumentRepresentation {
 
   public DocumentRepresentation addHighlightForOffsetsFromString(
       Iterable<String> offsets, String delimiter, Integer tagPriority) {
+    //ToDo: here and where else applicable -> handle DocumentOffset.of if null
     offsets.forEach(
         off ->
             addHighlightForOffset(
@@ -231,6 +232,7 @@ public class DocumentRepresentation {
     // ToDo: heuristic for move when both space to left and right is equal
     boolean leftIsWhitespace = checkForWhitespace(documentText, indexBefore + 1 + move, -1) == 0;
     boolean rightIsWhitespace = checkForWhitespace(documentText, indexAfter - 1 + move, 1) == 0;
+    // ToDo: some odd cases where left and right are WS but moved to the wrong direction
     if (leftIsWhitespace && rightIsWhitespace) return move;
     return (Math.abs(move) == left ? right : -left);
   }
