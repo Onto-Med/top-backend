@@ -26,6 +26,7 @@ public interface EntityRepository
       String pattern = "%" + title.toLowerCase() + "%";
       query.distinct(true); // This may cause side effects!
       return cb.or(
+          cb.equal(root.get(EntityDao_.ID), title),
           cb.like(
               cb.lower(
                   root.join(EntityDao_.CURRENT_VERSION)
