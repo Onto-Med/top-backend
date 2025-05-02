@@ -3,9 +3,15 @@ adapter: care.smith.top.top_document_query.adapter.elasticsearch.ElasticsearchAd
 connection:
   url: http://localhost
   port: 9008
+  alternateUrl: http://127.0.0.1
 index:
   - test_documents
 field:
   - text
 batchSize: 30
 replaceFields: {'text': 'content'}
+labelKey: label
+conceptGraph:
+  connection:
+    url: http://localhost
+    port: 9007

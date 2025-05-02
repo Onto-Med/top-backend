@@ -69,7 +69,13 @@ public class ConceptClusterService implements ContentService {
   }
 
   public Boolean conceptClusterProcessesContainsKey(String pipelineId) {
-    return conceptClusterProcesses.containsKey(pipelineId);
+    if (conceptClusterProcesses.containsKey(pipelineId)) return true;
+    if (getCorpusIdsInNeo4j().contains(pipelineId)) {
+      conceptClusterProcesses.put(pipelineId, new Thread());
+      conceptClusterProcesses.get(pipelineId).start();
+      return true;
+    }
+    return false;
   }
 
   public HashMap<String, Thread> addToClusterProcesses(
