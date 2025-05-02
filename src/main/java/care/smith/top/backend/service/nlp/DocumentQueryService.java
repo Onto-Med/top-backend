@@ -287,6 +287,10 @@ public class DocumentQueryService extends QueryService {
     ZipOutputStream zipStream = createZipStream(organisationId, repositoryId, queryId);
 
     zipStream.putNextEntry(new ZipEntry("metadata.csv"));
+    // ToDo: this "write" calls "generate" of the concept expression again somewhere down the line
+    // to print the expression string.
+    // This is not really efficient, as the concept is resolved already and "executeQuery"
+    // beforehand when the TextFinder executes. But not high-priority right now.
     csvConverter.write(concepts, zipStream);
 
     zipStream.putNextEntry(new ZipEntry("data.csv"));
