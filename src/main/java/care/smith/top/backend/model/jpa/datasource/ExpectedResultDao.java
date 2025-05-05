@@ -261,15 +261,26 @@ public class ExpectedResultDao {
   }
 
   public TestReport toReport(Value actual) {
-    Value expected = toValue();
     return new TestReport(
             getExpectedResultId(),
             getPhenotypeId(),
             getSubjectId(),
             getEncounterId(),
-            expected.equals(actual))
-        .expected(expected)
+            compareWith(actual))
+        .expected(toValue())
         .actual(actual);
+  }
+
+  private boolean compareWith(Value other) {
+    Value value = toValue();
+    if (value == other) {
+      return true;
+    } else if (other == null) {
+      return false;
+    } else {
+      return Objects.equals(value.getDataType(), other.getDataType())
+          && Objects.equals(value.getFields(), other.getFields());
+    }
   }
 
   @Embeddable
