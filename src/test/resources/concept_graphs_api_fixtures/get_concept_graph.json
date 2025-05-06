@@ -1,52 +1,37 @@
 {
   "adjacency": [
     {
-      "id": 632,
+      "id":12,
       "neighbors": [
         {
-          "id": 3102,
-          "significance": 54.1663512886644,
-          "weight": 0.5851269178390502
+          "id":185,
+          "significance":12.912279647151603,
+          "weight":0.7684571962356567
         }
       ]
     },
     {
-      "id": 1719,
+      "id":18,
       "neighbors": [
         {
-          "id": 4307,
-          "significance": 56.51388596723889,
-          "weight": 0.6231559414863587
+          "id":185,
+          "significance":6.571214768887976,
+          "weight":0.5997220339775086
         }
       ]
     },
     {
-      "id": 3102,
+      "id":185,
       "neighbors": [
         {
-          "id": 632,
-          "significance": 54.1663512886644,
-          "weight": 0.5851269178390502
+          "id":12,
+          "significance":12.912279647151603,
+          "weight":0.7684571962356567
         },
         {
-          "id": 4307,
-          "significance": 16.63806935157468,
-          "weight": 0.5028897914886474
-        }
-      ]
-    },
-    {
-      "id": 4307,
-      "neighbors": [
-        {
-          "id": 1719,
-          "significance": 56.51388596723889,
-          "weight": 0.6231559414863587
-        },
-        {
-          "id": 3102,
-          "significance": 16.63806935157468,
-          "weight": 0.5028897914886474
+          "id":18,
+          "significance":6.571214768887976,
+          "weight":0.5997220339775086
         }
       ]
     }
@@ -54,31 +39,39 @@
   "nodes": [
     {
       "documents": [
-        "edd9dc6c-df8d-4ce2-ac48-61909c392003"
+        {
+          "id":"66cbfac2-d992-4a16-9c4f-f832ac913580",
+          "offsets": [
+            [287,301]
+          ]
+        }
       ],
-      "id": 632,
-      "label": "extension kraftgrad"
+      "id":12,
+      "label":"akute psychose"
     },
     {
       "documents": [
-        "3b17eefb-757d-472d-ae85-ec04476fa6d6"
+        {
+          "id":"66cbfac2-d992-4a16-9c4f-f832ac913580",
+          "offsets": [
+            [421,450]
+          ]
+        }
       ],
-      "id": 1719,
-      "label": "aktiver beweglichkeit"
+      "id":18,
+      "label":"symptomatisches anfallsleiden"
     },
     {
       "documents": [
-        "87c53af9-667b-47f5-9d5a-cd2a1ec74995"
+        {
+          "id":"66cbfac2-d992-4a16-9c4f-f832ac913580",
+          "offsets": [
+            [7417,7438]
+          ]
+        }
       ],
-      "id": 3102,
-      "label": "dosierten belastungssteigerung"
-    },
-    {
-      "documents": [
-        "0b492c1d-be2e-411e-824c-24913288ff71"
-      ],
-      "id": 4307,
-      "label": "bewegungs\u00fcbungen"
+      "id":185,
+      "label":"psychotischem erleben"
     }
   ]
 }

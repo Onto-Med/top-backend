@@ -37,7 +37,7 @@ public interface DocumentNodeRepository
           + "  AND returnBool\n"
           + "RETURN DISTINCT d;")
   List<DocumentNodeEntity> getDocumentsForPhraseIds(
-      Set<String> phraseIds, String corpusIds, Boolean exemplarOnly);
+      Set<String> phraseIds, String corpusId, Boolean exemplarOnly);
 
   @Query(
       "UNWIND $phraseTexts as labels\n"
@@ -51,7 +51,7 @@ public interface DocumentNodeRepository
           + "  AND returnBool\n"
           + "RETURN DISTINCT d;")
   List<DocumentNodeEntity> getDocumentsForPhrasesText(
-      Set<String> phraseTexts, String corpusIds, Boolean exemplarOnly);
+      Set<String> phraseTexts, String corpusId, Boolean exemplarOnly);
 
   @Query(
       "OPTIONAL MATCH (n:Document {docId: $documentId})\n" + "RETURN n IS NOT NULL AS Predicate;")

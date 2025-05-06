@@ -1,8 +1,9 @@
-package care.smith.top.backend.service.nlp;
+package care.smith.top.backend.nlp.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import care.smith.top.backend.AbstractNLPTest;
+import care.smith.top.backend.nlp.AbstractNLPTest;
+import care.smith.top.backend.service.nlp.PhraseService;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
@@ -11,6 +12,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
 class PhraseServiceTest extends AbstractNLPTest {
+  private final String exampleDatasource = "exampledatasource";
 
   @Autowired PhraseService phraseService;
 
@@ -21,8 +23,8 @@ class PhraseServiceTest extends AbstractNLPTest {
 
   @Test
   void getPhrasesForConcept() {
-    assertThat(phraseService.getPhrasesForConcept("c1", null)).isEqualTo(phrases1);
-    assertThat(phraseService.getPhrasesForConcept("c2", null)).isEqualTo(phrases2);
+    assertThat(phraseService.getPhrasesForConcept("c1", exampleDatasource)).isEqualTo(phrases1);
+    assertThat(phraseService.getPhrasesForConcept("c2", exampleDatasource)).isEqualTo(phrases2);
   }
 
   @Test
@@ -32,8 +34,10 @@ class PhraseServiceTest extends AbstractNLPTest {
 
   @Test
   void getPhraseById() {
-    assertThat(phraseService.getPhraseById("p1", null).orElseThrow()).isEqualTo(phrases1.get(0));
-    assertThat(phraseService.getPhraseById("p2", null).orElseThrow()).isEqualTo(phrases2.get(0));
+    assertThat(phraseService.getPhraseById("p1", exampleDatasource).orElseThrow())
+        .isEqualTo(phrases1.get(0));
+    assertThat(phraseService.getPhraseById("p2", exampleDatasource).orElseThrow())
+        .isEqualTo(phrases2.get(0));
   }
 
   @Test
@@ -51,15 +55,17 @@ class PhraseServiceTest extends AbstractNLPTest {
 
   @Test
   void getPhrasesForDocument() {
-    assertThat(phraseService.getPhrasesForDocument("d1", null, false)).isEqualTo(phrases2);
-    assertThat(Set.copyOf(phraseService.getPhrasesForDocument("d2", null, false)))
+    assertThat(phraseService.getPhrasesForDocument("d1", exampleDatasource, false))
+        .isEqualTo(phrases2);
+    assertThat(Set.copyOf(phraseService.getPhrasesForDocument("d2", exampleDatasource, false)))
         .isEqualTo(Set.copyOf(phrases1_2));
-    assertThat(phraseService.getPhrasesForDocument("d2", null, true)).isEqualTo(phrases1);
+    assertThat(phraseService.getPhrasesForDocument("d2", exampleDatasource, true))
+        .isEqualTo(phrases1);
   }
 
   @Test
   void getPhrasesByIds() {
-    assertThat(Set.copyOf(phraseService.getPhrasesByIds(List.of("p1", "p2"), null)))
+    assertThat(Set.copyOf(phraseService.getPhrasesByIds(List.of("p1", "p2"), exampleDatasource)))
         .isEqualTo(Set.copyOf(phrases1_2));
   }
 }

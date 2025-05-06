@@ -1,7 +1,8 @@
-package care.smith.top.backend.util.nlp;
+package care.smith.top.backend.nlp.util;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import care.smith.top.backend.util.nlp.DocumentOffset;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 

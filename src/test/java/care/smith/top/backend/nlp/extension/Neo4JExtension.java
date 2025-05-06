@@ -1,6 +1,6 @@
-package care.smith.top.backend.extension;
+package care.smith.top.backend.nlp.extension;
 
-import static care.smith.top.backend.AbstractNLPTest.*;
+import static care.smith.top.backend.nlp.AbstractNLPTest.*;
 
 import java.net.URI;
 import java.util.List;
@@ -35,6 +35,7 @@ public class Neo4JExtension implements BeforeAllCallback, ExtensionContext.Store
   private static boolean started = false;
   private static Neo4j embeddedNeo4j;
   private static Session neo4jSession;
+  private static final String exampleDatasource = "exampledatasource";
 
   private static void setUpNeo4jDB() {
     embeddedNeo4j = Neo4jBuilders.newInProcessBuilder().withDisabledServer().build();
@@ -47,8 +48,8 @@ public class Neo4JExtension implements BeforeAllCallback, ExtensionContext.Store
           document ->
               neo4jSession.run(
                   String.format(
-                      "CREATE (:Document {docId: '%s', name: '%s', corpusId: '%s'})",
-                      document.getId(), document.getName(), "exampleDatasource")));
+                      "CREATE (:Document {docId: '%s', name: '%s'})",
+                      document.getId(), document.getName())));
       concepts1_2.forEach(
           concept -> {
             String labels =
@@ -58,14 +59,14 @@ public class Neo4JExtension implements BeforeAllCallback, ExtensionContext.Store
             neo4jSession.run(
                 String.format(
                     "CREATE (:Concept {conceptId: '%s', labels: %s, corpusId: '%s'})",
-                    concept.getId(), String.format("[%s]", labels), "exampleDatasource"));
+                    concept.getId(), String.format("[%s]", labels), exampleDatasource));
           });
       phrases1_2.forEach(
           phrase ->
               neo4jSession.run(
                   String.format(
-                      "CREATE (:Phrase {phraseId: '%s', phrase: '%s', exemplar: %s, corpusId: '%s'})",
-                      phrase.getId(), phrase.getText(), phrase.isExemplar(), "exampleDatasource")));
+                      "CREATE (:Phrase {phraseId: '%s', phrase: '%s', exemplar: %s})",
+                      phrase.getId(), phrase.getText(), phrase.isExemplar())));
 
       relations.forEach(
           (key, list) -> {

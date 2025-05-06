@@ -1,8 +1,9 @@
-package care.smith.top.backend.api.nlp;
+package care.smith.top.backend.nlp.api;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import care.smith.top.backend.AbstractNLPTest;
+import care.smith.top.backend.api.nlp.ConceptPipelineApiDelegateImpl;
+import care.smith.top.backend.nlp.AbstractNLPTest;
 import java.util.Objects;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;

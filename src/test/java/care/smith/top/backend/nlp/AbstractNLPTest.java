@@ -1,12 +1,12 @@
-package care.smith.top.backend;
+package care.smith.top.backend.nlp;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import care.smith.top.backend.extension.Neo4JExtension;
 import care.smith.top.backend.model.neo4j.DocumentNodeEntity;
+import care.smith.top.backend.nlp.extension.Neo4JExtension;
 import care.smith.top.backend.repository.neo4j.ConceptClusterNodeRepository;
 import care.smith.top.backend.repository.neo4j.DocumentNodeRepository;
 import care.smith.top.backend.repository.neo4j.PhraseDocumentRelationRepository;
@@ -41,14 +41,14 @@ public abstract class AbstractNLPTest {
               .id("d1")
               .name("Document 1")
               .text("Document 1")
-              .highlightedText("Document 1"));
+              .highlightedText("<div ref='documentText'>Document 1</div>"));
   protected static Set<Document> documents2 =
       Set.of(
           new Document()
               .id("d2")
               .name("Document 2")
               .text("Document 2")
-              .highlightedText("Document 2"));
+              .highlightedText("<div ref='documentText'>Document 2</div>"));
   public static Set<Document> documents1_2 =
       Set.of(documents1.iterator().next(), documents2.iterator().next());
   protected static List<ConceptCluster> concepts1 =
@@ -62,7 +62,8 @@ public abstract class AbstractNLPTest {
       List.of(new Phrase().id("p2").text("another phrase there").exemplar(false));
   public static List<Phrase> phrases1_2 = List.of(phrases1.get(0), phrases2.get(0));
   protected static HttpServer conceptGraphsApiService;
-  protected static int cgApi = 9009;
+  protected static int cgApi = 9011;
+  private static final String exampleDatasource = "exampledatasource";
 
   @RegisterExtension static Neo4JExtension neo4JExtension = new Neo4JExtension();
   @Autowired protected ConceptClusterNodeRepository conceptClusterNodeRepository;
@@ -86,8 +87,7 @@ public abstract class AbstractNLPTest {
         "/graph/statistics",
         new ResourceHttpHandler("/concept_graphs_api_fixtures/get_statistics.json"));
     conceptGraphsApiService.createContext(
-        "/graph/0",
-        new ResourceHttpHandler("/concept_graphs_api_fixtures/get_concept_graph_new.json"));
+        "/graph/0", new ResourceHttpHandler("/concept_graphs_api_fixtures/get_concept_graph.json"));
     conceptGraphsApiService.start();
   }
 
@@ -128,15 +128,18 @@ public abstract class AbstractNLPTest {
         .thenReturn(page1_2);
 
     DocumentNodeRepository documentNodeRepository = mock(DocumentNodeRepository.class);
-    when(documentNodeRepository.getDocumentsForPhraseIds(Set.of("p1", "p2"), null, false))
+    when(documentNodeRepository.getDocumentsForPhraseIds(
+            Set.of("p1", "p2"), exampleDatasource, false))
         .thenReturn(List.of(d1, d2));
-    when(documentNodeRepository.getDocumentsForPhraseIds(Set.of("p1", "p2"), null, true))
+    when(documentNodeRepository.getDocumentsForPhraseIds(
+            Set.of("p1", "p2"), exampleDatasource, true))
         .thenReturn(List.of(d2));
-    when(documentNodeRepository.getDocumentsForConceptIds(Set.of("c1", "c2"), null, false))
+    when(documentNodeRepository.getDocumentsForConceptIds(
+            Set.of("c1", "c2"), exampleDatasource, false))
         .thenReturn(List.of(d1, d2));
-    when(documentNodeRepository.getDocumentsForConceptIds(Set.of("c1"), null, false))
+    when(documentNodeRepository.getDocumentsForConceptIds(Set.of("c1"), exampleDatasource, false))
         .thenReturn(List.of(d2));
-    when(documentNodeRepository.getDocumentsForConceptIds(Set.of("c2"), null, false))
+    when(documentNodeRepository.getDocumentsForConceptIds(Set.of("c2"), exampleDatasource, false))
         .thenReturn(List.of(d1, d2));
 
     DocumentQueryService documentQueryService = mock(DocumentQueryService.class);
@@ -159,13 +162,13 @@ public abstract class AbstractNLPTest {
 
     // CallRealMethod
     when(documentService.count()).thenCallRealMethod();
-    when(documentService.getDocumentsForConceptIds(anySet(), null, anyBoolean()))
+    when(documentService.getDocumentsForConceptIds(anySet(), anyString(), anyBoolean()))
         .thenCallRealMethod();
-    when(documentService.getDocumentsForConceptIds(anySet(), null, anyBoolean(), any()))
+    when(documentService.getDocumentsForConceptIds(anySet(), anyString(), anyBoolean(), any()))
         .thenCallRealMethod();
-    when(documentService.getDocumentsForPhraseIds(anySet(), null, anyBoolean()))
+    when(documentService.getDocumentsForPhraseIds(anySet(), anyString(), anyBoolean()))
         .thenCallRealMethod();
-    when(documentService.getDocumentsForPhraseTexts(anySet(), null, anyBoolean()))
+    when(documentService.getDocumentsForPhraseTexts(anySet(), anyString(), anyBoolean()))
         .thenCallRealMethod();
 
     return documentService;
