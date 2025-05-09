@@ -60,17 +60,23 @@ public class DocumentService implements ContentService {
         .orElse(0L);
   }
 
-  public List<Document> getDocumentsForConceptIds(Set<String> conceptIds, Boolean exemplarOnly) {
+  public List<Document> getDocumentsForConceptIds(
+      Set<String> conceptIds, String corpusId, Boolean exemplarOnly) {
     if (conceptIds == null || conceptIds.isEmpty()) {
       return List.of();
     }
-    return getDocumentNodeRepository().getDocumentsForConceptIds(conceptIds, exemplarOnly).stream()
+    return getDocumentNodeRepository()
+        .getDocumentsForConceptIds(conceptIds, corpusId, exemplarOnly)
+        .stream()
         .map(DocumentNodeEntity::toApiModel)
         .collect(Collectors.toList());
   }
 
   public List<Document> getDocumentsForConceptIds(
-      Set<String> conceptIds, Boolean exemplarOnly, DocumentGatheringMode gatheringMode) {
+      Set<String> conceptIds,
+      String corpusId,
+      Boolean exemplarOnly,
+      DocumentGatheringMode gatheringMode) {
     if (conceptIds == null || conceptIds.isEmpty()) {
       return List.of();
     }
@@ -84,7 +90,7 @@ public class DocumentService implements ContentService {
           conceptId -> {
             List<DocumentNodeEntity> dneList =
                 getDocumentNodeRepository()
-                    .getDocumentsForConceptIds(Set.of(conceptId), exemplarOnly);
+                    .getDocumentsForConceptIds(Set.of(conceptId), corpusId, exemplarOnly);
             listOfSets.add(
                 dneList.stream().map(DocumentNodeEntity::documentId).collect(Collectors.toSet()));
             dneList.forEach(dne -> hashMapDocuments.put(dne.documentId(), dne));
@@ -99,34 +105,38 @@ public class DocumentService implements ContentService {
     } else if (Objects.equals(gatheringMode, DocumentGatheringMode.EXCLUSIVE)) {
       return getDocumentNodeRepository()
           .getDocumentsForConceptIds(
-              Collections.singleton(conceptIds.iterator().next()), exemplarOnly)
+              Collections.singleton(conceptIds.iterator().next()), corpusId, exemplarOnly)
           .stream()
           .map(DocumentNodeEntity::toApiModel)
           .collect(Collectors.toList());
     } else {
       return getDocumentNodeRepository()
-          .getDocumentsForConceptIds(conceptIds, exemplarOnly)
+          .getDocumentsForConceptIds(conceptIds, corpusId, exemplarOnly)
           .stream()
           .map(DocumentNodeEntity::toApiModel)
           .collect(Collectors.toList());
     }
   }
 
-  public List<Document> getDocumentsForPhraseIds(Set<String> phraseIds, Boolean exemplarOnly) {
+  public List<Document> getDocumentsForPhraseIds(
+      Set<String> phraseIds, String corpusId, Boolean exemplarOnly) {
     if (phraseIds == null || phraseIds.isEmpty()) {
       return List.of();
     }
-    return getDocumentNodeRepository().getDocumentsForPhraseIds(phraseIds, exemplarOnly).stream()
+    return getDocumentNodeRepository()
+        .getDocumentsForPhraseIds(phraseIds, corpusId, exemplarOnly)
+        .stream()
         .map(DocumentNodeEntity::toApiModel)
         .collect(Collectors.toList());
   }
 
-  public List<Document> getDocumentsForPhraseTexts(Set<String> phraseTexts, Boolean exemplarOnly) {
+  public List<Document> getDocumentsForPhraseTexts(
+      Set<String> phraseTexts, String corpusId, Boolean exemplarOnly) {
     if (phraseTexts == null || phraseTexts.isEmpty()) {
       return List.of();
     }
     return getDocumentNodeRepository()
-        .getDocumentsForPhrasesText(phraseTexts, exemplarOnly)
+        .getDocumentsForPhrasesText(phraseTexts, corpusId, exemplarOnly)
         .stream()
         .map(DocumentNodeEntity::toApiModel)
         .collect(Collectors.toList());

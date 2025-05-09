@@ -1,6 +1,6 @@
 package care.smith.top.backend.api.nlp;
 
-import static care.smith.top.backend.util.NLPUtils.stringConformity;
+import static care.smith.top.backend.util.nlp.NLPUtils.stringConformity;
 
 import care.smith.top.backend.api.ConceptclusterApiDelegate;
 import care.smith.top.backend.service.nlp.ConceptClusterService;
@@ -67,8 +67,13 @@ public class ConceptClusterApiDelegateImpl implements ConceptclusterApiDelegate 
       Integer page,
       List<String> include) {
     final String finalCorpusId = stringConformity(corpusId);
-    if (Boolean.TRUE.equals(recalculateCache))
-      conceptClusterService.evictConceptsFromCache(finalCorpusId);
+    if (Boolean.TRUE.equals(recalculateCache)) {
+      if (finalCorpusId == null) {
+        conceptClusterService.evictAllConceptsFromCache();
+      } else {
+        conceptClusterService.evictConceptsFromCache(finalCorpusId);
+      }
+    }
 
     boolean labels = !(labelsText == null || labelsText.isEmpty());
     boolean phrases = !(phraseId == null || phraseId.isEmpty());

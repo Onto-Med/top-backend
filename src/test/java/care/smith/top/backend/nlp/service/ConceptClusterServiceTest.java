@@ -1,8 +1,9 @@
-package care.smith.top.backend.service.nlp;
+package care.smith.top.backend.nlp.service;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import care.smith.top.backend.AbstractNLPTest;
+import care.smith.top.backend.nlp.AbstractNLPTest;
+import care.smith.top.backend.service.nlp.ConceptClusterService;
 import care.smith.top.model.ConceptCluster;
 import java.util.HashSet;
 import java.util.List;
@@ -84,4 +85,7 @@ class ConceptClusterServiceTest extends AbstractNLPTest {
                 .conceptsByLabelsAndPhrases(List.of("good"), List.of("p1", "p2"), null, 0)
                 .getContent()));
   }
+
+  @Test
+  void createNeo4jGraph() {}
 }

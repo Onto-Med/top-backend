@@ -9,6 +9,8 @@ import org.springframework.data.neo4j.core.schema.*;
 @Node("Phrase")
 public class PhraseNodeEntity {
 
+  @Id @GeneratedValue Long id;
+
   @Property("attributes")
   private final List<String> phraseAttributes;
 
@@ -17,8 +19,6 @@ public class PhraseNodeEntity {
 
   @Property("phrase")
   private final String phraseText;
-
-  @Id @GeneratedValue Long id;
 
   @Property("phraseId")
   private final String phraseId;

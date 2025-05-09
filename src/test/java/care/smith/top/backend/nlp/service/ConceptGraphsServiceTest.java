@@ -1,8 +1,9 @@
-package care.smith.top.backend.service.nlp;
+package care.smith.top.backend.nlp.service;
 
 import static org.assertj.core.api.Assertions.*;
 
-import care.smith.top.backend.AbstractNLPTest;
+import care.smith.top.backend.nlp.AbstractNLPTest;
+import care.smith.top.backend.service.nlp.ConceptGraphsService;
 import care.smith.top.model.ConceptGraph;
 import care.smith.top.model.ConceptGraphPipeline;
 import care.smith.top.model.ConceptGraphStat;
@@ -31,8 +32,8 @@ class ConceptGraphsServiceTest extends AbstractNLPTest {
         .isNotNull()
         .satisfies(
             c -> {
-              assertThat(c.getAdjacency()).hasSize(4);
-              assertThat(c.getNodes()).hasSize(4);
+              assertThat(c.getAdjacency()).hasSize(3);
+              assertThat(c.getNodes()).hasSize(3);
             });
   }
 

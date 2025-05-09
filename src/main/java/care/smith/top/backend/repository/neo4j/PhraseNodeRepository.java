@@ -12,15 +12,19 @@ public interface PhraseNodeRepository
     extends Neo4jRepository<PhraseNodeEntity, Long>, CypherdslStatementExecutor<PhraseNodeEntity> {
 
   @Query(
-      "MATCH (d:Document)-[:HAS_PHRASE]-(p:Phrase)"
+      "MATCH (d:Document)-[:HAS_PHRASE]-(p:Phrase)-[:IN_CONCEPT]->(c:Concept {corpusId: $corpusId})"
           + "WHERE (d.docId = $documentId)"
           + "AND (NOT $exemplarOnly OR NOT (p.exemplar XOR $exemplarOnly))"
           + "RETURN DISTINCT p;")
-  List<PhraseNodeEntity> getPhrasesForDocument(String documentId, Boolean exemplarOnly);
+  List<PhraseNodeEntity> getPhrasesForDocument(
+      String documentId, String corpusId, Boolean exemplarOnly);
 
-  @Query("OPTIONAL MATCH (n:Phrase {phraseId: $phraseId})\n" + "RETURN n IS NOT NULL AS Predicate;")
-  Boolean phraseNodeExists(String phraseId);
+  @Query(
+      "OPTIONAL MATCH (n:Phrase {phraseId: $phraseId})-[:IN_CONCEPT]->(c:Concept {corpusId: $corpusId})"
+          + "RETURN n IS NOT NULL AS Predicate;")
+  Boolean phraseNodeExists(String phraseId, String corpusId);
 
-  @Query("MATCH (n:Phrase WHERE n.phraseId IN $phraseIds) RETURN DISTINCT n")
-  List<PhraseNodeEntity> getPhrasesForIds(List<String> phraseIds);
+  @Query(
+      "MATCH (n:Phrase WHERE n.phraseId IN $phraseIds)-[:IN_CONCEPT]->(c:Concept {corpusId: $corpusId}) RETURN DISTINCT n")
+  List<PhraseNodeEntity> getPhrasesForIds(List<String> phraseIds, String corpusId);
 }

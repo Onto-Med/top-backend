@@ -13,6 +13,7 @@ import care.smith.top.model.PipelineResponseStatus;
 import care.smith.top.top_document_query.adapter.TextAdapter;
 import care.smith.top.top_document_query.concept_cluster.ConceptPipelineManager;
 import care.smith.top.top_document_query.concept_cluster.model.ConceptGraphEntity;
+import care.smith.top.top_document_query.concept_cluster.model.PhraseDocumentObject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -20,6 +21,7 @@ import com.google.common.collect.Lists;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.neo4j.cypherdsl.core.Cypher;
@@ -67,7 +69,13 @@ public class ConceptClusterService implements ContentService {
   }
 
   public Boolean conceptClusterProcessesContainsKey(String pipelineId) {
-    return conceptClusterProcesses.containsKey(pipelineId);
+    if (conceptClusterProcesses.containsKey(pipelineId)) return true;
+    if (getCorpusIdsInNeo4j().contains(pipelineId)) {
+      conceptClusterProcesses.put(pipelineId, new Thread());
+      conceptClusterProcesses.get(pipelineId).start();
+      return true;
+    }
+    return false;
   }
 
   public HashMap<String, Thread> addToClusterProcesses(
@@ -255,36 +263,40 @@ public class ConceptClusterService implements ContentService {
   private void createGraphInNeo4j(
       String graphId, String processId, ConceptGraphEntity conceptGraph, TextAdapter adapter) {
     Map<String, List<String>> documentId2PhraseIdMap = new HashMap<>();
-    Map<String, Integer> phrasesDocumentCount = new HashMap<>();
     Map<String, PhraseNodeEntity> phraseNodeEntityMap = new HashMap<>();
+    Map<String, PhraseDocumentObject[]> phraseDocumentObjectsMap = new HashMap<>();
 
     Arrays.stream(conceptGraph.getNodes())
         .forEach(
             phraseNodeObject -> {
               Arrays.stream(phraseNodeObject.getDocuments())
                   .forEach(
-                      documentId -> {
-                        if (!documentId2PhraseIdMap.containsKey(documentId)) {
+                      documentObject -> {
+                        if (!documentId2PhraseIdMap.containsKey(documentObject.getId())) {
                           documentId2PhraseIdMap.put(
-                              documentId, Lists.newArrayList(phraseNodeObject.getId()));
+                              documentObject.getId(), Lists.newArrayList(phraseNodeObject.getId()));
                         } else {
-                          documentId2PhraseIdMap.get(documentId).add(phraseNodeObject.getId());
+                          documentId2PhraseIdMap
+                              .get(documentObject.getId())
+                              .add(phraseNodeObject.getId());
                         }
                       });
               phraseNodeEntityMap.put(
                   phraseNodeObject.getId(),
                   new PhraseNodeEntity(
                       null, false, phraseNodeObject.getLabel(), phraseNodeObject.getId()));
-              phrasesDocumentCount.put(
-                  phraseNodeObject.getId(), phraseNodeObject.getDocuments().length);
+              phraseDocumentObjectsMap.put(
+                  phraseNodeObject.getId(), phraseNodeObject.getDocuments());
             });
 
     // Save Concept Nodes (and by extension create relationships 'PHRASE--IN_CONCEPT->CONCEPT' as
     // well as Phrase nodes)
     if (!conceptNodeRepository.conceptNodeExists(processId, graphId)) {
       List<String> labels =
-          phrasesDocumentCount.entrySet().stream()
-              .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
+          phraseDocumentObjectsMap.entrySet().stream()
+              .sorted(
+                  Collections.reverseOrder(
+                      Comparator.comparingInt(entry -> entry.getValue().length)))
               .filter(nodeEntry -> phraseNodeEntityMap.containsKey(nodeEntry.getKey()))
               .map(nodeEntry -> phraseNodeEntityMap.get(nodeEntry.getKey()).phraseText())
               .limit(3)
@@ -314,14 +326,28 @@ public class ConceptClusterService implements ContentService {
           .forEach(
               documentEntityList ->
                   documentEntityList.forEach(
-                      documentEntity ->
-                          documentNodeRepository.save(
-                              new DocumentNodeEntity(
-                                  documentEntity.getId(),
-                                  documentEntity.getName(),
-                                  documentId2PhraseIdMap.get(documentEntity.getId()).stream()
-                                      .map(phraseNodeEntityMap::get)
-                                      .collect(Collectors.toSet())))));
+                      documentEntity -> {
+                        String docId = documentEntity.getId();
+                        DocumentNodeEntity dne =
+                            new DocumentNodeEntity(docId, documentEntity.getName());
+                        documentId2PhraseIdMap
+                            .get(docId)
+                            .forEach(
+                                s -> {
+                                  PhraseNodeEntity pne = phraseNodeEntityMap.get(s);
+                                  dne.addPhrases(
+                                      pne,
+                                      Arrays.stream(phraseDocumentObjectsMap.get(s))
+                                          .flatMap(
+                                              pdo -> {
+                                                if (Objects.equals(pdo.getId(), docId))
+                                                  return pdo.getOffsets().stream();
+                                                return Stream.empty();
+                                              })
+                                          .collect(Collectors.toList()));
+                                });
+                        documentNodeRepository.save(dne);
+                      }));
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

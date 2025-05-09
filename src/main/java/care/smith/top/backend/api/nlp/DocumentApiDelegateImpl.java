@@ -1,21 +1,19 @@
 package care.smith.top.backend.api.nlp;
 
-import static java.util.regex.Pattern.UNICODE_CASE;
-
 import care.smith.top.backend.api.DocumentApiDelegate;
 import care.smith.top.backend.service.nlp.DocumentService;
 import care.smith.top.backend.service.nlp.PhraseService;
 import care.smith.top.backend.util.ApiModelMapper;
+import care.smith.top.backend.util.nlp.DocumentRepresentation;
+import care.smith.top.backend.util.nlp.NLPUtils;
 import care.smith.top.model.Document;
 import care.smith.top.model.DocumentGatheringMode;
 import care.smith.top.model.DocumentPage;
-import care.smith.top.model.Phrase;
 import care.smith.top.top_document_query.adapter.TextAdapter;
 import care.smith.top.top_document_query.elasticsearch.DocumentEntity;
 import java.io.IOException;
 import java.util.*;
 import java.util.logging.Logger;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -30,8 +28,6 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
   private final DocumentService documentService;
   private final String COLOR_PRE = "$color::";
   private final String COLOR_AFTER = "::color$";
-  private final String BORDER_MARKUP =
-      "<span style=\"border: 2px solid black; padding: 3px; border-radius: 5px\">";
   private final Map<Character, String> REGEX_SPECIAL =
       Map.ofEntries(
           Map.entry('.', "\\."),
@@ -67,6 +63,7 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
       List<String> include) {
     page -= 1;
     TextAdapter adapter;
+    String corpusId = NLPUtils.stringConformity(dataSource);
     try {
       adapter = documentService.getAdapterForDataSource(dataSource);
     } catch (InstantiationException e) {
@@ -80,7 +77,9 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
     HashSet<String> finalDocumentIds = new HashSet<>();
     if (phraseIds != null && !phraseIds.isEmpty()) {
       finalDocumentIds.addAll(
-          documentService.getDocumentsForPhraseIds(Set.copyOf(phraseIds), exemplarOnly).stream()
+          documentService
+              .getDocumentsForPhraseIds(Set.copyOf(phraseIds), corpusId, exemplarOnly)
+              .stream()
               .map(Document::getId)
               .collect(Collectors.toSet()));
       neo4jFilterOn = true;
@@ -89,7 +88,8 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
       // 'gatheringMode' is only relevant for getting documents by 'conceptClusterIds'
       Set<String> conceptClusterIdSet =
           documentService
-              .getDocumentsForConceptIds(Set.copyOf(conceptClusterIds), exemplarOnly, gatheringMode)
+              .getDocumentsForConceptIds(
+                  Set.copyOf(conceptClusterIds), corpusId, exemplarOnly, gatheringMode)
               .stream()
               .map(Document::getId)
               .collect(Collectors.toSet());
@@ -102,7 +102,9 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
     }
     if (phraseText != null && !phraseText.isEmpty()) {
       Set<String> phraseTextSet =
-          documentService.getDocumentsForPhraseTexts(Set.copyOf(phraseText), exemplarOnly).stream()
+          documentService
+              .getDocumentsForPhraseTexts(Set.copyOf(phraseText), corpusId, exemplarOnly)
+              .stream()
               .map(Document::getId)
               .collect(Collectors.toSet());
       if (neo4jFilterOn) {
@@ -150,41 +152,35 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
       List<String> offsets,
       List<String> include) {
     TextAdapter adapter;
+    String corpusId = NLPUtils.stringConformity(dataSource);
     try {
       adapter = documentService.getAdapterForDataSource(dataSource);
     } catch (InstantiationException e) {
       LOGGER.severe("The text adapter '" + dataSource + "' could not be initialized.");
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
     }
+
     try {
       Document document = adapter.getDocumentById(documentId, false).orElseThrow();
       if (highlightConcepts == null) highlightConcepts = new ArrayList<>();
       if (offsets == null) offsets = new ArrayList<>();
 
-      String[] colors = new String[] {"yellow", "black"};
-      String conceptId = null;
+      DocumentRepresentation documentRepresentation =
+          DocumentRepresentation.of(document).addHighlightForOffsetsFromString(offsets, 1);
+      highlightConcepts.forEach(
+          highlightString -> {
+            String[] parsedString = parseHighlightString(highlightString);
+            String conceptId = parsedString[0];
+            String startTag = parsedString[1];
+            String endTag = parsedString[2];
+            documentRepresentation.addHighlightForOffsetsFromDocumentOffsets(
+                phraseService.getAllOffsetsForConceptInDocument(documentId, corpusId, conceptId),
+                startTag,
+                endTag,
+                0);
+          });
 
-      if (document.getHighlightedText() == null) document.setHighlightedText(document.getText());
-      addBorderToHighlights(document, offsets);
-
-      for (String concept : highlightConcepts) {
-        if (concept.startsWith(COLOR_PRE)) {
-          colors =
-              concept.substring(COLOR_PRE.length(), concept.lastIndexOf(COLOR_AFTER)).split("\\|");
-          conceptId = concept.substring(concept.lastIndexOf(COLOR_AFTER) + COLOR_AFTER.length());
-        } else {
-          conceptId = concept;
-        }
-        String finalConceptId = conceptId;
-
-        buildTextWithHighlights(
-            document,
-            colors,
-            phraseService.getPhrasesForConcept(finalConceptId).stream()
-                .map(Phrase::getText)
-                .collect(Collectors.toList()));
-      }
-      return ResponseEntity.ok(document);
+      return ResponseEntity.ok(documentRepresentation.buildDocument());
     } catch (IOException e) {
       LOGGER.fine("Server Instance could not be reached/queried.");
       return ResponseEntity.of(Optional.ofNullable(DocumentEntity.nullDocument()));
@@ -222,54 +218,30 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
     }
   }
 
-  private void addBorderToHighlights(Document document, List<String> offsets) {
-    String highlightTag = BORDER_MARKUP + "%s</span>";
-    StringBuilder highlightBuilder = new StringBuilder();
-    int curr = 0;
-    for (String offset : offsets) {
-      int begin = Integer.parseInt(offset.split("-")[0]);
-      int end = Integer.parseInt(offset.split("-")[1]);
-      highlightBuilder.append(document.getHighlightedText(), curr, begin);
-      highlightBuilder.append(
-          String.format(highlightTag, document.getHighlightedText().substring(begin, end)));
-      curr = end;
+  private String[] parseHighlightString(String highlightString) {
+    String conceptId;
+    String[] colors;
+    if (highlightString.startsWith(COLOR_PRE)) {
+      colors =
+          highlightString
+              .substring(COLOR_PRE.length(), highlightString.lastIndexOf(COLOR_AFTER))
+              .split("\\|");
+      conceptId =
+          highlightString.substring(
+              highlightString.lastIndexOf(COLOR_AFTER) + COLOR_AFTER.length());
+    } else {
+      colors = new String[] {"yellow", "black"};
+      conceptId = highlightString;
     }
-    highlightBuilder.append(document.getHighlightedText().substring(curr));
-    document.setHighlightedText(highlightBuilder.toString());
-  }
 
-  private void buildTextWithHighlights(Document document, String[] colors, List<String> terms) {
-    // ToDo: surrounding es highlights span with concept cluster highlight span needs to be seen if
-    // it works for all cases
     String colorBackgroundValue = colors[0];
     String colorForegroundValue = colors.length > 1 ? colors[1] : "black";
-    String markTag =
-        "<span style=\"background: %s; color: %s; padding: 2px; border-radius: 5px\">%s</span>";
-    if (terms == null) return;
-    for (String mark : terms) {
-      StringBuilder escapedString = new StringBuilder();
-      for (char character : mark.toCharArray()) {
-        if (REGEX_SPECIAL.containsKey(character)) {
-          escapedString.append(REGEX_SPECIAL.get(character));
-        } else {
-          escapedString.append(character);
-        }
-      }
-      String repl =
-          Pattern.compile(
-                  String.format("\\b(%s)?%s(</span>)?\\b", BORDER_MARKUP, escapedString),
-                  Pattern.CASE_INSENSITIVE | UNICODE_CASE)
-              .matcher(document.getHighlightedText())
-              .replaceAll(
-                  matchResult ->
-                      String.format(
-                          markTag,
-                          colorBackgroundValue,
-                          colorForegroundValue,
-                          document
-                              .getHighlightedText()
-                              .substring(matchResult.start(), matchResult.end())));
-      document.highlightedText(repl);
-    }
+    return new String[] {
+      conceptId,
+      String.format(
+          "<span style=\"background: %s; color: %s; padding: 2px; border-radius: 5px\">",
+          colorBackgroundValue, colorForegroundValue),
+      "</span>"
+    };
   }
 }

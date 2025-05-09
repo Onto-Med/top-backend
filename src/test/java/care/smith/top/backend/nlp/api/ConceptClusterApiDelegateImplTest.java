@@ -1,8 +1,9 @@
-package care.smith.top.backend.api.nlp;
+package care.smith.top.backend.nlp.api;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import care.smith.top.backend.AbstractNLPTest;
+import care.smith.top.backend.api.nlp.ConceptClusterApiDelegateImpl;
+import care.smith.top.backend.nlp.AbstractNLPTest;
 import care.smith.top.backend.service.nlp.ConceptClusterService;
 import java.io.IOException;
 import java.util.List;
@@ -12,7 +13,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class ConceptClusterApiDelegateImplTest extends AbstractNLPTest {
-
+  private final String exampleDatasource = "exampledatasource";
   private ConceptClusterApiDelegateImpl conceptClusterApi;
 
   @BeforeEach
@@ -34,7 +35,7 @@ class ConceptClusterApiDelegateImplTest extends AbstractNLPTest {
         Set.copyOf(
             conceptClusterApi
                 .getConceptClusters(
-                    List.of("something"), List.of("p1", "p2"), false, null, null, null)
+                    List.of("something"), List.of("p1", "p2"), false, exampleDatasource, null, null)
                 .getBody()
                 .getContent()));
     assertEquals(
@@ -42,7 +43,7 @@ class ConceptClusterApiDelegateImplTest extends AbstractNLPTest {
         Set.copyOf(
             conceptClusterApi
                 .getConceptClusters(
-                    List.of("another"), List.of("p1", "p2"), false, null, null, null)
+                    List.of("another"), List.of("p1", "p2"), false, exampleDatasource, null, null)
                 .getBody()
                 .getContent()));
   }
@@ -50,9 +51,11 @@ class ConceptClusterApiDelegateImplTest extends AbstractNLPTest {
   @Test
   void getConceptClusterById() {
     assertEquals(
-        concepts1.get(0), conceptClusterApi.getConceptClusterById("c1", null, null).getBody());
+        concepts1.get(0),
+        conceptClusterApi.getConceptClusterById("c1", exampleDatasource, null).getBody());
     assertEquals(
-        concepts2.get(0), conceptClusterApi.getConceptClusterById("c2", null, null).getBody());
+        concepts2.get(0),
+        conceptClusterApi.getConceptClusterById("c2", exampleDatasource, null).getBody());
   }
 
   @Test
@@ -62,7 +65,7 @@ class ConceptClusterApiDelegateImplTest extends AbstractNLPTest {
         Set.copyOf(
             Objects.requireNonNull(
                     conceptClusterApi
-                        .getConceptClusterByDocumentId("d2", "exampleDatasource", null, 0)
+                        .getConceptClusterByDocumentId("d2", exampleDatasource, null, 0)
                         .getBody())
                 .getContent()));
   }

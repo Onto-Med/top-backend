@@ -1,6 +1,7 @@
-package care.smith.top.backend.api.nlp;
+package care.smith.top.backend.nlp.api;
 
-import care.smith.top.backend.AbstractNLPTest;
+import care.smith.top.backend.api.nlp.DocumentApiDelegateImpl;
+import care.smith.top.backend.nlp.AbstractNLPTest;
 import care.smith.top.model.Document;
 import care.smith.top.model.DocumentGatheringMode;
 import care.smith.top.model.DocumentPage;
@@ -15,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 
 class DocumentApiDelegateImplTest extends AbstractNLPTest {
   private static DocumentApiDelegateImpl documentApi;
+  private final String exampleDatasource = "exampledatasource";
 
   @BeforeAll
   static void setUp() throws IOException, InstantiationException {
@@ -25,37 +27,37 @@ class DocumentApiDelegateImplTest extends AbstractNLPTest {
   void getDocuments() {
     ResponseEntity<DocumentPage> response1 =
         documentApi.getDocuments(
-            "exampleDataSource", null, null, null, null, null, null, null, 0, null);
+            exampleDatasource, null, null, null, null, null, null, null, 0, null);
     Assertions.assertEquals(
         documents1_2, Set.copyOf(Objects.requireNonNull(response1.getBody()).getContent()));
 
     ResponseEntity<DocumentPage> response2 =
         documentApi.getDocuments(
-            "exampleDataSource", "Document", null, null, null, null, null, null, 0, null);
+            exampleDatasource, "Document", null, null, null, null, null, null, 0, null);
     Assertions.assertEquals(
         documents1_2, Set.copyOf(Objects.requireNonNull(response2.getBody()).getContent()));
 
     ResponseEntity<DocumentPage> response3 =
         documentApi.getDocuments(
-            "exampleDataSource", null, List.of("d1"), null, null, null, null, null, 0, null);
+            exampleDatasource, null, List.of("d1"), null, null, null, null, null, 0, null);
     Assertions.assertEquals(
         documents1, Set.copyOf(Objects.requireNonNull(response3.getBody()).getContent()));
 
     ResponseEntity<DocumentPage> response4 =
         documentApi.getDocuments(
-            "exampleDataSource", null, null, List.of("p1", "p2"), null, null, null, null, 0, null);
+            exampleDatasource, null, null, List.of("p1", "p2"), null, null, null, null, 0, null);
     Assertions.assertEquals(
         documents1_2, Set.copyOf(Objects.requireNonNull(response4.getBody()).getContent()));
 
     ResponseEntity<DocumentPage> response5 =
         documentApi.getDocuments(
-            "exampleDataSource", null, null, List.of("p1", "p2"), null, null, null, true, 0, null);
+            exampleDatasource, null, null, List.of("p1", "p2"), null, null, null, true, 0, null);
     Assertions.assertEquals(
         documents2, Set.copyOf(Objects.requireNonNull(response5.getBody()).getContent()));
 
     ResponseEntity<DocumentPage> response6 =
         documentApi.getDocuments(
-            "exampleDataSource",
+            exampleDatasource,
             null,
             null,
             null,
@@ -70,7 +72,7 @@ class DocumentApiDelegateImplTest extends AbstractNLPTest {
 
     ResponseEntity<DocumentPage> response7 =
         documentApi.getDocuments(
-            "exampleDataSource",
+            exampleDatasource,
             null,
             List.of("d1"),
             null,
@@ -87,10 +89,10 @@ class DocumentApiDelegateImplTest extends AbstractNLPTest {
   @Test
   void getSingleDocumentById() {
     ResponseEntity<Document> response1 =
-        documentApi.getSingleDocumentById("d1", "exampleDataSource", null, null, null);
+        documentApi.getSingleDocumentById("d1", exampleDatasource, null, null, null);
     Assertions.assertEquals(documents1, Set.of(Objects.requireNonNull(response1.getBody())));
     ResponseEntity<Document> response2 =
-        documentApi.getSingleDocumentById("d2", "exampleDataSource", null, null, null);
+        documentApi.getSingleDocumentById("d2", exampleDatasource, null, null, null);
     Assertions.assertEquals(documents2, Set.of(Objects.requireNonNull(response2.getBody())));
   }
 }

@@ -1,14 +1,18 @@
 package care.smith.top.backend.service.nlp;
 
+import care.smith.top.backend.model.neo4j.OffsetEntity;
 import care.smith.top.backend.model.neo4j.PhraseNodeEntity;
+import care.smith.top.backend.repository.neo4j.PhraseDocumentRelationRepository;
 import care.smith.top.backend.repository.neo4j.PhraseNodeRepository;
 import care.smith.top.backend.service.ContentService;
+import care.smith.top.backend.util.nlp.DocumentOffset;
 import care.smith.top.model.Phrase;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import org.neo4j.cypherdsl.core.Cypher;
 import org.neo4j.cypherdsl.core.Node;
@@ -19,10 +23,15 @@ import org.springframework.stereotype.Service;
 @Service
 public class PhraseService implements ContentService {
 
-  private final PhraseNodeRepository phraseRepository;
+  private static final Logger logger = Logger.getLogger(PhraseService.class.getName());
 
-  public PhraseService(PhraseNodeRepository phraseRepository) {
+  private final PhraseNodeRepository phraseRepository;
+  private final PhraseDocumentRelationRepository relationRepository;
+
+  public PhraseService(
+      PhraseNodeRepository phraseRepository, PhraseDocumentRelationRepository relationRepository) {
     this.phraseRepository = phraseRepository;
+    this.relationRepository = relationRepository;
   }
 
   static Statement phraseInDocument(String documentId, Boolean mostImportantOnly) {
@@ -39,11 +48,13 @@ public class PhraseService implements ContentService {
         .build();
   }
 
-  static Statement phraseInConcept(String conceptId) {
+  static Statement phraseInConcept(String conceptId, String corpusId) {
     Node phrase = Cypher.node("Phrase").named("phrase");
     Node concept =
         Cypher.node("Concept")
-            .withProperties("conceptId", Cypher.literalOf(conceptId))
+            .withProperties(
+                "conceptId", Cypher.literalOf(conceptId),
+                "corpusId", Cypher.literalOf(corpusId))
             .named("concept");
     return Cypher.match(phrase.relationshipTo(concept, "IN_CONCEPT"))
         .returningDistinct(phrase)
@@ -64,12 +75,16 @@ public class PhraseService implements ContentService {
     return Cypher.match(phrase).returning(phrase).build();
   }
 
-  static Statement phraseWithExactId(String phraseId) {
+  static Statement phraseWithExactId(String phraseId, String corpusId) {
+    Node concept =
+        Cypher.node("Concept")
+            .withProperties("corpusId", Cypher.literalOf(corpusId))
+            .named("concept");
     Node phrase =
         Cypher.node("Phrase")
             .withProperties("phraseId", Cypher.literalOf(phraseId))
             .named("phrase");
-    return Cypher.match(phrase).returning(phrase).build();
+    return Cypher.match(phrase.relationshipTo(concept, "IN_CONCEPT")).returning(phrase).build();
   }
 
   private final Function<PhraseNodeEntity, Phrase> phraseMapper =
@@ -87,22 +102,31 @@ public class PhraseService implements ContentService {
   }
 
   @Cacheable("phraseByConcept")
-  public List<Phrase> getPhrasesForConcept(String conceptId) {
-    return phraseRepository.findAll(phraseInConcept(conceptId)).stream()
+  public List<Phrase> getPhrasesForConcept(String conceptId, String corpusId) {
+    return phraseRepository.findAll(phraseInConcept(conceptId, corpusId)).stream()
         .map(phraseMapper)
         .collect(Collectors.toList());
+  }
+
+  public List<DocumentOffset> getAllOffsetsForConceptInDocument(
+      String documentId, String corpusId, String conceptId) {
+    return relationRepository
+        .getPhraseRelationshipsByDocumentAndConcept(documentId, corpusId, conceptId)
+        .stream()
+        .flatMap(r -> OffsetEntity.fromJsonString(r.getOffsets()).getOffsets().stream())
+        .toList();
   }
 
   public List<Phrase> getAllPhrases() {
     return phraseRepository.findAll().stream().map(phraseMapper).collect(Collectors.toList());
   }
 
-  public Optional<Phrase> getPhraseById(String phraseId) {
-    return phraseRepository.findOne(phraseWithExactId(phraseId)).map(phraseMapper);
+  public Optional<Phrase> getPhraseById(String phraseId, String corpusId) {
+    return phraseRepository.findOne(phraseWithExactId(phraseId, corpusId)).map(phraseMapper);
   }
 
-  public List<Phrase> getPhrasesByIds(List<String> phraseIds) {
-    return phraseRepository.getPhrasesForIds(phraseIds).stream()
+  public List<Phrase> getPhrasesByIds(List<String> phraseIds, String corpusId) {
+    return phraseRepository.getPhrasesForIds(phraseIds, corpusId).stream()
         .map(phraseMapper)
         .collect(Collectors.toList());
   }
@@ -125,8 +149,9 @@ public class PhraseService implements ContentService {
         .collect(Collectors.toList());
   }
 
-  public List<Phrase> getPhrasesForDocument(String documentId, Boolean mostImportantOnly) {
-    return phraseRepository.getPhrasesForDocument(documentId, mostImportantOnly).stream()
+  public List<Phrase> getPhrasesForDocument(
+      String documentId, String corpusId, Boolean mostImportantOnly) {
+    return phraseRepository.getPhrasesForDocument(documentId, corpusId, mostImportantOnly).stream()
         .map(phraseMapper)
         .collect(Collectors.toList());
   }
