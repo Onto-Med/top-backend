@@ -41,6 +41,9 @@ public class EncounterDao {
   @OneToMany(mappedBy = "encounter", cascade = CascadeType.ALL)
   private List<SubjectResourceDao> subjectResources = null;
 
+  @OneToMany(mappedBy = "encounter", cascade = CascadeType.ALL)
+  private List<ExpectedResultDao> expectedResults = null;
+
   public EncounterDao() {}
 
   public EncounterDao(@NotNull String dataSourceId, String encounterId) {
@@ -147,6 +150,17 @@ public class EncounterDao {
     return this;
   }
 
+  public EncounterDao expectedResults(List<ExpectedResultDao> expectedResultDaos) {
+    this.expectedResults = expectedResultDaos;
+    return this;
+  }
+
+  public EncounterDao addExpectedResults(ExpectedResultDao... expectedResultDaos) {
+    if (expectedResults == null) expectedResults = new ArrayList<>();
+    expectedResults.addAll(List.of(expectedResultDaos));
+    return this;
+  }
+
   public String getDataSourceId() {
     return encounterKey.getDataSourceId();
   }
@@ -177,6 +191,10 @@ public class EncounterDao {
 
   public List<SubjectResourceDao> getSubjectResources() {
     return subjectResources;
+  }
+
+  public List<ExpectedResultDao> getExpectedResults() {
+    return expectedResults;
   }
 
   @Nullable
