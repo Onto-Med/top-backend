@@ -277,10 +277,19 @@ public class ExpectedResultDao {
       return true;
     } else if (other == null) {
       return false;
-    } else {
-      return Objects.equals(value.getDataType(), other.getDataType())
-          && Objects.equals(value.getFields(), other.getFields());
+    } else if (Objects.equals(value.getDataType(), other.getDataType())) {
+      if (value instanceof BooleanValue) {
+        return Objects.equals(((BooleanValue) value).isValue(), ((BooleanValue) other).isValue());
+      } else if (value instanceof NumberValue) {
+        return Objects.equals(((NumberValue) value).getValue(), ((NumberValue) other).getValue());
+      } else if (value instanceof StringValue) {
+        return Objects.equals(((StringValue) value).getValue(), ((StringValue) other).getValue());
+      } else if (value instanceof DateTimeValue) {
+        return Objects.equals(
+            ((DateTimeValue) value).getValue(), ((DateTimeValue) other).getValue());
+      }
     }
+    return false;
   }
 
   @Embeddable
