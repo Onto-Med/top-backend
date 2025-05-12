@@ -213,7 +213,7 @@ public class RepositoryService implements ContentService {
           "Could not test repository. Query has failed for the provided test data.");
     }
 
-    Stream<TestReport> reports =
+    List<TestReport> reports =
         expectedResults.stream()
             .map(
                 er -> {
@@ -228,18 +228,28 @@ public class RepositoryService implements ContentService {
                   care.smith.top.model.Value actual = values.stream().findFirst().orElse(null);
 
                   return er.toReport(actual);
-                });
+                })
+            .toList();
 
-    return Streams.concat(
-            reports,
-            // TODO: exclude if already present in reports
-            resultSet.getPhenotypes().stream()
-                .flatMap(
-                    p ->
-                        p.values().stream()
-                            .filter(v -> projectionIds.contains(v.getPhenotypeName()))
-                            .flatMap(v -> toTestReport(dataSourceId, p.getSubjectId(), v))))
-        .toList();
+    Stream<TestReport> remaining =
+        resultSet.getPhenotypes().stream()
+            .flatMap(
+                p ->
+                    p.values().stream()
+                        .filter(v -> projectionIds.contains(v.getPhenotypeName()))
+                        .flatMap(v -> toTestReport(dataSourceId, p.getSubjectId(), v)))
+            .filter(
+                a ->
+                    reports.stream()
+                        .noneMatch(
+                            e ->
+                                Objects.equals(a.getSubjectId(), e.getSubjectId())
+                                    && Objects.equals(a.getEncounterId(), e.getEncounterId())
+                                    && Objects.equals(a.getEntityId(), e.getEntityId())
+                                    && Objects.equals(a.getActual(), e.getActual())))
+            .sorted(Comparator.comparing(TestReport::getSubjectId));
+
+    return Streams.concat(reports.stream(), remaining).toList();
   }
 
   private Stream<TestReport> toTestReport(
