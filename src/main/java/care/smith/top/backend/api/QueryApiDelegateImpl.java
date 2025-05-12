@@ -158,6 +158,8 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
     return new ResponseEntity<>(HttpStatus.CREATED);
   }
 
+  @PreAuthorize(
+      "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.jpa.OrganisationDao', 'READ')")
   @Override
   public ResponseEntity<List<DataSource>> getOrganisationDataSources(
       String organisationId, QueryType queryType) {
