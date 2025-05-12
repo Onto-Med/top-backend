@@ -107,9 +107,15 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
   }
 
   @Override
-  @PreAuthorize("hasRole('ADMIN')")
+  @PreAuthorize(
+      "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.jpa.OrganisationDao', 'MANAGE')")
+  @Transactional
   public ResponseEntity<Void> uploadDataSource(
-      MultipartFile file, DataSourceFileType fileType, String dataSourceId, String config) {
+      String organisationId,
+      MultipartFile file,
+      DataSourceFileType fileType,
+      String dataSourceId,
+      String config) {
     try {
       BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream()));
       DataImport.getInstance(
@@ -142,7 +148,8 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
                   .map(c -> c + "=" + c)
                   .collect(Collectors.joining(";")))
           .run();
-      dataSourceRepository.save(new DataSourceDao(dataSourceId));
+      DataSourceDao dataSource = dataSourceRepository.save(new DataSourceDao(dataSourceId));
+      organisationService.addOrganisationDataSource(organisationId, dataSource.toApiModel());
     } catch (IOException e) {
       throw new ResponseStatusException(
           HttpStatus.INTERNAL_SERVER_ERROR,
