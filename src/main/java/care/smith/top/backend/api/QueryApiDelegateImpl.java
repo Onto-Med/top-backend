@@ -71,24 +71,16 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
   public ResponseEntity<QueryResult> enqueueQuery(
       String organisationId, String repositoryId, Query query) {
 
-    switch (query.getType()) {
-      case PHENOTYPE:
-        return new ResponseEntity<>(
-            phenotypeQueryService.enqueueQuery(organisationId, repositoryId, query),
-            HttpStatus.CREATED);
-      case CONCEPT:
-        return new ResponseEntity<>(
-            documentQueryService.enqueueQuery(organisationId, repositoryId, query),
-            HttpStatus.CREATED);
-      default:
-        throw new ResponseStatusException(
-            HttpStatus.NOT_ACCEPTABLE,
-            String.format(
-                "Query type is not valid; must be one of [%s]",
-                Arrays.stream(QueryType.values())
-                    .map(QueryType::toString)
-                    .collect(Collectors.joining(", "))));
-    }
+    return switch (query.getType()) {
+      case PHENOTYPE ->
+          new ResponseEntity<>(
+              phenotypeQueryService.enqueueQuery(organisationId, repositoryId, query),
+              HttpStatus.CREATED);
+      case CONCEPT ->
+          new ResponseEntity<>(
+              documentQueryService.enqueueQuery(organisationId, repositoryId, query),
+              HttpStatus.CREATED);
+    };
   }
 
   @Override
@@ -220,14 +212,10 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
   }
 
   private QueryService getQueryService(String organisationId, String repositoryId, UUID queryId) {
-    switch (getQueryType(organisationId, repositoryId, queryId)) {
-      case PHENOTYPE:
-        return phenotypeQueryService;
-      case CONCEPT:
-        return documentQueryService;
-      default:
-        throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "No such query found.");
-    }
+    return switch (getQueryType(organisationId, repositoryId, queryId)) {
+      case PHENOTYPE -> phenotypeQueryService;
+      case CONCEPT -> documentQueryService;
+    };
   }
 
   private QueryType getQueryType(String organisationId, String repositoryId, UUID queryId) {

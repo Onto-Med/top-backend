@@ -123,8 +123,8 @@ public class ExpectedResultDao {
   @Override
   public String toString() {
     String ls = System.lineSeparator();
-    StringBuffer sb =
-        new StringBuffer(
+    StringBuilder sb =
+        new StringBuilder(
             "ExpectedResultDao|"
                 + getDataSourceId()
                 + "|"
@@ -132,13 +132,13 @@ public class ExpectedResultDao {
                 + "|"
                 + phenotypeId
                 + ls);
-    sb.append("--------------------------------------------------" + ls);
-    sb.append("subject: " + subject + ls);
-    sb.append("encounter: " + encounter + ls);
-    if (numberValue != null) sb.append("numberValue: " + numberValue + ls);
-    if (textValue != null) sb.append("textValue: " + textValue + ls);
-    if (booleanValue != null) sb.append("booleanValue: " + booleanValue + ls);
-    if (dateTimeValue != null) sb.append("dateTimeValue: " + dateTimeValue + ls);
+    sb.append("--------------------------------------------------").append(ls);
+    sb.append("subject: ").append(subject).append(ls);
+    sb.append("encounter: ").append(encounter).append(ls);
+    if (numberValue != null) sb.append("numberValue: ").append(numberValue).append(ls);
+    if (textValue != null) sb.append("textValue: ").append(textValue).append(ls);
+    if (booleanValue != null) sb.append("booleanValue: ").append(booleanValue).append(ls);
+    if (dateTimeValue != null) sb.append("dateTimeValue: ").append(dateTimeValue).append(ls);
     return sb.toString();
   }
 
