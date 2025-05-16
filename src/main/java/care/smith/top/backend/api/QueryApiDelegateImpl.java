@@ -71,24 +71,16 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
   public ResponseEntity<QueryResult> enqueueQuery(
       String organisationId, String repositoryId, Query query) {
 
-    switch (query.getType()) {
-      case PHENOTYPE:
-        return new ResponseEntity<>(
-            phenotypeQueryService.enqueueQuery(organisationId, repositoryId, query),
-            HttpStatus.CREATED);
-      case CONCEPT:
-        return new ResponseEntity<>(
-            documentQueryService.enqueueQuery(organisationId, repositoryId, query),
-            HttpStatus.CREATED);
-      default:
-        throw new ResponseStatusException(
-            HttpStatus.NOT_ACCEPTABLE,
-            String.format(
-                "Query type is not valid; must be one of [%s]",
-                Arrays.stream(QueryType.values())
-                    .map(QueryType::toString)
-                    .collect(Collectors.joining(", "))));
-    }
+    return switch (query.getType()) {
+      case PHENOTYPE ->
+          new ResponseEntity<>(
+              phenotypeQueryService.enqueueQuery(organisationId, repositoryId, query),
+              HttpStatus.CREATED);
+      case CONCEPT ->
+          new ResponseEntity<>(
+              documentQueryService.enqueueQuery(organisationId, repositoryId, query),
+              HttpStatus.CREATED);
+    };
   }
 
   @Override
@@ -107,9 +99,15 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
   }
 
   @Override
-  @PreAuthorize("hasRole('ADMIN')")
+  @PreAuthorize(
+      "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.jpa.OrganisationDao', 'MANAGE')")
+  @Transactional
   public ResponseEntity<Void> uploadDataSource(
-      MultipartFile file, DataSourceFileType fileType, String dataSourceId, String config) {
+      String organisationId,
+      MultipartFile file,
+      DataSourceFileType fileType,
+      String dataSourceId,
+      String config) {
     try {
       BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream()));
       DataImport.getInstance(
@@ -142,7 +140,8 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
                   .map(c -> c + "=" + c)
                   .collect(Collectors.joining(";")))
           .run();
-      dataSourceRepository.save(new DataSourceDao(dataSourceId));
+      DataSourceDao dataSource = dataSourceRepository.save(new DataSourceDao(dataSourceId));
+      organisationService.addOrganisationDataSource(organisationId, dataSource.toApiModel());
     } catch (IOException e) {
       throw new ResponseStatusException(
           HttpStatus.INTERNAL_SERVER_ERROR,
@@ -158,6 +157,8 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
     return new ResponseEntity<>(HttpStatus.CREATED);
   }
 
+  @PreAuthorize(
+      "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.jpa.OrganisationDao', 'READ')")
   @Override
   public ResponseEntity<List<DataSource>> getOrganisationDataSources(
       String organisationId, QueryType queryType) {
@@ -211,14 +212,10 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
   }
 
   private QueryService getQueryService(String organisationId, String repositoryId, UUID queryId) {
-    switch (getQueryType(organisationId, repositoryId, queryId)) {
-      case PHENOTYPE:
-        return phenotypeQueryService;
-      case CONCEPT:
-        return documentQueryService;
-      default:
-        throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "No such query found.");
-    }
+    return switch (getQueryType(organisationId, repositoryId, queryId)) {
+      case PHENOTYPE -> phenotypeQueryService;
+      case CONCEPT -> documentQueryService;
+    };
   }
 
   private QueryType getQueryType(String organisationId, String repositoryId, UUID queryId) {

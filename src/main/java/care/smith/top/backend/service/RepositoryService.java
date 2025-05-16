@@ -4,24 +4,25 @@ import care.smith.top.backend.model.jpa.EntityDao;
 import care.smith.top.backend.model.jpa.OrganisationDao;
 import care.smith.top.backend.model.jpa.RepositoryDao;
 import care.smith.top.backend.model.jpa.RepositoryDao_;
+import care.smith.top.backend.model.jpa.datasource.EncounterDao;
 import care.smith.top.backend.model.jpa.datasource.ExpectedResultDao;
 import care.smith.top.backend.repository.jpa.OrganisationRepository;
 import care.smith.top.backend.repository.jpa.PhenotypeRepository;
 import care.smith.top.backend.repository.jpa.RepositoryRepository;
+import care.smith.top.backend.repository.jpa.datasource.EncounterRepository;
 import care.smith.top.backend.repository.jpa.datasource.ExpectedResultRepository;
 import care.smith.top.model.*;
 import care.smith.top.top_phenotypic_query.result.PhenotypeValues;
 import care.smith.top.top_phenotypic_query.result.ResultSet;
+import com.google.common.collect.Streams;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Stream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
@@ -48,6 +49,7 @@ public class RepositoryService implements ContentService {
 
   @Autowired private RepositoryRepository repositoryRepository;
   @Autowired private OrganisationRepository organisationRepository;
+  @Autowired private EncounterRepository encounterRepository;
   @Autowired private ExpectedResultRepository expectedResultRepository;
   @Autowired private PhenotypeRepository phenotypeRepository;
   @Autowired private UserService userService;
@@ -190,10 +192,10 @@ public class RepositoryService implements ContentService {
 
     if (expectedResults.isEmpty()) return new ArrayList<>();
 
+    List<String> projectionIds =
+        expectedResults.stream().map(ExpectedResultDao::getPhenotypeId).distinct().toList();
     List<ProjectionEntry> projection =
-        expectedResults.stream()
-            .map(ExpectedResultDao::getPhenotypeId)
-            .distinct()
+        projectionIds.stream()
             .map(id -> new ProjectionEntry(id, ProjectionEntry.TypeEnum.PROJECTION_ENTRY))
             .toList();
 
@@ -211,21 +213,62 @@ public class RepositoryService implements ContentService {
           "Could not test repository. Query has failed for the provided test data.");
     }
 
-    return expectedResults.stream()
-        .map(
-            er -> {
-              DateTimeRestriction dateRange =
-                  er.getEncounter() != null ? er.getEncounter().toDateRange() : null;
-              List<care.smith.top.model.Value> values =
-                  Objects.requireNonNullElse(
-                          resultSet.getValues(er.getEncounterId(), er.getPhenotypeId()),
-                          new PhenotypeValues(er.getPhenotypeId()))
-                      .getValues(dateRange);
+    List<TestReport> reports =
+        expectedResults.stream()
+            .map(
+                er -> {
+                  DateTimeRestriction dateRange =
+                      er.getEncounter() != null ? er.getEncounter().toDateRange() : null;
+                  List<care.smith.top.model.Value> values =
+                      Objects.requireNonNullElse(
+                              resultSet.getValues(er.getEncounterId(), er.getPhenotypeId()),
+                              new PhenotypeValues(er.getPhenotypeId()))
+                          .getValues(dateRange);
 
-              care.smith.top.model.Value actual = values.stream().findFirst().orElse(null);
+                  care.smith.top.model.Value actual = values.stream().findFirst().orElse(null);
 
-              return er.toReport(actual);
-            })
-        .toList();
+                  return er.toReport(actual);
+                })
+            .toList();
+
+    Stream<TestReport> remaining =
+        resultSet.getPhenotypes().stream()
+            .flatMap(
+                p ->
+                    p.values().stream()
+                        .filter(v -> projectionIds.contains(v.getPhenotypeName()))
+                        .flatMap(v -> toTestReport(dataSourceId, p.getSubjectId(), v)))
+            .filter(
+                a ->
+                    reports.stream()
+                        .noneMatch(
+                            e ->
+                                Objects.equals(a.getSubjectId(), e.getSubjectId())
+                                    && Objects.equals(a.getEncounterId(), e.getEncounterId())
+                                    && Objects.equals(a.getEntityId(), e.getEntityId())
+                                    && Objects.equals(a.getActual(), e.getActual())))
+            .sorted(Comparator.comparing(TestReport::getSubjectId));
+
+    return Streams.concat(reports.stream(), remaining).toList();
+  }
+
+  private Stream<TestReport> toTestReport(
+      String dataSourceId, String encounterId, PhenotypeValues phenotypeValues) {
+    Optional<EncounterDao> encounter =
+        encounterRepository.findByEncounterKeyDataSourceIdAndEncounterKeyEncounterId(
+            dataSourceId, encounterId);
+    return phenotypeValues.values().stream()
+        .flatMap(
+            v ->
+                v.stream()
+                    .map(
+                        w ->
+                            new TestReport(
+                                    null,
+                                    phenotypeValues.getPhenotypeName(),
+                                    encounter.map(EncounterDao::getSubjectId).orElse(null),
+                                    encounterId,
+                                    null)
+                                .actual(w)));
   }
 }
