@@ -76,14 +76,12 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
       String organisationId, String repositoryId, Query query) {
 
     return switch (query.getType()) {
-      case PHENOTYPE ->
-          new ResponseEntity<>(
-              phenotypeQueryService.enqueueQuery(organisationId, repositoryId, query),
-              HttpStatus.CREATED);
-      case CONCEPT ->
-          new ResponseEntity<>(
-              documentQueryService.enqueueQuery(organisationId, repositoryId, query),
-              HttpStatus.CREATED);
+      case PHENOTYPE -> new ResponseEntity<>(
+          phenotypeQueryService.enqueueQuery(organisationId, repositoryId, query),
+          HttpStatus.CREATED);
+      case CONCEPT -> new ResponseEntity<>(
+          documentQueryService.enqueueQuery(organisationId, repositoryId, query),
+          HttpStatus.CREATED);
     };
   }
 
