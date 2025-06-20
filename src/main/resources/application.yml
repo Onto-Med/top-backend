@@ -72,7 +72,7 @@ top:
     data-source-config-dir: ${DOCUMENT_DATA_SOURCE_CONFIG_DIR:config/data_sources/nlp}
     default-adapter: ${DOCUMENT_DEFAULT_ADAPTER:#{null}}
     concept-graphs-api:
-      uri: ${CONCEPT_GRAPHS_API_ENDPOINT:http://localhost:9007}
+      uri: ${CONCEPT_GRAPHS_API_ENDPOINT:http://localhost:9010}
     security:
       graphdb:
         username: ${DB_NEO4J_USER:neo4j}
