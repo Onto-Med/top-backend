@@ -84,11 +84,7 @@ public class ConceptGraphsService implements ContentService {
     String stringResponse = pipelineManager.deleteProcess(processId);
     if (stringResponse.toLowerCase().contains("no such process")) {
       return pipelineResponse.response(stringResponse).status(PipelineResponseStatus.FAILED);
-    } else if (stringResponse.toLowerCase().contains("is currently running")) {
-      return pipelineResponse.response(stringResponse).status(PipelineResponseStatus.RUNNING);
-    } else if (stringResponse
-        .toLowerCase()
-        .contains(String.format("process '%s' deleted", processId.toLowerCase()))) {
+    } else if (stringResponse.toLowerCase().contains("set to be deleted")) {
       return pipelineResponse.response(stringResponse).status(PipelineResponseStatus.SUCCESSFUL);
     }
     return pipelineResponse.response(stringResponse).status(PipelineResponseStatus.FAILED);

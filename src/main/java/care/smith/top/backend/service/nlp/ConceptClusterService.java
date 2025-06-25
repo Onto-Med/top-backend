@@ -19,7 +19,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.common.collect.Lists;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.util.*;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -38,11 +40,12 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class ConceptClusterService implements ContentService {
+  private static final Logger LOGGER = Logger.getLogger(ConceptClusterService.class.getName());
 
   @Value("${spring.paging.page-size:10}")
   private int pageSize = 10;
 
-  private final ConceptPipelineManager pipelineManager;
+  private ConceptPipelineManager pipelineManager = null;
   private final ConceptClusterNodeRepository conceptNodeRepository;
   private final PhraseNodeRepository phraseNodeRepository;
   private final DocumentNodeRepository documentNodeRepository;
@@ -53,7 +56,12 @@ public class ConceptClusterService implements ContentService {
       ConceptClusterNodeRepository conceptNodeRepository,
       PhraseNodeRepository phraseNodeRepository,
       DocumentNodeRepository documentNodeRepository) {
-    pipelineManager = new ConceptPipelineManager(conceptGraphsApiUri);
+    try {
+      pipelineManager = new ConceptPipelineManager(conceptGraphsApiUri);
+    } catch (MalformedURLException e) {
+      LOGGER.severe(
+          "Couldn't initialize pipelineManager; document related functions won't be available.");
+    }
     conceptClusterProcesses = new HashMap<>();
     this.conceptNodeRepository = conceptNodeRepository;
     this.phraseNodeRepository = phraseNodeRepository;

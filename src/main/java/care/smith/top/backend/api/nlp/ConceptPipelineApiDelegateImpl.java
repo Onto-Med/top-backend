@@ -62,11 +62,9 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
     PipelineResponse clusterResponse =
         conceptClusterService.deleteCompletePipelineAndResults(finalPipelineId);
     PipelineResponse graphResponse = conceptGraphsService.deletePipeline(finalPipelineId);
-    if ((clusterResponse.getStatus().equals(PipelineResponseStatus.SUCCESSFUL)
-            && graphResponse.getStatus().equals(PipelineResponseStatus.SUCCESSFUL))
-        || graphResponse
-            .getResponse()
-            .contains(String.format("no such process '%s'", finalPipelineId)))
+    if ((Objects.equals(clusterResponse.getStatus(), PipelineResponseStatus.SUCCESSFUL)
+            && Objects.equals(graphResponse.getStatus(), PipelineResponseStatus.SUCCESSFUL))
+        || Objects.requireNonNull(graphResponse.getResponse()).contains("no such process"))
       return ResponseEntity.ok().build();
     return ResponseEntity.internalServerError().build();
   }
@@ -157,7 +155,8 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
             queryArgs.get("return_statistics"),
             request,
             cgApiConfig.get());
-    if (pipelineResponse.getStatus().equals(PipelineResponseStatus.FAILED)) {
+    if (Objects.requireNonNull(pipelineResponse.getStatus())
+        .equals(PipelineResponseStatus.FAILED)) {
       return ResponseEntity.of(Optional.of(pipelineResponse));
     }
     return ResponseEntity.ok(pipelineResponse);
@@ -223,6 +222,16 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
                 configMap.put("document_server", tempFile);
               });
     }
+    //ToDo: maybe need a vector_store server config param as well
+    try {
+      File tempFileVectorStore = File.createTempFile("tmp-", "-vector_store_server_config");
+      Files.write(tempFileVectorStore.toPath(), createVectorStoreServerConfigLines());
+      tempFileVectorStore.deleteOnExit();
+      configMap.put("vectorstore_server", tempFileVectorStore);
+    } catch (IOException e) {
+      LOGGER.severe(
+              "Couldn't create temporary file to send to the concept graphs api as a vector_store_server_config.");
+    }
 
     try {
       PipelineResponse pipelineResponse =
@@ -234,7 +243,7 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
               language,
               skipPresent,
               returnStatistics);
-      if (pipelineResponse.getStatus().equals(PipelineResponseStatus.FAILED)) {
+      if (Objects.equals(pipelineResponse.getStatus(), PipelineResponseStatus.FAILED)) {
         return ResponseEntity.of(Optional.of(pipelineResponse));
       }
       return ResponseEntity.ok(pipelineResponse);
@@ -304,5 +313,12 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
     createDocumentServerConfigMap(textAdapterConfig)
         .forEach((k, v) -> l.add(String.format("\"%s\": \"%s\"", k, v)));
     return l;
+  }
+
+  private List<String> createVectorStoreServerConfigLines() {
+    return List.of(
+            "\"url\": \"http://localhost\"",
+            "\"port\": \"8882\""
+    );
   }
 }
