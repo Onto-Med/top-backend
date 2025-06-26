@@ -114,7 +114,7 @@ public class ConceptClusterApiDelegateImpl implements ConceptclusterApiDelegate 
 
   @Override
   public ResponseEntity<PipelineResponse> createConceptClustersForPipelineId(
-          String pipelineId, ConceptClusterCreationDef conceptClusterCreationDef) {
+      String pipelineId, ConceptClusterCreationDef conceptClusterCreationDef) {
     final String finalPipelineId = stringConformity(pipelineId);
     PipelineResponse response = new PipelineResponse().pipelineId(finalPipelineId);
     TextAdapter adapter;
@@ -130,13 +130,13 @@ public class ConceptClusterApiDelegateImpl implements ConceptclusterApiDelegate 
 
     if (!conceptClusterService.conceptClusterProcessesContainsKey(finalPipelineId)) {
       conceptClusterService.addToClusterProcesses(
-              finalPipelineId,
-              conceptClusterService
-                      .createSpecificGraphsInNeo4j(finalPipelineId, conceptClusterCreationDef, adapter)
-                      .getRight());
+          finalPipelineId,
+          conceptClusterService
+              .createSpecificGraphsInNeo4j(finalPipelineId, conceptClusterCreationDef, adapter)
+              .getRight());
       response
-              .status(PipelineResponseStatus.RUNNING)
-              .response("Started Concept Clusters creation ...");
+          .status(PipelineResponseStatus.RUNNING)
+          .response("Started Concept Clusters creation ...");
     } else {
       checkConceptClusterProcess(finalPipelineId, response);
     }

@@ -226,14 +226,16 @@ public class ConceptClusterService implements ContentService {
   }
 
   public Pair<String, Thread> createSpecificGraphsInNeo4j(
-          String processName, ConceptClusterCreationDef creationDef, TextAdapter adapter) {
+      String processName, ConceptClusterCreationDef creationDef, TextAdapter adapter) {
     Map<String, ConceptGraphEntity> graphs =
         pipelineManager.getConceptGraphs(processName, creationDef.getGraphIds());
     Thread t =
         new Thread(
             () ->
                 graphs.forEach(
-                    (gId, graph) -> createGraphInNeo4j(gId, processName, graph, adapter, creationDef.getPhraseExclusions())));
+                    (gId, graph) ->
+                        createGraphInNeo4j(
+                            gId, processName, graph, adapter, creationDef.getPhraseExclusions())));
     t.start();
     return new ImmutablePair<>(processName, t);
   }
@@ -270,7 +272,11 @@ public class ConceptClusterService implements ContentService {
   }
 
   private void createGraphInNeo4j(
-      String graphId, String processId, ConceptGraphEntity conceptGraph, TextAdapter adapter, List<String> exclude) {
+      String graphId,
+      String processId,
+      ConceptGraphEntity conceptGraph,
+      TextAdapter adapter,
+      List<String> exclude) {
     Map<String, List<String>> documentId2PhraseIdMap = new HashMap<>();
     Map<String, PhraseNodeEntity> phraseNodeEntityMap = new HashMap<>();
     Map<String, PhraseDocumentObject[]> phraseDocumentObjectsMap = new HashMap<>();
@@ -325,7 +331,8 @@ public class ConceptClusterService implements ContentService {
                   .get(adjacencyObject.getId())
                   .addNeighbors(
                       Arrays.stream(adjacencyObject.getNeighbors())
-                          .filter(phraseNodeNeighbors -> !exclude.contains(phraseNodeNeighbors.getId()))
+                          .filter(
+                              phraseNodeNeighbors -> !exclude.contains(phraseNodeNeighbors.getId()))
                           .map(neighbor -> phraseNodeEntityMap.get(neighbor.getId()))
                           .collect(Collectors.toSet()));
               phraseNodeRepository.save(phraseNodeEntityMap.get(adjacencyObject.getId()));
