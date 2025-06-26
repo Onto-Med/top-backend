@@ -222,7 +222,7 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
                 configMap.put("document_server", tempFile);
               });
     }
-    //ToDo: maybe need a vector_store server config param as well
+    // ToDo: maybe need a vector_store server config param as well
     try {
       File tempFileVectorStore = File.createTempFile("tmp-", "-vector_store_server_config");
       Files.write(tempFileVectorStore.toPath(), createVectorStoreServerConfigLines());
@@ -230,7 +230,7 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
       configMap.put("vectorstore_server", tempFileVectorStore);
     } catch (IOException e) {
       LOGGER.severe(
-              "Couldn't create temporary file to send to the concept graphs api as a vector_store_server_config.");
+          "Couldn't create temporary file to send to the concept graphs api as a vector_store_server_config.");
     }
 
     try {
@@ -316,9 +316,6 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
   }
 
   private List<String> createVectorStoreServerConfigLines() {
-    return List.of(
-            "\"url\": \"http://localhost\"",
-            "\"port\": \"8882\""
-    );
+    return List.of("\"url\": \"http://localhost\"", "\"port\": \"8882\"");
   }
 }
