@@ -1,6 +1,9 @@
 package care.smith.top.backend.api;
 
+import care.smith.top.backend.model.jpa.OrganisationDao;
+import care.smith.top.backend.model.jpa.OrganisationDataSourceDao;
 import care.smith.top.backend.model.jpa.datasource.DataSourceDao;
+import care.smith.top.backend.repository.jpa.OrganisationRepository;
 import care.smith.top.backend.repository.jpa.QueryRepository;
 import care.smith.top.backend.repository.jpa.datasource.*;
 import care.smith.top.backend.service.OrganisationService;
@@ -39,6 +42,7 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
   @Autowired private SubjectResourceRepository subjectResourceRepository;
   @Autowired private ExpectedResultRepository expectedResultRepository;
   @Autowired private DataSourceRepository dataSourceRepository;
+  @Autowired private OrganisationRepository organisationRepository;
 
   @Override
   public ResponseEntity<Void> deleteQuery(
@@ -108,6 +112,13 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
       DataSourceFileType fileType,
       String dataSourceId,
       String config) {
+    OrganisationDao organisation =
+        organisationRepository
+            .findById(organisationId)
+            .orElseThrow(
+                () ->
+                    new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Organisation does not exist."));
     try {
       BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream()));
       DataImport.getInstance(
@@ -140,12 +151,20 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
                   .map(c -> c + "=" + c)
                   .collect(Collectors.joining(";")))
           .run();
-      DataSourceDao dataSource = dataSourceRepository.save(new DataSourceDao(dataSourceId));
-      organisationService.addOrganisationDataSource(organisationId, dataSource.toApiModel());
+      dataSourceRepository.save(new DataSourceDao(dataSourceId));
     } catch (IOException e) {
       throw new ResponseStatusException(
           HttpStatus.INTERNAL_SERVER_ERROR,
           String.format("Could not read uploaded file. (%s)", e.getMessage()));
+    }
+    try {
+      OrganisationDataSourceDao dataSourceDao =
+          new OrganisationDataSourceDao(organisation, dataSourceId, QueryType.PHENOTYPE);
+      organisationRepository.save(organisation.addDataSource(dataSourceDao));
+    } catch (Exception e) {
+      throw new ResponseStatusException(
+          HttpStatus.INTERNAL_SERVER_ERROR,
+          String.format("Could not add data source to organisation '%s'.", organisation.getName()));
     }
     return new ResponseEntity<>(HttpStatus.CREATED);
   }
