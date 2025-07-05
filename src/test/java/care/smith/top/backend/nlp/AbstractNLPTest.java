@@ -62,7 +62,7 @@ public abstract class AbstractNLPTest {
       List.of(new Phrase().id("p2").text("another phrase there").exemplar(false));
   public static List<Phrase> phrases1_2 = List.of(phrases1.get(0), phrases2.get(0));
   protected static HttpServer conceptGraphsApiService;
-  protected static int cgApi = 9011;
+  protected static int cgApi = 9010;
   private static final String exampleDatasource = "exampledatasource";
 
   @RegisterExtension static Neo4JExtension neo4JExtension = new Neo4JExtension();
