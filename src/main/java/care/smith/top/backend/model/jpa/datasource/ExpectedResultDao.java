@@ -264,7 +264,9 @@ public class ExpectedResultDao {
     return new TestReport(
             getExpectedResultId(),
             getPhenotypeId(),
-            getSubjectId(),
+            getSubjectId() != null
+                ? getSubjectId()
+                : getEncounter() != null ? getEncounter().getSubjectId() : null,
             getEncounterId(),
             compareWith(actual))
         .expected(toValue())

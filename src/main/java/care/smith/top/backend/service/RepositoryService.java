@@ -246,8 +246,10 @@ public class RepositoryService implements ContentService {
                     reports.stream()
                         .noneMatch(
                             e ->
-                                Objects.equals(a.getSubjectId(), e.getSubjectId())
-                                    && Objects.equals(a.getEncounterId(), e.getEncounterId())
+                                (e.getSubjectId() == null
+                                        || Objects.equals(a.getSubjectId(), e.getSubjectId()))
+                                    && (e.getEncounterId() == null
+                                        || Objects.equals(a.getEncounterId(), e.getEncounterId()))
                                     && Objects.equals(a.getEntityId(), e.getEntityId())
                                     && Objects.equals(a.getActual(), e.getActual())))
             .sorted(Comparator.comparing(TestReport::getSubjectId));
