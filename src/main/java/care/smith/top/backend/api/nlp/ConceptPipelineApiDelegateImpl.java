@@ -62,11 +62,9 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
     PipelineResponse clusterResponse =
         conceptClusterService.deleteCompletePipelineAndResults(finalPipelineId);
     PipelineResponse graphResponse = conceptGraphsService.deletePipeline(finalPipelineId);
-    if ((clusterResponse.getStatus().equals(PipelineResponseStatus.SUCCESSFUL)
-            && graphResponse.getStatus().equals(PipelineResponseStatus.SUCCESSFUL))
-        || graphResponse
-            .getResponse()
-            .contains(String.format("no such process '%s'", finalPipelineId)))
+    if ((Objects.equals(clusterResponse.getStatus(), PipelineResponseStatus.SUCCESSFUL)
+            && Objects.equals(graphResponse.getStatus(), PipelineResponseStatus.SUCCESSFUL))
+        || Objects.requireNonNull(graphResponse.getResponse()).contains("no such process"))
       return ResponseEntity.ok().build();
     return ResponseEntity.internalServerError().build();
   }
@@ -129,6 +127,8 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
     }
 
     AtomicReference<JSONObject> documentServerConfig = new AtomicReference<>();
+    AtomicReference<JSONObject> vectorStoreServerConfig = new AtomicReference<>();
+    AtomicReference<JSONObject> cgApiConfig = new AtomicReference<>();
     documentQueryService
         .getTextAdapterConfig(
             StringUtils.defaultString(
@@ -138,10 +138,14 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
                 defaultDataSourceId))
         .ifPresent(
             textAdapterConfig -> {
-              Map<String, String> configMap = createDocumentServerConfigMap(textAdapterConfig);
-              documentServerConfig.set(new JSONObject(configMap));
+              documentServerConfig.set(
+                  new JSONObject(createDocumentServerConfigMap(textAdapterConfig)));
+              vectorStoreServerConfig.set(
+                  new JSONObject(createVectorStoreServerMap(textAdapterConfig)));
+              cgApiConfig.set(new JSONObject(createCgServerMap(textAdapterConfig)));
             });
     request.put("document_server", documentServerConfig.get());
+    request.put("vectorstore_server", vectorStoreServerConfig.get());
 
     pipelineResponse =
         conceptGraphsService.initPipeline(
@@ -149,8 +153,10 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
             requestParams.get("language"),
             queryArgs.get("skip_present"),
             queryArgs.get("return_statistics"),
-            request);
-    if (pipelineResponse.getStatus().equals(PipelineResponseStatus.FAILED)) {
+            request,
+            cgApiConfig.get());
+    if (Objects.requireNonNull(pipelineResponse.getStatus())
+        .equals(PipelineResponseStatus.FAILED)) {
       return ResponseEntity.of(Optional.of(pipelineResponse));
     }
     return ResponseEntity.ok(pipelineResponse);
@@ -216,6 +222,16 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
                 configMap.put("document_server", tempFile);
               });
     }
+    // ToDo: maybe need a vector_store server config param as well
+    try {
+      File tempFileVectorStore = File.createTempFile("tmp-", "-vector_store_server_config");
+      Files.write(tempFileVectorStore.toPath(), createVectorStoreServerConfigLines());
+      tempFileVectorStore.deleteOnExit();
+      configMap.put("vectorstore_server", tempFileVectorStore);
+    } catch (IOException e) {
+      LOGGER.severe(
+          "Couldn't create temporary file to send to the concept graphs api as a vector_store_server_config.");
+    }
 
     try {
       PipelineResponse pipelineResponse =
@@ -227,7 +243,7 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
               language,
               skipPresent,
               returnStatistics);
-      if (pipelineResponse.getStatus().equals(PipelineResponseStatus.FAILED)) {
+      if (Objects.equals(pipelineResponse.getStatus(), PipelineResponseStatus.FAILED)) {
         return ResponseEntity.of(Optional.of(pipelineResponse));
       }
       return ResponseEntity.ok(pipelineResponse);
@@ -242,6 +258,32 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
     return ResponseEntity.ok().build();
   }
 
+  private Map<String, String> createVectorStoreServerMap(TextAdapterConfig textAdapterConfig) {
+    Map<String, String> configMap =
+        new HashMap<>(
+            Map.of(
+                "url", textAdapterConfig.getVectorStore().getConnection().getUrl(),
+                "port", textAdapterConfig.getVectorStore().getConnection().getPort()));
+    if (textAdapterConfig.getVectorStore().getConnection().getAlternateUrl() != null) {
+      configMap.put(
+          "alternate_url", textAdapterConfig.getVectorStore().getConnection().getAlternateUrl());
+    }
+    return configMap;
+  }
+
+  private Map<String, String> createCgServerMap(TextAdapterConfig textAdapterConfig) {
+    Map<String, String> configMap =
+        new HashMap<>(
+            Map.of(
+                "url", textAdapterConfig.getConceptGraph().getConnection().getUrl(),
+                "port", textAdapterConfig.getConceptGraph().getConnection().getPort()));
+    if (textAdapterConfig.getConceptGraph().getConnection().getAlternateUrl() != null) {
+      configMap.put(
+          "alternate_url", textAdapterConfig.getConceptGraph().getConnection().getAlternateUrl());
+    }
+    return configMap;
+  }
+
   private Map<String, String> createDocumentServerConfigMap(TextAdapterConfig textAdapterConfig) {
     // ToDO: index right now in the concept graphs api only supports one value
     Map<String, String> configMap =
@@ -253,6 +295,9 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
                 "size", String.valueOf(textAdapterConfig.getBatchSize()),
                 "label_key", textAdapterConfig.getLabelKey(),
                 "other_id", textAdapterConfig.getOtherId()));
+    if (textAdapterConfig.getConnection().getAlternateUrl() != null) {
+      configMap.put("alternate_url", textAdapterConfig.getConnection().getAlternateUrl());
+    }
     if (textAdapterConfig.getReplaceFields() != null) {
       configMap.put(
           "replace_keys",
@@ -268,5 +313,9 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
     createDocumentServerConfigMap(textAdapterConfig)
         .forEach((k, v) -> l.add(String.format("\"%s\": \"%s\"", k, v)));
     return l;
+  }
+
+  private List<String> createVectorStoreServerConfigLines() {
+    return List.of("\"url\": \"http://localhost\"", "\"port\": \"8882\"");
   }
 }

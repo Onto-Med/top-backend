@@ -8,6 +8,7 @@ import care.smith.top.backend.repository.neo4j.DocumentNodeRepository;
 import care.smith.top.backend.repository.neo4j.PhraseNodeRepository;
 import care.smith.top.backend.service.ContentService;
 import care.smith.top.model.ConceptCluster;
+import care.smith.top.model.ConceptClusterCreationDef;
 import care.smith.top.model.PipelineResponse;
 import care.smith.top.model.PipelineResponseStatus;
 import care.smith.top.top_document_query.adapter.TextAdapter;
@@ -19,7 +20,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.common.collect.Lists;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.util.*;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -38,11 +41,12 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class ConceptClusterService implements ContentService {
+  private static final Logger LOGGER = Logger.getLogger(ConceptClusterService.class.getName());
 
   @Value("${spring.paging.page-size:10}")
   private int pageSize = 10;
 
-  private final ConceptPipelineManager pipelineManager;
+  private ConceptPipelineManager pipelineManager = null;
   private final ConceptClusterNodeRepository conceptNodeRepository;
   private final PhraseNodeRepository phraseNodeRepository;
   private final DocumentNodeRepository documentNodeRepository;
@@ -53,7 +57,12 @@ public class ConceptClusterService implements ContentService {
       ConceptClusterNodeRepository conceptNodeRepository,
       PhraseNodeRepository phraseNodeRepository,
       DocumentNodeRepository documentNodeRepository) {
-    pipelineManager = new ConceptPipelineManager(conceptGraphsApiUri);
+    try {
+      pipelineManager = new ConceptPipelineManager(conceptGraphsApiUri);
+    } catch (MalformedURLException e) {
+      LOGGER.severe(
+          "Couldn't initialize pipelineManager; document related functions won't be available.");
+    }
     conceptClusterProcesses = new HashMap<>();
     this.conceptNodeRepository = conceptNodeRepository;
     this.phraseNodeRepository = phraseNodeRepository;
@@ -217,14 +226,16 @@ public class ConceptClusterService implements ContentService {
   }
 
   public Pair<String, Thread> createSpecificGraphsInNeo4j(
-      String processName, List<String> graphIds, TextAdapter adapter) {
+      String processName, ConceptClusterCreationDef creationDef, TextAdapter adapter) {
     Map<String, ConceptGraphEntity> graphs =
-        pipelineManager.getConceptGraphs(processName, graphIds);
+        pipelineManager.getConceptGraphs(processName, creationDef.getGraphIds());
     Thread t =
         new Thread(
             () ->
                 graphs.forEach(
-                    (gId, graph) -> createGraphInNeo4j(gId, processName, graph, adapter)));
+                    (gId, graph) ->
+                        createGraphInNeo4j(
+                            gId, processName, graph, adapter, creationDef.getPhraseExclusions())));
     t.start();
     return new ImmutablePair<>(processName, t);
   }
@@ -261,12 +272,17 @@ public class ConceptClusterService implements ContentService {
   }
 
   private void createGraphInNeo4j(
-      String graphId, String processId, ConceptGraphEntity conceptGraph, TextAdapter adapter) {
+      String graphId,
+      String processId,
+      ConceptGraphEntity conceptGraph,
+      TextAdapter adapter,
+      List<String> exclude) {
     Map<String, List<String>> documentId2PhraseIdMap = new HashMap<>();
     Map<String, PhraseNodeEntity> phraseNodeEntityMap = new HashMap<>();
     Map<String, PhraseDocumentObject[]> phraseDocumentObjectsMap = new HashMap<>();
 
     Arrays.stream(conceptGraph.getNodes())
+        .filter(node -> !exclude.contains(node.getId()))
         .forEach(
             phraseNodeObject -> {
               Arrays.stream(phraseNodeObject.getDocuments())
@@ -289,7 +305,7 @@ public class ConceptClusterService implements ContentService {
                   phraseNodeObject.getId(), phraseNodeObject.getDocuments());
             });
 
-    // Save Concept Nodes (and by extension create relationships 'PHRASE--IN_CONCEPT->CONCEPT' as
+    // Save Concept Nodes (and by extension, create relationships 'PHRASE--IN_CONCEPT->CONCEPT' as
     // well as Phrase nodes)
     if (!conceptNodeRepository.conceptNodeExists(processId, graphId)) {
       List<String> labels =
@@ -308,12 +324,15 @@ public class ConceptClusterService implements ContentService {
 
     // Create Relations between Phrases 'PHRASE<-HAS_NEIGHBOR->PHRASE'
     Arrays.stream(conceptGraph.getAdjacency())
+        .filter(adjacencyObject -> !exclude.contains(adjacencyObject.getId()))
         .forEach(
             adjacencyObject -> {
               phraseNodeEntityMap
                   .get(adjacencyObject.getId())
                   .addNeighbors(
                       Arrays.stream(adjacencyObject.getNeighbors())
+                          .filter(
+                              phraseNodeNeighbors -> !exclude.contains(phraseNodeNeighbors.getId()))
                           .map(neighbor -> phraseNodeEntityMap.get(neighbor.getId()))
                           .collect(Collectors.toSet()));
               phraseNodeRepository.save(phraseNodeEntityMap.get(adjacencyObject.getId()));

@@ -8,8 +8,10 @@ import care.smith.top.top_document_query.concept_cluster.model.GraphStatsEntity;
 import care.smith.top.top_document_query.concept_cluster.model.pipeline_response.PipelineFailEntity;
 import care.smith.top.top_document_query.concept_cluster.model.pipeline_response.PipelineResponseEntity;
 import java.io.File;
+import java.net.MalformedURLException;
 import java.util.*;
 import java.util.function.Function;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,10 +20,21 @@ import org.springframework.stereotype.Service;
 @Service
 public class ConceptGraphsService implements ContentService {
   private final ConceptPipelineManager pipelineManager;
+  private static final Logger LOGGER = Logger.getLogger(ConceptGraphsService.class.getName());
 
   public ConceptGraphsService(
       @Value("${top.documents.concept-graphs-api.uri}") String conceptGraphsApiUri) {
-    pipelineManager = new ConceptPipelineManager(conceptGraphsApiUri);
+    ConceptPipelineManager tmpPipeline;
+    try {
+      tmpPipeline = new ConceptPipelineManager(conceptGraphsApiUri);
+    } catch (MalformedURLException e) {
+      try {
+        tmpPipeline = new ConceptPipelineManager("http://localhost:9010");
+      } catch (MalformedURLException ex) {
+        throw new RuntimeException(ex);
+      }
+    }
+    pipelineManager = tmpPipeline;
   }
 
   @Override
@@ -71,11 +84,7 @@ public class ConceptGraphsService implements ContentService {
     String stringResponse = pipelineManager.deleteProcess(processId);
     if (stringResponse.toLowerCase().contains("no such process")) {
       return pipelineResponse.response(stringResponse).status(PipelineResponseStatus.FAILED);
-    } else if (stringResponse.toLowerCase().contains("is currently running")) {
-      return pipelineResponse.response(stringResponse).status(PipelineResponseStatus.RUNNING);
-    } else if (stringResponse
-        .toLowerCase()
-        .contains(String.format("process '%s' deleted", processId.toLowerCase()))) {
+    } else if (stringResponse.toLowerCase().contains("set to be deleted")) {
       return pipelineResponse.response(stringResponse).status(PipelineResponseStatus.SUCCESSFUL);
     }
     return pipelineResponse.response(stringResponse).status(PipelineResponseStatus.FAILED);
@@ -104,7 +113,29 @@ public class ConceptGraphsService implements ContentService {
       String language,
       Boolean skipPresent,
       Boolean returnStatistics,
-      JSONObject jsonBody) {
+      JSONObject jsonBody,
+      JSONObject cgApiUrl) {
+    String url = cgApiUrl.getString("url") + ":" + cgApiUrl.getString("port");
+    try {
+      boolean success = pipelineManager.switchConnection(url);
+      if (!success) {
+        if (cgApiUrl.has("alternate_url") && cgApiUrl.get("alternate_url") != JSONObject.NULL) {
+          String alternateUrl =
+              cgApiUrl.getString("alternate_url") + ":" + cgApiUrl.getString("port");
+          success = pipelineManager.switchConnection(alternateUrl);
+        }
+        if (!success) {
+          LOGGER.severe(
+              "Tried to initiate PipelineManager with connection info given in Adapter config but to no avail."
+                  + " Trying to use the default as given in the backend application's config.");
+        }
+      }
+    } catch (MalformedURLException e) {
+      LOGGER.warning(
+          "The given url in the Adapter config seems to be malformed: '"
+              + url
+              + "'; or the alternate url is malformed/missing.");
+    }
     PipelineResponseEntity pre =
         pipelineManager.startPipeline(
             processName, language, skipPresent, returnStatistics, jsonBody);
