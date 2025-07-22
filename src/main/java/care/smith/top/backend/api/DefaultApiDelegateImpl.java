@@ -35,9 +35,10 @@ public class DefaultApiDelegateImpl implements DefaultApiDelegate {
 
   @Override
   public ResponseEntity<Statistic> getStatistics() {
-    long documentCount = 0;
+    DocumentCounts documentCounts = new DocumentCounts().documentServer(0L).graphDB(0L);
     try {
-      documentCount = documentService.count();
+      documentCounts.setGraphDB(documentService.count());
+      documentCounts.setDocumentServer(documentService.textAdaptersDocumentCount());
     } catch (Throwable e) {
       LOGGER.warning(e.getMessage());
     }
@@ -52,7 +53,7 @@ public class DefaultApiDelegateImpl implements DefaultApiDelegate {
                     EntityType.SINGLE_RESTRICTION,
                     EntityType.COMPOSITE_PHENOTYPE,
                     EntityType.COMPOSITE_RESTRICTION))
-            .documents(documentCount);
+            .documents(documentCounts);
     return new ResponseEntity<>(statistic, HttpStatus.OK);
   }
 }
