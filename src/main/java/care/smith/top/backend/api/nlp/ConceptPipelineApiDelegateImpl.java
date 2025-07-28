@@ -204,34 +204,35 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
                       }
                     }));
 
-    if (data == null) {
-      documentQueryService
-          .getTextAdapterConfig(StringUtils.defaultString(dataSourceId, defaultDataSourceId))
-          .ifPresent(
-              textAdapterConfig -> {
-                List<String> lines = createDocumentServerConfigLines(textAdapterConfig);
-                File tempFile = null;
+    documentQueryService
+        .getTextAdapterConfig(StringUtils.defaultString(dataSourceId, defaultDataSourceId))
+        .ifPresent(
+            textAdapterConfig -> {
+              List<String> lines = createDocumentServerConfigLines(textAdapterConfig);
+              File tempFile = null;
+              // If data is not provided via text files a document server will be used
+              if (data == null) {
                 try {
                   tempFile = File.createTempFile("tmp-", "-document_server_config");
                   Files.write(tempFile.toPath(), lines);
                   tempFile.deleteOnExit();
                 } catch (IOException e) {
                   LOGGER.severe(
-                      "Couldn't create temporary file to send to the concept graphs api as a document_server_config.");
+                          "Couldn't create temporary file to send to the concept graphs api as a document_server_config.");
                 }
                 configMap.put("document_server", tempFile);
-              });
-    }
-    // ToDo: maybe need a vector_store server config param as well
-    try {
-      File tempFileVectorStore = File.createTempFile("tmp-", "-vector_store_server_config");
-      Files.write(tempFileVectorStore.toPath(), createVectorStoreServerConfigLines());
-      tempFileVectorStore.deleteOnExit();
-      configMap.put("vectorstore_server", tempFileVectorStore);
-    } catch (IOException e) {
-      LOGGER.severe(
-          "Couldn't create temporary file to send to the concept graphs api as a vector_store_server_config.");
-    }
+              }
+              // read and store infos for the vector store server
+              try {
+                File tempFileVectorStore = File.createTempFile("tmp-", "-vector_store_server_config");
+                Files.write(tempFileVectorStore.toPath(), createVectorStoreServerConfigLines());
+                tempFileVectorStore.deleteOnExit();
+                configMap.put("vectorstore_server", tempFileVectorStore);
+              } catch (IOException e) {
+                LOGGER.severe(
+                        "Couldn't create temporary file to send to the concept graphs api as a vector_store_server_config.");
+              }
+            });
 
     try {
       PipelineResponse pipelineResponse =
