@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -208,7 +209,8 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
         .getTextAdapterConfig(StringUtils.defaultString(dataSourceId, defaultDataSourceId))
         .ifPresent(
             textAdapterConfig -> {
-              List<String> lines = createDocumentServerConfigLines(textAdapterConfig);
+              List<String> lines =
+                  createServerConfigLines(textAdapterConfig, this::createDocumentServerConfigMap);
               File tempFile = null;
               // If data is not provided via text files a document server will be used
               if (data == null) {
@@ -218,19 +220,22 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
                   tempFile.deleteOnExit();
                 } catch (IOException e) {
                   LOGGER.severe(
-                          "Couldn't create temporary file to send to the concept graphs api as a document_server_config.");
+                      "Couldn't create temporary file to send to the concept graphs api as a document_server_config.");
                 }
                 configMap.put("document_server", tempFile);
               }
               // read and store infos for the vector store server
               try {
-                File tempFileVectorStore = File.createTempFile("tmp-", "-vector_store_server_config");
-                Files.write(tempFileVectorStore.toPath(), createVectorStoreServerConfigLines());
+                File tempFileVectorStore =
+                    File.createTempFile("tmp-", "-vector_store_server_config");
+                Files.write(
+                    tempFileVectorStore.toPath(),
+                    createServerConfigLines(textAdapterConfig, this::createVectorStoreServerMap));
                 tempFileVectorStore.deleteOnExit();
                 configMap.put("vectorstore_server", tempFileVectorStore);
               } catch (IOException e) {
                 LOGGER.severe(
-                        "Couldn't create temporary file to send to the concept graphs api as a vector_store_server_config.");
+                    "Couldn't create temporary file to send to the concept graphs api as a vector_store_server_config.");
               }
             });
 
@@ -309,14 +314,13 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
     return configMap;
   }
 
-  private List<String> createDocumentServerConfigLines(TextAdapterConfig textAdapterConfig) {
+  private List<String> createServerConfigLines(
+      TextAdapterConfig textAdapterConfig,
+      Function<TextAdapterConfig, Map<String, String>> configMapper) {
     List<String> l = new ArrayList<>();
-    createDocumentServerConfigMap(textAdapterConfig)
+    configMapper
+        .apply(textAdapterConfig)
         .forEach((k, v) -> l.add(String.format("\"%s\": \"%s\"", k, v)));
     return l;
-  }
-
-  private List<String> createVectorStoreServerConfigLines() {
-    return List.of("\"url\": \"http://localhost\"", "\"port\": \"8882\"");
   }
 }
