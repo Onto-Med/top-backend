@@ -334,7 +334,8 @@ public class EntityService implements ContentService {
       List<String> repositoryIds,
       Boolean includePrimary,
       Integer page) {
-    PageRequest pageRequest = PageRequest.of(page != null ? page - 1 : 0, pageSize);
+    PageRequest pageRequest =
+        PageRequest.of(page != null ? page - 1 : 0, pageSize, Sort.by(EntityDao_.ID));
     return phenotypeRepository
         .findAllByRepositoryIdsAndRepository_PrimaryAndTitleAndEntityTypeAndDataTypeAndItemType(
             repositoryIds,
@@ -362,7 +363,8 @@ public class EntityService implements ContentService {
       ItemType itemType,
       Integer page) {
     getRepository(organisationId, repositoryId);
-    PageRequest pageRequest = PageRequest.of(page != null ? page - 1 : 0, pageSize);
+    PageRequest pageRequest =
+        PageRequest.of(page != null ? page - 1 : 0, pageSize, Sort.by(EntityDao_.ID));
 
     return phenotypeRepository
         .findAllByRepositoryIdAndTitleAndEntityTypeAndDataTypeAndItemType(
