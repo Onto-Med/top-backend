@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -100,7 +101,9 @@ public class UserService implements ContentService, UserDetailsService {
   }
 
   public Page<UserDao> getUsers(String name, List<String> organisationIds, Integer page) {
-    PageRequest pageRequest = PageRequest.of(page != null ? page - 1 : 0, pageSize);
+    PageRequest pageRequest =
+        PageRequest.of(
+            page != null ? page - 1 : 0, pageSize, Sort.by(UserDao_.USERNAME, UserDao_.ID));
     return userRepository.findAllByUsernameAndOrganisationIds(name, organisationIds, pageRequest);
   }
 
