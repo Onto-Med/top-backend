@@ -2,6 +2,7 @@ package care.smith.top.backend.service;
 
 import care.smith.top.backend.model.jpa.Permission;
 import care.smith.top.backend.model.jpa.QueryDao;
+import care.smith.top.backend.model.jpa.QueryDao_;
 import care.smith.top.backend.repository.jpa.QueryRepository;
 import care.smith.top.backend.repository.jpa.RepositoryRepository;
 import care.smith.top.model.*;
@@ -26,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
@@ -191,7 +193,9 @@ public abstract class QueryService {
   @PreAuthorize(
       "hasPermission(#organisationId, 'care.smith.top.backend.model.jpa.OrganisationDao', 'WRITE')")
   public Page<Query> getQueries(String organisationId, String repositoryId, Integer page) {
-    PageRequest pageRequest = PageRequest.of(page == null ? 0 : page - 1, pageSize);
+    PageRequest pageRequest =
+        PageRequest.of(
+            page == null ? 0 : page - 1, pageSize, Sort.by(QueryDao_.CREATED_AT, QueryDao_.ID));
     return queryRepository
         .findAllByRepository_OrganisationIdAndRepositoryIdOrderByCreatedAtDesc(
             organisationId, repositoryId, pageRequest)
