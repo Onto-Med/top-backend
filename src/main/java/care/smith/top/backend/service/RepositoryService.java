@@ -14,7 +14,6 @@ import care.smith.top.backend.repository.jpa.datasource.ExpectedResultRepository
 import care.smith.top.model.*;
 import care.smith.top.top_phenotypic_query.result.PhenotypeValues;
 import care.smith.top.top_phenotypic_query.result.ResultSet;
-import com.google.common.collect.Streams;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -214,47 +213,65 @@ public class RepositoryService implements ContentService {
     }
 
     List<TestReport> reports =
-        expectedResults.stream()
-            .map(
-                er -> {
-                  DateTimeRestriction dateRange =
-                      er.getEncounter() != null ? er.getEncounter().toDateRange() : null;
-                  List<care.smith.top.model.Value> values =
-                      Objects.requireNonNullElse(
-                              resultSet.getValues(er.getEncounterId(), er.getPhenotypeId()),
-                              new PhenotypeValues(er.getPhenotypeId()))
-                          .getValues(dateRange);
+        new ArrayList<>(
+            expectedResults.stream()
+                .map(
+                    er -> {
+                      DateTimeRestriction dateRange =
+                          er.getEncounter() != null ? er.getEncounter().toDateRange() : null;
+                      List<care.smith.top.model.Value> values =
+                          Objects.requireNonNullElse(
+                                  resultSet.getValues(er.getEncounterId(), er.getPhenotypeId()),
+                                  new PhenotypeValues(er.getPhenotypeId()))
+                              .getValues(dateRange);
 
-                  care.smith.top.model.Value actual = null;
-                  if (values != null) {
-                    actual = values.stream().findFirst().orElse(null);
-                  }
+                      care.smith.top.model.Value actual = null;
+                      if (values != null) {
+                        actual = values.stream().findFirst().orElse(null);
+                      }
 
-                  return er.toReport(actual);
-                })
-            .toList();
+                      return er.toReport(actual);
+                    })
+                .toList());
 
-    Stream<TestReport> remaining =
+    List<TestReport> remaining =
         resultSet.getPhenotypes().stream()
             .flatMap(
                 p ->
                     p.values().stream()
                         .filter(v -> projectionIds.contains(v.getPhenotypeName()))
                         .flatMap(v -> toTestReport(dataSourceId, p.getSubjectId(), v)))
-            .filter(
-                a ->
-                    reports.stream()
-                        .noneMatch(
-                            e ->
-                                (e.getSubjectId() == null
-                                        || Objects.equals(a.getSubjectId(), e.getSubjectId()))
-                                    && (e.getEncounterId() == null
-                                        || Objects.equals(a.getEncounterId(), e.getEncounterId()))
-                                    && Objects.equals(a.getEntityId(), e.getEntityId())
-                                    && Objects.equals(a.getActual(), e.getActual())))
-            .sorted(Comparator.comparing(TestReport::getSubjectId));
+            .sorted(Comparator.comparing(TestReport::getSubjectId))
+            .toList();
 
-    return Streams.concat(reports.stream(), remaining).toList();
+    for (TestReport a : remaining) {
+      boolean isPresent =
+          reports.stream()
+              .noneMatch(
+                  e ->
+                      (e.getSubjectId() == null
+                              || Objects.equals(a.getSubjectId(), e.getSubjectId()))
+                          && (e.getEncounterId() == null
+                              || Objects.equals(a.getEncounterId(), e.getEncounterId()))
+                          && Objects.equals(a.getEntityId(), e.getEntityId())
+                          && isEqual(a.getActual(), e.getActual()));
+      if (isPresent) reports.add(a);
+    }
+
+    return reports;
+  }
+
+  private boolean isEqual(care.smith.top.model.Value a, care.smith.top.model.Value b) {
+    if (Objects.equals(a, b)) return true;
+    if (a == null || b == null || a.getDataType() != b.getDataType()) return false;
+
+    return switch (a.getDataType()) {
+      case STRING -> Objects.equals(((StringValue) a).getValue(), ((StringValue) b).getValue());
+      case NUMBER -> Objects.equals(((NumberValue) a).getValue(), ((NumberValue) b).getValue());
+      case BOOLEAN -> Objects.equals(((BooleanValue) a).isValue(), ((BooleanValue) b).isValue());
+      case DATE_TIME ->
+          Objects.equals(((DateTimeValue) a).getValue(), ((DateTimeValue) b).getValue());
+    };
   }
 
   private Stream<TestReport> toTestReport(
