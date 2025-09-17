@@ -273,7 +273,7 @@ public class ExpectedResultDao {
         .actual(actual);
   }
 
-  private boolean compareWith(Value other) {
+  public boolean compareWith(Value other) {
     Value value = toValue();
     if (value == other) {
       return true;
