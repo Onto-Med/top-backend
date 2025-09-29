@@ -32,4 +32,8 @@ public class RAGService {
   public RAGAnswer poseQuestion(String process, String question) {
     return ragManager.poseQuestion(process, question);
   }
+
+  public RAGAnswer poseQuestionWithFilter(String process, String question, String[] docIds) {
+    return ragManager.poseQuestion(process, question, docIds);
+  }
 }
