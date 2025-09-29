@@ -34,13 +34,13 @@ public class RAGApiDelegateImpl implements RagApiDelegate {
 
   @Override
   public ResponseEntity<RAGAnswer> poseQuestionToRAGWithFilter(
-      String process, String q, RAGFilter raGFilter) {
+      String process, String q, RAGFilter ragFilter) {
     return ResponseEntity.ok(
         ragService.poseQuestionWithFilter(
             process,
             q,
-            raGFilter.getDocIds() != null
-                ? raGFilter.getDocIds().toArray(new String[0])
+            ragFilter.getDocIds() != null
+                ? ragFilter.getDocIds().toArray(new String[0])
                 : new String[0]));
   }
 
