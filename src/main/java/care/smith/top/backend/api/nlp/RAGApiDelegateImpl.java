@@ -9,6 +9,7 @@ import care.smith.top.top_document_query.adapter.TextAdapter;
 import java.util.logging.Logger;
 import org.json.JSONObject;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -23,6 +24,7 @@ public class RAGApiDelegateImpl implements RagApiDelegate {
   }
 
   @Override
+  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<String> initializeRAG(String process, Boolean force, Object body) {
     return ResponseEntity.ok(ragService.initializeRAG(process, force, (JSONObject) body));
   }

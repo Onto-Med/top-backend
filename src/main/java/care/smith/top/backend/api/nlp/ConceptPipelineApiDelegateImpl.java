@@ -23,6 +23,7 @@ import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -58,6 +59,7 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
   }
 
   @Override
+  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<Void> deleteConceptPipelineById(String pipelineId) {
     final String finalPipelineId = stringConformity(pipelineId);
     PipelineResponse clusterResponse =
@@ -99,6 +101,7 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
   }
 
   @Override
+  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<PipelineResponse> startConceptGraphPipelineWithJson(
       String conceptPipelineConfigRequest) {
     PipelineResponse pipelineResponse;
@@ -164,6 +167,7 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
   }
 
   @Override
+  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<PipelineResponse> startConceptGraphPipeline(
       String pipelineId,
       String dataSourceId,
@@ -259,6 +263,7 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
   }
 
   @Override
+  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<Void> stopConceptGraphPipeline(String pipelineId) {
     conceptGraphsService.stopPipeline(stringConformity(pipelineId));
     return ResponseEntity.ok().build();
