@@ -2,11 +2,11 @@ package care.smith.top.backend.service.nlp;
 
 import care.smith.top.backend.service.ContentService;
 import care.smith.top.model.*;
-import care.smith.top.top_document_query.concept_cluster.ConceptPipelineManager;
-import care.smith.top.top_document_query.concept_cluster.model.ConceptGraphEntity;
-import care.smith.top.top_document_query.concept_cluster.model.GraphStatsEntity;
-import care.smith.top.top_document_query.concept_cluster.model.pipeline_response.PipelineFailEntity;
-import care.smith.top.top_document_query.concept_cluster.model.pipeline_response.PipelineResponseEntity;
+import care.smith.top.top_document_query.concept_graphs_api.ConceptPipelineManager;
+import care.smith.top.top_document_query.concept_graphs_api.model.ConceptGraphEntity;
+import care.smith.top.top_document_query.concept_graphs_api.model.GraphStatsEntity;
+import care.smith.top.top_document_query.concept_graphs_api.model.pipeline_response.PipelineFailEntity;
+import care.smith.top.top_document_query.concept_graphs_api.model.pipeline_response.PipelineResponseEntity;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.util.*;

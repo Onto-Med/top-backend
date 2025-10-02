@@ -14,6 +14,7 @@ import java.util.logging.Logger;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -113,6 +114,7 @@ public class ConceptClusterApiDelegateImpl implements ConceptclusterApiDelegate 
   }
 
   @Override
+  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<PipelineResponse> createConceptClustersForPipelineId(
       String pipelineId, ConceptClusterCreationDef conceptClusterCreationDef) {
     final String finalPipelineId = stringConformity(pipelineId);
@@ -144,6 +146,7 @@ public class ConceptClusterApiDelegateImpl implements ConceptclusterApiDelegate 
   }
 
   @Override
+  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<Void> deleteConceptClustersForPipelineId(String pipelineId) {
     PipelineResponse response =
         conceptClusterService.deleteCompletePipelineAndResults(stringConformity(pipelineId));
