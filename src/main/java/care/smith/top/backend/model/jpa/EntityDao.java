@@ -19,21 +19,24 @@ public class EntityDao {
 
   @Id private String id;
 
-  @ManyToOne private RepositoryDao repository;
+  @ManyToOne(fetch = FetchType.LAZY)
+  private RepositoryDao repository;
 
-  @OneToMany(mappedBy = "entity", cascade = CascadeType.REMOVE)
+  @OneToMany(mappedBy = "entity", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
   private List<EntityVersionDao> versions = null;
 
   @OneToOne private EntityVersionDao currentVersion;
 
-  @OneToMany(mappedBy = "origin")
+  @OneToMany(mappedBy = "origin", fetch = FetchType.LAZY)
   private List<EntityDao> forks = null;
 
-  @ManyToOne private EntityDao origin;
+  @ManyToOne(fetch = FetchType.LAZY)
+  private EntityDao origin;
 
-  @ManyToMany private List<EntityDao> superEntities = null;
+  @ManyToMany(fetch = FetchType.LAZY)
+  private List<EntityDao> superEntities = null;
 
-  @ManyToMany(mappedBy = "superEntities")
+  @ManyToMany(mappedBy = "superEntities", fetch = FetchType.LAZY)
   private List<EntityDao> subEntities = null;
 
   public EntityDao() {}

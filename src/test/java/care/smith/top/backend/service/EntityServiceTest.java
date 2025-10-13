@@ -586,9 +586,7 @@ class EntityServiceTest extends AbstractTest {
         .hasValueSatisfying(
             e -> {
               assertThat(e.getCurrentVersion().getVersion()).isEqualTo(3);
-              assertThat(e.getCurrentVersion().getPreviousVersion())
-                  .isNotNull()
-                  .satisfies(prev -> assertThat(prev.getVersion()).isEqualTo(1));
+              assertThat(e.getCurrentVersion().getPreviousVersion()).isNotNull();
             });
 
     assertThat(

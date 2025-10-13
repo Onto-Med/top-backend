@@ -35,17 +35,19 @@ public class EntityVersionDao {
   @OrderColumn
   private List<CodeDao> codes = null;
 
-  @OneToOne private EntityVersionDao previousVersion;
+  @OneToOne(fetch = FetchType.LAZY)
+  private EntityVersionDao previousVersion;
 
-  @OneToOne(mappedBy = "previousVersion")
+  @OneToOne(mappedBy = "previousVersion", fetch = FetchType.LAZY)
   private EntityVersionDao nextVersion;
 
-  @ManyToMany private Set<EntityVersionDao> equivalentEntityVersions = null;
+  @ManyToMany(fetch = FetchType.LAZY)
+  private Set<EntityVersionDao> equivalentEntityVersions = null;
 
-  @ManyToMany(mappedBy = "equivalentEntityVersions")
+  @ManyToMany(mappedBy = "equivalentEntityVersions", fetch = FetchType.LAZY)
   private Set<EntityVersionDao> equivalentEntityVersionOf = null;
 
-  @ManyToOne
+  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "user_id")
   @CreatedBy
   private UserDao author;
