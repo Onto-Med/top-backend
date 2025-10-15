@@ -12,7 +12,6 @@ import java.io.InputStream;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import javax.validation.constraints.NotNull;
 import org.reflections.Reflections;
 import org.reflections.util.ConfigurationBuilder;
@@ -48,6 +47,7 @@ public class EntityService implements ContentService {
   @Autowired private PhenotypeRepository phenotypeRepository;
   @Autowired private ConceptRepository conceptRepository;
   @Autowired private RepositoryRepository repositoryRepository;
+  @Autowired private CodeRepository codeRepository;
   @Autowired private UserService userService;
   @Autowired private OlsCodeRepository olsCodeRepository;
 
@@ -470,19 +470,38 @@ public class EntityService implements ContentService {
       "hasRole('ADMIN') or hasPermission(#repositoryId, 'care.smith.top.backend.model.jpa.RepositoryDao', 'READ')")
   public Entity loadEntity(String organisationId, String repositoryId, String id, Integer version) {
     getRepository(organisationId, repositoryId);
+    Optional<EntityVersionDao> optional;
     if (version == null)
-      return entityRepository
-          .findByIdAndRepositoryId(id, repositoryId)
-          .map(EntityDao::toApiModel)
-          .map(populateWithCodeSystems())
-          .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+      optional =
+          entityRepository
+              .findByIdAndRepositoryId(id, repositoryId)
+              .map(EntityDao::getCurrentVersion);
+    else
+      optional =
+          entityVersionRepository.findByEntity_RepositoryIdAndEntityIdAndVersion(
+              repositoryId, id, version);
+    EntityVersionDao entityVersionDao =
+        optional.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-    return entityVersionRepository
-        .findByEntity_RepositoryIdAndEntityIdAndVersion(repositoryId, id, version)
-        .map(EntityVersionDao::toApiModel)
-        .map(populateSubEntities())
-        .map(populateWithCodeSystems())
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    List<Code> rootCodes = new ArrayList<>();
+    List<CodeDao> codeDaos = loadCodeDaos().apply(entityVersionDao);
+    Map<Long, Code> codeMap =
+        codeDaos.stream().collect(Collectors.toMap(CodeDao::getId, CodeDao::toApiModel));
+
+    for (CodeDao c : codeDaos) {
+      Code child = codeMap.get(c.getId());
+      if (c.getParent() == null || c.getParent().getId() == null) {
+        rootCodes.add(child);
+      } else {
+        Code parent = codeMap.get(c.getParent().getId());
+        if (parent != null) {
+          parent.getChildren().add(child);
+        }
+      }
+    }
+
+    Entity entity = entityVersionDao.toApiModel().codes(rootCodes);
+    return populateWithCodeSystems().apply(entity);
   }
 
   @CacheEvict(value = "entities", key = "#repositoryId")
@@ -912,6 +931,10 @@ public class EntityService implements ContentService {
       return e.codes(
           e.getCodes().stream().peek(this::populateWithCodeSystems).collect(Collectors.toList()));
     };
+  }
+
+  private Function<EntityVersionDao, List<CodeDao>> loadCodeDaos() {
+    return e -> codeRepository.getCodeTreeByEntityVersionId(e.getId(), null);
   }
 
   private void populateWithCodeSystems(Code c) {

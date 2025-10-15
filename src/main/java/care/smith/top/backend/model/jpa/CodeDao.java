@@ -3,6 +3,7 @@ package care.smith.top.backend.model.jpa;
 import care.smith.top.model.Code;
 import care.smith.top.model.CodeSystem;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -66,7 +67,8 @@ public class CodeDao {
     return new Code(new CodeSystem(URI.create(codeSystemUri)), code)
         .uri(uri != null ? URI.create(uri) : null)
         .name(name)
-        .synonyms(Collections.emptyList());
+        .synonyms(Collections.emptyList())
+        .children(new ArrayList<>());
   }
 
   public CodeDao id(@NotNull Long id) {
