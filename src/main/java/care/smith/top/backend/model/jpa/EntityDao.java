@@ -136,11 +136,6 @@ public class EntityDao {
         .createdAt(entityVersionDao.getCreatedAt())
         .version(entityVersionDao.getVersion());
 
-    if (entityVersionDao.getCodes() != null)
-      entity.codes(
-          entityVersionDao.getCodes().stream()
-              .map(CodeDao::toApiModel)
-              .collect(Collectors.toList()));
     if (entityVersionDao.getDescriptions() != null)
       entity.descriptions(
           entityVersionDao.getDescriptions().stream()

@@ -31,7 +31,7 @@ public class EntityVersionDao {
 
   @ElementCollection @OrderColumn private List<LocalisableTextDao> descriptions = null;
 
-  @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+  @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
   @OrderColumn
   private List<CodeDao> codes = null;
 

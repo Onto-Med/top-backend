@@ -15,7 +15,7 @@ public class CodeDao {
 
   @Id @GeneratedValue private Long id;
 
-  @ManyToOne(optional = true)
+  @ManyToOne()
   @JoinColumn(name = "parent_id", referencedColumnName = "id")
   private CodeDao parent;
 
@@ -66,7 +66,6 @@ public class CodeDao {
     return new Code(new CodeSystem(URI.create(codeSystemUri)), code)
         .uri(uri != null ? URI.create(uri) : null)
         .name(name)
-        .children(getChildren().stream().map(CodeDao::toApiModel).collect(Collectors.toList()))
         .synonyms(Collections.emptyList());
   }
 
