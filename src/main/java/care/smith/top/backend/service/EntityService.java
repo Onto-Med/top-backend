@@ -2,7 +2,7 @@ package care.smith.top.backend.service;
 
 import care.smith.top.backend.model.jpa.*;
 import care.smith.top.backend.repository.jpa.*;
-import care.smith.top.backend.repository.ols.CodeRepository;
+import care.smith.top.backend.repository.ols.OlsCodeRepository;
 import care.smith.top.backend.util.ApiModelMapper;
 import care.smith.top.model.*;
 import care.smith.top.top_phenotypic_query.converter.PhenotypeExporter;
@@ -49,7 +49,7 @@ public class EntityService implements ContentService {
   @Autowired private ConceptRepository conceptRepository;
   @Autowired private RepositoryRepository repositoryRepository;
   @Autowired private UserService userService;
-  @Autowired private CodeRepository codeRepository;
+  @Autowired private OlsCodeRepository olsCodeRepository;
 
   @Override
   @Cacheable("entityCount")
@@ -915,10 +915,9 @@ public class EntityService implements ContentService {
   }
 
   private void populateWithCodeSystems(Code c) {
-    codeRepository.getCodeSystem(c.getCodeSystem().getUri()).ifPresent(c::codeSystem);
-    Optional.ofNullable(c.getChildren())
-        .map(Collection::stream)
-        .orElseGet(Stream::empty)
+    olsCodeRepository.getCodeSystem(c.getCodeSystem().getUri()).ifPresent(c::codeSystem);
+    Optional.ofNullable(c.getChildren()).stream()
+        .flatMap(Collection::stream)
         .forEach(this::populateWithCodeSystems);
   }
 }

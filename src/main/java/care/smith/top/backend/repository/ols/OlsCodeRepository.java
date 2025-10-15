@@ -20,9 +20,9 @@ import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Mono;
 
 @Repository
-public class CodeRepository extends OlsRepository {
+public class OlsCodeRepository extends OlsRepository {
   private static final java.util.logging.Logger LOGGER =
-      Logger.getLogger(CodeRepository.class.getName());
+      Logger.getLogger(OlsCodeRepository.class.getName());
 
   @Value("${coding.suggestions-page-size}")
   private int suggestionsPageSize;
@@ -30,7 +30,7 @@ public class CodeRepository extends OlsRepository {
   @Value("${coding.code-children-page-size}")
   private int codeChildrenPageSize;
 
-  @Autowired private CodeSystemRepository codeSystemRepository;
+  @Autowired private OlsCodeSystemRepository olsCodeSystemRepository;
 
   /**
    * This method converts a TOP page number to OLS page number. OLS page count starts from 0, we
@@ -312,7 +312,7 @@ public class CodeRepository extends OlsRepository {
   public Optional<CodeSystem> getCodeSystem(String externalId) {
     if (externalId == null) return Optional.empty();
     try {
-      return codeSystemRepository.getAllCodeSystems().values().stream()
+      return olsCodeSystemRepository.getAllCodeSystems().values().stream()
           .filter(cs -> externalId.equals(cs.getExternalId()))
           .findFirst();
     } catch (OlsConnectionException e) {
@@ -322,8 +322,8 @@ public class CodeRepository extends OlsRepository {
 
   public Optional<CodeSystem> getCodeSystem(URI codeSystemUri) {
     try {
-      if (codeSystemRepository.getAllCodeSystems().containsKey(codeSystemUri))
-        return Optional.of(codeSystemRepository.getAllCodeSystems().get(codeSystemUri));
+      if (olsCodeSystemRepository.getAllCodeSystems().containsKey(codeSystemUri))
+        return Optional.of(olsCodeSystemRepository.getAllCodeSystems().get(codeSystemUri));
     } catch (OlsConnectionException ignored) {
     }
     return Optional.empty();

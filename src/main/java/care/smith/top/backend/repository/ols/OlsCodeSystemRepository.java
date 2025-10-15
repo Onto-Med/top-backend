@@ -11,8 +11,8 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public class CodeSystemRepository extends OlsRepository {
-  private static final Logger LOGGER = Logger.getLogger(CodeSystemRepository.class.getName());
+public class OlsCodeSystemRepository extends OlsRepository {
+  private static final Logger LOGGER = Logger.getLogger(OlsCodeSystemRepository.class.getName());
 
   @Cacheable("olsOntologies")
   public Map<URI, CodeSystem> getAllCodeSystems() throws OlsConnectionException {

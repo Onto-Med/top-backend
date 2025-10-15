@@ -3,8 +3,8 @@ package care.smith.top.backend.service;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import care.smith.top.backend.AbstractTest;
-import care.smith.top.backend.repository.ols.CodeRepository;
-import care.smith.top.backend.repository.ols.CodeSystemRepository;
+import care.smith.top.backend.repository.ols.OlsCodeRepository;
+import care.smith.top.backend.repository.ols.OlsCodeSystemRepository;
 import care.smith.top.backend.repository.ols.OlsConnectionException;
 import care.smith.top.model.*;
 import java.net.URI;
@@ -20,8 +20,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 @SpringBootTest
 public class CodeServiceTest extends AbstractTest {
 
-  @Autowired private CodeSystemRepository codeSystemRepository;
-  @Autowired private CodeRepository codeRepository;
+  @Autowired private OlsCodeSystemRepository olsCodeSystemRepository;
+  @Autowired private OlsCodeRepository olsCodeRepository;
 
   private static final class UriCodeScopeChildCountTuple {
     URI uri;
@@ -170,7 +170,7 @@ public class CodeServiceTest extends AbstractTest {
   }
 
   private void fillInCodeSystems(Code code) {
-    codeRepository
+    olsCodeRepository
         .getCodeSystem(code.getCodeSystem().getUri())
         .ifPresent(codeSystem -> code.setCodeSystem(codeSystem));
     Optional.ofNullable(code.getChildren())

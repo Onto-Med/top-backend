@@ -1,7 +1,7 @@
 package care.smith.top.backend.service;
 
-import care.smith.top.backend.repository.ols.CodeRepository;
-import care.smith.top.backend.repository.ols.CodeSystemRepository;
+import care.smith.top.backend.repository.ols.OlsCodeRepository;
+import care.smith.top.backend.repository.ols.OlsCodeSystemRepository;
 import care.smith.top.backend.repository.ols.OlsConnectionException;
 import care.smith.top.backend.repository.ols.OlsRepository;
 import care.smith.top.model.*;
@@ -22,8 +22,8 @@ import org.springframework.stereotype.Service;
 @Service
 @Primary
 public class OLSCodeService {
-  @Autowired protected CodeSystemRepository codeSystemRepository;
-  @Autowired protected CodeRepository codeRepository;
+  @Autowired protected OlsCodeSystemRepository olsCodeSystemRepository;
+  @Autowired protected OlsCodeRepository olsCodeRepository;
 
   @Value("${spring.paging.page-size:10}")
   private int ontologyPageSize;
@@ -37,19 +37,19 @@ public class OLSCodeService {
   }
 
   public Code getCode(URI uri, String codeSystemId, CodeScope scope) {
-    return codeRepository.getCode(uri, codeSystemId, scope);
+    return olsCodeRepository.getCode(uri, codeSystemId, scope);
   }
 
   public CodePage getCodes(
       List<String> include, String label, List<String> codeSystemIds, Integer page)
       throws OlsConnectionException {
-    return codeRepository.getCodes(label, codeSystemIds, page, OlsRepository.SEARCH_METHOD.SEARCH);
+    return olsCodeRepository.getCodes(label, codeSystemIds, page, OlsRepository.SEARCH_METHOD.SEARCH);
   }
 
   public CodePage getCodeSuggestions(
       List<String> include, String label, List<String> codeSystemIds, Integer page)
       throws OlsConnectionException {
-    return codeRepository.getCodes(label, codeSystemIds, page, OlsRepository.SEARCH_METHOD.SUGGEST);
+    return olsCodeRepository.getCodes(label, codeSystemIds, page, OlsRepository.SEARCH_METHOD.SUGGEST);
   }
 
   /**
@@ -70,7 +70,7 @@ public class OLSCodeService {
     int skipCount = (requestedPage - 1) * ontologyPageSize;
 
     List<CodeSystem> filteredCodeSystems =
-        codeSystemRepository.getAllCodeSystems().values().stream()
+        olsCodeSystemRepository.getAllCodeSystems().values().stream()
             .sorted((a, b) -> a.getExternalId().compareToIgnoreCase(b.getExternalId()))
             .filter(cs -> uri == null || uri.equals(cs.getUri()))
             .filter(filterByName(name))
