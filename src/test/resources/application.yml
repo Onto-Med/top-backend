@@ -14,12 +14,8 @@ spring:
     drop-first: true
   jpa:
     hibernate:
-      dialect: org.hibernate.dialect.HSQLDialect
+      dialect: org.hibernate.dialect.PostgreSQLDialect
     open-in-view: false
-  datasource:
-    url: jdbc:hsqldb:mem:test
-    username: sa
-    password:
   security:
     cors:
       allowed-origins: "*"

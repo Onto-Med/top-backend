@@ -1,4 +1,4 @@
-package care.smith.top.backend;
+package care.smith.top.backend.util;
 
 import care.smith.top.backend.api.OrganisationApiDelegateImpl;
 import care.smith.top.backend.repository.jpa.CategoryRepository;
@@ -17,23 +17,16 @@ import care.smith.top.backend.service.EntityService;
 import care.smith.top.backend.service.OrganisationService;
 import care.smith.top.backend.service.RepositoryService;
 import care.smith.top.backend.service.UserService;
-import care.smith.top.backend.util.ResourceHttpHandler;
-import care.smith.top.backend.util.ResourcePathHttpHandler;
-import com.sun.net.httpserver.HttpServer;
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.nio.file.Path;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 
 @SpringBootTest
-@ContextConfiguration()
-public abstract class AbstractTest {
-  static HttpServer olsServer;
+@ExtendWith(TestContainersInitializer.class)
+@ContextConfiguration(initializers = TestContainersInitializer.class)
+public class AbstractJpaTest {
   @Autowired protected OrganisationApiDelegateImpl organisationApiDelegate;
   @Autowired protected OrganisationService organisationService;
   @Autowired protected OrganisationRepository organisationRepository;
@@ -51,32 +44,6 @@ public abstract class AbstractTest {
   @Autowired protected SubjectRepository subjectRepository;
   @Autowired protected EncounterRepository encounterRepository;
   @Autowired protected SubjectResourceRepository subjectResourceRepository;
-
-  @BeforeAll
-  static void initializeOLS() throws IOException {
-    olsServer = HttpServer.create(new InetSocketAddress(9000), 0);
-    olsServer.createContext(
-        "/api/ontologies", new ResourceHttpHandler("/ols4_fixtures/ontologies.json"));
-    olsServer.createContext("/api/select", new ResourceHttpHandler("/ols4_fixtures/select.json"));
-    olsServer.createContext(
-        "/api/ontologies/test/terms",
-        new ResourcePathHttpHandler(
-            path -> {
-              boolean hierarchicalChildren =
-                  path.getFileName().toString().equals("hierarchicalChildren");
-              Path realPath = hierarchicalChildren ? path.getParent() : path;
-              Path resourceRootPath =
-                  Path.of("/ols4_fixtures", hierarchicalChildren ? "terms_hierarchy" : "terms");
-              Path relativeUriPath = Path.of("/api/ontologies/test/terms").relativize(realPath);
-              return resourceRootPath.resolve(relativeUriPath.toString() + ".json");
-            }));
-    olsServer.start();
-  }
-
-  @AfterAll
-  static void stopOLS() {
-    olsServer.stop(0);
-  }
 
   @BeforeEach
   public void resetState() {

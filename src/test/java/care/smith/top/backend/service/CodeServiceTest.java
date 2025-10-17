@@ -2,55 +2,30 @@ package care.smith.top.backend.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import care.smith.top.backend.AbstractTest;
 import care.smith.top.backend.repository.ols.OlsCodeRepository;
 import care.smith.top.backend.repository.ols.OlsCodeSystemRepository;
 import care.smith.top.backend.repository.ols.OlsConnectionException;
+import care.smith.top.backend.util.AbstractJpaTest;
+import care.smith.top.backend.util.OlsServerInitializer;
 import care.smith.top.model.*;
 import java.net.URI;
 import java.util.*;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ContextConfiguration;
 
-@SpringBootTest
-public class CodeServiceTest extends AbstractTest {
+@ExtendWith(OlsServerInitializer.class)
+@ContextConfiguration(initializers = OlsServerInitializer.class)
+public class CodeServiceTest extends AbstractJpaTest {
 
+  @Autowired OLSCodeService codeService;
   @Autowired private OlsCodeSystemRepository olsCodeSystemRepository;
   @Autowired private OlsCodeRepository olsCodeRepository;
-
-  private static final class UriCodeScopeChildCountTuple {
-    URI uri;
-    Integer subtree;
-    Integer leaves;
-
-    UriCodeScopeChildCountTuple(URI uri, Integer subtree, Integer leaves) {
-      this.uri = uri;
-      this.subtree = subtree;
-      this.leaves = leaves;
-    }
-
-    static UriCodeScopeChildCountTuple of(URI uri, Integer subtree, Integer leaves) {
-      return new UriCodeScopeChildCountTuple(uri, subtree, leaves);
-    }
-
-    Integer value(CodeScope scope) {
-      switch (scope) {
-        case SELF:
-          return 0;
-        case SUBTREE:
-          return subtree;
-        case LEAVES:
-          return leaves;
-        default:
-          throw new AssertionError(scope.toString());
-      }
-    }
-  }
 
   private static final Stream<Arguments> provideTestValuesForSubtrees() {
     return Stream.of(
@@ -83,8 +58,6 @@ public class CodeServiceTest extends AbstractTest {
         Arguments.of("test-54", 1, 1),
         Arguments.of("test-55", 1, 1));
   }
-
-  @Autowired OLSCodeService codeService;
 
   @Test
   void getSuggestions() throws OlsConnectionException {
@@ -175,5 +148,34 @@ public class CodeServiceTest extends AbstractTest {
         .ifPresent(codeSystem -> code.setCodeSystem(codeSystem));
     Optional.ofNullable(code.getChildren())
         .ifPresent(children -> children.forEach(child -> fillInCodeSystems(child)));
+  }
+
+  private static final class UriCodeScopeChildCountTuple {
+    URI uri;
+    Integer subtree;
+    Integer leaves;
+
+    UriCodeScopeChildCountTuple(URI uri, Integer subtree, Integer leaves) {
+      this.uri = uri;
+      this.subtree = subtree;
+      this.leaves = leaves;
+    }
+
+    static UriCodeScopeChildCountTuple of(URI uri, Integer subtree, Integer leaves) {
+      return new UriCodeScopeChildCountTuple(uri, subtree, leaves);
+    }
+
+    Integer value(CodeScope scope) {
+      switch (scope) {
+        case SELF:
+          return 0;
+        case SUBTREE:
+          return subtree;
+        case LEAVES:
+          return leaves;
+        default:
+          throw new AssertionError(scope.toString());
+      }
+    }
   }
 }

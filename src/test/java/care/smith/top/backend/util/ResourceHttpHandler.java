@@ -1,6 +1,5 @@
 package care.smith.top.backend.util;
 
-import care.smith.top.backend.AbstractTest;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import java.io.IOException;
@@ -16,7 +15,7 @@ public class ResourceHttpHandler implements HttpHandler {
 
   @Override
   public void handle(HttpExchange exchange) throws IOException {
-    try (InputStream resource = AbstractTest.class.getResourceAsStream(resourcePath)) {
+    try (InputStream resource = AbstractJpaTest.class.getResourceAsStream(resourcePath)) {
       assert resource != null;
       byte[] response = resource.readAllBytes();
       exchange.getResponseHeaders().set("Content-Type", "application/json");

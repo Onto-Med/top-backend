@@ -8,11 +8,7 @@ import java.io.StringReader;
 import java.math.BigDecimal;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ContextConfiguration;
 
-@SpringBootTest
-@ContextConfiguration
 class CSVImportTest extends ImportTest {
   public static final String SUBJECT_CSV =
       "pat_id; birth_date; gender"
@@ -175,14 +171,14 @@ class CSVImportTest extends ImportTest {
       SubjectDao subject, EncounterDao encounter) {
     return new SubjectResourceDao(DATA_SOURCE_ID, "r1", subject, encounter, "codesystem1", "code1")
         .dateTime(DateUtil.parse("01.02.2003"))
-        .numberValue(new BigDecimal("12.340"));
+        .numberValue(new BigDecimal("12.34"));
   }
 
   private SubjectResourceDao buildExpectedSubjectResource2(
       SubjectDao subject, EncounterDao encounter) {
     return new SubjectResourceDao(DATA_SOURCE_ID, "r2", subject, encounter, "codesystem2", "code2")
         .dateTime(DateUtil.parse("2004-05-06T01:02:03"))
-        .numberValue(new BigDecimal("56.780"));
+        .numberValue(new BigDecimal("56.78"));
   }
 
   private void importSubjectData(String csv) {
