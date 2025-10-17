@@ -2,8 +2,8 @@ package care.smith.top.backend.nlp.service;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import care.smith.top.backend.nlp.AbstractNLPTest;
 import care.smith.top.backend.service.nlp.ConceptClusterService;
+import care.smith.top.backend.util.AbstractNLPTest;
 import care.smith.top.model.ConceptCluster;
 import java.util.HashSet;
 import java.util.List;

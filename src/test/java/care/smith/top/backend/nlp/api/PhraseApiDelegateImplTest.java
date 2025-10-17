@@ -1,8 +1,8 @@
 package care.smith.top.backend.nlp.api;
 
 import care.smith.top.backend.api.nlp.PhraseApiDelegateImpl;
-import care.smith.top.backend.nlp.AbstractNLPTest;
 import care.smith.top.backend.service.nlp.PhraseService;
+import care.smith.top.backend.util.AbstractNLPTest;
 import java.io.IOException;
 import java.util.Objects;
 import org.junit.jupiter.api.Assertions;

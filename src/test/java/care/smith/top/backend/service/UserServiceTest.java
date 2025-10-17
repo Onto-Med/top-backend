@@ -2,15 +2,15 @@ package care.smith.top.backend.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import care.smith.top.backend.AbstractTest;
 import care.smith.top.backend.model.jpa.OrganisationDao;
 import care.smith.top.backend.model.jpa.Permission;
 import care.smith.top.backend.model.jpa.UserDao;
 import care.smith.top.backend.model.jpa.key.OrganisationMembershipKeyDao;
+import care.smith.top.backend.util.AbstractJpaTest;
 import java.util.Collections;
 import org.junit.jupiter.api.Test;
 
-class UserServiceTest extends AbstractTest {
+class UserServiceTest extends AbstractJpaTest {
   @Test
   void grantAndRevokeMembership() {
     OrganisationDao organisation =

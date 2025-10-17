@@ -31,11 +31,7 @@ import org.hl7.fhir.r4.model.Timing.TimingRepeatComponent;
 import org.hl7.fhir.r4.model.codesystems.V3ActCode;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ContextConfiguration;
 
-@SpringBootTest
-@ContextConfiguration
 class FHIRImportTest extends ImportTest {
   static final String DATA_SOURCE_ID = "data_source_1";
   static String FHIR;
@@ -228,7 +224,7 @@ class FHIRImportTest extends ImportTest {
     SubjectResourceDao p1o =
         new SubjectResourceDao(
                 DATA_SOURCE_ID, "Observation/p1o", sub1, enc11, "http://loinc.org", "711-2")
-            .numberValue(new BigDecimal("0.920"))
+            .numberValue(new BigDecimal("0.92"))
             .unit("x10*9/L")
             .dateTime(DateUtil.parse("2015-02-01T12:00"));
     SubjectResourceDao p1p =
@@ -325,7 +321,7 @@ class FHIRImportTest extends ImportTest {
     SubjectResourceDao p1o =
         new SubjectResourceDao(
                 DATA_SOURCE_ID, "Observation/p1o", sub1, enc11, "http://loinc.org", "711-2")
-            .numberValue(new BigDecimal("0.920"))
+            .numberValue(new BigDecimal("0.92"))
             .unit("x10*9/L")
             .dateTime(DateUtil.parse("2015-02-01T12:00"));
     SubjectResourceDao p1p =

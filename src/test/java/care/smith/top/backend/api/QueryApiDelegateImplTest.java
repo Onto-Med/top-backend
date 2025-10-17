@@ -2,7 +2,7 @@ package care.smith.top.backend.api;
 
 import static org.assertj.core.api.Assertions.*;
 
-import care.smith.top.backend.AbstractTest;
+import care.smith.top.backend.util.AbstractJpaTest;
 import care.smith.top.model.DataSource;
 import care.smith.top.model.Organisation;
 import care.smith.top.model.QueryType;
@@ -11,7 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
-class QueryApiDelegateImplTest extends AbstractTest {
+class QueryApiDelegateImplTest extends AbstractJpaTest {
   @Autowired private QueryApiDelegateImpl queryApi;
   @Autowired private OrganisationApiDelegateImpl organisationApi;
 

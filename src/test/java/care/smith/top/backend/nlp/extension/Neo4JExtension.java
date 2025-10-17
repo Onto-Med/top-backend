@@ -1,6 +1,6 @@
 package care.smith.top.backend.nlp.extension;
 
-import static care.smith.top.backend.nlp.AbstractNLPTest.*;
+import static care.smith.top.backend.util.AbstractNLPTest.*;
 
 import java.net.URI;
 import java.util.List;
@@ -32,10 +32,10 @@ public class Neo4JExtension implements BeforeAllCallback, ExtensionContext.Store
           "p2",
               List.of(
                   Triple.of(IN_CONCEPT_REL, null, "c2"), Triple.of(NEIGHBOR_OF_REL, null, "p1")));
+  private static final String exampleDatasource = "exampledatasource";
   private static boolean started = false;
   private static Neo4j embeddedNeo4j;
   private static Session neo4jSession;
-  private static final String exampleDatasource = "exampledatasource";
 
   private static void setUpNeo4jDB() {
     embeddedNeo4j = Neo4jBuilders.newInProcessBuilder().withDisabledServer().build();

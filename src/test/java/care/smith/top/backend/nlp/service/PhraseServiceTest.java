@@ -2,19 +2,13 @@ package care.smith.top.backend.nlp.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import care.smith.top.backend.nlp.AbstractNLPTest;
-import care.smith.top.backend.service.nlp.PhraseService;
+import care.smith.top.backend.util.AbstractNLPTest;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
 class PhraseServiceTest extends AbstractNLPTest {
   private final String exampleDatasource = "exampledatasource";
-
-  @Autowired PhraseService phraseService;
 
   @Test
   void count() {

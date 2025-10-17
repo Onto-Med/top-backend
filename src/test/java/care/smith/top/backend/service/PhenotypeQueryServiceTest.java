@@ -3,7 +3,7 @@ package care.smith.top.backend.service;
 import static org.assertj.core.api.Assertions.*;
 import static org.awaitility.Awaitility.await;
 
-import care.smith.top.backend.AbstractTest;
+import care.smith.top.backend.util.AbstractJpaTest;
 import care.smith.top.model.*;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -14,12 +14,10 @@ import java.util.concurrent.TimeUnit;
 import org.jobrunr.storage.StorageProvider;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
-@SpringBootTest
-class PhenotypeQueryServiceTest extends AbstractTest {
+class PhenotypeQueryServiceTest extends AbstractJpaTest {
   static List<String> dataSources = Arrays.asList("Test_Data_Source_1", "Test_Data_Source_2");
   @Autowired PhenotypeQueryService queryService;
   @Autowired StorageProvider storageProvider;

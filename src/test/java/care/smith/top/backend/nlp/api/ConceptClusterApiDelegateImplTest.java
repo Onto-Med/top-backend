@@ -3,8 +3,8 @@ package care.smith.top.backend.nlp.api;
 import static org.junit.jupiter.api.Assertions.*;
 
 import care.smith.top.backend.api.nlp.ConceptClusterApiDelegateImpl;
-import care.smith.top.backend.nlp.AbstractNLPTest;
 import care.smith.top.backend.service.nlp.ConceptClusterService;
+import care.smith.top.backend.util.AbstractNLPTest;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;

@@ -109,6 +109,7 @@ public class EntityVersionDao {
               .collect(Collectors.toList());
     if (entity.getCodes() != null)
       codes = entity.getCodes().stream().map(CodeDao::new).collect(Collectors.toList());
+    // TODO: map code parents
     if (entity instanceof Phenotype) {
       dataType = ((Phenotype) entity).getDataType();
       itemType = ((Phenotype) entity).getItemType();

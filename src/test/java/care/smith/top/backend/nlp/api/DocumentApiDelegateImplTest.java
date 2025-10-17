@@ -1,7 +1,7 @@
 package care.smith.top.backend.nlp.api;
 
 import care.smith.top.backend.api.nlp.DocumentApiDelegateImpl;
-import care.smith.top.backend.nlp.AbstractNLPTest;
+import care.smith.top.backend.util.AbstractNLPTest;
 import care.smith.top.model.Document;
 import care.smith.top.model.DocumentGatheringMode;
 import care.smith.top.model.DocumentPage;
