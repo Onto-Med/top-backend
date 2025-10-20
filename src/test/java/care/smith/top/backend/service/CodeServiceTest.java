@@ -106,7 +106,6 @@ public class CodeServiceTest extends AbstractJpaTest {
                       c -> {
                         assertThat(c.getCodes()).size().isEqualTo(1);
                         Code codeEntity = c.getCodes().get(0);
-                        fillInCodeSystems(codeEntity);
 
                         assertThat(codeEntity).isEqualTo(code);
 
