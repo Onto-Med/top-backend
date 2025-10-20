@@ -59,7 +59,7 @@ public class CodeDao {
     if (code.getCodeSystem() != null) codeSystemUri = code.getCodeSystem().getUri().toString();
     this.children =
         Optional.ofNullable(code.getChildren()).orElse(Collections.emptyList()).stream()
-            .map(this::deepTranslate)
+            .map(c -> new CodeDao(c).parent(this))
             .collect(Collectors.toList());
   }
 
@@ -156,13 +156,5 @@ public class CodeDao {
 
   public String getCodeSystemUri() {
     return codeSystemUri;
-  }
-
-  private CodeDao deepTranslate(Code code) {
-    final CodeDao codeDao = new CodeDao(code);
-    return codeDao.children(
-        Optional.ofNullable(code.getChildren()).orElse(Collections.emptyList()).stream()
-            .map(childCode -> deepTranslate(childCode).parent(codeDao))
-            .collect(Collectors.toList()));
   }
 }
