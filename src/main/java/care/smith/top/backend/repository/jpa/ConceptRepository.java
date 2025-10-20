@@ -53,9 +53,9 @@ public interface ConceptRepository extends EntityRepository {
    * If the depth of an entity
    *
    * <ul>
-   *   <li>== 0 -> subConcepts won't be resolved.
-   *   <li>> 0 -> subConcepts will be resolved up until and including the depth
-   *   <li>< 0 -> all subConcepts will be resolved
+   *   <li>⩵ 0 → subConcepts won't be resolved.
+   *   <li>> 0 → subConcepts will be resolved up until and including the depth
+   *   <li>< 0 → all subConcepts will be resolved
    * </ul>
    *
    * @param concepts
