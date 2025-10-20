@@ -46,7 +46,10 @@ public class OlsServerInitializer
             }));
     olsServer.start();
 
-    TestPropertyValues.of("coding.terminology-service=http://localhost:" + olsServer.getAddress().getPort() + "/api")
+    TestPropertyValues.of(
+            "coding.terminology-service=http://localhost:"
+                + olsServer.getAddress().getPort()
+                + "/api")
         .applyTo(applicationContext.getEnvironment());
   }
 }

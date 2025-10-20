@@ -25,6 +25,6 @@ public interface CodeRepository
               + "SELECT * "
               + "FROM code_tree "
               + "WHERE CASE WHEN :levelCap IS NULL THEN true ELSE level <= :levelCap END "
-  + "ORDER BY parent_id NULLS FIRST, children_order")
+              + "ORDER BY parent_id NULLS FIRST, children_order")
   List<CodeDao> getCodeTreeByEntityVersionId(Long entityVersionId, Integer levelCap);
 }

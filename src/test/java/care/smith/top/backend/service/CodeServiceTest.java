@@ -27,7 +27,7 @@ public class CodeServiceTest extends AbstractJpaTest {
   @Autowired private OlsCodeSystemRepository olsCodeSystemRepository;
   @Autowired private OlsCodeRepository olsCodeRepository;
 
-  private static final Stream<Arguments> provideTestValuesForSubtrees() {
+  private static Stream<Arguments> provideTestValuesForSubtrees() {
     return Stream.of(
         Arguments.of("test-1", 2, 1),
         Arguments.of("test-11", 1, 1),
@@ -128,53 +128,14 @@ public class CodeServiceTest extends AbstractJpaTest {
   }
 
   private int nodeCount(Code c) {
-    return 1 + c.getChildren().stream().map(child -> nodeCount(child)).reduce(0, Integer::sum);
+    return 1 + c.getChildren().stream().map(this::nodeCount).reduce(0, Integer::sum);
   }
 
   private int leafCount(Code c) {
-    return isLeaf(c)
-        ? 1
-        : c.getChildren().stream().map(child -> leafCount(child)).reduce(0, Integer::sum);
+    return isLeaf(c) ? 1 : c.getChildren().stream().map(this::leafCount).reduce(0, Integer::sum);
   }
 
   private boolean isLeaf(Code c) {
-    return c.getChildren() == null || c.getChildren().size() == 0;
-  }
-
-  private void fillInCodeSystems(Code code) {
-    olsCodeRepository
-        .getCodeSystem(code.getCodeSystem().getUri())
-        .ifPresent(codeSystem -> code.setCodeSystem(codeSystem));
-    Optional.ofNullable(code.getChildren())
-        .ifPresent(children -> children.forEach(child -> fillInCodeSystems(child)));
-  }
-
-  private static final class UriCodeScopeChildCountTuple {
-    URI uri;
-    Integer subtree;
-    Integer leaves;
-
-    UriCodeScopeChildCountTuple(URI uri, Integer subtree, Integer leaves) {
-      this.uri = uri;
-      this.subtree = subtree;
-      this.leaves = leaves;
-    }
-
-    static UriCodeScopeChildCountTuple of(URI uri, Integer subtree, Integer leaves) {
-      return new UriCodeScopeChildCountTuple(uri, subtree, leaves);
-    }
-
-    Integer value(CodeScope scope) {
-      switch (scope) {
-        case SELF:
-          return 0;
-        case SUBTREE:
-          return subtree;
-        case LEAVES:
-          return leaves;
-        default:
-          throw new AssertionError(scope.toString());
-      }
-    }
+    return c.getChildren() == null || c.getChildren().isEmpty();
   }
 }

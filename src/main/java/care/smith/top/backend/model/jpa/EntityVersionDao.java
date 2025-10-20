@@ -38,7 +38,7 @@ public class EntityVersionDao {
   @OneToOne(fetch = FetchType.LAZY)
   private EntityVersionDao previousVersion;
 
-  @OneToOne(mappedBy = "previousVersion", fetch = FetchType.LAZY)
+  @OneToOne(mappedBy = "previousVersion")
   private EntityVersionDao nextVersion;
 
   @ManyToMany(fetch = FetchType.LAZY)

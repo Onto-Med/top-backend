@@ -43,13 +43,15 @@ public class OLSCodeService {
   public CodePage getCodes(
       List<String> include, String label, List<String> codeSystemIds, Integer page)
       throws OlsConnectionException {
-    return olsCodeRepository.getCodes(label, codeSystemIds, page, OlsRepository.SEARCH_METHOD.SEARCH);
+    return olsCodeRepository.getCodes(
+        label, codeSystemIds, page, OlsRepository.SEARCH_METHOD.SEARCH);
   }
 
   public CodePage getCodeSuggestions(
       List<String> include, String label, List<String> codeSystemIds, Integer page)
       throws OlsConnectionException {
-    return olsCodeRepository.getCodes(label, codeSystemIds, page, OlsRepository.SEARCH_METHOD.SUGGEST);
+    return olsCodeRepository.getCodes(
+        label, codeSystemIds, page, OlsRepository.SEARCH_METHOD.SUGGEST);
   }
 
   /**
@@ -74,7 +76,7 @@ public class OLSCodeService {
             .sorted((a, b) -> a.getExternalId().compareToIgnoreCase(b.getExternalId()))
             .filter(cs -> uri == null || uri.equals(cs.getUri()))
             .filter(filterByName(name))
-            .collect(Collectors.toList());
+            .toList();
 
     List<CodeSystem> content =
         filteredCodeSystems.stream()
@@ -82,12 +84,11 @@ public class OLSCodeService {
             .limit(ontologyPageSize)
             .collect(Collectors.toList());
 
-    return (CodeSystemPage)
-        new CodeSystemPage()
-            .content(content)
-            .size(ontologyPageSize)
-            .totalElements((long) filteredCodeSystems.size())
-            .number(requestedPage)
-            .totalPages(filteredCodeSystems.size() / ontologyPageSize + 1);
+    return new CodeSystemPage()
+        .content(content)
+        .size(ontologyPageSize)
+        .totalElements((long) filteredCodeSystems.size())
+        .number(requestedPage)
+        .totalPages(filteredCodeSystems.size() / ontologyPageSize + 1);
   }
 }

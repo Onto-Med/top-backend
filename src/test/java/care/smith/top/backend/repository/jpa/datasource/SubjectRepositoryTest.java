@@ -3,9 +3,9 @@ package care.smith.top.backend.repository.jpa.datasource;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
-import care.smith.top.backend.util.AbstractJpaTest;
 import care.smith.top.backend.model.jpa.datasource.SubjectDao;
 import care.smith.top.backend.model.jpa.datasource.SubjectResourceDao;
+import care.smith.top.backend.util.AbstractJpaTest;
 import java.time.LocalDateTime;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
