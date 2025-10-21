@@ -1,6 +1,7 @@
 package care.smith.top.backend.service.nlp;
 
 import care.smith.top.model.RAGAnswer;
+import care.smith.top.model.RAGStatus;
 import care.smith.top.top_document_query.concept_graphs_api.RAGManager;
 import java.net.MalformedURLException;
 import org.json.JSONObject;
@@ -35,5 +36,15 @@ public class RAGService {
 
   public RAGAnswer poseQuestionWithFilter(String process, String question, String[] docIds) {
     return ragManager.poseQuestion(process, question, docIds);
+  }
+
+  public RAGStatus getStatus(String process) {
+      return ragManager.getRAGStatus(process);
+  }
+
+  public boolean isActive(String process) {
+      RAGStatus status = getStatus(process);
+      if (status == null) return false;
+      return Boolean.TRUE.equals(status.isActive());
   }
 }
