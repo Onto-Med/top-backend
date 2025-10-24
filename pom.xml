@@ -62,7 +62,7 @@
         <dependency>
             <groupId>care.smith.top</groupId>
             <artifactId>top-api</artifactId>
-            <version>0.13.4-SNAPSHOT</version>
+            <version>0.13.4</version>
         </dependency>
         <dependency>
             <groupId>care.smith.top</groupId>
@@ -82,7 +82,7 @@
         <dependency>
             <groupId>care.smith.top</groupId>
             <artifactId>top-document-query</artifactId>
-            <version>0.9.1-SNAPSHOT</version>
+            <version>0.9.1</version>
             <exclusions>
                 <exclusion>
                     <groupId>care.smith.top</groupId>

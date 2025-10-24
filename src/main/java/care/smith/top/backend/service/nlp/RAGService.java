@@ -39,12 +39,12 @@ public class RAGService {
   }
 
   public RAGStatus getStatus(String process) {
-      return ragManager.getRAGStatus(process);
+    return ragManager.getRAGStatus(process);
   }
 
   public boolean isActive(String process) {
-      RAGStatus status = getStatus(process);
-      if (status == null) return false;
-      return Boolean.TRUE.equals(status.isActive());
+    RAGStatus status = getStatus(process);
+    if (status == null) return false;
+    return Boolean.TRUE.equals(status.isActive());
   }
 }

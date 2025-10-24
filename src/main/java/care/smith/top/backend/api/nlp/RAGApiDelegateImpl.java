@@ -47,12 +47,12 @@ public class RAGApiDelegateImpl implements RagApiDelegate {
                 : new String[0]));
   }
 
-    @Override
-    public ResponseEntity<RAGStatus> getStatusOfRAG(String process) {
-      return ResponseEntity.ok(ragService.getStatus(process));
-    }
+  @Override
+  public ResponseEntity<RAGStatus> getStatusOfRAG(String process) {
+    return ResponseEntity.ok(ragService.getStatus(process));
+  }
 
-    private TextAdapter getTextAdapter(String dataSource) {
+  private TextAdapter getTextAdapter(String dataSource) {
     try {
       return documentService.getAdapterForDataSource(dataSource);
     } catch (InstantiationException e) {
