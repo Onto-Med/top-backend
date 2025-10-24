@@ -2,8 +2,8 @@ package care.smith.top.backend.nlp.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import care.smith.top.backend.nlp.AbstractNLPTest;
 import care.smith.top.backend.service.nlp.DocumentService;
+import care.smith.top.backend.util.AbstractNLPTest;
 import care.smith.top.model.Document;
 import java.io.IOException;
 import java.util.HashSet;
@@ -12,9 +12,7 @@ import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
 class DocumentServiceTest extends AbstractNLPTest {
   private static DocumentService documentService;
   private final Set<String> documentIds1 =

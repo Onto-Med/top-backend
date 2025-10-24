@@ -2,14 +2,14 @@ package care.smith.top.backend.service;
 
 import static org.assertj.core.api.Assertions.*;
 
-import care.smith.top.backend.AbstractTest;
 import care.smith.top.backend.model.jpa.RepositoryDao;
+import care.smith.top.backend.util.AbstractJpaTest;
 import care.smith.top.model.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
-class RepositoryServiceTest extends AbstractTest {
+class RepositoryServiceTest extends AbstractJpaTest {
   @Test
   void createRepository() {
     Organisation organisation =

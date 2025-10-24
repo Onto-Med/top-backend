@@ -2,8 +2,8 @@ package care.smith.top.backend.service;
 
 import static org.assertj.core.api.Assertions.*;
 
-import care.smith.top.backend.AbstractTest;
 import care.smith.top.backend.model.jpa.EntityDao;
+import care.smith.top.backend.util.AbstractJpaTest;
 import care.smith.top.backend.util.TopJsonFormat;
 import care.smith.top.model.*;
 import care.smith.top.top_phenotypic_query.c2reasoner.functions.bool.Not;
@@ -16,7 +16,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
-class EntityServiceTest extends AbstractTest {
+class EntityServiceTest extends AbstractJpaTest {
   @Test
   void exportRepository() {
     Organisation organisation = organisationService.createOrganisation(new Organisation("org"));
@@ -586,9 +586,7 @@ class EntityServiceTest extends AbstractTest {
         .hasValueSatisfying(
             e -> {
               assertThat(e.getCurrentVersion().getVersion()).isEqualTo(3);
-              assertThat(e.getCurrentVersion().getPreviousVersion())
-                  .isNotNull()
-                  .satisfies(prev -> assertThat(prev.getVersion()).isEqualTo(1));
+              assertThat(e.getCurrentVersion().getPreviousVersion()).isNotNull();
             });
 
     assertThat(

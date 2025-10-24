@@ -2,8 +2,8 @@ package care.smith.top.backend.nlp.service;
 
 import static org.assertj.core.api.Assertions.*;
 
-import care.smith.top.backend.nlp.AbstractNLPTest;
 import care.smith.top.backend.service.nlp.ConceptGraphsService;
+import care.smith.top.backend.util.AbstractNLPTest;
 import care.smith.top.model.ConceptGraph;
 import care.smith.top.model.ConceptGraphPipeline;
 import care.smith.top.model.ConceptGraphStat;
@@ -11,9 +11,7 @@ import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
 class ConceptGraphsServiceTest extends AbstractNLPTest {
   @Autowired ConceptGraphsService conceptGraphsService;
 

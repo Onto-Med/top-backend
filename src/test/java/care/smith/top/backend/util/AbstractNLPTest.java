@@ -1,4 +1,4 @@
-package care.smith.top.backend.nlp;
+package care.smith.top.backend.util;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -13,7 +13,7 @@ import care.smith.top.backend.repository.neo4j.PhraseDocumentRelationRepository;
 import care.smith.top.backend.repository.neo4j.PhraseNodeRepository;
 import care.smith.top.backend.service.nlp.DocumentQueryService;
 import care.smith.top.backend.service.nlp.DocumentService;
-import care.smith.top.backend.util.ResourceHttpHandler;
+import care.smith.top.backend.service.nlp.PhraseService;
 import care.smith.top.model.ConceptCluster;
 import care.smith.top.model.Document;
 import care.smith.top.model.Phrase;
@@ -28,13 +28,13 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.util.TestSocketUtils;
 
-@SpringBootTest
-public abstract class AbstractNLPTest {
+public abstract class AbstractNLPTest extends AbstractJpaTest {
+  private static final String exampleDatasource = "exampledatasource";
   protected static Set<Document> documents1 =
       Set.of(
           new Document()
@@ -62,20 +62,22 @@ public abstract class AbstractNLPTest {
       List.of(new Phrase().id("p2").text("another phrase there").exemplar(false));
   public static List<Phrase> phrases1_2 = List.of(phrases1.get(0), phrases2.get(0));
   protected static HttpServer conceptGraphsApiService;
-  protected static int cgApi = 9010;
-  private static final String exampleDatasource = "exampledatasource";
-
+  protected static int cgApi = TestSocketUtils.findAvailableTcpPort();
   @RegisterExtension static Neo4JExtension neo4JExtension = new Neo4JExtension();
   @Autowired protected ConceptClusterNodeRepository conceptClusterNodeRepository;
   @Autowired protected PhraseNodeRepository phraseRepository;
   @Autowired protected DocumentNodeRepository documentNodeRepository;
   @Autowired protected PhraseDocumentRelationRepository relationRepository;
+  @Autowired protected PhraseService phraseService;
 
   @DynamicPropertySource
   static void dbProperties(DynamicPropertyRegistry registry) {
     registry.add("spring.neo4j.uri", neo4JExtension::getBoltUri);
     registry.add("spring.neo4j.authentication.username", () -> "neo4j");
     registry.add("spring.neo4j.authentication.password", () -> null);
+    registry.add(
+        "top.documents.concept-graphs-api.uri",
+        () -> "http://localhost:" + conceptGraphsApiService.getAddress().getPort());
   }
 
   @BeforeAll

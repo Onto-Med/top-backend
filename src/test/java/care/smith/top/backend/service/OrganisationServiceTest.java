@@ -2,7 +2,7 @@ package care.smith.top.backend.service;
 
 import static org.assertj.core.api.Assertions.*;
 
-import care.smith.top.backend.AbstractTest;
+import care.smith.top.backend.util.AbstractJpaTest;
 import care.smith.top.model.Organisation;
 import care.smith.top.model.Repository;
 import care.smith.top.model.RepositoryType;
@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
-class OrganisationServiceTest extends AbstractTest {
+class OrganisationServiceTest extends AbstractJpaTest {
 
   @Test
   void createOrganisation() {

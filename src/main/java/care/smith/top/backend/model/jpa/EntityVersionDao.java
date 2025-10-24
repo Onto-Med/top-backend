@@ -31,21 +31,23 @@ public class EntityVersionDao {
 
   @ElementCollection @OrderColumn private List<LocalisableTextDao> descriptions = null;
 
-  @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+  @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
   @OrderColumn
   private List<CodeDao> codes = null;
 
-  @OneToOne private EntityVersionDao previousVersion;
+  @OneToOne(fetch = FetchType.LAZY)
+  private EntityVersionDao previousVersion;
 
   @OneToOne(mappedBy = "previousVersion")
   private EntityVersionDao nextVersion;
 
-  @ManyToMany private Set<EntityVersionDao> equivalentEntityVersions = null;
+  @ManyToMany(fetch = FetchType.LAZY)
+  private Set<EntityVersionDao> equivalentEntityVersions = null;
 
-  @ManyToMany(mappedBy = "equivalentEntityVersions")
+  @ManyToMany(mappedBy = "equivalentEntityVersions", fetch = FetchType.LAZY)
   private Set<EntityVersionDao> equivalentEntityVersionOf = null;
 
-  @ManyToOne
+  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "user_id")
   @CreatedBy
   private UserDao author;
@@ -107,6 +109,7 @@ public class EntityVersionDao {
               .collect(Collectors.toList());
     if (entity.getCodes() != null)
       codes = entity.getCodes().stream().map(CodeDao::new).collect(Collectors.toList());
+
     if (entity instanceof Phenotype) {
       dataType = ((Phenotype) entity).getDataType();
       itemType = ((Phenotype) entity).getItemType();
