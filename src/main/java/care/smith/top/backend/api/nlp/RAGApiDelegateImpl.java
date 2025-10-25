@@ -5,6 +5,7 @@ import care.smith.top.backend.service.nlp.DocumentService;
 import care.smith.top.backend.service.nlp.RAGService;
 import care.smith.top.model.RAGAnswer;
 import care.smith.top.model.RAGFilter;
+import care.smith.top.model.RAGStatus;
 import care.smith.top.top_document_query.adapter.TextAdapter;
 import java.util.logging.Logger;
 import org.json.JSONObject;
@@ -44,6 +45,11 @@ public class RAGApiDelegateImpl implements RagApiDelegate {
             ragFilter.getDocIds() != null
                 ? ragFilter.getDocIds().toArray(new String[0])
                 : new String[0]));
+  }
+
+  @Override
+  public ResponseEntity<RAGStatus> getStatusOfRAG(String process) {
+    return ResponseEntity.ok(ragService.getStatus(process));
   }
 
   private TextAdapter getTextAdapter(String dataSource) {
