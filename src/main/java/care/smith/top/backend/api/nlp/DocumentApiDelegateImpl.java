@@ -8,6 +8,7 @@ import care.smith.top.backend.util.nlp.DocumentRepresentation;
 import care.smith.top.backend.util.nlp.NLPUtils;
 import care.smith.top.model.Document;
 import care.smith.top.model.DocumentGatheringMode;
+import care.smith.top.model.DocumentImport;
 import care.smith.top.model.DocumentPage;
 import care.smith.top.top_document_query.adapter.TextAdapter;
 import care.smith.top.top_document_query.elasticsearch.DocumentEntity;
@@ -15,6 +16,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -216,6 +218,23 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
       LOGGER.fine("Server Instance could not be reached/queried.");
       return ResponseEntity.ok(new DocumentPage());
     }
+  }
+
+  @Override
+  public ResponseEntity<DocumentImport> importDocuments(
+      String dataSource, String language, List<@Valid Document> documents) {
+    try {
+      TextAdapter adapter = documentService.getAdapterForDataSource(dataSource);
+      DocumentImport importResult =
+          adapter.importDocuments(documents.toArray(new Document[0]), language);
+      return ResponseEntity.ok(importResult);
+    } catch (InstantiationException e) {
+      LOGGER.severe("The text adapter '" + dataSource + "' could not be initialized.");
+    } catch (IOException e) {
+      LOGGER.severe(
+          "Server Instance could not be reached/queried for datasource '" + dataSource + "'.");
+    }
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
   }
 
   private String[] parseHighlightString(String highlightString) {
