@@ -4,6 +4,9 @@ server:
     context-path: ${APP_PATH:/}
   error:
     include-message: always
+  tomcat:
+    max-swallow-size: ${MAX_COMBINED_DOCUMENTS_UPLOAD:2MB}
+    max-http-form-post-size: ${MAX_COMBINED_DOCUMENTS_UPLOAD:2MB}
 
 openapi:
   tOP:
