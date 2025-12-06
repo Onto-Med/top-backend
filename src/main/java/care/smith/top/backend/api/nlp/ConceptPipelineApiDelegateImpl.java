@@ -22,6 +22,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -74,6 +75,7 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
 
   @Override
   public ResponseEntity<ConceptGraphPipeline> getConceptGraphPipelineById(String pipelineId) {
+      if (!conceptGraphsService.pipelineManagerIsAccessible()) return serviceNotFoundError();
     ConceptGraphPipeline pipeline = new ConceptGraphPipeline();
     final String finalPipelineId = stringConformity(pipelineId);
     try {
@@ -273,6 +275,11 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
   public ResponseEntity<Void> stopConceptGraphPipeline(String pipelineId) {
     conceptGraphsService.stopPipeline(stringConformity(pipelineId));
     return ResponseEntity.ok().build();
+  }
+
+  private ResponseEntity<ConceptGraphPipeline> serviceNotFoundError() {
+      LOGGER.severe("Concept Graphs API service not found.");
+      return ResponseEntity.of(Optional.of(new ConceptGraphPipeline().pipelineId(null).status(PipelineResponseStatus.FAILED)));
   }
 
   private Map<String, String> createVectorStoreServerMap(TextAdapterConfig textAdapterConfig) {
