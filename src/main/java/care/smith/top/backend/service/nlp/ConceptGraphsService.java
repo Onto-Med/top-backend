@@ -44,13 +44,13 @@ public class ConceptGraphsService implements ContentService {
     return pipelineManager.count();
   }
 
-    public boolean pipelineManagerIsAccessible() {
-        return pipelineManager.isAccessible();
-    }
+  public boolean pipelineManagerIsAccessible() {
+    return pipelineManager.isAccessible();
+  }
 
-    public String currentUrl() {
-      return pipelineManager.getCurrentUrl().toString();
-    }
+  public String currentUrl() {
+    return pipelineManager.getCurrentUrl().toString();
+  }
 
   public Map<String, ConceptGraphStat> getAllConceptGraphStatistics(String processName) {
     return pipelineManager
