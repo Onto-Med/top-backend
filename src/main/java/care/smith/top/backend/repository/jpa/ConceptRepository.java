@@ -22,7 +22,7 @@ public interface ConceptRepository extends EntityRepository {
       nativeQuery = true,
       value =
           "WITH RECURSIVE tree AS ("
-              + " SELECT *, NULL\\:\\:character varying AS parent_id, 0 AS level"
+              + " SELECT *, CAST(NULL AS character varying) AS parent_id, 0 AS level"
               + " FROM entity e"
               + " WHERE id = :entityId"
               + " UNION"
@@ -38,7 +38,7 @@ public interface ConceptRepository extends EntityRepository {
       nativeQuery = true,
       value =
           "WITH RECURSIVE tree AS ("
-              + " SELECT *, NULL\\:\\:character varying AS parent_id, 0 AS level"
+              + " SELECT *, CAST(NULL AS character varying) AS parent_id, 0 AS level"
               + " FROM entity e"
               + " WHERE id = :entityId"
               + " UNION"
