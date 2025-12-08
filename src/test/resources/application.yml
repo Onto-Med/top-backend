@@ -16,6 +16,11 @@ spring:
     hibernate:
       dialect: org.hibernate.dialect.PostgreSQLDialect
     open-in-view: false
+    properties:
+      hibernate:
+        # Reverts to the behavior of Hibernate 5.3+
+        id:
+          db_structure_naming_strategy: legacy
   security:
     cors:
       allowed-origins: "*"

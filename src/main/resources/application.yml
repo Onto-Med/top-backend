@@ -33,6 +33,11 @@ spring:
       ddl-auto: validate
       dialect: org.hibernate.dialect.PostgreSQLDialect
     open-in-view: false
+    properties:
+      hibernate:
+        # Reverts to the behavior of Hibernate 5.3+
+        id:
+          db_structure_naming_strategy: legacy
   datasource:
     url: jdbc:${DB_TYPE:postgresql}://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:postgres}
     username: ${DB_USER:postgres}
