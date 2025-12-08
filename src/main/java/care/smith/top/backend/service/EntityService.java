@@ -437,7 +437,7 @@ public class EntityService implements ContentService {
       List<EntityType> type,
       DataType dataType,
       ItemType itemType) {
-    // TODO: filter parameters are ignored
+    // NOTE: filter parameters are ignored
     getRepository(organisationId, repositoryId);
     return entityRepository
         .findAllByRepositoryIdAndSuperEntitiesEmpty(repositoryId, Sort.by(EntityDao_.ID))

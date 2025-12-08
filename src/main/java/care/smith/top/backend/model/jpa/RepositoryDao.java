@@ -163,7 +163,6 @@ public class RepositoryDao {
   }
 
   public RepositoryDao update(Repository data) {
-    // TODO: if (user is admin) update primary
     return name(data.getName()).description(data.getDescription()).primary(data.isPrimary());
   }
 
