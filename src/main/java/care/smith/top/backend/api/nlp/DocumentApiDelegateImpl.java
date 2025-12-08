@@ -32,22 +32,6 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
   private final DocumentService documentService;
   private final String COLOR_PRE = "$color::";
   private final String COLOR_AFTER = "::color$";
-  private final Map<Character, String> REGEX_SPECIAL =
-      Map.ofEntries(
-          Map.entry('.', "\\."),
-          Map.entry('+', "\\+"),
-          Map.entry('*', "\\*"),
-          Map.entry('?', "\\?"),
-          Map.entry('^', "\\^"),
-          Map.entry('$', "\\$"),
-          Map.entry('(', "\\("),
-          Map.entry(')', "\\)"),
-          Map.entry('[', "\\["),
-          Map.entry(']', "\\]"),
-          Map.entry('{', "\\{"),
-          Map.entry('}', "\\}"),
-          Map.entry('|', "\\|"),
-          Map.entry('\\', "\\\\"));
 
   public DocumentApiDelegateImpl(DocumentService documentService) {
     this.documentService = documentService;

@@ -2,8 +2,6 @@ package care.smith.top.backend.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import care.smith.top.backend.repository.ols.OlsCodeRepository;
-import care.smith.top.backend.repository.ols.OlsCodeSystemRepository;
 import care.smith.top.backend.repository.ols.OlsConnectionException;
 import care.smith.top.backend.util.AbstractJpaTest;
 import care.smith.top.backend.util.OlsServerInitializer;
@@ -24,8 +22,6 @@ import org.springframework.test.context.ContextConfiguration;
 public class CodeServiceTest extends AbstractJpaTest {
 
   @Autowired OLSCodeService codeService;
-  @Autowired private OlsCodeSystemRepository olsCodeSystemRepository;
-  @Autowired private OlsCodeRepository olsCodeRepository;
 
   private static Stream<Arguments> provideTestValuesForSubtrees() {
     return Stream.of(

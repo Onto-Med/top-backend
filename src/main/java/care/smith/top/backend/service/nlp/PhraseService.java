@@ -12,7 +12,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import org.neo4j.cypherdsl.core.Cypher;
 import org.neo4j.cypherdsl.core.Node;
@@ -22,9 +21,6 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class PhraseService implements ContentService {
-
-  private static final Logger logger = Logger.getLogger(PhraseService.class.getName());
-
   private final PhraseNodeRepository phraseRepository;
   private final PhraseDocumentRelationRepository relationRepository;
 

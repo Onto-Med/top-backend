@@ -6,8 +6,6 @@ import care.smith.top.backend.service.nlp.RAGService;
 import care.smith.top.model.RAGAnswer;
 import care.smith.top.model.RAGFilter;
 import care.smith.top.model.RAGStatus;
-import care.smith.top.top_document_query.adapter.TextAdapter;
-import java.util.logging.Logger;
 import org.json.JSONObject;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -15,13 +13,10 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class RAGApiDelegateImpl implements RagApiDelegate {
-  private final Logger LOGGER = Logger.getLogger(RAGApiDelegateImpl.class.getName());
   private final RAGService ragService;
-  private final DocumentService documentService;
 
   public RAGApiDelegateImpl(RAGService ragService, DocumentService documentService) {
     this.ragService = ragService;
-    this.documentService = documentService;
   }
 
   @Override
@@ -50,14 +45,5 @@ public class RAGApiDelegateImpl implements RagApiDelegate {
   @Override
   public ResponseEntity<RAGStatus> getStatusOfRAG(String process) {
     return ResponseEntity.ok(ragService.getStatus(process));
-  }
-
-  private TextAdapter getTextAdapter(String dataSource) {
-    try {
-      return documentService.getAdapterForDataSource(dataSource);
-    } catch (InstantiationException e) {
-      LOGGER.severe("The text adapter '" + dataSource + "' could not be initialized.");
-      return null;
-    }
   }
 }

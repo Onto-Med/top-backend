@@ -15,8 +15,6 @@ import org.junit.jupiter.api.Test;
 
 class DocumentServiceTest extends AbstractNLPTest {
   private static DocumentService documentService;
-  private final Set<String> documentIds1 =
-      documents1.stream().map(Document::getId).collect(Collectors.toSet());
   private final Set<String> documentIds2 =
       documents2.stream().map(Document::getId).collect(Collectors.toSet());
   private final Set<String> documentIds1_2 =
