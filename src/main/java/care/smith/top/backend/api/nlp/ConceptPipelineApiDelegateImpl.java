@@ -22,6 +22,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -37,6 +38,19 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
 
   @Value("top.documents.default-adapter")
   private String defaultDataSourceId;
+
+  @Override
+  public ResponseEntity<ConceptGraphManagerStatus> getConceptPipelineManagerStatus() {
+    ConceptGraphManagerStatus conceptGraphManagerStatus =
+        new ConceptGraphManagerStatus()
+            .status(conceptGraphsService.pipelineManagerIsAccessible())
+            .enabled(conceptGraphsService.cgApiEnabled);
+    if (Boolean.TRUE.equals(conceptGraphManagerStatus.isStatus())) {
+      return new ResponseEntity<>(conceptGraphManagerStatus, HttpStatus.OK);
+    } else {
+      return new ResponseEntity<>(conceptGraphManagerStatus, HttpStatus.NOT_FOUND);
+    }
+  }
 
   @Override
   public ResponseEntity<Map<String, ConceptGraphStat>> getConceptGraphStatistics(
@@ -277,7 +291,12 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
   }
 
   private ResponseEntity<ConceptGraphPipeline> serviceNotFoundError() {
-    LOGGER.severe("Concept Graphs API service not found.");
+    String logMessage = "Concept Graphs API service not found.";
+    if (conceptGraphsService.cgApiEnabled) {
+      LOGGER.severe(logMessage);
+    } else {
+      LOGGER.fine(logMessage + " But it was not enabled in application's configuration.");
+    }
     return ResponseEntity.of(
         Optional.of(
             new ConceptGraphPipeline().pipelineId(null).status(PipelineResponseStatus.FAILED)));
