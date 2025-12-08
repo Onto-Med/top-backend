@@ -3,14 +3,14 @@ package care.smith.top.backend.model.jpa.datasource;
 import care.smith.top.model.DataType;
 import care.smith.top.model.DateTimeRestriction;
 import care.smith.top.model.RestrictionOperator;
+import jakarta.annotation.Nullable;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import javax.annotation.Nullable;
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
 
 @Entity(name = "encounter")
 @Table(indexes = @Index(columnList = "dataSourceId"))

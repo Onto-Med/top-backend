@@ -1,13 +1,13 @@
 package care.smith.top.backend.model.jpa.datasource;
 
 import care.smith.top.model.*;
+import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Objects;
-import javax.persistence.*;
-import javax.persistence.Entity;
-import javax.validation.constraints.NotNull;
 
 @Entity(name = "expected_result")
 @Table(indexes = @Index(columnList = "dataSourceId"))

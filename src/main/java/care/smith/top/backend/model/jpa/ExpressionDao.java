@@ -1,14 +1,13 @@
 package care.smith.top.backend.model.jpa;
 
 import care.smith.top.model.*;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
-import javax.persistence.*;
-import javax.persistence.Entity;
-import javax.validation.constraints.NotNull;
 
-@Entity(name = "expression")
+@jakarta.persistence.Entity(name = "expression")
 public class ExpressionDao {
   @Id @GeneratedValue private Long id;
 

@@ -1,9 +1,8 @@
 package care.smith.top.backend.model.jpa;
 
 import care.smith.top.model.LocalisableText;
-import javax.persistence.Column;
-import javax.persistence.Embeddable;
-import javax.validation.constraints.NotNull;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 
 @Embeddable
 public class LocalisableTextDao {
