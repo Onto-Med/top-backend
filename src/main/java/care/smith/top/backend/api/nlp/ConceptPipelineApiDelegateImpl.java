@@ -45,11 +45,7 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
         new ConceptGraphManagerStatus()
             .status(conceptGraphsService.pipelineManagerIsAccessible())
             .enabled(conceptGraphsService.cgApiEnabled);
-    if (Boolean.TRUE.equals(conceptGraphManagerStatus.isStatus())) {
-      return new ResponseEntity<>(conceptGraphManagerStatus, HttpStatus.OK);
-    } else {
-      return new ResponseEntity<>(conceptGraphManagerStatus, HttpStatus.NOT_FOUND);
-    }
+    return new ResponseEntity<>(conceptGraphManagerStatus, HttpStatus.OK);
   }
 
   @Override
@@ -88,6 +84,7 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
 
   @Override
   public ResponseEntity<ConceptGraphPipeline> getConceptGraphPipelineById(String pipelineId) {
+    if (!conceptGraphsService.cgApiEnabled) return ResponseEntity.of(Optional.empty());
     if (!conceptGraphsService.pipelineManagerIsAccessible()) return serviceNotFoundError();
     ConceptGraphPipeline pipeline = new ConceptGraphPipeline();
     final String finalPipelineId = stringConformity(pipelineId);
