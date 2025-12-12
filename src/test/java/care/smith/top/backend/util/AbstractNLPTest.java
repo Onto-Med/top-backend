@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import care.smith.top.backend.TopBackendApplication;
 import care.smith.top.backend.model.neo4j.DocumentNodeEntity;
 import care.smith.top.backend.repository.neo4j.ConceptClusterNodeRepository;
 import care.smith.top.backend.repository.neo4j.DocumentNodeRepository;
@@ -34,7 +35,9 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.util.TestSocketUtils;
 
 @ExtendWith(Neo4jTestcontainersInitializer.class)
-@ContextConfiguration(initializers = Neo4jTestcontainersInitializer.class)
+@ContextConfiguration(
+    classes = TopBackendApplication.class,
+    initializers = Neo4jTestcontainersInitializer.class)
 public abstract class AbstractNLPTest extends AbstractJpaTest {
   private static final String exampleDatasource = "exampledatasource";
   protected static Set<Document> documents1 =
