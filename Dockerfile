@@ -15,4 +15,4 @@ ENV LOADER_PATH=/plugins
 COPY --from=build-stage /app/target/*.jar /usr/src/top-backend/top-backend.jar
 WORKDIR /usr/src/top-backend
 EXPOSE 8080
-ENTRYPOINT ["java", "-cp", "top-backend.jar", "org.springframework.boot.loader.PropertiesLauncher"]
+ENTRYPOINT ["java", "-cp", "top-backend.jar", "org.springframework.boot.loader.launch.JarLauncher"]
