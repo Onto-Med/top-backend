@@ -88,20 +88,14 @@ class DocumentServiceTest extends AbstractNLPTest {
   }
 
   @Test
-  @Disabled
-  void getDocumentIdsForQuery() {
-    // As of now: No reason to test here, as it just calls a method in DocumentQueryService
-  }
+  @Disabled("As of now: No reason to test here, as it just calls a method in DocumentQueryService")
+  void getDocumentIdsForQuery() {}
 
   @Test
-  @Disabled
-  void getAdapterForDataSource() {
-    // As of now: No reason to test here, as it just calls a method in DocumentQueryService
-  }
+  @Disabled("As of now: No reason to test here, as it just calls a method in DocumentQueryService")
+  void getAdapterForDataSource() {}
 
   @Test
-  @Disabled
-  void getAdapterFromQuery() {
-    // As of now: No reason to test here, as it just calls a method in DocumentQueryService
-  }
+  @Disabled("As of now: No reason to test here, as it just calls a method in DocumentQueryService")
+  void getAdapterFromQuery() {}
 }
