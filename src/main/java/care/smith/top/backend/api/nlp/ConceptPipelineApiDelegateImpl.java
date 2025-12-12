@@ -17,7 +17,6 @@ import java.util.function.Function;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -135,7 +134,7 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
     AtomicReference<JSONObject> cgApiConfig = new AtomicReference<>();
     documentQueryService
         .getTextAdapterConfig(
-            StringUtils.defaultString(
+            Objects.toString(
                 !Objects.equals(requestParams.get("name"), "default")
                     ? requestParams.get("name")
                     : null,
@@ -187,8 +186,9 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
               new PipelineResponse()
                   .pipelineId(finalPipelineId)
                   .response(
-                      "Neither 'data' nor configuration for a document server ('dataSourceId') were provided. "
-                          + "There also seems no default document server to be available. One of either is needed.")
+                      "Neither 'data' nor configuration for a document server ('dataSourceId') were"
+                          + " provided. There also seems no default document server to be"
+                          + " available. One of either is needed.")
                   .status(PipelineResponseStatus.FAILED));
     }
     Map<String, File> configMap =
@@ -210,7 +210,7 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
                     }));
 
     documentQueryService
-        .getTextAdapterConfig(StringUtils.defaultString(dataSourceId, defaultDataSourceId))
+        .getTextAdapterConfig(Objects.toString(dataSourceId, defaultDataSourceId))
         .ifPresent(
             textAdapterConfig -> {
               List<String> lines =
@@ -224,7 +224,8 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
                   tempFile.deleteOnExit();
                 } catch (IOException e) {
                   LOGGER.severe(
-                      "Couldn't create temporary file to send to the concept graphs api as a document_server_config.");
+                      "Couldn't create temporary file to send to the concept graphs api as a"
+                          + " document_server_config.");
                 }
                 configMap.put("document_server", tempFile);
               }
@@ -239,7 +240,8 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
                 configMap.put("vectorstore_server", tempFileVectorStore);
               } catch (IOException e) {
                 LOGGER.severe(
-                    "Couldn't create temporary file to send to the concept graphs api as a vector_store_server_config.");
+                    "Couldn't create temporary file to send to the concept graphs api as a"
+                        + " vector_store_server_config.");
               }
             });
 
