@@ -124,11 +124,22 @@ public class CodeServiceTest extends AbstractJpaTest {
   }
 
   private int nodeCount(Code c) {
-    return 1 + c.getChildren().stream().map(this::nodeCount).reduce(0, Integer::sum);
+    return 1
+        + c.getChildren().stream()
+            .map(this::nodeCount)
+            .filter(Objects::nonNull)
+            .mapToInt(Integer::intValue)
+            .reduce(0, Integer::sum);
   }
 
   private int leafCount(Code c) {
-    return isLeaf(c) ? 1 : c.getChildren().stream().map(this::leafCount).reduce(0, Integer::sum);
+    return isLeaf(c)
+        ? 1
+        : c.getChildren().stream()
+            .map(this::leafCount)
+            .filter(Objects::nonNull)
+            .mapToInt(Integer::intValue)
+            .reduce(0, Integer::sum);
   }
 
   private boolean isLeaf(Code c) {

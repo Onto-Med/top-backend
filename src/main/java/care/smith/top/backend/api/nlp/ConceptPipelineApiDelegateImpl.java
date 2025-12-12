@@ -8,6 +8,7 @@ import care.smith.top.backend.service.nlp.ConceptGraphsService;
 import care.smith.top.backend.service.nlp.DocumentQueryService;
 import care.smith.top.model.*;
 import care.smith.top.top_document_query.adapter.config.TextAdapterConfig;
+import jakarta.annotation.Nonnull;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -150,9 +151,12 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
     request.put("document_server", documentServerConfig.get());
     request.put("vectorstore_server", vectorStoreServerConfig.get());
 
+    @Nonnull
+    String processName = Objects.requireNonNullElse(requestParams.get("name"), "default");
+
     pipelineResponse =
         conceptGraphsService.initPipeline(
-            requestParams.get("name"),
+            processName,
             requestParams.get("language"),
             queryArgs.get("skip_present"),
             queryArgs.get("return_statistics"),
@@ -179,7 +183,8 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
       MultipartFile embeddingConfig,
       MultipartFile clusteringConfig,
       MultipartFile graphConfig) {
-    String finalPipelineId = stringConformity(pipelineId);
+    @Nonnull
+    String finalPipelineId = Objects.requireNonNullElse(stringConformity(pipelineId), "default");
     if (data == null && dataSourceId == null && defaultDataSourceId == null) {
       return ResponseEntity.badRequest()
           .body(

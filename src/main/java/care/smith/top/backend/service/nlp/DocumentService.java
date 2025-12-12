@@ -8,7 +8,6 @@ import care.smith.top.model.DocumentGatheringMode;
 import care.smith.top.top_document_query.adapter.TextAdapter;
 import java.io.IOException;
 import java.util.*;
-import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -56,6 +55,8 @@ public class DocumentService implements ContentService {
                 return 0L;
               }
             })
+        .filter(Objects::nonNull)
+        .mapToLong(Long::longValue)
         .reduce(Long::sum)
         .orElse(0L);
   }
