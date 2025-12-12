@@ -24,8 +24,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 
 @SpringBootTest
-@ExtendWith(TestContainersInitializer.class)
-@ContextConfiguration(initializers = TestContainersInitializer.class)
+@ExtendWith(PostgreSqlTestcontainersInitializer.class)
+@ContextConfiguration(initializers = PostgreSqlTestcontainersInitializer.class)
 public class AbstractJpaTest {
   @Autowired protected OrganisationApiDelegateImpl organisationApiDelegate;
   @Autowired protected OrganisationService organisationService;

@@ -6,7 +6,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import care.smith.top.backend.model.neo4j.DocumentNodeEntity;
-import care.smith.top.backend.nlp.extension.Neo4JExtension;
 import care.smith.top.backend.repository.neo4j.ConceptClusterNodeRepository;
 import care.smith.top.backend.repository.neo4j.DocumentNodeRepository;
 import care.smith.top.backend.repository.neo4j.PhraseDocumentRelationRepository;
@@ -26,13 +25,16 @@ import java.net.InetSocketAddress;
 import java.util.*;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.util.TestSocketUtils;
 
+@ExtendWith(Neo4jTestcontainersInitializer.class)
+@ContextConfiguration(initializers = Neo4jTestcontainersInitializer.class)
 public abstract class AbstractNLPTest extends AbstractJpaTest {
   private static final String exampleDatasource = "exampledatasource";
   protected static Set<Document> documents1 =
@@ -63,7 +65,6 @@ public abstract class AbstractNLPTest extends AbstractJpaTest {
   public static List<Phrase> phrases1_2 = List.of(phrases1.get(0), phrases2.get(0));
   protected static HttpServer conceptGraphsApiService;
   protected static int cgApi = TestSocketUtils.findAvailableTcpPort();
-  @RegisterExtension static Neo4JExtension neo4JExtension = new Neo4JExtension();
   @Autowired protected ConceptClusterNodeRepository conceptClusterNodeRepository;
   @Autowired protected PhraseNodeRepository phraseRepository;
   @Autowired protected DocumentNodeRepository documentNodeRepository;
@@ -72,9 +73,6 @@ public abstract class AbstractNLPTest extends AbstractJpaTest {
 
   @DynamicPropertySource
   static void dbProperties(DynamicPropertyRegistry registry) {
-    registry.add("spring.neo4j.uri", neo4JExtension::getBoltUri);
-    registry.add("spring.neo4j.authentication.username", () -> "neo4j");
-    registry.add("spring.neo4j.authentication.password", () -> null);
     registry.add(
         "top.documents.concept-graphs-api.uri",
         () -> "http://localhost:" + conceptGraphsApiService.getAddress().getPort());

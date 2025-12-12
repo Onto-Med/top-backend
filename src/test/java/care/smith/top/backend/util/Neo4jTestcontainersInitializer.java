@@ -1,21 +1,23 @@
-package care.smith.top.backend.nlp.extension;
+package care.smith.top.backend.util;
 
-import static care.smith.top.backend.util.AbstractNLPTest.*;
-
-import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.tuple.Triple;
-import org.junit.jupiter.api.extension.BeforeAllCallback;
+import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.neo4j.driver.AuthToken;
+import org.neo4j.driver.AuthTokens;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.GraphDatabase;
 import org.neo4j.driver.Session;
-import org.neo4j.harness.Neo4j;
-import org.neo4j.harness.Neo4jBuilders;
+import org.springframework.boot.test.util.TestPropertyValues;
+import org.springframework.context.ApplicationContextInitializer;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.testcontainers.containers.Neo4jContainer;
 
-public class Neo4JExtension implements BeforeAllCallback, ExtensionContext.Store.CloseableResource {
+public class Neo4jTestcontainersInitializer
+    implements ApplicationContextInitializer<ConfigurableApplicationContext>, AfterAllCallback {
   private static final String HAS_PHRASE_REL = "HAS_PHRASE";
   private static final String IN_CONCEPT_REL = "IN_CONCEPT";
   private static final String NEIGHBOR_OF_REL = "NEIGHBOR_OF";
@@ -33,37 +35,53 @@ public class Neo4JExtension implements BeforeAllCallback, ExtensionContext.Store
               List.of(
                   Triple.of(IN_CONCEPT_REL, null, "c2"), Triple.of(NEIGHBOR_OF_REL, null, "p1")));
   private static final String exampleDatasource = "exampledatasource";
-  private static boolean started = false;
-  private static Neo4j embeddedNeo4j;
-  private static Session neo4jSession;
 
-  private static void setUpNeo4jDB() {
-    embeddedNeo4j = Neo4jBuilders.newInProcessBuilder().withDisabledServer().build();
-    try (Driver driver = GraphDatabase.driver(embeddedNeo4j.boltURI());
+  Neo4jContainer<?> neo4j = new Neo4jContainer<>("neo4j:5");
+
+  @Override
+  public void afterAll(ExtensionContext context) {
+    if (neo4j != null) neo4j.stop();
+  }
+
+  @Override
+  public void initialize(ConfigurableApplicationContext applicationContext) {
+    neo4j.start();
+
+    TestPropertyValues.of(
+            "spring.neo4j.uri=" + neo4j.getBoltUrl(),
+            "spring.neo4j.authentication.username=" + "neo4j",
+            "spring.neo4j.authentication.password=" + neo4j.getAdminPassword())
+        .applyTo(applicationContext.getEnvironment());
+
+    setUpNeo4jDb();
+  }
+
+  private void setUpNeo4jDb() {
+    AuthToken authToken = AuthTokens.basic("neo4j", neo4j.getAdminPassword());
+    try (Driver driver = GraphDatabase.driver(neo4j.getBoltUrl(), authToken);
         Session session = driver.session()) {
       Map<String, String> typeMap = Map.of("d", "Document", "c", "Concept", "p", "Phrase");
       Map<String, String> idMap = Map.of("d", "docId", "c", "conceptId", "p", "phraseId");
-      neo4jSession = session;
-      documents1_2.forEach(
+      AbstractNLPTest.documents1_2.forEach(
           document ->
-              neo4jSession.run(
+              session.run(
                   String.format(
                       "CREATE (:Document {docId: '%s', name: '%s'})",
                       document.getId(), document.getName())));
-      concepts1_2.forEach(
+      AbstractNLPTest.concepts1_2.forEach(
           concept -> {
             String labels =
                 concept.getLabels().stream()
                     .map(s -> String.format("'%s'", s.trim()))
                     .collect(Collectors.joining(","));
-            neo4jSession.run(
+            session.run(
                 String.format(
                     "CREATE (:Concept {conceptId: '%s', labels: %s, corpusId: '%s'})",
                     concept.getId(), String.format("[%s]", labels), exampleDatasource));
           });
-      phrases1_2.forEach(
+      AbstractNLPTest.phrases1_2.forEach(
           phrase ->
-              neo4jSession.run(
+              session.run(
                   String.format(
                       "CREATE (:Phrase {phraseId: '%s', phrase: '%s', exemplar: %s})",
                       phrase.getId(), phrase.getText(), phrase.isExemplar())));
@@ -80,7 +98,8 @@ public class Neo4JExtension implements BeforeAllCallback, ExtensionContext.Store
                   String rParam = triple.getMiddle();
                   String query =
                       String.format(
-                          "MATCH (s:%s), (t:%s) WHERE s.%s = '%s' AND t.%s = '%s' CREATE (s)-[:%s%s]->(t)",
+                          "MATCH (s:%s), (t:%s) WHERE s.%s = '%s' AND t.%s = '%s' CREATE"
+                              + " (s)-[:%s%s]->(t)",
                           sType,
                           tType,
                           sId,
@@ -89,30 +108,9 @@ public class Neo4JExtension implements BeforeAllCallback, ExtensionContext.Store
                           triple.getRight(),
                           rType,
                           rParam != null ? rParam : "");
-                  neo4jSession.run(query);
+                  session.run(query);
                 });
           });
     }
-  }
-
-  @Override
-  public void beforeAll(ExtensionContext context) {
-    if (!started) {
-      started = true;
-      setUpNeo4jDB();
-      context
-          .getRoot()
-          .getStore(ExtensionContext.Namespace.GLOBAL)
-          .put("test-data-setup-started", this);
-    }
-  }
-
-  @Override
-  public void close() {
-    embeddedNeo4j.close();
-  }
-
-  public URI getBoltUri() {
-    return embeddedNeo4j.boltURI();
   }
 }
