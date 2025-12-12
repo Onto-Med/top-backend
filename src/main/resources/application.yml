@@ -50,7 +50,7 @@ spring:
       resourceserver:
         jwt:
           issuer-uri: ${OAUTH2_URL:http://127.0.0.1:8081}/realms/${OAUTH2_REALM:top-realm}
-          jwk-set-uri: ${OAUTH2_URL:http://127.0.0.1:8081}/realms/${OAUTH2_REALM:top-realm}/protocol/openid-connect/certs
+          jwk-set-uri: ${OAUTH2_DOCKER_URL:${OAUTH2_URL:http://127.0.0.1:8081}}/realms/${OAUTH2_REALM:top-realm}/protocol/openid-connect/certs
   paging:
     page-size: 25
   jackson:

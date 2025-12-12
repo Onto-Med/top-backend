@@ -44,6 +44,7 @@ instructions.
    OAuth2 related:
     * `OAUTH2_ENABLED`: enable or disable oauth2, defaults to `false`
     * `OAUTH2_URL`: base URL of the OAuth2 server, defaults to `http://127.0.0.1:8081`
+    * `OAUTH2_DOCKER_URL`: This URL defaults to `OAUTH2_URL`. In a docker setup, you can use it to configure the Docker network internal URL to access the OAuth2 server. In this case, JWTs are verified agains `OAUTH2_DOCKER_URL`, whereas `OAUTH2_URL` is used to verify the issuer of JWTs.
     * `OAUTH2_REALM`: name of the OAuth2 realm to be used for authentication
 2. Start the PostgreSQL database ([see dockerhub](https://hub.docker.com/_/postgres)). Please review the documentation
    for production use.
