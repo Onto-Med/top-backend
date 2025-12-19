@@ -151,8 +151,7 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
     request.put("document_server", documentServerConfig.get());
     request.put("vectorstore_server", vectorStoreServerConfig.get());
 
-    @Nonnull
-    String processName = Objects.requireNonNullElse(requestParams.get("name"), "default");
+    @Nonnull String processName = Objects.requireNonNullElse(requestParams.get("name"), "default");
 
     pipelineResponse =
         conceptGraphsService.initPipeline(
