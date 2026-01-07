@@ -2,6 +2,7 @@ package care.smith.top.backend.service;
 
 import care.smith.top.backend.model.jpa.*;
 import care.smith.top.backend.model.jpa.datasource.DataSourceDao;
+import care.smith.top.backend.repository.jpa.CodeRepository;
 import care.smith.top.backend.repository.jpa.PhenotypeRepository;
 import care.smith.top.backend.repository.jpa.datasource.DataSourceRepository;
 import care.smith.top.model.*;
@@ -53,6 +54,7 @@ public class PhenotypeQueryService extends QueryService {
 
   @Autowired private PhenotypeRepository phenotypeRepository;
   @Autowired private DataSourceRepository dataSourceRepository;
+  @Autowired private CodeRepository codeRepository;
 
   @Override
   public QueryResult enqueueQuery(String organisationId, String repositoryId, Query query) {
@@ -214,7 +216,7 @@ public class PhenotypeQueryService extends QueryService {
                         })
                     .orElse(null))
         .filter(Objects::nonNull)
-        .map(EntityDao::toApiModel)
+        .map(EntityService.prepareEntity(codeRepository))
         .toList();
   }
 
