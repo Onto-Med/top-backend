@@ -65,7 +65,8 @@ public class EntityService implements ContentService {
   @Caching(
       evict = {@CacheEvict("entityCount"), @CacheEvict(value = "entities", key = "#repositoryId")})
   @PreAuthorize(
-      "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.jpa.OrganisationDao', 'WRITE')")
+      "hasRole('ADMIN') or hasPermission(#organisationId,"
+          + " 'care.smith.top.backend.model.jpa.OrganisationDao', 'WRITE')")
   public int createEntities(
       String organisationId, String repositoryId, List<Entity> entities, List<String> include) {
     Map<String, String> ids = new HashMap<>();
@@ -86,7 +87,8 @@ public class EntityService implements ContentService {
   @Caching(
       evict = {@CacheEvict("entityCount"), @CacheEvict(value = "entities", key = "#repositoryId")})
   @PreAuthorize(
-      "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.jpa.OrganisationDao', 'WRITE')")
+      "hasRole('ADMIN') or hasPermission(#organisationId,"
+          + " 'care.smith.top.backend.model.jpa.OrganisationDao', 'WRITE')")
   public Entity createEntity(String organisationId, String repositoryId, Entity data) {
     return createEntity(organisationId, repositoryId, data, false);
   }
@@ -97,8 +99,10 @@ public class EntityService implements ContentService {
         @CacheEvict(value = "entities", key = "#forkingInstruction.repositoryId")
       })
   @PreAuthorize(
-      "hasRole('ADMIN') or hasPermission(#repositoryId, 'care.smith.top.backend.model.jpa.RepositoryDao', 'READ') "
-          + "and hasPermission(#forkingInstruction.organisationId, 'care.smith.top.backend.model.jpa.OrganisationDao', 'WRITE')")
+      "hasRole('ADMIN') or hasPermission(#repositoryId,"
+          + " 'care.smith.top.backend.model.jpa.RepositoryDao', 'READ') and"
+          + " hasPermission(#forkingInstruction.organisationId,"
+          + " 'care.smith.top.backend.model.jpa.OrganisationDao', 'WRITE')")
   public List<Entity> createFork(
       String organisationId,
       String repositoryId,
@@ -128,7 +132,8 @@ public class EntityService implements ContentService {
             .findByIdAndRepositoryId(id, repositoryId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-    Entity entity = prepareEntity().andThen(populateWithCodeSystems()).apply(entityDao);
+    Entity entity =
+        prepareEntity(codeRepository).andThen(populateWithCodeSystems()).apply(entityDao);
 
     if (RepositoryType.CONCEPT_REPOSITORY.equals(destinationRepo.getRepositoryType())
         && !List.of(EntityType.SINGLE_CONCEPT, EntityType.COMPOSITE_CONCEPT)
@@ -255,7 +260,8 @@ public class EntityService implements ContentService {
   @Caching(
       evict = {@CacheEvict("entityCount"), @CacheEvict(value = "entities", key = "#repositoryId")})
   @PreAuthorize(
-      "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.jpa.OrganisationDao', 'WRITE')")
+      "hasRole('ADMIN') or hasPermission(#organisationId,"
+          + " 'care.smith.top.backend.model.jpa.OrganisationDao', 'WRITE')")
   public void deleteEntity(String organisationId, String repositoryId, String id, Boolean cascade) {
     getRepository(organisationId, repositoryId);
 
@@ -296,7 +302,8 @@ public class EntityService implements ContentService {
   }
 
   @PreAuthorize(
-      "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.jpa.OrganisationDao', 'WRITE')")
+      "hasRole('ADMIN') or hasPermission(#organisationId,"
+          + " 'care.smith.top.backend.model.jpa.OrganisationDao', 'WRITE')")
   public void deleteVersion(
       String organisationId, String repositoryId, String id, Integer version) {
     getRepository(organisationId, repositoryId);
@@ -346,13 +353,14 @@ public class EntityService implements ContentService {
             itemType,
             userService.getCurrentUser(),
             pageRequest)
-        .map(prepareEntity())
+        .map(prepareEntity(codeRepository))
         .map(populateSubEntities())
         .map(populateWithCodeSystems());
   }
 
   @PreAuthorize(
-      "hasRole('ADMIN') or hasPermission(#repositoryId, 'care.smith.top.backend.model.jpa.RepositoryDao', 'READ')")
+      "hasRole('ADMIN') or hasPermission(#repositoryId,"
+          + " 'care.smith.top.backend.model.jpa.RepositoryDao', 'READ')")
   public Page<Entity> getEntitiesByRepositoryId(
       String organisationId,
       String repositoryId,
@@ -369,13 +377,14 @@ public class EntityService implements ContentService {
     return phenotypeRepository
         .findAllByRepositoryIdAndTitleAndEntityTypeAndDataTypeAndItemType(
             repositoryId, name, type, dataType, itemType, pageRequest)
-        .map(prepareEntity())
+        .map(prepareEntity(codeRepository))
         .map(populateSubEntities())
         .map(populateWithCodeSystems());
   }
 
   @PreAuthorize(
-      "hasRole('ADMIN') or hasPermission(#repositoryId, 'care.smith.top.backend.model.jpa.RepositoryDao', 'READ')")
+      "hasRole('ADMIN') or hasPermission(#repositoryId,"
+          + " 'care.smith.top.backend.model.jpa.RepositoryDao', 'READ')")
   public ForkingStats getForkingStats(
       String organisationId, String repositoryId, String id, List<String> include) {
     getRepository(organisationId, repositoryId);
@@ -418,7 +427,8 @@ public class EntityService implements ContentService {
       key = "#repositoryId",
       condition = "#name == null && #type == null && #dataType == null")
   @PreAuthorize(
-      "hasRole('ADMIN') or hasPermission(#repositoryId, 'care.smith.top.backend.model.jpa.RepositoryDao', 'READ')")
+      "hasRole('ADMIN') or hasPermission(#repositoryId,"
+          + " 'care.smith.top.backend.model.jpa.RepositoryDao', 'READ')")
   public List<Entity> getRootEntitiesByRepositoryId(
       String organisationId,
       String repositoryId,
@@ -431,14 +441,15 @@ public class EntityService implements ContentService {
     getRepository(organisationId, repositoryId);
     return entityRepository
         .findAllByRepositoryIdAndSuperEntitiesEmpty(repositoryId, Sort.by(EntityDao_.ID))
-        .map(prepareEntity())
+        .map(prepareEntity(codeRepository))
         .map(populateSubEntities())
         .map(populateWithCodeSystems())
         .getContent();
   }
 
   @PreAuthorize(
-      "hasRole('ADMIN') or hasPermission(#repositoryId, 'care.smith.top.backend.model.jpa.RepositoryDao', 'READ')")
+      "hasRole('ADMIN') or hasPermission(#repositoryId,"
+          + " 'care.smith.top.backend.model.jpa.RepositoryDao', 'READ')")
   public List<Entity> getSubclasses(
       String organisationId, String repositoryId, String id, List<String> include) {
     RepositoryDao repoDao = getRepository(organisationId, repositoryId);
@@ -447,27 +458,29 @@ public class EntityService implements ContentService {
       repo = conceptRepository;
     }
     return repo.findAllByRepositoryIdAndSuperEntities_Id(repositoryId, id, Sort.by(EntityDao_.ID))
-        .map(prepareEntity())
+        .map(prepareEntity(codeRepository))
         .map(populateSubEntities())
         .map(populateWithCodeSystems())
         .getContent();
   }
 
   @PreAuthorize(
-      "hasRole('ADMIN') or hasPermission(#repositoryId, 'care.smith.top.backend.model.jpa.RepositoryDao', 'READ')")
+      "hasRole('ADMIN') or hasPermission(#repositoryId,"
+          + " 'care.smith.top.backend.model.jpa.RepositoryDao', 'READ')")
   public List<Entity> getVersions(
       String organisationId, String repositoryId, String id, List<String> include) {
     getRepository(organisationId, repositoryId);
     return entityVersionRepository
         .findAllByEntity_RepositoryIdAndEntityIdOrderByVersionDesc(repositoryId, id)
         .stream()
-        .map(prepareEntityVersion())
+        .map(prepareEntityVersion(codeRepository))
         .map(populateWithCodeSystems())
         .collect(Collectors.toList());
   }
 
   @PreAuthorize(
-      "hasRole('ADMIN') or hasPermission(#repositoryId, 'care.smith.top.backend.model.jpa.RepositoryDao', 'READ')")
+      "hasRole('ADMIN') or hasPermission(#repositoryId,"
+          + " 'care.smith.top.backend.model.jpa.RepositoryDao', 'READ')")
   public Entity loadEntity(String organisationId, String repositoryId, String id, Integer version) {
     getRepository(organisationId, repositoryId);
     Optional<EntityVersionDao> optional;
@@ -481,14 +494,15 @@ public class EntityService implements ContentService {
           entityVersionRepository.findByEntity_RepositoryIdAndEntityIdAndVersion(
               repositoryId, id, version);
     return optional
-        .map(prepareEntityVersion())
+        .map(prepareEntityVersion(codeRepository))
         .map(populateWithCodeSystems())
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
   }
 
   @CacheEvict(value = "entities", key = "#repositoryId")
   @PreAuthorize(
-      "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.jpa.OrganisationDao', 'WRITE')")
+      "hasRole('ADMIN') or hasPermission(#organisationId,"
+          + " 'care.smith.top.backend.model.jpa.OrganisationDao', 'WRITE')")
   public Entity setCurrentEntityVersion(
       String organisationId,
       String repositoryId,
@@ -506,7 +520,7 @@ public class EntityService implements ContentService {
             .findByEntity_RepositoryIdAndEntityIdAndVersion(repositoryId, id, version)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-    return prepareEntity()
+    return prepareEntity(codeRepository)
         .andThen(populateWithCodeSystems())
         .andThen(populateSubEntities())
         .apply(entityRepository.save(entity.currentVersion(entityVersion)));
@@ -514,7 +528,8 @@ public class EntityService implements ContentService {
 
   @CacheEvict(value = "entities", key = "#repositoryId")
   @PreAuthorize(
-      "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.jpa.OrganisationDao', 'WRITE')")
+      "hasRole('ADMIN') or hasPermission(#organisationId,"
+          + " 'care.smith.top.backend.model.jpa.OrganisationDao', 'WRITE')")
   public Entity updateEntityById(
       String organisationId, String repositoryId, String id, Entity data, List<String> include) {
     getRepository(organisationId, repositoryId);
@@ -546,21 +561,22 @@ public class EntityService implements ContentService {
       setSuperEntities(entity, superEntities);
     }
 
-    return prepareEntity()
+    return prepareEntity(codeRepository)
         .andThen(populateWithCodeSystems())
         .andThen(populateSubEntities())
         .apply(entityRepository.save(entity.currentVersion(newVersion)));
   }
 
   @PreAuthorize(
-      "hasRole('ADMIN') or hasPermission(#repositoryId, 'care.smith.top.backend.model.jpa.RepositoryDao', 'READ')")
+      "hasRole('ADMIN') or hasPermission(#repositoryId,"
+          + " 'care.smith.top.backend.model.jpa.RepositoryDao', 'READ')")
   public ByteArrayOutputStream exportRepository(
       String organisationId, String repositoryId, String converter) {
     RepositoryDao repository = getRepository(organisationId, repositoryId);
     Entity[] entities =
         entityRepository
             .findAllByRepositoryId(repositoryId, Pageable.unpaged())
-            .map(prepareEntity())
+            .map(prepareEntity(codeRepository))
             .map(populateWithCodeSystems())
             .stream()
             .toArray(Entity[]::new);
@@ -590,7 +606,8 @@ public class EntityService implements ContentService {
   @Caching(
       evict = {@CacheEvict("entityCount"), @CacheEvict(value = "entities", key = "#repositoryId")})
   @PreAuthorize(
-      "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.jpa.OrganisationDao', 'WRITE')")
+      "hasRole('ADMIN') or hasPermission(#organisationId,"
+          + " 'care.smith.top.backend.model.jpa.OrganisationDao', 'WRITE')")
   public void importRepository(
       String organisationId, String repositoryId, String converter, InputStream stream) {
 
@@ -616,7 +633,8 @@ public class EntityService implements ContentService {
 
   @CacheEvict(value = "entities", key = "#repositoryId")
   @PreAuthorize(
-      "hasRole('ADMIN') or hasPermission(#organisationId, 'care.smith.top.backend.model.jpa.OrganisationDao', 'WRITE')")
+      "hasRole('ADMIN') or hasPermission(#organisationId,"
+          + " 'care.smith.top.backend.model.jpa.OrganisationDao', 'WRITE')")
   public Entity moveEntity(
       String organisationId, String repositoryId, String entityId, List<Entity> superEntities) {
     getRepository(organisationId, repositoryId);
@@ -629,7 +647,7 @@ public class EntityService implements ContentService {
       setSuperEntities(entity, superEntities);
     }
 
-    return prepareEntity()
+    return prepareEntity(codeRepository)
         .andThen(populateWithCodeSystems())
         .andThen(populateSubEntities())
         .apply(entityRepository.save(entity));
@@ -827,7 +845,7 @@ public class EntityService implements ContentService {
         entityVersionRepository.save(new EntityVersionDao(data).version(1).entity(entity));
     entity.currentVersion(entityVersion);
 
-    return prepareEntity()
+    return prepareEntity(codeRepository)
         .andThen(populateWithCodeSystems())
         .andThen(populateSubEntities())
         .apply(entityRepository.save(entity));
@@ -926,11 +944,12 @@ public class EntityService implements ContentService {
         .forEach(this::populateWithCodeSystems);
   }
 
-  private Function<EntityDao, Entity> prepareEntity() {
-    return entityDao -> prepareEntityVersion().apply(entityDao.getCurrentVersion());
+  public static Function<EntityDao, Entity> prepareEntity(CodeRepository codeRepository) {
+    return entityDao -> prepareEntityVersion(codeRepository).apply(entityDao.getCurrentVersion());
   }
 
-  private Function<EntityVersionDao, Entity> prepareEntityVersion() {
+  public static Function<EntityVersionDao, Entity> prepareEntityVersion(
+      CodeRepository codeRepository) {
     return entityVersionDao -> {
       List<Code> rootCodes = new ArrayList<>();
       List<CodeDao> codeDaos =
