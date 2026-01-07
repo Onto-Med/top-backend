@@ -2,9 +2,9 @@ package care.smith.top.backend.util.nlp;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Objects;
-import org.jetbrains.annotations.NotNull;
 
 public class DocumentOffset implements Comparable<DocumentOffset> {
   private Integer begin;

@@ -1,8 +1,8 @@
 package care.smith.top.backend.configuration;
 
 import care.smith.top.backend.model.jpa.UserDao;
+import jakarta.validation.constraints.NotNull;
 import java.util.Optional;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.AuditorAware;

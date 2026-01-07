@@ -1,7 +1,7 @@
 package care.smith.top.backend.configuration.converter;
 
 import care.smith.top.model.ConceptGraphPipelineStatusEnum;
-import org.jetbrains.annotations.NotNull;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
 
