@@ -3,11 +3,11 @@ package care.smith.top.backend.model.jpa;
 import care.smith.top.model.Organisation;
 import care.smith.top.model.Repository;
 import care.smith.top.model.RepositoryType;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -163,7 +163,6 @@ public class RepositoryDao {
   }
 
   public RepositoryDao update(Repository data) {
-    // TODO: if (user is admin) update primary
     return name(data.getName()).description(data.getDescription()).primary(data.isPrimary());
   }
 

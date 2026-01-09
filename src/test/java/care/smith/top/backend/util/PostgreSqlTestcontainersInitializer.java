@@ -7,7 +7,7 @@ import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.testcontainers.containers.PostgreSQLContainer;
 
-public class TestContainersInitializer
+public class PostgreSqlTestcontainersInitializer
     implements ApplicationContextInitializer<ConfigurableApplicationContext>, AfterAllCallback {
   PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine");
 

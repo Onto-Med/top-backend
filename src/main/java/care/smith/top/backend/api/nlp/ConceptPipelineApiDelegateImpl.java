@@ -8,6 +8,7 @@ import care.smith.top.backend.service.nlp.ConceptGraphsService;
 import care.smith.top.backend.service.nlp.DocumentQueryService;
 import care.smith.top.model.*;
 import care.smith.top.top_document_query.adapter.config.TextAdapterConfig;
+import jakarta.annotation.Nonnull;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -17,7 +18,6 @@ import java.util.function.Function;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -135,7 +135,7 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
     AtomicReference<JSONObject> cgApiConfig = new AtomicReference<>();
     documentQueryService
         .getTextAdapterConfig(
-            StringUtils.defaultString(
+            Objects.toString(
                 !Objects.equals(requestParams.get("name"), "default")
                     ? requestParams.get("name")
                     : null,
@@ -151,9 +151,11 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
     request.put("document_server", documentServerConfig.get());
     request.put("vectorstore_server", vectorStoreServerConfig.get());
 
+    @Nonnull String processName = Objects.requireNonNullElse(requestParams.get("name"), "default");
+
     pipelineResponse =
         conceptGraphsService.initPipeline(
-            requestParams.get("name"),
+            processName,
             requestParams.get("language"),
             queryArgs.get("skip_present"),
             queryArgs.get("return_statistics"),
@@ -180,15 +182,17 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
       MultipartFile embeddingConfig,
       MultipartFile clusteringConfig,
       MultipartFile graphConfig) {
-    String finalPipelineId = stringConformity(pipelineId);
+    @Nonnull
+    String finalPipelineId = Objects.requireNonNullElse(stringConformity(pipelineId), "default");
     if (data == null && dataSourceId == null && defaultDataSourceId == null) {
       return ResponseEntity.badRequest()
           .body(
               new PipelineResponse()
                   .pipelineId(finalPipelineId)
                   .response(
-                      "Neither 'data' nor configuration for a document server ('dataSourceId') were provided. "
-                          + "There also seems no default document server to be available. One of either is needed.")
+                      "Neither 'data' nor configuration for a document server ('dataSourceId') were"
+                          + " provided. There also seems no default document server to be"
+                          + " available. One of either is needed.")
                   .status(PipelineResponseStatus.FAILED));
     }
     Map<String, File> configMap =
@@ -210,7 +214,7 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
                     }));
 
     documentQueryService
-        .getTextAdapterConfig(StringUtils.defaultString(dataSourceId, defaultDataSourceId))
+        .getTextAdapterConfig(Objects.toString(dataSourceId, defaultDataSourceId))
         .ifPresent(
             textAdapterConfig -> {
               List<String> lines =
@@ -224,7 +228,8 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
                   tempFile.deleteOnExit();
                 } catch (IOException e) {
                   LOGGER.severe(
-                      "Couldn't create temporary file to send to the concept graphs api as a document_server_config.");
+                      "Couldn't create temporary file to send to the concept graphs api as a"
+                          + " document_server_config.");
                 }
                 configMap.put("document_server", tempFile);
               }
@@ -239,7 +244,8 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
                 configMap.put("vectorstore_server", tempFileVectorStore);
               } catch (IOException e) {
                 LOGGER.severe(
-                    "Couldn't create temporary file to send to the concept graphs api as a vector_store_server_config.");
+                    "Couldn't create temporary file to send to the concept graphs api as a"
+                        + " vector_store_server_config.");
               }
             });
 

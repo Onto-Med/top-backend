@@ -15,8 +15,12 @@ import org.springframework.data.neo4j.repository.config.EnableNeo4jRepositories;
 @Import(InfrastructureConfig.class)
 @ComponentScan("care.smith.top.backend")
 @EnableCaching
-@EnableJpaRepositories(basePackages = "care.smith.top.backend.repository.jpa")
-@EnableNeo4jRepositories(basePackages = "care.smith.top.backend.repository.neo4j")
+@EnableJpaRepositories(
+    basePackages = "care.smith.top.backend.repository.jpa",
+    transactionManagerRef = "jpaTransactionManager")
+@EnableNeo4jRepositories(
+    basePackages = "care.smith.top.backend.repository.neo4j",
+    transactionManagerRef = "neo4jTransactionManager")
 @EnableJpaAuditing(dateTimeProviderRef = "auditingDateTimeProvider")
 public class TopBackendApplication {
 

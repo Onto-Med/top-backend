@@ -2,8 +2,6 @@ package care.smith.top.backend.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import care.smith.top.backend.repository.ols.OlsCodeRepository;
-import care.smith.top.backend.repository.ols.OlsCodeSystemRepository;
 import care.smith.top.backend.repository.ols.OlsConnectionException;
 import care.smith.top.backend.util.AbstractJpaTest;
 import care.smith.top.backend.util.OlsServerInitializer;
@@ -24,8 +22,6 @@ import org.springframework.test.context.ContextConfiguration;
 public class CodeServiceTest extends AbstractJpaTest {
 
   @Autowired OLSCodeService codeService;
-  @Autowired private OlsCodeSystemRepository olsCodeSystemRepository;
-  @Autowired private OlsCodeRepository olsCodeRepository;
 
   private static Stream<Arguments> provideTestValuesForSubtrees() {
     return Stream.of(
@@ -128,11 +124,22 @@ public class CodeServiceTest extends AbstractJpaTest {
   }
 
   private int nodeCount(Code c) {
-    return 1 + c.getChildren().stream().map(this::nodeCount).reduce(0, Integer::sum);
+    return 1
+        + c.getChildren().stream()
+            .map(this::nodeCount)
+            .filter(Objects::nonNull)
+            .mapToInt(Integer::intValue)
+            .reduce(0, Integer::sum);
   }
 
   private int leafCount(Code c) {
-    return isLeaf(c) ? 1 : c.getChildren().stream().map(this::leafCount).reduce(0, Integer::sum);
+    return isLeaf(c)
+        ? 1
+        : c.getChildren().stream()
+            .map(this::leafCount)
+            .filter(Objects::nonNull)
+            .mapToInt(Integer::intValue)
+            .reduce(0, Integer::sum);
   }
 
   private boolean isLeaf(Code c) {

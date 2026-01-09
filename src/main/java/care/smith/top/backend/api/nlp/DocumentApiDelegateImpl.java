@@ -13,11 +13,11 @@ import care.smith.top.model.DocumentPage;
 import care.smith.top.top_document_query.adapter.TextAdapter;
 import care.smith.top.top_document_query.elasticsearch.DocumentEntity;
 import co.elastic.clients.elasticsearch._types.ElasticsearchException;
+import jakarta.validation.Valid;
 import java.io.IOException;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -32,22 +32,6 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
   private final DocumentService documentService;
   private final String COLOR_PRE = "$color::";
   private final String COLOR_AFTER = "::color$";
-  private final Map<Character, String> REGEX_SPECIAL =
-      Map.ofEntries(
-          Map.entry('.', "\\."),
-          Map.entry('+', "\\+"),
-          Map.entry('*', "\\*"),
-          Map.entry('?', "\\?"),
-          Map.entry('^', "\\^"),
-          Map.entry('$', "\\$"),
-          Map.entry('(', "\\("),
-          Map.entry(')', "\\)"),
-          Map.entry('[', "\\["),
-          Map.entry(']', "\\]"),
-          Map.entry('{', "\\{"),
-          Map.entry('}', "\\}"),
-          Map.entry('|', "\\|"),
-          Map.entry('\\', "\\\\"));
 
   public DocumentApiDelegateImpl(DocumentService documentService) {
     this.documentService = documentService;

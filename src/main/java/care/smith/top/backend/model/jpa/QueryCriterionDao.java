@@ -3,11 +3,9 @@ package care.smith.top.backend.model.jpa;
 import care.smith.top.model.DateTimeRestriction;
 import care.smith.top.model.ProjectionEntry;
 import care.smith.top.model.QueryCriterion;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import java.util.Objects;
-import javax.persistence.CascadeType;
-import javax.persistence.Embeddable;
-import javax.persistence.OneToOne;
-import javax.validation.constraints.NotNull;
 
 @Embeddable
 public class QueryCriterionDao {

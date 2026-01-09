@@ -70,10 +70,7 @@ public class OlsCodeRepository extends OlsRepository {
             .bodyToMono(OLSTerm.class)
             .onErrorResume(
                 WebClientResponseException.class,
-                e ->
-                    e.getRawStatusCode() == HttpStatus.NOT_FOUND.value()
-                        ? Mono.empty()
-                        : Mono.error(e))
+                e -> e.getStatusCode().equals(HttpStatus.NOT_FOUND) ? Mono.empty() : Mono.error(e))
             .block();
 
     if (term == null)
@@ -192,7 +189,7 @@ public class OlsCodeRepository extends OlsRepository {
                   .onErrorResume(
                       WebClientResponseException.class,
                       e ->
-                          e.getRawStatusCode() == HttpStatus.NOT_FOUND.value()
+                          e.getStatusCode().equals(HttpStatus.NOT_FOUND)
                               ? Mono.empty()
                               : Mono.error(e))
                   .block());

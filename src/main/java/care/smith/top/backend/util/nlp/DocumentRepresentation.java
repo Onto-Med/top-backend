@@ -263,6 +263,7 @@ public class DocumentRepresentation {
     private String endTag;
     private Integer priority;
 
+    @SuppressWarnings("unused")
     public Tag(String startTag, String endTag) {
       this.startTag = startTag;
       this.endTag = endTag;
@@ -279,6 +280,7 @@ public class DocumentRepresentation {
       return startTag;
     }
 
+    @SuppressWarnings("unused")
     public void setStartTag(String startTag) {
       this.startTag = startTag;
     }
@@ -287,6 +289,7 @@ public class DocumentRepresentation {
       return endTag;
     }
 
+    @SuppressWarnings("unused")
     public void setEndTag(String endTag) {
       this.endTag = endTag;
     }
@@ -295,6 +298,7 @@ public class DocumentRepresentation {
       return -priority;
     }
 
+    @SuppressWarnings("unused")
     public void setPriority(Integer priority) {
       this.priority = priority;
     }

@@ -15,8 +15,6 @@ import org.junit.jupiter.api.Test;
 
 class DocumentServiceTest extends AbstractNLPTest {
   private static DocumentService documentService;
-  private final Set<String> documentIds1 =
-      documents1.stream().map(Document::getId).collect(Collectors.toSet());
   private final Set<String> documentIds2 =
       documents2.stream().map(Document::getId).collect(Collectors.toSet());
   private final Set<String> documentIds1_2 =
@@ -90,20 +88,14 @@ class DocumentServiceTest extends AbstractNLPTest {
   }
 
   @Test
-  @Disabled
-  void getDocumentIdsForQuery() {
-    // As of now: No reason to test here, as it just calls a method in DocumentQueryService
-  }
+  @Disabled("As of now: No reason to test here, as it just calls a method in DocumentQueryService")
+  void getDocumentIdsForQuery() {}
 
   @Test
-  @Disabled
-  void getAdapterForDataSource() {
-    // As of now: No reason to test here, as it just calls a method in DocumentQueryService
-  }
+  @Disabled("As of now: No reason to test here, as it just calls a method in DocumentQueryService")
+  void getAdapterForDataSource() {}
 
   @Test
-  @Disabled
-  void getAdapterFromQuery() {
-    // As of now: No reason to test here, as it just calls a method in DocumentQueryService
-  }
+  @Disabled("As of now: No reason to test here, as it just calls a method in DocumentQueryService")
+  void getAdapterFromQuery() {}
 }

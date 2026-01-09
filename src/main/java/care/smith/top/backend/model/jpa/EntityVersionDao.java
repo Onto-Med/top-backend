@@ -1,19 +1,19 @@
 package care.smith.top.backend.model.jpa;
 
 import care.smith.top.model.*;
+import care.smith.top.model.Entity;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import java.time.OffsetDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-import javax.persistence.*;
-import javax.persistence.Entity;
-import javax.validation.constraints.NotNull;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-@Entity(name = "entity_version")
+@jakarta.persistence.Entity(name = "entity_version")
 @EntityListeners(AuditingEntityListener.class)
 public class EntityVersionDao {
   @Id @GeneratedValue private Long id;
@@ -95,7 +95,7 @@ public class EntityVersionDao {
     this.unit = unit;
   }
 
-  public EntityVersionDao(@NotNull care.smith.top.model.Entity entity) {
+  public EntityVersionDao(@NotNull Entity entity) {
     if (entity.getTitles() != null)
       titles =
           entity.getTitles().stream().map(LocalisableTextDao::new).collect(Collectors.toList());
@@ -169,7 +169,7 @@ public class EntityVersionDao {
     return this;
   }
 
-  public care.smith.top.model.Entity toApiModel() {
+  public Entity toApiModel() {
     return entity.toApiModel(this);
   }
 

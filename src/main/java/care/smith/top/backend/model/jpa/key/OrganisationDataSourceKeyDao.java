@@ -1,9 +1,9 @@
 package care.smith.top.backend.model.jpa.key;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
+import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
-import javax.persistence.Column;
-import javax.persistence.Embeddable;
-import javax.validation.constraints.NotNull;
 
 @Embeddable
 public class OrganisationDataSourceKeyDao implements Serializable {

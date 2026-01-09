@@ -7,8 +7,10 @@ import care.smith.top.top_document_query.concept_graphs_api.model.ConceptGraphEn
 import care.smith.top.top_document_query.concept_graphs_api.model.GraphStatsEntity;
 import care.smith.top.top_document_query.concept_graphs_api.model.pipeline_response.PipelineFailEntity;
 import care.smith.top.top_document_query.concept_graphs_api.model.pipeline_response.PipelineResponseEntity;
+import jakarta.annotation.Nonnull;
 import java.io.File;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.util.*;
 import java.util.function.Function;
 import java.util.logging.Logger;
@@ -27,10 +29,10 @@ public class ConceptGraphsService implements ContentService {
     ConceptPipelineManager tmpPipeline;
     try {
       tmpPipeline = new ConceptPipelineManager(conceptGraphsApiUri);
-    } catch (MalformedURLException e) {
+    } catch (MalformedURLException | URISyntaxException e) {
       try {
         tmpPipeline = new ConceptPipelineManager("http://localhost:9010");
-      } catch (MalformedURLException ex) {
+      } catch (MalformedURLException | URISyntaxException ex) {
         throw new RuntimeException(ex);
       }
     }
@@ -98,7 +100,7 @@ public class ConceptGraphsService implements ContentService {
       File data,
       File labels,
       Map<String, File> configs,
-      String processName,
+      @Nonnull String processName,
       String language,
       Boolean skipPresent,
       Boolean returnStatistics) {
@@ -109,11 +111,11 @@ public class ConceptGraphsService implements ContentService {
   }
 
   public PipelineResponse initPipeline(
-      String processName,
+      @Nonnull String processName,
       String language,
       Boolean skipPresent,
       Boolean returnStatistics,
-      JSONObject jsonBody,
+      @Nonnull JSONObject jsonBody,
       JSONObject cgApiUrl) {
     String url = cgApiUrl.getString("url") + ":" + cgApiUrl.getString("port");
     try {
@@ -126,11 +128,12 @@ public class ConceptGraphsService implements ContentService {
         }
         if (!success) {
           LOGGER.severe(
-              "Tried to initiate PipelineManager with connection info given in Adapter config but to no avail."
-                  + " Trying to use the default as given in the backend application's config.");
+              "Tried to initiate PipelineManager with connection info given in Adapter config but"
+                  + " to no avail. Trying to use the default as given in the backend application's"
+                  + " config.");
         }
       }
-    } catch (MalformedURLException e) {
+    } catch (MalformedURLException | URISyntaxException e) {
       LOGGER.warning(
           "The given url in the Adapter config seems to be malformed: '"
               + url

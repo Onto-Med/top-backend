@@ -2,8 +2,9 @@ package care.smith.top.backend.model.jpa;
 
 import care.smith.top.backend.model.jpa.key.OrganisationMembershipKeyDao;
 import care.smith.top.model.OrganisationMembership;
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
+import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.validation.constraints.NotNull;
 
 @Entity(name = "organisation_membership")
 public class OrganisationMembershipDao {

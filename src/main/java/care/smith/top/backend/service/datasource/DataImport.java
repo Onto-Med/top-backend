@@ -9,6 +9,7 @@ import care.smith.top.backend.repository.jpa.datasource.ExpectedResultRepository
 import care.smith.top.backend.repository.jpa.datasource.SubjectRepository;
 import care.smith.top.backend.repository.jpa.datasource.SubjectResourceRepository;
 import care.smith.top.model.DataSourceFileType;
+import jakarta.validation.constraints.NotNull;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.Arrays;
@@ -16,7 +17,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import javax.validation.constraints.NotNull;
 import org.apache.commons.lang3.NotImplementedException;
 
 public abstract class DataImport {

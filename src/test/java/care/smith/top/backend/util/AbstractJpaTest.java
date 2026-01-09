@@ -1,5 +1,6 @@
 package care.smith.top.backend.util;
 
+import care.smith.top.backend.TopBackendApplication;
 import care.smith.top.backend.api.OrganisationApiDelegateImpl;
 import care.smith.top.backend.repository.jpa.CategoryRepository;
 import care.smith.top.backend.repository.jpa.ConceptRepository;
@@ -24,8 +25,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 
 @SpringBootTest
-@ExtendWith(TestContainersInitializer.class)
-@ContextConfiguration(initializers = TestContainersInitializer.class)
+@ExtendWith(PostgreSqlTestcontainersInitializer.class)
+@ContextConfiguration(
+    classes = TopBackendApplication.class,
+    initializers = PostgreSqlTestcontainersInitializer.class)
 public class AbstractJpaTest {
   @Autowired protected OrganisationApiDelegateImpl organisationApiDelegate;
   @Autowired protected OrganisationService organisationService;

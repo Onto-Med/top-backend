@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import care.smith.top.backend.api.nlp.ConceptPipelineApiDelegateImpl;
 import care.smith.top.backend.util.AbstractNLPTest;
 import java.util.Objects;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -18,20 +17,6 @@ class ConceptPipelineApiDelegateImplTest extends AbstractNLPTest {
         23,
         Objects.requireNonNull(conceptGraphApi.getConceptGraphStatistics("process_id").getBody())
             .size());
-  }
-
-  @Test
-  @Disabled
-  void getConceptGraph() {
-    // getConceptGraph just calls conceptGraphService.getConceptGraphForIdAndProcess which is
-    // already tested
-  }
-
-  @Test
-  @Disabled
-  void getConceptPipelines() {
-    // getConceptPipeline just calls conceptGraphService.conceptGraphsService.getAllStoredProcesses
-    // which is already tested
   }
 
   @Test

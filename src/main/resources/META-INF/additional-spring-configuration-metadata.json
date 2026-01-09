@@ -1,0 +1,122 @@
+{"properties": [
+  {
+    "name": "openapi.t-oP.base-path",
+    "type": "java.lang.String",
+    "description": "Base path this application ins running on."
+  },
+  {
+    "name": "spring.max-batch-size",
+    "type": "java.lang.Integer",
+    "description": "Maximum number of entities that can be uploaded in a batch. Defaults to 100."
+  },
+  {
+    "name": "spring.security.cors.allowed-origins",
+    "type": "java.lang.String",
+    "description": "Allowed origins for cross-origin resource sharing (CORS)."
+  },
+  {
+    "name": "spring.security.oauth2.enabled",
+    "type": "java.lang.Boolean",
+    "description": "Whether authentication via OAuth2 is enabled. Defaults to false."
+  },
+  {
+    "name": "spring.paging.page-size",
+    "type": "java.lang.Integer",
+    "description": "Page size to be used when serving paged responses."
+  },
+  {
+    "name": "management.health.elasticsearch.enabled",
+    "type": "java.lang.Boolean",
+    "description": "Enable or disable elasticsearch health check."
+  },
+  {
+    "name": "coding.terminology-service",
+    "type": "java.lang.String",
+    "description": "URL of the terminology service. Defaults to https://www.ebi.ac.uk/ols4/api."
+  },
+  {
+    "name": "coding.suggestions-page-size",
+    "type": "java.lang.Integer",
+    "description": "Page size of code suggestions."
+  },
+  {
+    "name": "coding.code-children-page-size",
+    "type": "java.lang.Integer",
+    "description": "Page size of code children."
+  },
+  {
+    "name": "top.appName",
+    "type": "java.lang.String",
+    "description": "Name of this application."
+  },
+  {
+    "name": "top.version",
+    "type": "java.lang.String",
+    "description": "Version of this application."
+  },
+  {
+    "name": "top.demo-data",
+    "type": "java.lang.Boolean",
+    "description": "Whether the database should be initialised with demo data. Defaults to false."
+  },
+  {
+    "name": "top.result.dir",
+    "type": "java.lang.String",
+    "description": "Directory where query results are stored."
+  },
+  {
+    "name": "top.result.download-enabled",
+    "type": "java.lang.Boolean",
+    "description": "Whether the download of query results is enabled."
+  },
+  {
+    "name": "top.phenotyping.data-source-config-dir",
+    "type": "java.lang.String",
+    "description": "Directory where data source configurations for phenotype adapters are search for."
+  },
+  {
+    "name": "top.phenotyping.execute-queries",
+    "type": "java.lang.Boolean",
+    "description": "Whether phenotype queries are executed or not."
+  },
+  {
+    "name": "top.documents.data-source-config-dir",
+    "type": "java.lang.String",
+    "description": "Directory where data source configurations for document adapters are search for."
+  },
+  {
+    "name": "top.documents.default-adapter",
+    "type": "java.lang.String",
+    "description": "Default document adapter to use for document queries."
+  },
+  {
+    "name": "top.documents.concept-graphs-api.uri",
+    "type": "java.lang.String",
+    "description": "URL of the concept graphs service."
+  },
+  {
+    "name": "top.documents.security.graphdb.username",
+    "type": "java.lang.String",
+    "description": "Username for authentication to the graph DB."
+  },
+  {
+    "name": "top.documents.security.graphdb.password",
+    "type": "java.lang.String",
+    "description": "Password for authentication to the graph DB."
+  },
+  {
+    "name": "top.documents.security.documentdb.username",
+    "type": "java.lang.String",
+    "description": "Username for authentication to the document DB."
+  },
+  {
+    "name": "top.documents.security.documentdb.password",
+    "type": "java.lang.String",
+    "description": "Password for authentication to the document DB."
+  },
+  {
+    "name": "top.documents.max-term-count",
+    "type": "java.lang.String",
+    "description": "Maximum number of terms that can be included in a document query."
+  }
+]}

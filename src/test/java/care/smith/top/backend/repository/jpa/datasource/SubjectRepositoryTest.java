@@ -3,6 +3,7 @@ package care.smith.top.backend.repository.jpa.datasource;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
+import care.smith.top.backend.TopBackendApplication;
 import care.smith.top.backend.model.jpa.datasource.SubjectDao;
 import care.smith.top.backend.model.jpa.datasource.SubjectResourceDao;
 import care.smith.top.backend.util.AbstractJpaTest;
@@ -12,7 +13,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 
 @SpringBootTest
-@ContextConfiguration
+@ContextConfiguration(classes = TopBackendApplication.class)
 class SubjectRepositoryTest extends AbstractJpaTest {
   String dataSourceId = "data_source_1";
 

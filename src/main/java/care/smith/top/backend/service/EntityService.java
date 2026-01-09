@@ -7,12 +7,12 @@ import care.smith.top.backend.util.ApiModelMapper;
 import care.smith.top.model.*;
 import care.smith.top.top_phenotypic_query.converter.PhenotypeExporter;
 import care.smith.top.top_phenotypic_query.converter.PhenotypeImporter;
+import jakarta.validation.constraints.NotNull;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import javax.validation.constraints.NotNull;
 import org.reflections.Reflections;
 import org.reflections.util.ConfigurationBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -437,7 +437,7 @@ public class EntityService implements ContentService {
       List<EntityType> type,
       DataType dataType,
       ItemType itemType) {
-    // TODO: filter parameters are ignored
+    // NOTE: filter parameters are ignored
     getRepository(organisationId, repositoryId);
     return entityRepository
         .findAllByRepositoryIdAndSuperEntitiesEmpty(repositoryId, Sort.by(EntityDao_.ID))

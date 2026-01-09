@@ -13,9 +13,13 @@ spring:
   liquibase:
     drop-first: true
   jpa:
-    hibernate:
-      dialect: org.hibernate.dialect.PostgreSQLDialect
     open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        # Reverts to the behavior of Hibernate 5.3+
+        id:
+          "[db_structure_naming_strategy]": legacy
   security:
     cors:
       allowed-origins: "*"
@@ -23,8 +27,8 @@ spring:
       enabled: ${OAUTH2_ENABLED:false}
       resourceserver:
         jwt:
-          issuer-url: ${OAUTH2_URL:http://127.0.0.1:8081}/realms/${OAUTH2_REALM:top-realm}
-          jwk-set-uri: ${OAUTH2_URL:http://127.0.0.1:8081}/realms/${OAUTH2_REALM:top-realm}/protocol/openid-connect/certs
+          issuer-uri: ${OAUTH2_URL:http://127.0.0.1:8081}/realms/${OAUTH2_REALM:top-realm}
+          jwk-set-uri: ${OAUTH2_DOCKER_URL:${OAUTH2_URL:http://127.0.0.1:8081}}/realms/${OAUTH2_REALM:top-realm}/protocol/openid-connect/certs
   paging:
     page-size: 1000
   jackson:
@@ -49,7 +53,7 @@ top:
     execute-queries: false
   documents:
     data-source-config-dir: src/test/resources/config/data_sources/nlp
-    default_adapter: ${DOCUMENT_DEFAULT_ADAPTER:#{null}}
+    default-adapter: ${DOCUMENT_DEFAULT_ADAPTER:#{null}}
     concept-graphs-api:
       uri: ${CONCEPT_GRAPHS_API_ENDPOINT:http://localhost:9010}
     security:

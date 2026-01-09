@@ -2,16 +2,16 @@ package care.smith.top.backend.model.jpa;
 
 import care.smith.top.backend.util.ApiModelMapper;
 import care.smith.top.model.*;
+import care.smith.top.model.Entity;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import javax.persistence.*;
-import javax.persistence.Entity;
-import javax.validation.constraints.NotNull;
 import org.hibernate.TypeMismatchException;
 
-@Entity(name = "entity")
+@jakarta.persistence.Entity(name = "entity")
 public class EntityDao {
   @Enumerated
   @Column(name = "top_entity_type", nullable = false)
@@ -46,7 +46,7 @@ public class EntityDao {
     this.id = id == null ? UUID.randomUUID().toString() : id;
   }
 
-  public EntityDao(@NotNull care.smith.top.model.Entity entity) {
+  public EntityDao(@NotNull Entity entity) {
     id = entity.getId();
     entityType = entity.getEntityType();
   }
@@ -92,15 +92,15 @@ public class EntityDao {
     return this;
   }
 
-  public care.smith.top.model.Entity toApiModel() {
+  public Entity toApiModel() {
     return toApiModel(currentVersion);
   }
 
-  public care.smith.top.model.Entity toApiModel(EntityVersionDao entityVersionDao) {
-    if (entityVersionDao == null) return new care.smith.top.model.Entity();
+  public Entity toApiModel(EntityVersionDao entityVersionDao) {
+    if (entityVersionDao == null) return new Entity();
     EntityDao entityDao = entityVersionDao.getEntity();
 
-    care.smith.top.model.Entity entity;
+    Entity entity;
 
     if (ApiModelMapper.isCategory(entityType)) {
       entity = new Category();
