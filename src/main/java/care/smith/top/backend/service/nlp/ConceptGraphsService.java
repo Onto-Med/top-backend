@@ -23,9 +23,12 @@ import org.springframework.stereotype.Service;
 public class ConceptGraphsService implements ContentService {
   private final ConceptPipelineManager pipelineManager;
   private static final Logger LOGGER = Logger.getLogger(ConceptGraphsService.class.getName());
+  public final boolean cgApiEnabled;
 
   public ConceptGraphsService(
-      @Value("${top.documents.concept-graphs-api.uri}") String conceptGraphsApiUri) {
+      @Value("${top.documents.concept-graphs-api.uri}") String conceptGraphsApiUri,
+      @Value("${top.documents.concept-graphs-api.enabled}") boolean cgApiEnabled) {
+    this.cgApiEnabled = cgApiEnabled;
     ConceptPipelineManager tmpPipeline;
     try {
       tmpPipeline = new ConceptPipelineManager(conceptGraphsApiUri);
@@ -42,6 +45,14 @@ public class ConceptGraphsService implements ContentService {
   @Override
   public long count() {
     return pipelineManager.count();
+  }
+
+  public boolean pipelineManagerIsAccessible() {
+    return pipelineManager.isAccessible();
+  }
+
+  public String currentUrl() {
+    return pipelineManager.getCurrentUrl().toString();
   }
 
   public Map<String, ConceptGraphStat> getAllConceptGraphStatistics(String processName) {

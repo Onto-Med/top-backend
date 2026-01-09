@@ -1,7 +1,6 @@
 package care.smith.top.backend.util;
 
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -91,6 +90,18 @@ public abstract class AbstractNLPTest extends AbstractJpaTest {
         new ResourceHttpHandler("/concept_graphs_api_fixtures/get_statistics.json"));
     conceptGraphsApiService.createContext(
         "/graph/0", new ResourceHttpHandler("/concept_graphs_api_fixtures/get_concept_graph.json"));
+
+    /*
+     * Add "/" endpoint with empty response to address isAccessible check of
+     * care.smith.top.top_document_query.concept_graphs_api.ConceptPipelineManager.
+     */
+    conceptGraphsApiService.createContext(
+        "/",
+        exchange -> {
+          exchange.sendResponseHeaders(200, -1);
+          exchange.close();
+        });
+
     conceptGraphsApiService.start();
   }
 

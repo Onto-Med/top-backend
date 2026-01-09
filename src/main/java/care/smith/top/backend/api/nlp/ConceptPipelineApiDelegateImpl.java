@@ -22,6 +22,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -37,6 +38,15 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
 
   @Value("top.documents.default-adapter")
   private String defaultDataSourceId;
+
+  @Override
+  public ResponseEntity<ConceptGraphManagerStatus> getConceptPipelineManagerStatus() {
+    ConceptGraphManagerStatus conceptGraphManagerStatus =
+        new ConceptGraphManagerStatus()
+            .status(conceptGraphsService.pipelineManagerIsAccessible())
+            .enabled(conceptGraphsService.cgApiEnabled);
+    return new ResponseEntity<>(conceptGraphManagerStatus, HttpStatus.OK);
+  }
 
   @Override
   public ResponseEntity<Map<String, ConceptGraphStat>> getConceptGraphStatistics(
@@ -74,6 +84,8 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
 
   @Override
   public ResponseEntity<ConceptGraphPipeline> getConceptGraphPipelineById(String pipelineId) {
+    if (!conceptGraphsService.cgApiEnabled) return ResponseEntity.of(Optional.empty());
+    if (!conceptGraphsService.pipelineManagerIsAccessible()) return serviceNotFoundError();
     ConceptGraphPipeline pipeline = new ConceptGraphPipeline();
     final String finalPipelineId = stringConformity(pipelineId);
     try {
@@ -273,6 +285,18 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
   public ResponseEntity<Void> stopConceptGraphPipeline(String pipelineId) {
     conceptGraphsService.stopPipeline(stringConformity(pipelineId));
     return ResponseEntity.ok().build();
+  }
+
+  private ResponseEntity<ConceptGraphPipeline> serviceNotFoundError() {
+    String logMessage = "Concept Graphs API service not found.";
+    if (conceptGraphsService.cgApiEnabled) {
+      LOGGER.severe(logMessage);
+    } else {
+      LOGGER.fine(logMessage + " But it was not enabled in application's configuration.");
+    }
+    return ResponseEntity.of(
+        Optional.of(
+            new ConceptGraphPipeline().pipelineId(null).status(PipelineResponseStatus.FAILED)));
   }
 
   private Map<String, String> createVectorStoreServerMap(TextAdapterConfig textAdapterConfig) {

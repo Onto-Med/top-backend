@@ -95,6 +95,11 @@
     "description": "URL of the concept graphs service."
   },
   {
+    "name": "top.documents.concept-graphs-api.enabled",
+    "type": "java.lang.String",
+    "description": "Whether the concept-graphs-api should be available."
+  },
+  {
     "name": "top.documents.security.graphdb.username",
     "type": "java.lang.String",
     "description": "Username for authentication to the graph DB."

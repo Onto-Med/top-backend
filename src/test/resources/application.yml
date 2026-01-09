@@ -56,6 +56,7 @@ top:
     default-adapter: ${DOCUMENT_DEFAULT_ADAPTER:#{null}}
     concept-graphs-api:
       uri: ${CONCEPT_GRAPHS_API_ENDPOINT:http://localhost:9010}
+      enabled: true
     security:
       graphdb:
         username: ${DB_NEO4J_USER:neo4j}
