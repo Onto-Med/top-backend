@@ -10,6 +10,7 @@ import care.smith.top.top_document_query.concept_graphs_api.model.pipeline_respo
 import jakarta.annotation.Nonnull;
 import java.io.File;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.util.*;
 import java.util.function.Function;
 import java.util.logging.Logger;
@@ -28,10 +29,10 @@ public class ConceptGraphsService implements ContentService {
     ConceptPipelineManager tmpPipeline;
     try {
       tmpPipeline = new ConceptPipelineManager(conceptGraphsApiUri);
-    } catch (MalformedURLException e) {
+    } catch (MalformedURLException | URISyntaxException e) {
       try {
         tmpPipeline = new ConceptPipelineManager("http://localhost:9010");
-      } catch (MalformedURLException ex) {
+      } catch (MalformedURLException | URISyntaxException ex) {
         throw new RuntimeException(ex);
       }
     }
@@ -132,7 +133,7 @@ public class ConceptGraphsService implements ContentService {
                   + " config.");
         }
       }
-    } catch (MalformedURLException e) {
+    } catch (MalformedURLException | URISyntaxException e) {
       LOGGER.warning(
           "The given url in the Adapter config seems to be malformed: '"
               + url

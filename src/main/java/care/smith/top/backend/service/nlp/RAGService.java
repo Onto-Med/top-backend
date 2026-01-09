@@ -4,6 +4,7 @@ import care.smith.top.model.RAGAnswer;
 import care.smith.top.model.RAGStatus;
 import care.smith.top.top_document_query.concept_graphs_api.RAGManager;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -16,10 +17,10 @@ public class RAGService {
     RAGManager tmpManager;
     try {
       tmpManager = new RAGManager(conceptGraphsApiUri);
-    } catch (MalformedURLException e) {
+    } catch (MalformedURLException | URISyntaxException e) {
       try {
         tmpManager = new RAGManager("http://localhost:9010");
-      } catch (MalformedURLException ex) {
+      } catch (MalformedURLException | URISyntaxException ex) {
         throw new RuntimeException(ex);
       }
     }

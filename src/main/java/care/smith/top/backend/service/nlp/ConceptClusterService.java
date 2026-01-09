@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.common.collect.Lists;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -59,7 +60,7 @@ public class ConceptClusterService implements ContentService {
       DocumentNodeRepository documentNodeRepository) {
     try {
       pipelineManager = new ConceptPipelineManager(conceptGraphsApiUri);
-    } catch (MalformedURLException e) {
+    } catch (MalformedURLException | URISyntaxException e) {
       LOGGER.severe(
           "Couldn't initialize pipelineManager; document related functions won't be available.");
     }
