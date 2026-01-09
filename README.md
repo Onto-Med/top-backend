@@ -39,6 +39,7 @@ instructions.
     * `DB_NEO4J_PASS`: password for Neo4j database (should be declared here and not written into an adapter)
     * `DB_NEO4J_CONNECTION_TIMEOUT`: timeout in seconds for Neo4j requests, defaults to 30
     * `CONCEPT_GRAPHS_API_ENDPOINT`: API endpoint of the concept-graphs service, defaults to `http://localhost:9007`
+    * `CONCEPT_GRAPHS_API_ENABLED`: Whether the concept-graphs-api should be available.
     * `MAX_COMBINED_DOCUMENTS_UPLOAD`: restricts the maximum combined upload size of a document batch (defaults to 2MB); should be on par with the respective value in the frontend
 
    OAuth2 related:
