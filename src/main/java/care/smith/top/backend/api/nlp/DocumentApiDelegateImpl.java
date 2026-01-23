@@ -1,11 +1,12 @@
 package care.smith.top.backend.api.nlp;
 
+import static care.smith.top.top_document_query.util.NLPUtils.stringConformity;
+
 import care.smith.top.backend.api.DocumentApiDelegate;
 import care.smith.top.backend.service.nlp.DocumentService;
 import care.smith.top.backend.service.nlp.PhraseService;
 import care.smith.top.backend.util.ApiModelMapper;
 import care.smith.top.backend.util.nlp.DocumentRepresentation;
-import care.smith.top.backend.util.nlp.NLPUtils;
 import care.smith.top.model.Document;
 import care.smith.top.model.DocumentGatheringMode;
 import care.smith.top.model.DocumentImport;
@@ -51,11 +52,11 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
       List<String> include) {
     page -= 1;
     TextAdapter adapter;
-    String corpusId = NLPUtils.stringConformity(dataSource);
+    String corpusId = stringConformity(dataSource);
     try {
-      adapter = documentService.getAdapterForDataSource(dataSource);
+      adapter = documentService.getAdapterForDataSource(corpusId);
     } catch (InstantiationException e) {
-      LOGGER.severe("The text adapter '" + dataSource + "' could not be initialized.");
+      LOGGER.severe("The text adapter '" + corpusId + "' could not be initialized.");
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
     }
     exemplarOnly = (exemplarOnly != null) ? exemplarOnly : false;
@@ -147,11 +148,11 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
       List<String> offsets,
       List<String> include) {
     TextAdapter adapter;
-    String corpusId = NLPUtils.stringConformity(dataSource);
+    String corpusId = stringConformity(dataSource);
     try {
-      adapter = documentService.getAdapterForDataSource(dataSource);
+      adapter = documentService.getAdapterForDataSource(corpusId);
     } catch (InstantiationException e) {
-      LOGGER.severe("The text adapter '" + dataSource + "' could not be initialized.");
+      LOGGER.severe("The text adapter '" + corpusId + "' could not be initialized.");
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
     }
 
@@ -217,16 +218,17 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<DocumentImport> importDocuments(
       String dataSource, String language, List<@Valid Document> documents) {
+    String finalDataSource = stringConformity(dataSource);
     try {
-      TextAdapter adapter = documentService.getAdapterForDataSource(dataSource);
+      TextAdapter adapter = documentService.getAdapterForDataSource(finalDataSource);
       DocumentImport importResult =
           adapter.importDocuments(documents.toArray(new Document[0]), language);
       return ResponseEntity.ok(importResult);
     } catch (InstantiationException e) {
-      LOGGER.severe("The text adapter '" + dataSource + "' could not be initialized.");
+      LOGGER.severe("The text adapter '" + finalDataSource + "' could not be initialized.");
     } catch (IOException e) {
       LOGGER.severe(
-          "Server Instance could not be reached/queried for datasource '" + dataSource + "'.");
+          "Server Instance could not be reached/queried for datasource '" + finalDataSource + "'.");
     }
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
   }

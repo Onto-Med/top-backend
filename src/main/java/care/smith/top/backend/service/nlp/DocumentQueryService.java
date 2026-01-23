@@ -12,6 +12,7 @@ import care.smith.top.top_document_query.adapter.config.TextAdapterConfig;
 import care.smith.top.top_document_query.converter.csv.CSVDataRecord;
 import care.smith.top.top_document_query.converter.csv.DocumentCSV;
 import care.smith.top.top_document_query.util.Entities;
+import care.smith.top.top_document_query.util.NLPUtils;
 import java.io.IOException;
 import java.nio.file.FileSystemException;
 import java.nio.file.Files;
@@ -170,8 +171,11 @@ public class DocumentQueryService extends QueryService {
   }
 
   public Optional<TextAdapterConfig> getTextAdapterConfig(String id) {
-    if (id == null) return Optional.empty();
-    return getTextAdapterConfigs().stream().filter(a -> id.equals(a.getId())).findFirst();
+    String finalId = NLPUtils.stringConformity(id);
+    if (finalId == null) return Optional.empty();
+    return getTextAdapterConfigs().stream()
+        .filter(a -> finalId.equals(NLPUtils.stringConformity(a.getId())))
+        .findFirst();
   }
 
   public Map<String, List<String>> getDocumentIdsAndOffsets(

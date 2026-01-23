@@ -1,6 +1,6 @@
 package care.smith.top.backend.api.nlp;
 
-import static care.smith.top.backend.util.nlp.NLPUtils.stringConformity;
+import static care.smith.top.top_document_query.util.NLPUtils.stringConformity;
 
 import care.smith.top.backend.api.ConceptPipelineApiDelegate;
 import care.smith.top.backend.service.nlp.ConceptClusterService;
@@ -167,7 +167,7 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
 
     pipelineResponse =
         conceptGraphsService.initPipeline(
-            processName,
+            stringConformity(processName),
             requestParams.get("language"),
             queryArgs.get("skip_present"),
             queryArgs.get("return_statistics"),

@@ -3,6 +3,7 @@ package care.smith.top.backend.service.nlp;
 import care.smith.top.model.RAGAnswer;
 import care.smith.top.model.RAGStatus;
 import care.smith.top.top_document_query.concept_graphs_api.RAGManager;
+import care.smith.top.top_document_query.util.NLPUtils;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import org.json.JSONObject;
@@ -28,23 +29,28 @@ public class RAGService {
   }
 
   public String initializeRAG(String process, boolean force, JSONObject jsonBody) {
-    return ragManager.initRag(process, force, jsonBody);
+    String finalProcess = NLPUtils.stringConformity(process);
+    return ragManager.initRag(finalProcess, force, jsonBody);
   }
 
   public RAGAnswer poseQuestion(String process, String question) {
-    return ragManager.poseQuestion(process, question);
+    String finalProcess = NLPUtils.stringConformity(process);
+    return ragManager.poseQuestion(finalProcess, question);
   }
 
   public RAGAnswer poseQuestionWithFilter(String process, String question, String[] docIds) {
-    return ragManager.poseQuestion(process, question, docIds);
+    String finalProcess = NLPUtils.stringConformity(process);
+    return ragManager.poseQuestion(finalProcess, question, docIds);
   }
 
   public RAGStatus getStatus(String process) {
-    return ragManager.getRAGStatus(process);
+    String finalProcess = NLPUtils.stringConformity(process);
+    return ragManager.getRAGStatus(finalProcess);
   }
 
   public boolean isActive(String process) {
-    RAGStatus status = getStatus(process);
+    String finalProcess = NLPUtils.stringConformity(process);
+    RAGStatus status = getStatus(finalProcess);
     if (status == null) return false;
     return Boolean.TRUE.equals(status.isActive());
   }

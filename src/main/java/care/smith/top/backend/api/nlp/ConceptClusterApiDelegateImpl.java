@@ -1,6 +1,6 @@
 package care.smith.top.backend.api.nlp;
 
-import static care.smith.top.backend.util.nlp.NLPUtils.stringConformity;
+import static care.smith.top.top_document_query.util.NLPUtils.stringConformity;
 
 import care.smith.top.backend.api.ConceptclusterApiDelegate;
 import care.smith.top.backend.service.nlp.ConceptClusterService;
@@ -33,11 +33,12 @@ public class ConceptClusterApiDelegateImpl implements ConceptclusterApiDelegate 
   public ResponseEntity<ConceptClusterPage> getConceptClusterByDocumentId(
       String documentId, String dataSource, List<String> include, Integer page) {
     Document document;
+    String finalDataSource = stringConformity(dataSource);
     try {
-      TextAdapter adapter = documentService.getAdapterForDataSource(dataSource);
+      TextAdapter adapter = documentService.getAdapterForDataSource(finalDataSource);
       document = adapter.getDocumentById(documentId, true).orElseThrow();
     } catch (InstantiationException e) {
-      LOGGER.severe("The text adapter '" + dataSource + "' could not be initialized.");
+      LOGGER.severe("The text adapter '" + finalDataSource + "' could not be initialized.");
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
     } catch (IOException e) {
       LOGGER.fine("Text DB Server Instance could not be reached/queried.");
@@ -49,7 +50,7 @@ public class ConceptClusterApiDelegateImpl implements ConceptclusterApiDelegate 
     }
     return ResponseEntity.ok(
         ApiModelMapper.toConceptClusterPage(
-            conceptClusterService.conceptsByDocumentId(document.getId(), dataSource, page)));
+            conceptClusterService.conceptsByDocumentId(document.getId(), finalDataSource, page)));
   }
 
   @Override
@@ -103,7 +104,7 @@ public class ConceptClusterApiDelegateImpl implements ConceptclusterApiDelegate 
   public ResponseEntity<PipelineResponse> getConceptClusterProcess(String pipelineId) {
     final String finalPipelineId = stringConformity(pipelineId);
     PipelineResponse response = new PipelineResponse().pipelineId(finalPipelineId);
-    if (pipelineId == null
+    if (finalPipelineId == null
         || !conceptClusterService.conceptClusterProcessesContainsKey(finalPipelineId))
       return ResponseEntity.of(
           Optional.of(
@@ -122,7 +123,7 @@ public class ConceptClusterApiDelegateImpl implements ConceptclusterApiDelegate 
     TextAdapter adapter;
 
     try {
-      adapter = documentService.getAdapterForDataSource(pipelineId);
+      adapter = documentService.getAdapterForDataSource(finalPipelineId);
     } catch (InstantiationException e) {
       String message = "No text adapter for '" + finalPipelineId + "' could be initialized.";
       LOGGER.severe(message);
