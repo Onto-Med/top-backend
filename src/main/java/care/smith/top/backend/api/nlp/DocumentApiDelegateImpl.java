@@ -226,9 +226,6 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
       return ResponseEntity.ok(importResult);
     } catch (InstantiationException e) {
       LOGGER.severe("The text adapter '" + finalDataSource + "' could not be initialized.");
-    } catch (IOException e) {
-      LOGGER.severe(
-          "Server Instance could not be reached/queried for datasource '" + finalDataSource + "'.");
     }
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
   }

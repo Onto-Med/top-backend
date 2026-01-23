@@ -43,7 +43,9 @@ public class ConceptPipelineApiDelegateImpl implements ConceptPipelineApiDelegat
   public ResponseEntity<ConceptGraphManagerStatus> getConceptPipelineManagerStatus() {
     ConceptGraphManagerStatus conceptGraphManagerStatus =
         new ConceptGraphManagerStatus()
-            .status(conceptGraphsService.pipelineManagerIsAccessible())
+            .status(
+                conceptGraphsService.cgApiEnabled
+                    && conceptGraphsService.pipelineManagerIsAccessible())
             .enabled(conceptGraphsService.cgApiEnabled);
     return new ResponseEntity<>(conceptGraphManagerStatus, HttpStatus.OK);
   }
