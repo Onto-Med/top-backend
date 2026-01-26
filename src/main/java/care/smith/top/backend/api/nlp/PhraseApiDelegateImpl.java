@@ -1,10 +1,11 @@
 package care.smith.top.backend.api.nlp;
 
+import static care.smith.top.top_document_query.util.NLPUtils.stringConformity;
+
 import care.smith.top.backend.api.PhraseApiDelegate;
 import care.smith.top.backend.service.nlp.DocumentService;
 import care.smith.top.backend.service.nlp.PhraseService;
 import care.smith.top.backend.util.ApiModelMapper;
-import care.smith.top.backend.util.nlp.NLPUtils;
 import care.smith.top.model.Document;
 import care.smith.top.model.Phrase;
 import care.smith.top.model.PhrasePage;
@@ -43,7 +44,7 @@ public class PhraseApiDelegateImpl implements PhraseApiDelegate {
   @Override
   public ResponseEntity<PhrasePage> getPhrases(
       String text, String corpusId, String conceptClusterId, Integer page) {
-    String finalCorpusId = NLPUtils.stringConformity(corpusId);
+    String finalCorpusId = stringConformity(corpusId);
     HashSet<Phrase> phraseSet = new HashSet<>();
     boolean textFilter = !(text == null || text.trim().isEmpty());
     boolean conceptClusterFilter = !(conceptClusterId == null || conceptClusterId.trim().isEmpty());
@@ -64,7 +65,7 @@ public class PhraseApiDelegateImpl implements PhraseApiDelegate {
   @Override
   public ResponseEntity<PhrasePage> getPhrasesByDocumentId(
       String documentId, String dataSource, List<String> include, String text, Integer page) {
-    String corpusId = NLPUtils.stringConformity(dataSource);
+    String corpusId = stringConformity(dataSource);
     if ((documentId == null || documentId.trim().isEmpty())
         || (dataSource == null || dataSource.trim().isEmpty())) {
       LOGGER.severe("Either 'documentId', 'dataSource' or both are missing.");
@@ -72,7 +73,7 @@ public class PhraseApiDelegateImpl implements PhraseApiDelegate {
     }
     Optional<Document> document;
     try {
-      TextAdapter adapter = documentService.getAdapterForDataSource(dataSource);
+      TextAdapter adapter = documentService.getAdapterForDataSource(corpusId);
       document = adapter.getDocumentById(documentId, true);
     } catch (InstantiationException e) {
       LOGGER.severe("The text adapter '" + dataSource + "' could not be initialized.");
@@ -94,7 +95,7 @@ public class PhraseApiDelegateImpl implements PhraseApiDelegate {
   @Override
   public ResponseEntity<Phrase> getPhraseById(
       String phraseId, String corpusId, List<String> include) {
-    String finalCorpusId = NLPUtils.stringConformity(corpusId);
+    String finalCorpusId = stringConformity(corpusId);
     return ResponseEntity.of(phraseService.getPhraseById(phraseId, finalCorpusId));
   }
 

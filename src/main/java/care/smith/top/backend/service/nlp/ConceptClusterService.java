@@ -15,6 +15,7 @@ import care.smith.top.top_document_query.adapter.TextAdapter;
 import care.smith.top.top_document_query.concept_graphs_api.ConceptPipelineManager;
 import care.smith.top.top_document_query.concept_graphs_api.model.ConceptGraphEntity;
 import care.smith.top.top_document_query.concept_graphs_api.model.PhraseDocumentObject;
+import care.smith.top.top_document_query.util.NLPUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -140,7 +141,7 @@ public class ConceptClusterService implements ContentService {
 
   @Cacheable(value = "concepts", key = "{#corpusId}")
   public Page<ConceptCluster> concepts(String corpusId) {
-    return conceptsForPage(corpusId, null);
+    return conceptsForPage(NLPUtils.stringConformity(corpusId), null);
   }
 
   public Page<ConceptCluster> conceptsForPage(String corpusId, Integer page) {
