@@ -19,6 +19,9 @@ logging:
       springframework:
         data:
           neo4j: ERROR
+      hibernate:
+        orm:
+          incubating: ERROR
 
 spring:
   max-batch-size: ${MAX_BATCH_SIZE:100}

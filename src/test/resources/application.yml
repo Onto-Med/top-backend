@@ -6,6 +6,10 @@ server:
 logging:
   level:
     root: INFO
+    org:
+      hibernate:
+        orm:
+          incubating: ERROR
 
 spring:
   neo4j:
