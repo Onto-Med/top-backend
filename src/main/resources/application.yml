@@ -19,6 +19,12 @@ logging:
       springframework:
         data:
           neo4j: ERROR
+        security:
+          config:
+            annotation:
+              authentication:
+                configuration:
+                  InitializeUserDetailsBeanManagerConfigurer: ERROR
       hibernate:
         orm:
           incubating: ERROR
