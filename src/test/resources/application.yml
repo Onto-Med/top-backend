@@ -55,12 +55,12 @@ org:
       enabled: true
 
 top:
+  queries-enabled: false
   result:
     dir: ${QUERY_RESULT_DIR:config/query_results}
     download-enabled: ${QUERY_RESULT_DOWNLOAD_ENABLED:true}
   phenotyping:
     data-source-config-dir: src/test/resources/config/data_sources
-    execute-queries: false
   documents:
     data-source-config-dir: src/test/resources/config/data_sources/nlp
     default-adapter: ${DOCUMENT_DEFAULT_ADAPTER:#{null}}
