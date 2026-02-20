@@ -40,6 +40,9 @@ public abstract class QueryService {
   @Value("${spring.paging.page-size:10}")
   protected int pageSize;
 
+  @Value("${top.queries-enabled:true}")
+  protected boolean queriesEnabled;
+
   @Value("${top.result.dir:config/query_results}")
   protected String resultDir;
 
