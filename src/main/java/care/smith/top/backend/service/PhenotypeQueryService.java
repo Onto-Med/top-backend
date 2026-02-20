@@ -40,9 +40,6 @@ public class PhenotypeQueryService extends QueryService {
   @Value("${top.phenotyping.data-source-config-dir:config/data_sources}")
   private String dataSourceConfigDir;
 
-  @Value("${top.queries-enabled:true}")
-  private boolean queriesEnabled;
-
   @Value("${spring.datasource.url}")
   private String jpaDataSourceUrl;
 
@@ -108,16 +105,12 @@ public class PhenotypeQueryService extends QueryService {
     QueryResultDao result;
     try {
       ResultSet rs;
-      if (queriesEnabled) {
-        rs = executeQuery(query, queryDao.getRepository().getId());
-        result =
-            new QueryResultDao(
-                queryDao, createdAt, (long) rs.size(), OffsetDateTime.now(), QueryState.FINISHED);
-      } else {
-        rs = new ResultSet();
-        result =
-            new QueryResultDao(queryDao, createdAt, 0L, OffsetDateTime.now(), QueryState.FINISHED)
-                .message("Query execution is disabled.");
+      rs = executeQuery(query, queryDao.getRepository().getId());
+      result =
+          new QueryResultDao(
+              queryDao, createdAt, (long) rs.size(), OffsetDateTime.now(), QueryState.FINISHED);
+      if (!queriesEnabled) {
+        result.message("Query execution is disabled.");
       }
       storeResult(queryDao, rs);
     } catch (Throwable e) {
