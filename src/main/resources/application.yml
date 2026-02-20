@@ -78,12 +78,12 @@ top:
   appName: '@project.name@'
   version: '@project.version@'
   demo-data: ${IMPORT_DEMO_DATA:false}
+  queries-enabled: ${QUERIES_ENABLED:true}
   result:
     dir: ${QUERY_RESULT_DIR:config/query_results}
     download-enabled: ${QUERY_RESULT_DOWNLOAD_ENABLED:true}
   phenotyping:
     data-source-config-dir: ${DATA_SOURCE_CONFIG_DIR:config/data_sources}
-    execute-queries: ${EXECUTE_QUERIES:true}
   documents:
     data-source-config-dir: ${DOCUMENT_DATA_SOURCE_CONFIG_DIR:config/data_sources/nlp}
     default-adapter: ${DOCUMENT_DEFAULT_ADAPTER:#{null}}
