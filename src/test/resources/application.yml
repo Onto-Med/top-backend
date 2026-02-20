@@ -6,6 +6,17 @@ server:
 logging:
   level:
     root: INFO
+    org:
+      springframework:
+        security:
+          config:
+            annotation:
+              authentication:
+                configuration:
+                  InitializeUserDetailsBeanManagerConfigurer: ERROR
+      hibernate:
+        orm:
+          incubating: ERROR
 
 spring:
   neo4j:
@@ -16,7 +27,6 @@ spring:
     open-in-view: false
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
         # Reverts to the behavior of Hibernate 5.3+
         id:
           "[db_structure_naming_strategy]": legacy
