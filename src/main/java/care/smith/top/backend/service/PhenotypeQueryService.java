@@ -40,8 +40,8 @@ public class PhenotypeQueryService extends QueryService {
   @Value("${top.phenotyping.data-source-config-dir:config/data_sources}")
   private String dataSourceConfigDir;
 
-  @Value("${top.phenotyping.execute-queries:true}")
-  private boolean executeQueries;
+  @Value("${top.queries-enabled:true}")
+  private boolean queriesEnabled;
 
   @Value("${spring.datasource.url}")
   private String jpaDataSourceUrl;
@@ -108,7 +108,7 @@ public class PhenotypeQueryService extends QueryService {
     QueryResultDao result;
     try {
       ResultSet rs;
-      if (executeQueries) {
+      if (queriesEnabled) {
         rs = executeQuery(query, queryDao.getRepository().getId());
         result =
             new QueryResultDao(
@@ -138,7 +138,7 @@ public class PhenotypeQueryService extends QueryService {
     DataAdapterConfig config = getDataAdapterConfig(query.getDataSource()).orElseThrow();
 
     ResultSet resultSet = new ResultSet();
-    if (executeQueries) {
+    if (queriesEnabled) {
       DataAdapter adapter = DataAdapter.getInstance(config);
       if (adapter == null) throw new NullPointerException("Adaptor type could not be derived.");
 
