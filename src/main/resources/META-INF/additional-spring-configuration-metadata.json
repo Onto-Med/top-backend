@@ -60,6 +60,11 @@
     "description": "Whether the database should be initialised with demo data. Defaults to false."
   },
   {
+    "name": "top.queries-enabled",
+    "type": "java.lang.Boolean",
+    "description": "Whether queries are executed or not."
+  },
+  {
     "name": "top.result.dir",
     "type": "java.lang.String",
     "description": "Directory where query results are stored."
@@ -73,11 +78,6 @@
     "name": "top.phenotyping.data-source-config-dir",
     "type": "java.lang.String",
     "description": "Directory where data source configurations for phenotype adapters are search for."
-  },
-  {
-    "name": "top.phenotyping.execute-queries",
-    "type": "java.lang.Boolean",
-    "description": "Whether phenotype queries are executed or not."
   },
   {
     "name": "top.documents.data-source-config-dir",

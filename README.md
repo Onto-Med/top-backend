@@ -24,6 +24,7 @@ instructions.
     * `DATA_SOURCE_CONFIG_DIR`: location of data source configuration files, defaults to `config/data_sources`
     * `DOCUMENT_DATA_SOURCE_CONFIG_DIR`: location of document data source configuration files, defaults to `config/data_sources/nlp`
     * `QUERY_RESULT_DIR`: location where query results are stored to, defaults to `config/query_results`
+    * `QUERIES_ENABLED`: whether query execution is possible, defaults to true
     * `QUERY_RESULT_DOWNLOAD_ENABLED`: whether users with write permission for a repository can download query results
       or not, defaults to true
     * `TERMINOLOGY_SERVICE_ENDPOINT`: endpoint of the Ontology Lookup Service to be used for code search, defaults

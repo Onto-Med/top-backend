@@ -50,7 +50,7 @@ public class DocumentQueryService extends QueryService {
   @Override
   @org.jobrunr.jobs.annotations.Job(name = "Document query", retries = 0)
   public void executeQuery(UUID queryId) {
-    boolean runTextFinder = true;
+    boolean runTextFinder = queriesEnabled;
     OffsetDateTime createdAt = OffsetDateTime.now();
     QueryDao queryDao =
         queryRepository
