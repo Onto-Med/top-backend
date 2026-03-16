@@ -15,12 +15,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 
 /**
  * @author ralph
  */
 @Service
 @Primary
+@Validated
 public class OLSCodeService {
   @Autowired protected OlsCodeSystemRepository olsCodeSystemRepository;
   @Autowired protected OlsCodeRepository olsCodeRepository;
