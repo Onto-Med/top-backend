@@ -25,9 +25,11 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 
 @Service
 @Transactional
+@Validated
 public class UserService implements ContentService, UserDetailsService {
   @Autowired private OrganisationMembershipRepository organisationMembershipRepository;
   @Autowired private RepositoryRepository repositoryRepository;

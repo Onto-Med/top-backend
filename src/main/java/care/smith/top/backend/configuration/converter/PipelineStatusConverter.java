@@ -4,8 +4,10 @@ import care.smith.top.model.ConceptGraphPipelineStatusEnum;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
+import org.springframework.validation.annotation.Validated;
 
 @Component
+@Validated
 public class PipelineStatusConverter implements Converter<String, ConceptGraphPipelineStatusEnum> {
   @Override
   public ConceptGraphPipelineStatusEnum convert(@NotNull String source) {

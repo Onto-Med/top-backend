@@ -9,8 +9,10 @@ import org.springframework.data.domain.AuditorAware;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.validation.annotation.Validated;
 
 @Configuration
+@Validated
 public class SpringSecurityAuditorAware implements AuditorAware<UserDao> {
   @Value("${spring.security.oauth2.enabled}")
   private Boolean oauth2Enabled;
