@@ -1,0 +1,30 @@
+cff-version: 1.2.0
+message: If you use the content of this repository, please cite it using these metadata.
+title: TOP Backend
+abstract: Backend of the TOP Framework based on Java.
+authors:
+  - affiliation: Leipzig University
+    family-names: Beger
+    given-names: Christoph
+    orcid: https://orcid.org/0000-0002-1166-0368
+  - affiliation: Leipzig University
+    family-names: Matthies
+    given-names: Franz
+    orcid: https://orcid.org/0000-0001-7196-506X
+  - affiliation: Leipzig University
+    family-names: Schäfermeier
+    given-names: Ralph
+    orcid: https://orcid.org/0000-0002-4349-6726
+  - affiliation: Leipzig University
+    family-names: Höffner
+    given-names: Konrad
+    orcid: https://orcid.org/0000-0001-7358-3217
+  - affiliation: Leipzig University
+    family-names: Uciteli
+    given-names: Alexandr
+    orcid: https://orcid.org/0000-0001-9558-5352
+date-released: 2026-07-03
+keywords:
+  - phenotyping
+  - java
+license: MIT
