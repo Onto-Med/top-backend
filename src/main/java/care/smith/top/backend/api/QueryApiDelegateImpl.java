@@ -1,5 +1,7 @@
 package care.smith.top.backend.api;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import care.smith.top.backend.model.jpa.OrganisationDao;
 import care.smith.top.backend.model.jpa.OrganisationDataSourceDao;
 import care.smith.top.backend.model.jpa.datasource.DataSourceDao;
@@ -17,6 +19,7 @@ import care.smith.top.model.*;
 import care.smith.top.top_document_query.adapter.config.QueryExpansionConfig;
 import care.smith.top.top_document_query.adapter.config.TextAdapterConfig;
 import care.smith.top.top_document_query.concept_graphs_api.model.QueryExpansionProfileEntity;
+import care.smith.top.top_document_query.concept_graphs_api.model.QueryExpansionProfileRelationEntity;
 import java.io.*;
 import java.nio.file.FileSystemException;
 import java.util.*;
@@ -37,6 +40,8 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class QueryApiDelegateImpl implements QueryApiDelegate {
+  private static final ObjectMapper SNAKE_CASE_OBJECT_MAPPER =
+      new ObjectMapper().setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
   @Autowired private PhenotypeQueryService phenotypeQueryService;
   @Autowired private DocumentQueryService documentQueryService;
   @Autowired private QueryExpansionService queryExpansionService;
@@ -111,44 +116,70 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<QueryExpansionEffectiveConfig> getDataSourceQueryExpansionConfig(
       String dataSourceId) {
-    TextAdapterConfig adapterConfig =
-        documentQueryService
-            .getTextAdapterConfig(dataSourceId)
-            .orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Data source not found."));
-    QueryExpansionConfig queryExpansion = adapterConfig.getQueryExpansion();
-    if (queryExpansion == null || queryExpansion.getProfile() == null) {
-      throw new ResponseStatusException(
-          HttpStatus.NOT_FOUND, "Data source has no query-expansion configuration.");
-    }
+    QueryExpansionContext context = getQueryExpansionContext(dataSourceId);
+    return ResponseEntity.ok(
+        new QueryExpansionEffectiveConfig()
+            .profile(context.profileName())
+            .relations(toApiRelations(context.effectiveRelations())));
+  }
 
+  @Override
+  @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<List<QueryExpansionProfile>> getQueryExpansionProfiles() {
+    List<QueryExpansionProfile> profiles =
+        queryExpansionService
+            .getProfiles()
+            .orElseThrow(
+                () ->
+                    new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Query-expansion profiles not found or Concept Graphs API unavailable."))
+            .stream()
+            .map(this::toApiProfile)
+            .collect(Collectors.toList());
+    return ResponseEntity.ok(profiles);
+  }
+
+  @Override
+  @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<QueryExpansionProfile> getQueryExpansionProfile(String profileName) {
     QueryExpansionProfileEntity profile =
         queryExpansionService
-            .getProfile(queryExpansion.getProfile())
+            .getProfile(profileName)
             .orElseThrow(
                 () ->
                     new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Query-expansion profile not found or Concept Graphs API unavailable."));
+    return ResponseEntity.ok(toApiProfile(profile));
+  }
 
-    Set<String> configuredRelationIds = queryExpansion.getRelations().keySet();
-    List<QueryExpansionRelation> effectiveRelations =
-        profile.getRelations().stream()
-            .filter(relation -> configuredRelationIds.contains(relation.getId()))
-            .map(
-                relation ->
-                    new QueryExpansionRelation()
-                        .id(relation.getId())
-                        .label(relation.getLabel())
-                        .description(relation.getDescription())
-                        .sourceCategories(relation.getSourceCategories())
-                        .targetCategories(relation.getTargetCategories()))
+  @Override
+  @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<QueryExpansionResponse> expandQueryForDataSource(
+      String dataSourceId, QueryExpansionRequest request) {
+    QueryExpansionContext context = getQueryExpansionContext(dataSourceId);
+    Map<String, Object> rawRequest = SNAKE_CASE_OBJECT_MAPPER.convertValue(request, Map.class);
+    List<String> allowedRelationIds =
+        context.effectiveRelations().stream()
+            .map(QueryExpansionProfileRelationEntity::getId)
+            .collect(Collectors.toList());
+    List<Map<String, Object>> relationDefinitions =
+        context.effectiveRelations().stream()
+            .map(this::toConceptGraphsRelationDefinition)
             .collect(Collectors.toList());
 
+    Map<String, Object> rawResponse =
+        queryExpansionService
+            .expand(rawRequest, context.profileName(), allowedRelationIds, relationDefinitions)
+            .orElseThrow(
+                () ->
+                    new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Query expansion failed or Concept Graphs API unavailable."));
+
     return ResponseEntity.ok(
-        new QueryExpansionEffectiveConfig()
-            .profile(queryExpansion.getProfile())
-            .relations(effectiveRelations));
+        SNAKE_CASE_OBJECT_MAPPER.convertValue(rawResponse, QueryExpansionResponse.class));
   }
 
   @Override
@@ -278,6 +309,117 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
       throw new RuntimeException(e);
     }
   }
+
+  private QueryExpansionContext getQueryExpansionContext(String dataSourceId) {
+    TextAdapterConfig adapterConfig =
+        documentQueryService
+            .getTextAdapterConfig(dataSourceId)
+            .orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Data source not found."));
+    QueryExpansionConfig queryExpansion = adapterConfig.getQueryExpansion();
+    if (queryExpansion == null || queryExpansion.getProfile() == null) {
+      throw new ResponseStatusException(
+          HttpStatus.NOT_FOUND, "Data source has no query-expansion configuration.");
+    }
+
+    QueryExpansionProfileEntity profile =
+        queryExpansionService
+            .getProfile(queryExpansion.getProfile())
+            .orElseThrow(
+                () ->
+                    new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Query-expansion profile not found or Concept Graphs API unavailable."));
+
+    Set<String> configuredRelationIds = queryExpansion.getRelations().keySet();
+    List<QueryExpansionProfileRelationEntity> effectiveRelations =
+        profile.getRelations().stream()
+            .filter(relation -> configuredRelationIds.contains(relation.getId()))
+            .collect(Collectors.toList());
+    return new QueryExpansionContext(queryExpansion.getProfile(), profile, effectiveRelations);
+  }
+
+  private QueryExpansionProfile toApiProfile(QueryExpansionProfileEntity profile) {
+    return new QueryExpansionProfile()
+        .name(profile.getName())
+        .languageName(getLanguageName(profile))
+        .categories(getProfileCategories(profile))
+        .defaultCategories(getDefaultCategories(profile))
+        .relations(toApiRelations(profile.getRelations()));
+  }
+
+  private String getLanguageName(QueryExpansionProfileEntity profile) {
+    return invokeStringGetter(profile, "getLanguageName");
+  }
+
+  private List<QueryExpansionProfileCategory> getProfileCategories(
+      QueryExpansionProfileEntity profile) {
+    try {
+      Object categories = profile.getClass().getMethod("getCategories").invoke(profile);
+      if (categories instanceof List<?> categoryList) {
+        return categoryList.stream().map(this::toApiCategory).collect(Collectors.toList());
+      }
+    } catch (ReflectiveOperationException ignored) {
+      // Older top-document-query snapshots did not expose categories yet.
+    }
+    return Collections.emptyList();
+  }
+
+  private List<String> getDefaultCategories(QueryExpansionProfileEntity profile) {
+    try {
+      Object defaultCategories = profile.getClass().getMethod("getDefaultCategories").invoke(profile);
+      if (defaultCategories instanceof List<?> categoryList) {
+        return categoryList.stream().filter(String.class::isInstance).map(String.class::cast).toList();
+      }
+    } catch (ReflectiveOperationException ignored) {
+      // Older top-document-query snapshots did not expose default categories yet.
+    }
+    return Collections.emptyList();
+  }
+
+  private QueryExpansionProfileCategory toApiCategory(Object category) {
+    return new QueryExpansionProfileCategory()
+        .id(invokeStringGetter(category, "getId"))
+        .description(invokeStringGetter(category, "getDescription"));
+  }
+
+  private String invokeStringGetter(Object target, String methodName) {
+    try {
+      Object value = target.getClass().getMethod(methodName).invoke(target);
+      return value instanceof String stringValue ? stringValue : null;
+    } catch (ReflectiveOperationException ignored) {
+      return null;
+    }
+  }
+
+  private List<QueryExpansionRelation> toApiRelations(
+      List<QueryExpansionProfileRelationEntity> relations) {
+    return relations.stream().map(this::toApiRelation).collect(Collectors.toList());
+  }
+
+  private QueryExpansionRelation toApiRelation(QueryExpansionProfileRelationEntity relation) {
+    return new QueryExpansionRelation()
+        .id(relation.getId())
+        .label(relation.getLabel())
+        .description(relation.getDescription())
+        .sourceCategories(relation.getSourceCategories())
+        .targetCategories(relation.getTargetCategories());
+  }
+
+  private Map<String, Object> toConceptGraphsRelationDefinition(
+      QueryExpansionProfileRelationEntity relation) {
+    Map<String, Object> definition = new LinkedHashMap<>();
+    definition.put("id", relation.getId());
+    definition.put("description", relation.getDescription());
+    definition.put("source_categories", relation.getSourceCategories());
+    definition.put("target_categories", relation.getTargetCategories());
+    return definition;
+  }
+
+  private record QueryExpansionContext(
+      String profileName,
+      QueryExpansionProfileEntity profile,
+      List<QueryExpansionProfileRelationEntity> effectiveRelations) {}
 
   private QueryService getQueryService(String organisationId, String repositoryId, UUID queryId) {
     return switch (getQueryType(organisationId, repositoryId, queryId)) {
