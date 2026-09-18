@@ -15,3 +15,22 @@ conceptGraph:
   connection:
     url: http://localhost
     port: 9007
+queryExpansion:
+  profile: medical_de
+  relations:
+    equivalent_to:
+      strategy: alternatives
+    related_to:
+      strategy: optional_context
+    may_indicate:
+      strategy: require_context
+    treated_by:
+      strategy: require_context
+    investigated_by:
+      strategy: require_context
+    confirmed_by:
+      strategy: require_context
+    broader_than:
+      strategy: recall_expansion
+    narrower_than:
+      strategy: specificity_focus

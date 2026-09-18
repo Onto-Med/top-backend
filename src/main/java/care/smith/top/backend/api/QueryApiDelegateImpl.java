@@ -11,8 +11,12 @@ import care.smith.top.backend.service.PhenotypeQueryService;
 import care.smith.top.backend.service.QueryService;
 import care.smith.top.backend.service.datasource.*;
 import care.smith.top.backend.service.nlp.DocumentQueryService;
+import care.smith.top.backend.service.nlp.QueryExpansionService;
 import care.smith.top.backend.util.ApiModelMapper;
 import care.smith.top.model.*;
+import care.smith.top.top_document_query.adapter.config.QueryExpansionConfig;
+import care.smith.top.top_document_query.adapter.config.TextAdapterConfig;
+import care.smith.top.top_document_query.concept_graphs_api.model.QueryExpansionProfileEntity;
 import java.io.*;
 import java.nio.file.FileSystemException;
 import java.util.*;
@@ -35,6 +39,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class QueryApiDelegateImpl implements QueryApiDelegate {
   @Autowired private PhenotypeQueryService phenotypeQueryService;
   @Autowired private DocumentQueryService documentQueryService;
+  @Autowired private QueryExpansionService queryExpansionService;
   @Autowired private OrganisationService organisationService;
   @Autowired private QueryRepository queryRepository;
   @Autowired private SubjectRepository subjectRepository;
@@ -100,6 +105,50 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
     dataSourceRepository.deleteById(dataSourceId);
     subjectRepository.deleteAllBySubjectKeyDataSourceId(dataSourceId);
     return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+  }
+
+  @Override
+  @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<QueryExpansionEffectiveConfig> getDataSourceQueryExpansionConfig(
+      String dataSourceId) {
+    TextAdapterConfig adapterConfig =
+        documentQueryService
+            .getTextAdapterConfig(dataSourceId)
+            .orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Data source not found."));
+    QueryExpansionConfig queryExpansion = adapterConfig.getQueryExpansion();
+    if (queryExpansion == null || queryExpansion.getProfile() == null) {
+      throw new ResponseStatusException(
+          HttpStatus.NOT_FOUND, "Data source has no query-expansion configuration.");
+    }
+
+    QueryExpansionProfileEntity profile =
+        queryExpansionService
+            .getProfile(queryExpansion.getProfile())
+            .orElseThrow(
+                () ->
+                    new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Query-expansion profile not found or Concept Graphs API unavailable."));
+
+    Set<String> configuredRelationIds = queryExpansion.getRelations().keySet();
+    List<QueryExpansionRelation> effectiveRelations =
+        profile.getRelations().stream()
+            .filter(relation -> configuredRelationIds.contains(relation.getId()))
+            .map(
+                relation ->
+                    new QueryExpansionRelation()
+                        .id(relation.getId())
+                        .label(relation.getLabel())
+                        .description(relation.getDescription())
+                        .sourceCategories(relation.getSourceCategories())
+                        .targetCategories(relation.getTargetCategories()))
+            .collect(Collectors.toList());
+
+    return ResponseEntity.ok(
+        new QueryExpansionEffectiveConfig()
+            .profile(queryExpansion.getProfile())
+            .relations(effectiveRelations));
   }
 
   @Override
