@@ -16,6 +16,7 @@ public class QueryExpansionService {
   private final String llmProvider;
   private final String llmBaseUrl;
   private final String llmApiKey;
+  private final boolean llmNoStructuredOutput;
 
   public QueryExpansionService(
       @Value("${top.documents.concept-graphs-api.uri}") String conceptGraphsApiUri,
@@ -23,12 +24,15 @@ public class QueryExpansionService {
       @Value("${top.documents.query-expansion.llm.model:}") String llmModel,
       @Value("${top.documents.query-expansion.llm.provider:}") String llmProvider,
       @Value("${top.documents.query-expansion.llm.base-url:}") String llmBaseUrl,
-      @Value("${top.documents.query-expansion.llm.api-key:}") String llmApiKey) {
+      @Value("${top.documents.query-expansion.llm.api-key:}") String llmApiKey,
+      @Value("${top.documents.query-expansion.llm.no-structured-output:false}")
+          boolean llmNoStructuredOutput) {
     this.cgApiEnabled = cgApiEnabled;
     this.llmModel = llmModel;
     this.llmProvider = llmProvider;
     this.llmBaseUrl = llmBaseUrl;
     this.llmApiKey = llmApiKey;
+    this.llmNoStructuredOutput = llmNoStructuredOutput;
     QueryExpansionManager tmpManager;
     try {
       tmpManager = new QueryExpansionManager(conceptGraphsApiUri);
@@ -86,6 +90,7 @@ public class QueryExpansionService {
     putIfConfigured(options, "provider", llmProvider);
     putIfConfigured(options, "base_url", llmBaseUrl);
     putIfConfigured(options, "api_key", llmApiKey);
+    if (llmNoStructuredOutput) options.put("no_structured_output", true);
 
     Map<String, Object> llm = new LinkedHashMap<>();
     llm.put("model", llmModel);
