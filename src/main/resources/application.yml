@@ -95,6 +95,13 @@ top:
         username: ${DB_NEO4J_USER:neo4j}
         password: ${DB_NEO4J_PASS:#{null}}
     max-term-count: 10000
+    query-expansion:
+      llm:
+        model: alias-large
+        provider: blablador
+        base-url: https://api.blablador.fz-juelich.de/v1/
+        api-key: ${LLM_API_KEY:#{null}}
+        no-structured-output: true
 
 coding:
   terminology-service: ${TERMINOLOGY_SERVICE_ENDPOINT:https://www.ebi.ac.uk/ols4/api}

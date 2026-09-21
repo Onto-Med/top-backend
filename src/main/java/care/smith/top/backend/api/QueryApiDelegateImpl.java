@@ -651,15 +651,17 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
     return response.getRelations().stream()
         .map(
             relation -> {
-              String sourceDraftId = draftIdByConceptGraphId.get(relation.getSourceConceptId());
-              if (sourceDraftId == null) sourceDraftId = sourceConceptId;
+                var anonymousSourceDraft = new Object() {
+                    String sourceDraftId = draftIdByConceptGraphId.get(relation.getSourceConceptId());
+                };
+              if (anonymousSourceDraft.sourceDraftId == null) anonymousSourceDraft.sourceDraftId = sourceConceptId;
               String targetDraftId = draftIdByConceptGraphId.get(relation.getTargetConceptId());
               if (targetDraftId == null && singleDraftsByKey.size() == 1) {
                 targetDraftId = singleDraftsByKey.values().iterator().next().getId();
               }
               QueryExpansionRelationConfig relationConfig =
                   relationConfigById.get(relation.getRelation());
-              if (sourceDraftId == null
+              if (anonymousSourceDraft.sourceDraftId == null
                   || targetDraftId == null
                   || relationConfig == null
                   || relationConfig.getStrategy() == null) {
@@ -667,12 +669,12 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
               }
               String finalTargetDraftId = targetDraftId;
               return QueryExpansionExpressionCompiler
-                  .compileRelation(relationConfig.getStrategy(), sourceDraftId, finalTargetDraftId)
+                  .compileRelation(relationConfig.getStrategy(), anonymousSourceDraft.sourceDraftId, finalTargetDraftId)
                   .map(
                       expression ->
                           createCompositeConceptDraft(
                               relation.getRelation(),
-                              sourceDraftId,
+                              anonymousSourceDraft.sourceDraftId,
                               finalTargetDraftId,
                               expression,
                               language,
