@@ -340,12 +340,15 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
   }
 
   private QueryExpansionProfile toApiProfile(QueryExpansionProfileEntity profile) {
-    return new QueryExpansionProfile()
-        .name(profile.getName())
-        .languageName(getLanguageName(profile))
-        .categories(getProfileCategories(profile))
-        .defaultCategories(getDefaultCategories(profile))
-        .relations(toApiRelations(profile.getRelations()));
+    QueryExpansionProfile apiProfile =
+        new QueryExpansionProfile()
+            .name(profile.getName())
+            .languageName(getLanguageName(profile))
+            .categories(getProfileCategories(profile))
+            .defaultCategories(getDefaultCategories(profile))
+            .relations(toApiRelations(profile.getRelations()));
+    setDefaultRelations(apiProfile, getDefaultRelations(profile));
+    return apiProfile;
   }
 
   private String getLanguageName(QueryExpansionProfileEntity profile) {
@@ -375,6 +378,35 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
       // Older top-document-query snapshots did not expose default categories yet.
     }
     return Collections.emptyList();
+  }
+
+  private List<String> getDefaultRelations(QueryExpansionProfileEntity profile) {
+    try {
+      Object defaultRelations = profile.getClass().getMethod("getDefaultRelations").invoke(profile);
+      if (defaultRelations instanceof List<?> relationList) {
+        Set<String> profileRelationIds =
+            profile.getRelations().stream()
+                .map(QueryExpansionProfileRelationEntity::getId)
+                .collect(Collectors.toSet());
+        return relationList.stream()
+            .filter(String.class::isInstance)
+            .map(String.class::cast)
+            .filter(profileRelationIds::contains)
+            .toList();
+      }
+    } catch (ReflectiveOperationException ignored) {
+      // Older top-document-query snapshots did not expose default relations yet.
+    }
+    return Collections.emptyList();
+  }
+
+  private void setDefaultRelations(
+      QueryExpansionProfile profile, List<String> defaultRelations) {
+    try {
+      profile.getClass().getMethod("defaultRelations", List.class).invoke(profile, defaultRelations);
+    } catch (ReflectiveOperationException ignored) {
+      // Older top-api snapshots did not expose default relations yet.
+    }
   }
 
   private QueryExpansionProfileCategory toApiCategory(Object category) {
