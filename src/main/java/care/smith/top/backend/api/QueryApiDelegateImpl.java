@@ -1,6 +1,5 @@
 package care.smith.top.backend.api;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import care.smith.top.backend.model.jpa.OrganisationDao;
@@ -185,8 +184,8 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
 
     QueryExpansionResponse response =
         SNAKE_CASE_OBJECT_MAPPER.convertValue(rawResponse, QueryExpansionResponse.class);
-    return ResponseEntity.ok(
-        new QueryExpansionResponseWithDrafts(response, createGeneratedEntityDrafts(rawRequest, response, context)));
+    response.generatedEntityDrafts(createGeneratedEntityDrafts(rawRequest, response, context));
+    return ResponseEntity.ok(response);
   }
 
   @Override
@@ -606,7 +605,9 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
             singleDraftsByKey,
             language,
             sourceConcept);
-    return new QueryExpansionGeneratedEntityDrafts(singleDrafts, compositeDrafts);
+    return new QueryExpansionGeneratedEntityDrafts()
+        .singleConcepts(singleDrafts)
+        .compositeConcepts(compositeDrafts);
   }
 
   private SingleConcept createSingleConceptDraft(
@@ -715,46 +716,6 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
     Object value = map.get(camelKey);
     if (value == null) value = map.get(snakeKey);
     return value instanceof String stringValue ? stringValue : null;
-  }
-
-  private static class QueryExpansionGeneratedEntityDrafts {
-    private final List<SingleConcept> singleConcepts;
-    private final List<CompositeConcept> compositeConcepts;
-
-    QueryExpansionGeneratedEntityDrafts(
-        List<SingleConcept> singleConcepts, List<CompositeConcept> compositeConcepts) {
-      this.singleConcepts = singleConcepts;
-      this.compositeConcepts = compositeConcepts;
-    }
-
-    @JsonProperty("singleConcepts")
-    public List<SingleConcept> getSingleConcepts() {
-      return singleConcepts;
-    }
-
-    @JsonProperty("compositeConcepts")
-    public List<CompositeConcept> getCompositeConcepts() {
-      return compositeConcepts;
-    }
-  }
-
-  private static class QueryExpansionResponseWithDrafts extends QueryExpansionResponse {
-    private final QueryExpansionGeneratedEntityDrafts generatedEntityDrafts;
-
-    QueryExpansionResponseWithDrafts(
-        QueryExpansionResponse response, QueryExpansionGeneratedEntityDrafts generatedEntityDrafts) {
-      term(response.getTerm());
-      language(response.getLanguage());
-      expansions(response.getExpansions());
-      concepts(response.getConcepts());
-      relations(response.getRelations());
-      this.generatedEntityDrafts = generatedEntityDrafts;
-    }
-
-    @JsonProperty("generatedEntityDrafts")
-    public QueryExpansionGeneratedEntityDrafts getGeneratedEntityDrafts() {
-      return generatedEntityDrafts;
-    }
   }
 
   private record QueryExpansionContext(
