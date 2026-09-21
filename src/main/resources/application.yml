@@ -90,13 +90,6 @@ top:
     concept-graphs-api:
       uri: ${CONCEPT_GRAPHS_API_ENDPOINT:http://localhost:9007}
       enabled: ${CONCEPT_GRAPHS_API_ENABLED:false}
-    query-expansion:
-      llm:
-        model: ${QUERY_EXPANSION_LLM_MODEL:}
-        provider: ${QUERY_EXPANSION_LLM_PROVIDER:}
-        base-url: ${QUERY_EXPANSION_LLM_BASE_URL:}
-        api-key: ${QUERY_EXPANSION_LLM_API_KEY:#{null}}
-        no-structured-output: ${QUERY_EXPANSION_LLM_NO_STRUCTURED_OUTPUT:false}
     security:
       graphdb:
         username: ${DB_NEO4J_USER:neo4j}
@@ -104,7 +97,7 @@ top:
     max-term-count: 10000
     query-expansion:
       llm:
-        model: alias-large
+        model: alias-fast
         provider: blablador
         base-url: https://api.blablador.fz-juelich.de/v1/
         api-key: ${LLM_API_KEY:#{null}}
