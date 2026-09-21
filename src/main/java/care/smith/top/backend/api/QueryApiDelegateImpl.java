@@ -557,23 +557,26 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
     SingleConcept sourceConcept = sourceConceptId == null ? null : conceptRef(sourceConceptId);
 
     Map<String, String> draftIdByConceptGraphId = new HashMap<>();
-    Map<String, SingleConcept> singleDraftsByKey = new LinkedHashMap<>();
+    Map<String, String> draftTitleById = new HashMap<>();
+    if (sourceConceptId != null)
+      draftTitleById.put(sourceConceptId, getString(rawRequest, "term", "term"));
+    Map<String, SingleConcept> categoryDraftsByCategory = new LinkedHashMap<>();
+    Map<String, SingleConcept> termDraftsByKey = new LinkedHashMap<>();
 
     if (response.getConcepts() != null) {
       for (QueryExpansionConcept concept : response.getConcepts()) {
+        SingleConcept categoryDraft =
+            getOrCreateCategoryDraft(
+                concept.getCategory(), language, sourceConcept, categoryDraftsByCategory, context);
         SingleConcept draft =
-            createSingleConceptDraft(
-                concept.getLabel(),
-                concept.getCategory(),
-                concept.getTerms(),
-                language,
-                sourceConcept);
-        singleDraftsByKey.put(concept.getId(), draft);
+            createSingleConceptDraft(getConceptTitle(concept), language, categoryDraft);
+        termDraftsByKey.put(concept.getId(), draft);
         draftIdByConceptGraphId.put(concept.getId(), draft.getId());
+        draftTitleById.put(draft.getId(), getTitleText(draft));
       }
     }
 
-    if (singleDraftsByKey.isEmpty() && response.getExpansions() != null) {
+    if (termDraftsByKey.isEmpty() && response.getExpansions() != null) {
       response
           .getExpansions()
           .values()
@@ -583,26 +586,35 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
                       candidate -> {
                         String term = candidate.getTerm();
                         if (term == null || term.isBlank()) return;
-                        String key = candidate.getCategory() + ":" + term.toLowerCase();
-                        singleDraftsByKey.putIfAbsent(
-                            key,
-                            createSingleConceptDraft(
-                                term,
+                        SingleConcept categoryDraft =
+                            getOrCreateCategoryDraft(
                                 candidate.getCategory(),
-                                List.of(term),
                                 language,
-                                sourceConcept));
+                                sourceConcept,
+                                categoryDraftsByCategory,
+                                context);
+                        String key = candidate.getCategory() + ":" + term.toLowerCase();
+                        termDraftsByKey.putIfAbsent(
+                            key, createSingleConceptDraft(term, language, categoryDraft));
+                        SingleConcept draft = termDraftsByKey.get(key);
+                        draftTitleById.put(draft.getId(), getTitleText(draft));
                       }));
     }
 
-    List<SingleConcept> singleDrafts = new ArrayList<>(singleDraftsByKey.values());
+    categoryDraftsByCategory
+        .values()
+        .forEach(draft -> draftTitleById.put(draft.getId(), getTitleText(draft)));
+    List<SingleConcept> singleDrafts = new ArrayList<>();
+    singleDrafts.addAll(categoryDraftsByCategory.values());
+    singleDrafts.addAll(termDraftsByKey.values());
     List<CompositeConcept> compositeDrafts =
         createCompositeConceptDrafts(
             response,
             context,
             sourceConceptId,
             draftIdByConceptGraphId,
-            singleDraftsByKey,
+            termDraftsByKey,
+            draftTitleById,
             language,
             sourceConcept);
     return new QueryExpansionGeneratedEntityDrafts()
@@ -610,31 +622,50 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
         .compositeConcepts(compositeDrafts);
   }
 
-  private SingleConcept createSingleConceptDraft(
-      String label,
+  private SingleConcept getOrCreateCategoryDraft(
       String category,
-      List<String> terms,
       String language,
-      SingleConcept sourceConcept) {
-    String title =
-        label != null
-            ? label
-            : (terms == null
-                ? "Query expansion concept"
-                : terms.stream().findFirst().orElse("Query expansion concept"));
+      SingleConcept sourceConcept,
+      Map<String, SingleConcept> categoryDraftsByCategory,
+      QueryExpansionContext context) {
+    String categoryId = category == null || category.isBlank() ? "category" : category;
+    return categoryDraftsByCategory.computeIfAbsent(
+        categoryId,
+        id -> createSingleConceptDraft(getCategoryLabel(id, context), language, sourceConcept));
+  }
+
+  private SingleConcept createSingleConceptDraft(
+      String title,
+      String language,
+      SingleConcept superConcept) {
     SingleConcept draft =
         new SingleConcept()
             .id(UUID.randomUUID().toString())
             .entityType(EntityType.SINGLE_CONCEPT)
             .titles(List.of(localisableText(language, title)));
-    if (sourceConcept != null) draft.superConcepts(List.of(sourceConcept));
-    List<String> descriptionParts = new ArrayList<>();
-    if (category != null) descriptionParts.add(category);
-    if (terms != null && !terms.isEmpty()) descriptionParts.add(String.join(", ", terms));
-    if (!descriptionParts.isEmpty()) {
-      draft.descriptions(List.of(localisableText(language, String.join(" — ", descriptionParts))));
-    }
+    if (superConcept != null) draft.superConcepts(List.of(superConcept));
     return draft;
+  }
+
+  private String getConceptTitle(QueryExpansionConcept concept) {
+    if (concept.getTerms() != null && !concept.getTerms().isEmpty()) {
+      return concept.getTerms().get(0);
+    }
+    if (concept.getLabel() != null && !concept.getLabel().isBlank()) return concept.getLabel();
+    return "Query expansion concept";
+  }
+
+  private String getCategoryLabel(String categoryId, QueryExpansionContext context) {
+    if (context.profile().getCategories() == null) return categoryId;
+    return context.profile().getCategories().stream()
+        .filter(category -> categoryId.equals(category.getId()))
+        .map(
+            category ->
+                category.getLabel() == null || category.getLabel().isBlank()
+                    ? category.getId()
+                    : category.getLabel())
+        .findFirst()
+        .orElse(categoryId);
   }
 
   private List<CompositeConcept> createCompositeConceptDrafts(
@@ -643,6 +674,7 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
       String sourceConceptId,
       Map<String, String> draftIdByConceptGraphId,
       Map<String, SingleConcept> singleDraftsByKey,
+      Map<String, String> draftTitleById,
       String language,
       SingleConcept sourceConcept) {
     if (response.getRelations() == null) return Collections.emptyList();
@@ -651,31 +683,35 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
     return response.getRelations().stream()
         .map(
             relation -> {
-                var anonymousSourceDraft = new Object() {
-                    String sourceDraftId = draftIdByConceptGraphId.get(relation.getSourceConceptId());
-                };
-              if (anonymousSourceDraft.sourceDraftId == null) anonymousSourceDraft.sourceDraftId = sourceConceptId;
+              String resolvedSourceDraftId =
+                  draftIdByConceptGraphId.get(relation.getSourceConceptId());
+              if (resolvedSourceDraftId == null) resolvedSourceDraftId = sourceConceptId;
               String targetDraftId = draftIdByConceptGraphId.get(relation.getTargetConceptId());
               if (targetDraftId == null && singleDraftsByKey.size() == 1) {
                 targetDraftId = singleDraftsByKey.values().iterator().next().getId();
               }
               QueryExpansionRelationConfig relationConfig =
                   relationConfigById.get(relation.getRelation());
-              if (anonymousSourceDraft.sourceDraftId == null
+              if (resolvedSourceDraftId == null
                   || targetDraftId == null
                   || relationConfig == null
                   || relationConfig.getStrategy() == null) {
                 return null;
               }
+              String finalSourceDraftId = resolvedSourceDraftId;
               String finalTargetDraftId = targetDraftId;
               return QueryExpansionExpressionCompiler
-                  .compileRelation(relationConfig.getStrategy(), anonymousSourceDraft.sourceDraftId, finalTargetDraftId)
+                  .compileRelation(
+                      relationConfig.getStrategy(), finalSourceDraftId, finalTargetDraftId)
                   .map(
                       expression ->
                           createCompositeConceptDraft(
                               relation.getRelation(),
-                              anonymousSourceDraft.sourceDraftId,
+                              getRelationLabel(relation.getRelation(), context),
+                              finalSourceDraftId,
                               finalTargetDraftId,
+                              getDisplayTitle(finalSourceDraftId, draftTitleById),
+                              getDisplayTitle(finalTargetDraftId, draftTitleById),
                               expression,
                               language,
                               sourceConcept))
@@ -687,8 +723,11 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
 
   private CompositeConcept createCompositeConceptDraft(
       String relationId,
+      String relationLabel,
       String sourceConceptId,
       String targetConceptId,
+      String sourceTitle,
+      String targetTitle,
       Expression expression,
       String language,
       SingleConcept sourceConcept) {
@@ -696,14 +735,36 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
         new CompositeConcept()
             .id(UUID.randomUUID().toString())
             .entityType(EntityType.COMPOSITE_CONCEPT)
-            .titles(List.of(localisableText(language, relationId)))
+            .titles(
+                List.of(
+                    localisableText(
+                        language, sourceTitle + " --" + relationLabel + "--> " + targetTitle)))
             .expression(expression);
     if (sourceConcept != null) draft.superConcepts(List.of(sourceConcept));
     draft.descriptions(
         List.of(
             localisableText(
-                language, sourceConceptId + " --" + relationId + "--> " + targetConceptId)));
+                language, sourceTitle + " --" + relationLabel + "--> " + targetTitle)));
     return draft;
+  }
+
+  private String getRelationLabel(String relationId, QueryExpansionContext context) {
+    return context.effectiveRelations().stream()
+        .filter(relation -> relationId.equals(relation.getId()))
+        .map(QueryExpansionProfileRelationEntity::getLabel)
+        .filter(Objects::nonNull)
+        .filter(label -> !label.isBlank())
+        .findFirst()
+        .orElse(relationId);
+  }
+
+  private String getDisplayTitle(String draftId, Map<String, String> draftTitleById) {
+    return Optional.ofNullable(draftTitleById.get(draftId)).orElse(draftId);
+  }
+
+  private String getTitleText(SingleConcept concept) {
+    if (concept.getTitles() == null || concept.getTitles().isEmpty()) return concept.getId();
+    return concept.getTitles().get(0).getText();
   }
 
   private SingleConcept conceptRef(String conceptId) {
