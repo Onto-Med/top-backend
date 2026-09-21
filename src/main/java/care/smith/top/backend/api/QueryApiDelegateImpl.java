@@ -183,7 +183,7 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
                         "Query expansion failed or Concept Graphs API unavailable."));
 
     QueryExpansionResponse response =
-        SNAKE_CASE_OBJECT_MAPPER.convertValue(rawResponse, QueryExpansionResponse.class);
+        SNAKE_CASE_OBJECT_MAPPER.convertValue(normalizeSnakeCaseKeys(rawResponse), QueryExpansionResponse.class);
     response.generatedEntityDrafts(createGeneratedEntityDrafts(rawRequest, response, context));
     return ResponseEntity.ok(response);
   }
@@ -718,6 +718,37 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
     Object value = map.get(camelKey);
     if (value == null) value = map.get(snakeKey);
     return value instanceof String stringValue ? stringValue : null;
+  }
+
+  private Object normalizeSnakeCaseKeys(Object value) {
+    if (value instanceof Map<?, ?> map) {
+      Map<String, Object> normalized = new LinkedHashMap<>();
+      map.forEach(
+          (key, nestedValue) ->
+              normalized.put(
+                  snakeToLowerCamel(String.valueOf(key)), normalizeSnakeCaseKeys(nestedValue)));
+      return normalized;
+    }
+    if (value instanceof List<?> list) {
+      return list.stream().map(this::normalizeSnakeCaseKeys).toList();
+    }
+    return value;
+  }
+
+  private String snakeToLowerCamel(String value) {
+    StringBuilder result = new StringBuilder();
+    boolean upperNext = false;
+    for (char character : value.toCharArray()) {
+      if (character == '_') {
+        upperNext = true;
+      } else if (upperNext) {
+        result.append(Character.toUpperCase(character));
+        upperNext = false;
+      } else {
+        result.append(character);
+      }
+    }
+    return result.toString();
   }
 
   private record QueryExpansionContext(
