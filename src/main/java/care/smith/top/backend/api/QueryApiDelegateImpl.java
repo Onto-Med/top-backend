@@ -1,5 +1,6 @@
 package care.smith.top.backend.api;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import care.smith.top.backend.model.jpa.OrganisationDao;
@@ -17,9 +18,11 @@ import care.smith.top.backend.service.nlp.QueryExpansionService;
 import care.smith.top.backend.util.ApiModelMapper;
 import care.smith.top.model.*;
 import care.smith.top.top_document_query.adapter.config.QueryExpansionConfig;
+import care.smith.top.top_document_query.adapter.config.QueryExpansionRelationConfig;
 import care.smith.top.top_document_query.adapter.config.TextAdapterConfig;
 import care.smith.top.top_document_query.concept_graphs_api.model.QueryExpansionProfileEntity;
 import care.smith.top.top_document_query.concept_graphs_api.model.QueryExpansionProfileRelationEntity;
+import care.smith.top.top_document_query.query_expansion.QueryExpansionExpressionCompiler;
 import java.io.*;
 import java.nio.file.FileSystemException;
 import java.util.*;
@@ -160,14 +163,16 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
       String dataSourceId, QueryExpansionRequest request) {
     QueryExpansionContext context = getQueryExpansionContext(dataSourceId);
     Map<String, Object> rawRequest = SNAKE_CASE_OBJECT_MAPPER.convertValue(request, Map.class);
+    List<Map<String, Object>> relationMappings = getRelationMappings(rawRequest);
+    List<QueryExpansionProfileRelationEntity> requestedRelations =
+        getRequestedRelations(context.effectiveRelations(), relationMappings);
     List<String> allowedRelationIds =
-        context.effectiveRelations().stream()
+        requestedRelations.stream()
             .map(QueryExpansionProfileRelationEntity::getId)
+            .distinct()
             .collect(Collectors.toList());
     List<Map<String, Object>> relationDefinitions =
-        context.effectiveRelations().stream()
-            .map(this::toConceptGraphsRelationDefinition)
-            .collect(Collectors.toList());
+        toConceptGraphsRelationDefinitions(requestedRelations, relationMappings);
 
     Map<String, Object> rawResponse =
         queryExpansionService
@@ -178,8 +183,10 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
                         HttpStatus.NOT_FOUND,
                         "Query expansion failed or Concept Graphs API unavailable."));
 
+    QueryExpansionResponse response =
+        SNAKE_CASE_OBJECT_MAPPER.convertValue(rawResponse, QueryExpansionResponse.class);
     return ResponseEntity.ok(
-        SNAKE_CASE_OBJECT_MAPPER.convertValue(rawResponse, QueryExpansionResponse.class));
+        new QueryExpansionResponseWithDrafts(response, createGeneratedEntityDrafts(rawRequest, response, context)));
   }
 
   @Override
@@ -336,7 +343,7 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
         profile.getRelations().stream()
             .filter(relation -> configuredRelationIds.contains(relation.getId()))
             .collect(Collectors.toList());
-    return new QueryExpansionContext(queryExpansion.getProfile(), profile, effectiveRelations);
+    return new QueryExpansionContext(queryExpansion.getProfile(), profile, effectiveRelations, queryExpansion);
   }
 
   private QueryExpansionProfile toApiProfile(QueryExpansionProfileEntity profile) {
@@ -410,9 +417,22 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
   }
 
   private QueryExpansionProfileCategory toApiCategory(Object category) {
-    return new QueryExpansionProfileCategory()
-        .id(invokeStringGetter(category, "getId"))
-        .description(invokeStringGetter(category, "getDescription"));
+    String id = invokeStringGetter(category, "getId");
+    String label = invokeStringGetter(category, "getLabel");
+    QueryExpansionProfileCategory apiCategory =
+        new QueryExpansionProfileCategory()
+            .id(id)
+            .description(invokeStringGetter(category, "getDescription"));
+    setCategoryLabel(apiCategory, label == null || label.isBlank() ? id : label);
+    return apiCategory;
+  }
+
+  private void setCategoryLabel(QueryExpansionProfileCategory category, String label) {
+    try {
+      category.getClass().getMethod("label", String.class).invoke(category, label);
+    } catch (ReflectiveOperationException ignored) {
+      // Older top-api snapshots did not expose category labels yet.
+    }
   }
 
   private String invokeStringGetter(Object target, String methodName) {
@@ -438,20 +458,310 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
         .targetCategories(relation.getTargetCategories());
   }
 
+  private List<Map<String, Object>> getRelationMappings(Map<String, Object> rawRequest) {
+    Object mappings = rawRequest.get("relationMappings");
+    if (mappings == null) mappings = rawRequest.get("relation_mappings");
+    if (!(mappings instanceof List<?> mappingList)) return Collections.emptyList();
+    return mappingList.stream()
+        .filter(Map.class::isInstance)
+        .map(mapping -> (Map<String, Object>) mapping)
+        .collect(Collectors.toList());
+  }
+
+  private List<QueryExpansionProfileRelationEntity> getRequestedRelations(
+      List<QueryExpansionProfileRelationEntity> effectiveRelations,
+      List<Map<String, Object>> relationMappings) {
+    if (relationMappings.isEmpty()) return Collections.emptyList();
+    Set<String> requestedRelationIds =
+        relationMappings.stream()
+            .map(this::getRelationMappingRelationId)
+            .filter(Objects::nonNull)
+            .collect(Collectors.toCollection(LinkedHashSet::new));
+    return effectiveRelations.stream()
+        .filter(relation -> requestedRelationIds.contains(relation.getId()))
+        .collect(Collectors.toList());
+  }
+
+  private List<Map<String, Object>> toConceptGraphsRelationDefinitions(
+      List<QueryExpansionProfileRelationEntity> requestedRelations,
+      List<Map<String, Object>> relationMappings) {
+    Map<String, QueryExpansionProfileRelationEntity> relationById =
+        requestedRelations.stream()
+            .collect(Collectors.toMap(QueryExpansionProfileRelationEntity::getId, relation -> relation));
+
+    if (relationMappings.isEmpty()) {
+      return requestedRelations.stream()
+          .map(
+              relation ->
+                  toConceptGraphsRelationDefinition(
+                      relation, relation.getSourceCategories(), relation.getTargetCategories()))
+          .collect(Collectors.toList());
+    }
+
+    return relationMappings.stream()
+        .map(
+            mapping -> {
+              String relationId = getRelationMappingRelationId(mapping);
+              QueryExpansionProfileRelationEntity relation = relationById.get(relationId);
+              if (relation == null) return null;
+              List<String> sourceCategoryIds =
+                  filterAllowedCategories(
+                      getStringList(mapping, "sourceCategoryIds", "source_category_ids"),
+                      relation.getSourceCategories());
+              List<String> targetCategoryIds =
+                  filterAllowedCategories(
+                      getStringList(mapping, "targetCategoryIds", "target_category_ids"),
+                      relation.getTargetCategories());
+              if (sourceCategoryIds.isEmpty() || targetCategoryIds.isEmpty()) return null;
+              return toConceptGraphsRelationDefinition(relation, sourceCategoryIds, targetCategoryIds);
+            })
+        .filter(Objects::nonNull)
+        .collect(Collectors.toList());
+  }
+
+  private String getRelationMappingRelationId(Map<String, Object> mapping) {
+    Object relationId = mapping.get("relationId");
+    if (relationId == null) relationId = mapping.get("relation_id");
+    return relationId instanceof String stringValue ? stringValue : null;
+  }
+
+  private List<String> getStringList(Map<String, Object> mapping, String camelKey, String snakeKey) {
+    Object value = mapping.get(camelKey);
+    if (value == null) value = mapping.get(snakeKey);
+    if (!(value instanceof List<?> valueList)) return Collections.emptyList();
+    return valueList.stream().filter(String.class::isInstance).map(String.class::cast).toList();
+  }
+
+  private List<String> filterAllowedCategories(List<String> requested, List<String> allowed) {
+    Set<String> allowedSet = new HashSet<>(allowed);
+    return requested.stream().filter(allowedSet::contains).distinct().toList();
+  }
+
   private Map<String, Object> toConceptGraphsRelationDefinition(
-      QueryExpansionProfileRelationEntity relation) {
+      QueryExpansionProfileRelationEntity relation,
+      List<String> sourceCategoryIds,
+      List<String> targetCategoryIds) {
     Map<String, Object> definition = new LinkedHashMap<>();
     definition.put("id", relation.getId());
     definition.put("description", relation.getDescription());
-    definition.put("source_categories", relation.getSourceCategories());
-    definition.put("target_categories", relation.getTargetCategories());
+    definition.put("source_categories", sourceCategoryIds);
+    definition.put("target_categories", targetCategoryIds);
     return definition;
+  }
+
+  private QueryExpansionGeneratedEntityDrafts createGeneratedEntityDrafts(
+      Map<String, Object> rawRequest,
+      QueryExpansionResponse response,
+      QueryExpansionContext context) {
+    String sourceConceptId = getString(rawRequest, "sourceConceptId", "source_concept_id");
+    String language = response.getLanguage() == null ? "en" : response.getLanguage();
+    SingleConcept sourceConcept = sourceConceptId == null ? null : conceptRef(sourceConceptId);
+
+    Map<String, String> draftIdByConceptGraphId = new HashMap<>();
+    Map<String, SingleConcept> singleDraftsByKey = new LinkedHashMap<>();
+
+    if (response.getConcepts() != null) {
+      for (QueryExpansionConcept concept : response.getConcepts()) {
+        SingleConcept draft =
+            createSingleConceptDraft(
+                concept.getLabel(),
+                concept.getCategory(),
+                concept.getTerms(),
+                language,
+                sourceConcept);
+        singleDraftsByKey.put(concept.getId(), draft);
+        draftIdByConceptGraphId.put(concept.getId(), draft.getId());
+      }
+    }
+
+    if (singleDraftsByKey.isEmpty() && response.getExpansions() != null) {
+      response
+          .getExpansions()
+          .values()
+          .forEach(
+              candidates ->
+                  candidates.forEach(
+                      candidate -> {
+                        String term = candidate.getTerm();
+                        if (term == null || term.isBlank()) return;
+                        String key = candidate.getCategory() + ":" + term.toLowerCase();
+                        singleDraftsByKey.putIfAbsent(
+                            key,
+                            createSingleConceptDraft(
+                                term,
+                                candidate.getCategory(),
+                                List.of(term),
+                                language,
+                                sourceConcept));
+                      }));
+    }
+
+    List<SingleConcept> singleDrafts = new ArrayList<>(singleDraftsByKey.values());
+    List<CompositeConcept> compositeDrafts =
+        createCompositeConceptDrafts(
+            response,
+            context,
+            sourceConceptId,
+            draftIdByConceptGraphId,
+            singleDraftsByKey,
+            language,
+            sourceConcept);
+    return new QueryExpansionGeneratedEntityDrafts(singleDrafts, compositeDrafts);
+  }
+
+  private SingleConcept createSingleConceptDraft(
+      String label,
+      String category,
+      List<String> terms,
+      String language,
+      SingleConcept sourceConcept) {
+    String title =
+        label != null
+            ? label
+            : (terms == null
+                ? "Query expansion concept"
+                : terms.stream().findFirst().orElse("Query expansion concept"));
+    SingleConcept draft =
+        new SingleConcept()
+            .id(UUID.randomUUID().toString())
+            .entityType(EntityType.SINGLE_CONCEPT)
+            .titles(List.of(localisableText(language, title)));
+    if (sourceConcept != null) draft.superConcepts(List.of(sourceConcept));
+    List<String> descriptionParts = new ArrayList<>();
+    if (category != null) descriptionParts.add(category);
+    if (terms != null && !terms.isEmpty()) descriptionParts.add(String.join(", ", terms));
+    if (!descriptionParts.isEmpty()) {
+      draft.descriptions(List.of(localisableText(language, String.join(" — ", descriptionParts))));
+    }
+    return draft;
+  }
+
+  private List<CompositeConcept> createCompositeConceptDrafts(
+      QueryExpansionResponse response,
+      QueryExpansionContext context,
+      String sourceConceptId,
+      Map<String, String> draftIdByConceptGraphId,
+      Map<String, SingleConcept> singleDraftsByKey,
+      String language,
+      SingleConcept sourceConcept) {
+    if (response.getRelations() == null) return Collections.emptyList();
+
+    Map<String, QueryExpansionRelationConfig> relationConfigById = context.config().getRelations();
+    return response.getRelations().stream()
+        .map(
+            relation -> {
+              String sourceDraftId = draftIdByConceptGraphId.get(relation.getSourceConceptId());
+              if (sourceDraftId == null) sourceDraftId = sourceConceptId;
+              String targetDraftId = draftIdByConceptGraphId.get(relation.getTargetConceptId());
+              if (targetDraftId == null && singleDraftsByKey.size() == 1) {
+                targetDraftId = singleDraftsByKey.values().iterator().next().getId();
+              }
+              QueryExpansionRelationConfig relationConfig =
+                  relationConfigById.get(relation.getRelation());
+              if (sourceDraftId == null
+                  || targetDraftId == null
+                  || relationConfig == null
+                  || relationConfig.getStrategy() == null) {
+                return null;
+              }
+              String finalTargetDraftId = targetDraftId;
+              return QueryExpansionExpressionCompiler
+                  .compileRelation(relationConfig.getStrategy(), sourceDraftId, finalTargetDraftId)
+                  .map(
+                      expression ->
+                          createCompositeConceptDraft(
+                              relation.getRelation(),
+                              sourceDraftId,
+                              finalTargetDraftId,
+                              expression,
+                              language,
+                              sourceConcept))
+                  .orElse(null);
+            })
+        .filter(Objects::nonNull)
+        .toList();
+  }
+
+  private CompositeConcept createCompositeConceptDraft(
+      String relationId,
+      String sourceConceptId,
+      String targetConceptId,
+      Expression expression,
+      String language,
+      SingleConcept sourceConcept) {
+    CompositeConcept draft =
+        new CompositeConcept()
+            .id(UUID.randomUUID().toString())
+            .entityType(EntityType.COMPOSITE_CONCEPT)
+            .titles(List.of(localisableText(language, relationId)))
+            .expression(expression);
+    if (sourceConcept != null) draft.superConcepts(List.of(sourceConcept));
+    draft.descriptions(
+        List.of(
+            localisableText(
+                language, sourceConceptId + " --" + relationId + "--> " + targetConceptId)));
+    return draft;
+  }
+
+  private SingleConcept conceptRef(String conceptId) {
+    return new SingleConcept().id(conceptId).entityType(EntityType.SINGLE_CONCEPT);
+  }
+
+  private LocalisableText localisableText(String language, String text) {
+    return new LocalisableText().lang(language).text(text);
+  }
+
+  private String getString(Map<String, Object> map, String camelKey, String snakeKey) {
+    Object value = map.get(camelKey);
+    if (value == null) value = map.get(snakeKey);
+    return value instanceof String stringValue ? stringValue : null;
+  }
+
+  private static class QueryExpansionGeneratedEntityDrafts {
+    private final List<SingleConcept> singleConcepts;
+    private final List<CompositeConcept> compositeConcepts;
+
+    QueryExpansionGeneratedEntityDrafts(
+        List<SingleConcept> singleConcepts, List<CompositeConcept> compositeConcepts) {
+      this.singleConcepts = singleConcepts;
+      this.compositeConcepts = compositeConcepts;
+    }
+
+    @JsonProperty("singleConcepts")
+    public List<SingleConcept> getSingleConcepts() {
+      return singleConcepts;
+    }
+
+    @JsonProperty("compositeConcepts")
+    public List<CompositeConcept> getCompositeConcepts() {
+      return compositeConcepts;
+    }
+  }
+
+  private static class QueryExpansionResponseWithDrafts extends QueryExpansionResponse {
+    private final QueryExpansionGeneratedEntityDrafts generatedEntityDrafts;
+
+    QueryExpansionResponseWithDrafts(
+        QueryExpansionResponse response, QueryExpansionGeneratedEntityDrafts generatedEntityDrafts) {
+      term(response.getTerm());
+      language(response.getLanguage());
+      expansions(response.getExpansions());
+      concepts(response.getConcepts());
+      relations(response.getRelations());
+      this.generatedEntityDrafts = generatedEntityDrafts;
+    }
+
+    @JsonProperty("generatedEntityDrafts")
+    public QueryExpansionGeneratedEntityDrafts getGeneratedEntityDrafts() {
+      return generatedEntityDrafts;
+    }
   }
 
   private record QueryExpansionContext(
       String profileName,
       QueryExpansionProfileEntity profile,
-      List<QueryExpansionProfileRelationEntity> effectiveRelations) {}
+      List<QueryExpansionProfileRelationEntity> effectiveRelations,
+      QueryExpansionConfig config) {}
 
   private QueryService getQueryService(String organisationId, String repositoryId, UUID queryId) {
     return switch (getQueryType(organisationId, repositoryId, queryId)) {
