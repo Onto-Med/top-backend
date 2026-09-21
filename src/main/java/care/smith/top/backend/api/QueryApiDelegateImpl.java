@@ -21,7 +21,10 @@ import care.smith.top.top_document_query.adapter.config.QueryExpansionRelationCo
 import care.smith.top.top_document_query.adapter.config.TextAdapterConfig;
 import care.smith.top.top_document_query.concept_graphs_api.model.QueryExpansionProfileEntity;
 import care.smith.top.top_document_query.concept_graphs_api.model.QueryExpansionProfileRelationEntity;
+import care.smith.top.top_document_query.functions.Or;
 import care.smith.top.top_document_query.query_expansion.QueryExpansionExpressionCompiler;
+import care.smith.top.top_document_query.query_expansion.QueryExpansionStrategy;
+import care.smith.top.top_document_query.util.builder.Exp;
 import java.io.*;
 import java.nio.file.FileSystemException;
 import java.util.*;
@@ -680,8 +683,10 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
     if (response.getRelations() == null) return Collections.emptyList();
 
     Map<String, QueryExpansionRelationConfig> relationConfigById = context.config().getRelations();
-    return response.getRelations().stream()
-        .map(
+    Map<CompositeRelationGroupKey, LinkedHashSet<String>> targetsByGroup = new LinkedHashMap<>();
+    response
+        .getRelations()
+        .forEach(
             relation -> {
               String resolvedSourceDraftId =
                   draftIdByConceptGraphId.get(relation.getSourceConceptId());
@@ -696,22 +701,38 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
                   || targetDraftId == null
                   || relationConfig == null
                   || relationConfig.getStrategy() == null) {
-                return null;
+                return;
               }
-              String finalSourceDraftId = resolvedSourceDraftId;
-              String finalTargetDraftId = targetDraftId;
+              CompositeRelationGroupKey key =
+                  new CompositeRelationGroupKey(
+                      resolvedSourceDraftId, relation.getRelation(), relationConfig.getStrategy());
+              targetsByGroup.computeIfAbsent(key, ignored -> new LinkedHashSet<>()).add(targetDraftId);
+            });
+
+    return targetsByGroup.entrySet().stream()
+        .map(
+            entry -> {
+              CompositeRelationGroupKey key = entry.getKey();
+              List<String> targetDraftIds = new ArrayList<>(entry.getValue());
+              Expression targetExpression = toEntityOrExpression(targetDraftIds);
+              String targetTitle =
+                  targetDraftIds.stream()
+                      .map(targetId -> getDisplayTitle(targetId, draftTitleById))
+                      .collect(Collectors.joining(" OR "));
               return QueryExpansionExpressionCompiler
                   .compileRelation(
-                      relationConfig.getStrategy(), finalSourceDraftId, finalTargetDraftId)
+                      QueryExpansionStrategy.fromId(key.strategy()),
+                      Exp.ofEntity(key.sourceDraftId()),
+                      targetExpression)
                   .map(
                       expression ->
                           createCompositeConceptDraft(
-                              relation.getRelation(),
-                              getRelationLabel(relation.getRelation(), context),
-                              finalSourceDraftId,
-                              finalTargetDraftId,
-                              getDisplayTitle(finalSourceDraftId, draftTitleById),
-                              getDisplayTitle(finalTargetDraftId, draftTitleById),
+                              key.relationId(),
+                              getRelationLabel(key.relationId(), context),
+                              key.sourceDraftId(),
+                              String.join(",", targetDraftIds),
+                              getDisplayTitle(key.sourceDraftId(), draftTitleById),
+                              targetTitle,
                               expression,
                               language,
                               sourceConcept))
@@ -719,6 +740,11 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
             })
         .filter(Objects::nonNull)
         .toList();
+  }
+
+  private Expression toEntityOrExpression(List<String> entityIds) {
+    if (entityIds.size() == 1) return Exp.ofEntity(entityIds.get(0));
+    return Or.of(entityIds.stream().map(Exp::ofEntity).toList());
   }
 
   private CompositeConcept createCompositeConceptDraft(
@@ -811,6 +837,9 @@ public class QueryApiDelegateImpl implements QueryApiDelegate {
     }
     return result.toString();
   }
+
+  private record CompositeRelationGroupKey(
+      String sourceDraftId, String relationId, String strategy) {}
 
   private record QueryExpansionContext(
       String profileName,
