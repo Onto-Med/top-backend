@@ -43,7 +43,7 @@ class QueryApiDelegateImplTest extends AbstractJpaTest {
   void getDataSourceQueryExpansionConfigReturnsEffectiveSemanticRelationIntersection() {
     DocumentQueryService documentQueryService = mock(DocumentQueryService.class);
     QueryExpansionService queryExpansionService = mock(QueryExpansionService.class);
-    QueryApiDelegateImpl delegate = new QueryApiDelegateImpl();
+    QueryExpansionApiDelegateImpl delegate = new QueryExpansionApiDelegateImpl();
     ReflectionTestUtils.setField(delegate, "documentQueryService", documentQueryService);
     ReflectionTestUtils.setField(delegate, "queryExpansionService", queryExpansionService);
 
@@ -97,7 +97,7 @@ class QueryApiDelegateImplTest extends AbstractJpaTest {
   @Test
   void getDataSourceQueryExpansionConfigReturnsNotFoundForMissingQueryExpansionConfig() {
     DocumentQueryService documentQueryService = mock(DocumentQueryService.class);
-    QueryApiDelegateImpl delegate = new QueryApiDelegateImpl();
+    QueryExpansionApiDelegateImpl delegate = new QueryExpansionApiDelegateImpl();
     ReflectionTestUtils.setField(delegate, "documentQueryService", documentQueryService);
     when(documentQueryService.getTextAdapterConfig("documents"))
         .thenReturn(Optional.of(new TextAdapterConfig()));
