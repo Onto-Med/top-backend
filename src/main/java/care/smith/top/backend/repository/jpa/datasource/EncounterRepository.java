@@ -1,6 +1,8 @@
 package care.smith.top.backend.repository.jpa.datasource;
 
 import care.smith.top.backend.model.jpa.datasource.EncounterDao;
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -10,4 +12,7 @@ public interface EncounterRepository
     extends JpaRepository<EncounterDao, EncounterDao.EncounterKey> {
   Optional<EncounterDao> findByEncounterKeyDataSourceIdAndEncounterKeyEncounterId(
       String dataSourceId, String encounterId);
+
+  List<EncounterDao> findAllByEncounterKeyDataSourceIdAndEncounterKeyEncounterIdIn(
+      String dataSourceId, Collection<String> encounterIds);
 }
