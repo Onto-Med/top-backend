@@ -234,13 +234,35 @@ public class RepositoryService implements ContentService {
                     })
                 .toList());
 
+    // Resolve contacts once for the entire report instead of querying for each phenotype.
+    List<String> encounterIds =
+        resultSet.getPhenotypes().stream()
+            .filter(
+                p ->
+                    p.values().stream().anyMatch(v -> projectionIds.contains(v.getPhenotypeName())))
+            .map(p -> p.getSubjectId())
+            .distinct()
+            .toList();
+    Map<String, EncounterDao> encounters = new HashMap<>();
+    // Bound the IN clause for large test datasets.
+    for (int offset = 0; offset < encounterIds.size(); offset += 1000) {
+      List<String> batch =
+          encounterIds.subList(offset, Math.min(offset + 1000, encounterIds.size()));
+      encounterRepository
+          .findAllByEncounterKeyDataSourceIdAndEncounterKeyEncounterIdIn(dataSourceId, batch)
+          .forEach(encounter -> encounters.put(encounter.getEncounterId(), encounter));
+    }
+
     List<TestReport> remaining =
         resultSet.getPhenotypes().stream()
             .flatMap(
                 p ->
                     p.values().stream()
                         .filter(v -> projectionIds.contains(v.getPhenotypeName()))
-                        .flatMap(v -> toTestReport(dataSourceId, p.getSubjectId(), v)))
+                        .flatMap(
+                            v ->
+                                toTestReport(
+                                    encounters.get(p.getSubjectId()), p.getSubjectId(), v)))
             .sorted(Comparator.comparing(TestReport::getSubjectId))
             .toList();
 
@@ -275,10 +297,7 @@ public class RepositoryService implements ContentService {
   }
 
   private Stream<TestReport> toTestReport(
-      String dataSourceId, String encounterId, PhenotypeValues phenotypeValues) {
-    Optional<EncounterDao> encounter =
-        encounterRepository.findByEncounterKeyDataSourceIdAndEncounterKeyEncounterId(
-            dataSourceId, encounterId);
+      EncounterDao encounter, String encounterId, PhenotypeValues phenotypeValues) {
     return phenotypeValues.values().stream()
         .flatMap(
             v ->
@@ -288,7 +307,7 @@ public class RepositoryService implements ContentService {
                             new TestReport(
                                     null,
                                     phenotypeValues.getPhenotypeName(),
-                                    encounter.map(EncounterDao::getSubjectId).orElse(null),
+                                    encounter == null ? null : encounter.getSubjectId(),
                                     encounterId,
                                     null)
                                 .actual(w)));
