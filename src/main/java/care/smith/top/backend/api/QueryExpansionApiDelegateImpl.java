@@ -11,6 +11,8 @@ import care.smith.top.top_document_query.adapter.config.TextAdapterConfig;
 import care.smith.top.top_document_query.concept_graphs_api.model.QueryExpansionProfileEntity;
 import care.smith.top.top_document_query.concept_graphs_api.model.QueryExpansionProfileRelationEntity;
 import care.smith.top.top_document_query.query_expansion.QueryExpansionExpressionCompiler;
+import care.smith.top.top_document_query.query_expansion.QueryExpansionRelationStrategyResolver;
+import care.smith.top.top_document_query.query_expansion.QueryExpansionStrategy;
 import java.util.*;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,11 +34,8 @@ public class QueryExpansionApiDelegateImpl implements QueryExpansionApiDelegate 
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<QueryExpansionEffectiveConfig> getDataSourceQueryExpansionConfig(
       String dataSourceId) {
-    QueryExpansionContext context = getQueryExpansionContext(dataSourceId);
-    return ResponseEntity.ok(
-        new QueryExpansionEffectiveConfig()
-            .profile(context.profileName())
-            .relations(toApiRelations(context.effectiveRelations())));
+    getQueryExpansionConfig(dataSourceId);
+    return ResponseEntity.ok(new QueryExpansionEffectiveConfig().enabled(true));
   }
 
   @Override
@@ -74,7 +73,12 @@ public class QueryExpansionApiDelegateImpl implements QueryExpansionApiDelegate 
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<QueryExpansionResponse> expandQueryForDataSource(
       String dataSourceId, QueryExpansionRequest request) {
-    QueryExpansionContext context = getQueryExpansionContext(dataSourceId);
+    QueryExpansionConfig queryExpansion = getQueryExpansionConfig(dataSourceId);
+    String profileName = request.getProfileName();
+    if (profileName == null || profileName.isBlank()) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Query-expansion profileName is required.");
+    }
+    QueryExpansionContext context = getQueryExpansionContext(profileName, queryExpansion);
     Map<String, Object> rawRequest = SNAKE_CASE_OBJECT_MAPPER.convertValue(request, Map.class);
     List<Map<String, Object>> relationMappings = getRelationMappings(rawRequest);
     List<QueryExpansionProfileRelationEntity> requestedRelations =
@@ -103,34 +107,32 @@ public class QueryExpansionApiDelegateImpl implements QueryExpansionApiDelegate 
     return ResponseEntity.ok(response);
   }
 
-  private QueryExpansionContext getQueryExpansionContext(String dataSourceId) {
+  private QueryExpansionConfig getQueryExpansionConfig(String dataSourceId) {
     TextAdapterConfig adapterConfig =
         documentQueryService
             .getTextAdapterConfig(dataSourceId)
             .orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Data source not found."));
     QueryExpansionConfig queryExpansion = adapterConfig.getQueryExpansion();
-    if (queryExpansion == null || queryExpansion.getProfile() == null) {
+    if (queryExpansion == null || !queryExpansion.isEnabled()) {
       throw new ResponseStatusException(
-          HttpStatus.NOT_FOUND, "Data source has no query-expansion configuration.");
+          HttpStatus.NOT_FOUND, "Data source has no enabled query-expansion configuration.");
     }
+    return queryExpansion;
+  }
 
+  private QueryExpansionContext getQueryExpansionContext(
+      String profileName, QueryExpansionConfig queryExpansion) {
     QueryExpansionProfileEntity profile =
         queryExpansionService
-            .getProfile(queryExpansion.getProfile())
+            .getProfile(profileName)
             .orElseThrow(
                 () ->
                     new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Query-expansion profile not found or Concept Graphs API unavailable."));
 
-    Set<String> configuredRelationIds = queryExpansion.getRelations().keySet();
-    List<QueryExpansionProfileRelationEntity> effectiveRelations =
-        profile.getRelations().stream()
-            .filter(relation -> configuredRelationIds.contains(relation.getId()))
-            .collect(Collectors.toList());
-    return new QueryExpansionContext(
-        queryExpansion.getProfile(), profile, effectiveRelations, queryExpansion);
+    return new QueryExpansionContext(profileName, profile, profile.getRelations(), queryExpansion);
   }
 
   private QueryExpansionProfile toApiProfile(QueryExpansionProfileEntity profile) {
@@ -465,7 +467,7 @@ public class QueryExpansionApiDelegateImpl implements QueryExpansionApiDelegate 
       SingleConcept sourceConcept) {
     if (response.getRelations() == null) return Collections.emptyList();
 
-    Map<String, QueryExpansionRelationConfig> relationConfigById = context.config().getRelations();
+    Map<String, QueryExpansionRelationConfig> legacyRelationConfigById = context.config().getRelations();
     return response.getRelations().stream()
         .map(
             relation -> {
@@ -475,17 +477,15 @@ public class QueryExpansionApiDelegateImpl implements QueryExpansionApiDelegate 
               if (targetDraftId == null && singleDraftsByKey.size() == 1) {
                 targetDraftId = singleDraftsByKey.values().iterator().next().getId();
               }
-              QueryExpansionRelationConfig relationConfig = relationConfigById.get(relation.getRelation());
-              if (resolvedSourceDraftId == null
-                  || targetDraftId == null
-                  || relationConfig == null
-                  || relationConfig.getStrategy() == null) {
+              Optional<QueryExpansionStrategy> strategy =
+                  getRelationStrategy(relation.getRelation(), legacyRelationConfigById);
+              if (resolvedSourceDraftId == null || targetDraftId == null || strategy.isEmpty()) {
                 return null;
               }
               String finalSourceDraftId = resolvedSourceDraftId;
               String finalTargetDraftId = targetDraftId;
               return QueryExpansionExpressionCompiler
-                  .compileRelation(relationConfig.getStrategy(), finalSourceDraftId, finalTargetDraftId)
+                  .compileRelation(strategy.get(), finalSourceDraftId, finalTargetDraftId)
                   .map(
                       expression ->
                           createCompositeConceptDraft(
@@ -501,6 +501,23 @@ public class QueryExpansionApiDelegateImpl implements QueryExpansionApiDelegate 
             })
         .filter(Objects::nonNull)
         .toList();
+  }
+
+  private Optional<QueryExpansionStrategy> getRelationStrategy(
+      String relationId, Map<String, QueryExpansionRelationConfig> legacyRelationConfigById) {
+    Optional<QueryExpansionStrategy> centralizedStrategy =
+        QueryExpansionRelationStrategyResolver.getStrategy(relationId);
+    if (centralizedStrategy.isPresent()) return centralizedStrategy;
+
+    QueryExpansionRelationConfig legacyRelationConfig = legacyRelationConfigById.get(relationId);
+    if (legacyRelationConfig == null || legacyRelationConfig.getStrategy() == null) {
+      return Optional.empty();
+    }
+    try {
+      return Optional.of(QueryExpansionStrategy.fromId(legacyRelationConfig.getStrategy()));
+    } catch (IllegalArgumentException ignored) {
+      return Optional.empty();
+    }
   }
 
   private CompositeConcept createCompositeConceptDraft(
