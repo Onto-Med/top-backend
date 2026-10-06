@@ -415,7 +415,9 @@ public class QueryExpansionApiDelegateImpl implements QueryExpansionApiDelegate 
   }
 
   private boolean isSynonymCategory(String category) {
-    return category != null && "synonyms".equalsIgnoreCase(category.trim());
+    if (category == null) return false;
+    String normalized = category.trim().toLowerCase(Locale.ROOT);
+    return "synonym".equals(normalized) || "synonyms".equals(normalized);
   }
 
   private SingleConcept getOrCreateCategoryDraft(
