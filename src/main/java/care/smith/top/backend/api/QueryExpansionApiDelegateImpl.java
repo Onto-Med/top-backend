@@ -357,6 +357,7 @@ public class QueryExpansionApiDelegateImpl implements QueryExpansionApiDelegate 
 
     if (response.getConcepts() != null) {
       for (QueryExpansionConcept concept : response.getConcepts()) {
+        if (isSynonymCategory(concept.getCategory())) continue;
         SingleConcept categoryDraft =
             getOrCreateCategoryDraft(
                 concept.getCategory(), language, sourceConcept, categoryDraftsByCategory, context);
@@ -376,7 +377,7 @@ public class QueryExpansionApiDelegateImpl implements QueryExpansionApiDelegate 
                   candidates.forEach(
                       candidate -> {
                         String term = candidate.getTerm();
-                        if (term == null || term.isBlank()) return;
+                        if (term == null || term.isBlank() || isSynonymCategory(candidate.getCategory())) return;
                         SingleConcept categoryDraft =
                             getOrCreateCategoryDraft(
                                 candidate.getCategory(),
@@ -411,6 +412,10 @@ public class QueryExpansionApiDelegateImpl implements QueryExpansionApiDelegate 
     return new QueryExpansionGeneratedEntityDrafts()
         .singleConcepts(singleDrafts)
         .compositeConcepts(compositeDrafts);
+  }
+
+  private boolean isSynonymCategory(String category) {
+    return category != null && "synonyms".equalsIgnoreCase(category.trim());
   }
 
   private SingleConcept getOrCreateCategoryDraft(
