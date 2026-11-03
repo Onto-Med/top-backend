@@ -264,6 +264,7 @@ public class DocumentQueryService extends QueryService {
     return new DataSource()
         .id(textAdapterConfig.getId())
         .queryType(QueryType.CONCEPT)
+        .indices(new LinkedHashSet<>(IndexSelection.configured(textAdapterConfig).indices()))
         .title(textAdapterConfig.getId().replace('_', ' '));
   }
 

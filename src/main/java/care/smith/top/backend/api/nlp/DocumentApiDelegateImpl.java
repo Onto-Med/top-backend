@@ -11,9 +11,11 @@ import care.smith.top.model.Document;
 import care.smith.top.model.DocumentGatheringMode;
 import care.smith.top.model.DocumentImport;
 import care.smith.top.model.DocumentPage;
+import care.smith.top.top_document_query.adapter.DocumentReference;
 import care.smith.top.top_document_query.adapter.TextAdapter;
 import care.smith.top.top_document_query.elasticsearch.DocumentEntity;
 import co.elastic.clients.elasticsearch._types.ElasticsearchException;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.io.IOException;
 import java.util.*;
@@ -30,6 +32,7 @@ import org.springframework.stereotype.Service;
 public class DocumentApiDelegateImpl implements DocumentApiDelegate {
   private final Logger LOGGER = Logger.getLogger(DocumentApiDelegateImpl.class.getName());
   @Autowired private PhraseService phraseService;
+  @Autowired private HttpServletRequest request;
   private final DocumentService documentService;
   private final String COLOR_PRE = "$color::";
   private final String COLOR_AFTER = "::color$";
@@ -41,6 +44,7 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
   @Override
   public ResponseEntity<DocumentPage> getDocuments(
       String dataSource,
+      String index,
       String name,
       List<String> documentIds,
       List<String> phraseIds,
@@ -50,11 +54,14 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
       Boolean exemplarOnly,
       Integer page,
       List<String> include) {
+    requireIndex(index);
     page -= 1;
     TextAdapter adapter;
     String corpusId = stringConformity(dataSource);
     try {
-      adapter = documentService.getAdapterForDataSource(corpusId);
+      adapter = documentService.getAdapterForDataSource(corpusId).forIndex(index);
+    } catch (IllegalArgumentException e) {
+      throw new InvalidDocumentSelectionException(e.getMessage());
     } catch (InstantiationException e) {
       LOGGER.severe("The text adapter '" + corpusId + "' could not be initialized.");
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -144,9 +151,11 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
   public ResponseEntity<Document> getSingleDocumentById(
       String documentId,
       String dataSource,
+      String index,
       List<String> highlightConcepts,
       List<String> offsets,
       List<String> include) {
+    requireIndex(index);
     TextAdapter adapter;
     String corpusId = stringConformity(dataSource);
     try {
@@ -157,7 +166,16 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
     }
 
     try {
-      Document document = adapter.getDocumentById(documentId, false).orElseThrow();
+      Document document;
+      try {
+        document =
+            adapter
+                .getDocument(
+                    new DocumentReference(adapter.getConfig().getId(), index, documentId), false)
+                .orElseThrow();
+      } catch (IllegalArgumentException e) {
+        throw new InvalidDocumentSelectionException(e.getMessage());
+      }
       if (highlightConcepts == null) highlightConcepts = new ArrayList<>();
       if (offsets == null) offsets = new ArrayList<>();
 
@@ -217,17 +235,32 @@ public class DocumentApiDelegateImpl implements DocumentApiDelegate {
   @Override
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<DocumentImport> importDocuments(
-      String dataSource, String language, List<@Valid Document> documents) {
+      String dataSource, String index, String language, List<@Valid Document> documents) {
+    requireIndex(index);
     String finalDataSource = stringConformity(dataSource);
     try {
       TextAdapter adapter = documentService.getAdapterForDataSource(finalDataSource);
       DocumentImport importResult =
-          adapter.importDocuments(documents.toArray(new Document[0]), language);
+          adapter.importDocuments(index, documents.toArray(new Document[0]), language);
       return ResponseEntity.ok(importResult);
+    } catch (IllegalArgumentException e) {
+      throw new InvalidDocumentSelectionException(e.getMessage());
     } catch (InstantiationException e) {
       LOGGER.severe("The text adapter '" + finalDataSource + "' could not be initialized.");
     }
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+  }
+
+  private void requireIndex(String index) {
+    String[] values = request == null ? null : request.getParameterValues("index");
+    if (index == null
+        || index.isBlank()
+        || index.contains(",")
+        || index.contains("[")
+        || index.contains("]")
+        || (values != null && values.length != 1)) {
+      throw new InvalidDocumentSelectionException("Select exactly one nonblank document index");
+    }
   }
 
   private String[] parseHighlightString(String highlightString) {
